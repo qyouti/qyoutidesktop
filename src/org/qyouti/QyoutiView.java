@@ -224,6 +224,8 @@ public class QyoutiView extends FrameView
         }
       }
     });
+
+    showAboutBox();
   }
 
 
