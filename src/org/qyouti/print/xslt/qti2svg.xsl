@@ -31,7 +31,213 @@
       <desc>Optical Mark Reader Data Sheet</desc>
       <rect x="0" y="0" fill="white" stroke="none" width="826.7" height="5500">
       </rect>
+
       <xsl:for-each select=".//item">
+        <xsl:variable name="count_response_lid">
+            <xsl:value-of select="count(.//response_lid)"/>
+        </xsl:variable>
+        <xsl:variable name="count_response_xy">
+            <xsl:value-of select="count(.//response_xy)"/>
+        </xsl:variable>
+        <xsl:variable name="count_response_str">
+            <xsl:value-of select="count(.//response_str)"/>
+        </xsl:variable>
+        <xsl:variable name="count_response_num">
+            <xsl:value-of select="count(.//response_num)"/>
+        </xsl:variable>
+        <xsl:variable name="count_response_grp">
+            <xsl:value-of select="count(.//response_grp)"/>
+        </xsl:variable>
+        <xsl:variable name="count_response_all">
+            <xsl:value-of select="$count_response_lid + $count_response_xy + $count_response_str + $count_response_num + $count_response_grp"/>
+        </xsl:variable>
+
+
+        <xsl:variable name="count_render_choice">
+            <xsl:value-of select="count(.//render_choice)"/>
+        </xsl:variable>
+        <xsl:variable name="count_render_hotspot">
+            <xsl:value-of select="count(.//render_hotspot)"/>
+        </xsl:variable>
+        <xsl:variable name="count_render_fib">
+            <xsl:value-of select="count(.//render_fib)"/>
+        </xsl:variable>
+        <xsl:variable name="count_render_slider">
+            <xsl:value-of select="count(.//render_slider)"/>
+        </xsl:variable>
+
+
+        <xsl:message>count_response_lid <xsl:value-of select="$count_response_lid"/></xsl:message>
+        <xsl:message>count_response_str <xsl:value-of select="$count_response_str"/></xsl:message>
+        <xsl:message>count_response_all <xsl:value-of select="$count_response_all"/></xsl:message>
+        <xsl:message>count_render_choice <xsl:value-of select="$count_render_choice"/></xsl:message>
+
+
+        <xsl:choose>
+          <xsl:when test="$count_response_all = 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - contains no response type declaration.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_all != 1">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - contains compound responses.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_xy != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - contains XY coordinate response.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_num != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - contains numerical response.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_grp != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - contains matching item response.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_render_hotspot != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - wants to present a hotspot.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_render_hotspot != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - wants to present a slider.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_lid = 1  and  $count_render_fib != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - wants to display text box in an ID response item.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_str = 1  and  $count_render_choice != 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - wants to display choice in a text item.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_lid = 1  and  $count_render_choice = 0">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - ID type but has no choices.'"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="$count_response_str = 1  and  $count_render_fib != 1">
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question - string response must have one text entry box.'"/>
+            </xsl:call-template>
+          </xsl:when>
+
+          <xsl:when test="$count_response_lid = 1">
+            <xsl:call-template name="item-choice">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+            </xsl:call-template>
+          </xsl:when>
+
+          <xsl:when test="$count_response_str = 1">
+            <xsl:call-template name="item-fib">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+            </xsl:call-template>
+          </xsl:when>
+
+          <xsl:otherwise>
+            <xsl:call-template name="item-unsupported">
+                <xsl:with-param name="item" select="."/>
+                <xsl:with-param name="qnum" select="position()"/>
+                <xsl:with-param name="error" select="'Unsupported question type'"/>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+
+      <xsl:for-each select=".//assessment/presentation_material//matimage">
+        <g class="intro">
+          <xsl:copy-of select="svg:svg"/>
+        </g>
+      </xsl:for-each>
+
+    </svg>
+  </xsl:template>
+
+
+
+
+  <xsl:template name="item-unsupported">
+    <xsl:param name="item"/>
+    <xsl:param name="qnum"/>
+    <xsl:param name="error"/>
+
+    <xsl:for-each select="$item">
+        <!-- -->
+        <xsl:variable name="qid">
+          <xsl:value-of select="@ident"/>
+        </xsl:variable>
+        <!-- -->
+
+        <!-- <xsl:variable name="code" select="code:itemCode( . )"/> -->
+
+        <xsl:variable name="itemheight">150</xsl:variable>
+
+        <xsl:value-of select="$newline"/>
+        <xsl:value-of select="$newline"/>
+        <g width="7in" class="item">
+          <xsl:attribute name="transform">
+            <xsl:value-of select="concat( 'translate( 50 ', position()*400, ' )' )"/>
+          </xsl:attribute>
+          <xsl:attribute name="height">
+            <xsl:value-of select="concat($itemheight div 100, 'in')"/>
+          </xsl:attribute>
+          <rect x="100" y="0" fill="white" stroke="none" width="700">
+            <xsl:attribute name="height">
+              <xsl:value-of select="$itemheight"/>
+            </xsl:attribute>
+          </rect>
+          <text x="110" y="15" fill="black" font-size="16" font-family="Monospace" font-weight="bold" text-anchor="start">
+          Question <xsl:value-of select="$qnum"/>  <xsl:value-of select="$error"/>
+          </text>
+          <xsl:value-of select="$newline"/>
+          <xsl:value-of select="$newline"/>
+          <xsl:copy-of select="rendersvg:svgQuestionQRCode( $qid, $itemheight, '', 60 )"/>
+        </g>
+        <xsl:value-of select="$newline"/>
+        <xsl:value-of select="$newline"/>
+     </xsl:for-each>
+  </xsl:template>
+
+
+
+
+  <xsl:template name="item-choice">
+    <xsl:param name="item"/>
+    <xsl:param name="qnum"/>
+
+    <xsl:for-each select="$item">
         <!-- -->
         <xsl:variable name="qid">
           <xsl:value-of select="@ident"/>
@@ -62,14 +268,9 @@
             </xsl:attribute>
           </rect>
           <text x="110" y="15" fill="black" font-size="16" font-family="Monospace" font-weight="bold" text-anchor="start">
-          Question <xsl:value-of select="position()"/>
+          Question <xsl:value-of select="$qnum"/>
           </text>
           <xsl:for-each select="./presentation/material/matimage[1]">
-            <!-- 
-            <xsl:variable name="qid">
-              <xsl:value-of select="../../response_lid/@ident"/>
-            </xsl:variable>
-             -->
             <xsl:variable name="qcoords">
               <xsl:call-template name="response-coords">
                 <xsl:with-param name="item" select="ancestor::item"/>
@@ -104,16 +305,97 @@
         </g>
         <xsl:value-of select="$newline"/>
         <xsl:value-of select="$newline"/>
-      </xsl:for-each>
-
-      <xsl:for-each select=".//assessment/presentation_material//matimage">
-        <g class="intro">
-          <xsl:copy-of select="svg:svg"/>
-        </g>
-      </xsl:for-each>
-
-    </svg>
+     </xsl:for-each>
   </xsl:template>
+
+
+
+
+<xsl:template name="item-fib">
+    <xsl:param name="item"/>
+    <xsl:param name="qnum"/>
+
+    <xsl:for-each select="$item">
+        <!-- -->
+        <xsl:variable name="qid">
+          <xsl:value-of select="@ident"/>
+        </xsl:variable>
+        <!-- -->
+
+        <!-- <xsl:variable name="code" select="code:itemCode( . )"/> -->
+
+        <xsl:variable name="itemheight">
+          <xsl:call-template name="calcitemheight">
+            <xsl:with-param name="item" select="."/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:message>Item height <xsl:value-of select="$itemheight"/></xsl:message>
+        <xsl:variable name="fibheight">
+          <xsl:call-template name="calcfibheight">
+            <xsl:with-param name="item" select="."/>
+          </xsl:call-template>
+        </xsl:variable>
+
+
+        <xsl:value-of select="$newline"/>
+        <xsl:value-of select="$newline"/>
+        <g width="7in" class="item">
+          <xsl:attribute name="transform">
+            <xsl:value-of select="concat( 'translate( 50 ', position()*400, ' )' )"/>
+          </xsl:attribute>
+          <xsl:attribute name="height">
+            <xsl:value-of select="concat($itemheight div 100, 'in')"/>
+          </xsl:attribute>
+          <rect x="100" y="0" fill="white" stroke="none" width="700">
+            <xsl:attribute name="height">
+              <xsl:value-of select="$itemheight"/>
+            </xsl:attribute>
+          </rect>
+          <text x="110" y="15" fill="black" font-size="16" font-family="Monospace" font-weight="bold" text-anchor="start">
+          Question <xsl:value-of select="$qnum"/>  Text Entry - Item under development.
+          </text>
+
+          <xsl:for-each select="./presentation/material/matimage[1]">
+            <g>
+              <xsl:attribute name="transform">
+                <xsl:value-of select="concat( 'translate( 110 ', $title-height, ' )' )"/>
+              </xsl:attribute>
+              <xsl:copy-of select="svg:svg"/>
+            </g>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="$newline"/>
+
+            <g>
+              <xsl:attribute name="transform">
+                <xsl:value-of select="concat( 'translate( 0 ', $title-height + $response-spacing + @height, ' )' )"/>
+              </xsl:attribute>
+              <rect x="110" y="0" fill="rgb( 255,140,255 )" stroke="none" width="608" height="24">
+                  <xsl:attribute name="height">
+                    <xsl:value-of select="$fibheight+8"/>
+                  </xsl:attribute>
+              </rect>
+              <rect x="114" y="4" fill="rgb( 255,230,255 )" stroke="none" width="600" height="16">
+                  <xsl:attribute name="height">
+                    <xsl:value-of select="$fibheight"/>
+                  </xsl:attribute>
+              </rect>
+            </g>
+
+            <xsl:variable name="qcoords">
+              <xsl:value-of select="concat( $title-height + $response-spacing + @height, ' ', $fibheight+8 )"/>
+            </xsl:variable>
+            <xsl:message>qcoords: <xsl:value-of select="$qcoords"/></xsl:message>
+            <xsl:copy-of select="rendersvg:svgQuestionQRCode( $qid, $itemheight, $qcoords, 60 )"/>
+          </xsl:for-each>
+
+
+        </g>
+        <xsl:value-of select="$newline"/>
+        <xsl:value-of select="$newline"/>
+     </xsl:for-each>
+  </xsl:template>
+
+
 
 
 
@@ -225,7 +507,14 @@
        <xsl:with-param name="runningtotal" select="0"/>
      </xsl:call-template>
    </xsl:variable>
-   <xsl:value-of select="$title-height + $stem-height + $resp-height + $margin-bottom"/>
+
+   <xsl:variable name="fib-height">
+     <xsl:call-template name="calcfibheight">
+       <xsl:with-param name="item" select="$item"/>
+     </xsl:call-template>
+   </xsl:variable>
+
+   <xsl:value-of select="$title-height + $stem-height + $resp-height + $fib-height + $margin-bottom"/>
   </xsl:template>
 
   <xsl:template name="calcimageheight">
@@ -247,6 +536,22 @@
    </xsl:choose>
   </xsl:template>
 
+
+  <xsl:template name="calcfibheight">
+   <xsl:param name="item"/>
+
+   <xsl:choose>
+     <xsl:when test="count($item/presentation//render_fib) != 1">
+       <xsl:value-of select="0"/>
+     </xsl:when>
+     <xsl:when test="$item/presentation//render_fib[1]/@rows != ''">
+       <xsl:value-of select="number( $item/presentation//render_fib[1]/@rows ) * 25 + $response-spacing * 2"/>
+     </xsl:when>
+     <xsl:otherwise>
+       <xsl:value-of select="100 + $response-spacing * 2"/>
+     </xsl:otherwise>
+   </xsl:choose>
+  </xsl:template>
 
 
 
