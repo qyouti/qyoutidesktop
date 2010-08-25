@@ -382,7 +382,10 @@
             </g>
 
             <xsl:variable name="qcoords">
-              <xsl:value-of select="concat( $title-height + $response-spacing + @height, ' ', $fibheight+8 )"/>
+              <xsl:text>114 </xsl:text>
+              <xsl:value-of select="$title-height + $response-spacing + @height"/>
+              <xsl:text> 600 </xsl:text>
+              <xsl:value-of select="$fibheight"/>
             </xsl:variable>
             <xsl:message>qcoords: <xsl:value-of select="$qcoords"/></xsl:message>
             <xsl:copy-of select="rendersvg:svgQuestionQRCode( $qid, $itemheight, $qcoords, 60 )"/>
@@ -473,8 +476,13 @@
     <xsl:variable name="current"
         select="$response_label/material/matimage"/>
 
-    <!-- <xsl:value-of select="concat( $response_label/@ident, ' ', floor($yoffset+4), ' ' )"/> -->
-    <xsl:value-of select="concat( floor($yoffset+4), ' ' )"/>
+<!--    <xsl:value-of select="concat( floor($yoffset+4), ' ' )"/> -->
+
+
+      <xsl:text>114 </xsl:text>
+      <xsl:value-of select="floor($yoffset+4)"/>
+      <xsl:text> 18 18 </xsl:text>
+
 
     <xsl:if test="$nresp != $last">
         <xsl:call-template name="response-coords">

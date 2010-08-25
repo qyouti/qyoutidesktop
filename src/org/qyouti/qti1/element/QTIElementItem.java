@@ -114,6 +114,12 @@ public class QTIElementItem
 
   public Object getOutcome( String ident )
   {
+    if ( !supported )
+    {
+      if ( "SCORE".equalsIgnoreCase( ident ) )
+          return new Integer( 0 );
+      throw new IllegalArgumentException( "Can't calculate outcome in unsupported assessment item " + getIdent() + "." );
+    }
     QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
     if ( decvar == null )
       throw new IllegalArgumentException( "Unknown outcome variable " + ident + " in assessment item " + getIdent() + "." );
@@ -122,6 +128,8 @@ public class QTIElementItem
 
   public void setOutcome( String ident, Object value )
   {
+    if ( !supported )
+      throw new IllegalArgumentException( "Can't calculate outcome in unsupported assessment item " + getIdent() + "." );
     QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
     if ( decvar == null )
       throw new IllegalArgumentException( "Unknown outcome variable " + ident + " in assessment item " + getIdent() + "." );
