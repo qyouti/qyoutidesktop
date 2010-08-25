@@ -156,18 +156,33 @@ public class PageDecoder
   }
 
 
+  private static int bytesToInteger( byte[] data, int offset )
+  {
+      return  ( data[offset] & 0xff )
+             |
+              (( data[offset + 1] << 8 ) & 0xff00 );
+  }
+
   private static QuestionCode decodeQuestion( byte[] data )
           throws UnsupportedEncodingException
   {
     QuestionCode qcode = new QuestionCode();
     qcode.id = decodeCString( data, 0 );
     qcode.next = data[ qcode.id.length()+1 ];
-    int c = (data.length - qcode.id.length() - 2) / 2;
-    qcode.box_offset = new int[c];
-    for ( int i=0; i<c; i++ )
-      qcode.box_offset[i] =  ( data[ qcode.id.length()+2+ (i*2)     ] & 0xff )
-                              |
-                           ( ( data[ qcode.id.length()+2+ (i*2) + 1 ] << 8 ) & 0xff00 );
+    int boxes = (data.length - qcode.id.length() - 2) / 8;
+    int offset, n;
+    qcode.box_xoffset = new int[boxes];
+    qcode.box_yoffset = new int[boxes];
+    qcode.box_width = new int[boxes];
+    qcode.box_height = new int[boxes];
+    for ( int i=0; i<boxes; i++ )
+    {
+      offset = qcode.id.length()+2+ (i*8);
+      qcode.box_xoffset[i] =  bytesToInteger( data, offset );
+      qcode.box_yoffset[i] =  bytesToInteger( data, offset+2 );
+      qcode.box_width[i] =  bytesToInteger( data, offset+4 );
+      qcode.box_height[i] =  bytesToInteger( data, offset+6 );
+    }
     return qcode;
   }
 
@@ -280,7 +295,7 @@ public class PageDecoder
       double qvoffset_pix_x;
       double qvoffset_pix_y;
       double qoffset_x, qoffset_y;
-      int x, y;
+      int x, y, w, h;
       byte[] question_qr_data;
       QuestionCode question_code=null;
 
@@ -331,16 +346,17 @@ public class PageDecoder
         voffset_hnth_inch += question_code.next * 10;
         question.ident = question_code.id;
 
-        for ( int r=0; r<question_code.box_offset.length; r++ )
+        for ( int r=0; r<question_code.box_yoffset.length; r++ )
         {
           System.out.println( "-----------------------------------" );
-          System.out.println( "Response " + r + " at " + question_code.box_offset[r] );
+          System.out.println( "Response " + r + " at " + question_code.box_xoffset[r] + ", " + question_code.box_yoffset[r] );
+          System.out.println( "                 W, H " + question_code.box_width[r]   + ", " + question_code.box_height[r] );
 
           response = new ResponseData( question );
           response.position = r;
           response.ident = null;
-          qhoffset_hnth_inch = metrics_qstn_qr_hzntl_box;
-          qvoffset_hnth_inch = question_code.box_offset[r];
+          qhoffset_hnth_inch = question_code.box_xoffset[r];
+          qvoffset_hnth_inch = question_code.box_yoffset[r];
           qoffset_x = qhoffset_hnth_inch*question_scale[0] + qvoffset_hnth_inch * question_scale[2];
           qoffset_y = qhoffset_hnth_inch*question_scale[1] + qvoffset_hnth_inch * question_scale[3];
           //System.out.println( "Next box at " + qhoffset_hnth_inch + " : " + qvoffset_hnth_inch + " hnth inch" );
@@ -348,8 +364,10 @@ public class PageDecoder
 
           x = (int)(triangle[0]+offset_x-(int)(rough_dpi*0.4)  + question_triangle[0]+qoffset_x);
           y = (int)(triangle[1]+offset_y-(int)(rough_dpi*0.4)  + question_triangle[1]+qoffset_y);
-          //System.out.println( "Look for box here: " + x + " : " + y );
-          response.box_image = image.getSubimage(x, y, (int)(rough_dpi*54.0/300.0), (int)(rough_dpi*54.0/300.0) );
+          w = (int)((rough_dpi*(double)question_code.box_width[r])/100.0);
+          h = (int)((rough_dpi*(double)question_code.box_height[r])/100.0);
+          System.out.println( "Look for box here: " + x + " : " + y + " : " + w + " : " + h );
+          response.box_image = image.getSubimage(x, y, w, h );
         }
       }
 
@@ -391,7 +409,13 @@ public class PageDecoder
       for ( int j=0; j<question.responses.size(); j++ )
       {
         response = question.responses.get( j );
-        //response.filtered_image = response.box_image;
+        response.selected= false;
+        response.examiner_selected = false;
+        response.filtered_image = null;
+        response.dark_pixels = -1;
+        if ( !qti_item.isSupported() )
+            continue;
+        
         temp = response.box_image;
 
         response.box_image = new BufferedImage( temp.getWidth(), temp.getHeight(),
@@ -408,8 +432,6 @@ public class PageDecoder
           darkest = j;
           darkest_dark_pixels = response.dark_pixels;
         }
-        response.selected= false;
-        response.examiner_selected = false;
       }
 
       if ( one_only )

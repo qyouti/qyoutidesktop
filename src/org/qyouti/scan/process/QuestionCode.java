@@ -34,5 +34,8 @@ public class QuestionCode
 {
     String id;
     int next;
-    int[] box_offset;
+    int[] box_xoffset;
+    int[] box_yoffset;
+    int[] box_width;
+    int[] box_height;
 }

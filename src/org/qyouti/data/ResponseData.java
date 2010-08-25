@@ -120,21 +120,24 @@ public class ResponseData
       writer.write( "</line>\n" );
     }
     writer.write( "            </box>\n" );
-    writer.write( "            <filtered>\n" );
-    for ( int i=0; i<filtered_image.getHeight(); i++ )
+    if ( filtered_image != null )
     {
-      writer.write( "                <line>" );
-      for ( int j=0; j<filtered_image.getHeight(); j++ )
-      {
-        rgb = filtered_image.getRGB( i, j );
-        if ( (rgb & 1) == 0 )
-          writer.write( "#" );
-        else
-          writer.write( "." );
-      }
-      writer.write( "</line>\n" );
+        writer.write( "            <filtered>\n" );
+        for ( int i=0; i<filtered_image.getHeight(); i++ )
+        {
+          writer.write( "                <line>" );
+          for ( int j=0; j<filtered_image.getHeight(); j++ )
+          {
+            rgb = filtered_image.getRGB( i, j );
+            if ( (rgb & 1) == 0 )
+              writer.write( "#" );
+            else
+              writer.write( "." );
+          }
+          writer.write( "</line>\n" );
+        }
+        writer.write( "            </filtered>\n" );
     }
-    writer.write( "            </filtered>\n" );
 
     writer.write( "          </response>\n" );
   }

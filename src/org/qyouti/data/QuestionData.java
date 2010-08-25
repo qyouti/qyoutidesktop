@@ -179,6 +179,7 @@ public class QuestionData
     return responses.size();
   }
 
+    @Override
   public int getColumnCount()
   {
     return 6;
@@ -232,16 +233,19 @@ public class QuestionData
     return columnIndex == 5;
   }
 
+    @Override
   public Object getValueAt(int rowIndex, int columnIndex)
   {
     ResponseData response = responses.get( rowIndex );
+    QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
+    
     switch ( columnIndex )
     {
       case 0:
         return String.valueOf((char)('a'+rowIndex));
       case 1:
-        QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
         if ( qtiitem == null ) return "?";
+        if ( !qtiitem.isSupported() ) return "?";
         QTIElementResponselabel rl = qtiitem.getResponselabelByOffset( rowIndex );
         if ( rl.isCorrect() ) return "yes";
         if ( rl.isIncorrect() ) return "no";
@@ -249,10 +253,16 @@ public class QuestionData
       case 2:
         return new ImageIcon( response.box_image );
       case 3:
+        if ( response.filtered_image == null )
+            return "?";
         return new ImageIcon( response.filtered_image );
       case 4:
+        //if ( qtiitem == null ) return "?";
+        //if ( !qtiitem.isSupported() ) return "n/a";
         return new Boolean( response.selected );
       case 5:
+        //if ( qtiitem == null ) return "?";
+        //if ( !qtiitem.isSupported() ) return "n/a";
         return new Boolean( response.examiner_selected );
     }
     return null;
