@@ -43,6 +43,14 @@ public class UnrecognisedQTIElement
     super.initialize();
   }
 
+  public String debug()
+  {
+      return  " Nodename: " + domelement.getNodeName() +
+              " Prefix: " + domelement.getPrefix() +
+              " Namespace: " + domelement.getNamespaceURI() +
+              " Tagname: " + domelement.getTagName();
+  }
+
   public void toString( StringBuffer buffer, int indent )
   {
     for ( int c=0; c<children.size(); c++ )

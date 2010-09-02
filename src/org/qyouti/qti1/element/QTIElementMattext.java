@@ -33,11 +33,17 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementMattext
-        extends QTIItemAncestor
+        extends QTIMatmedia
 {
     public String getContent()
     {
         if ( domelement == null ) return null;
         return domelement.getTextContent();
+    }
+
+    @Override
+    public boolean isSupported()
+    {
+        return true;
     }
 }

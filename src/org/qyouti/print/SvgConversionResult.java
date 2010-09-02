@@ -27,6 +27,7 @@
 package org.qyouti.print;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.svg.SVGDocument;
 
 /**
  *
@@ -36,9 +37,9 @@ public class SvgConversionResult
 {
   String svg;
   int height;  // in 100th inch
-  Document document;
-  public SvgConversionResult( Document d, String s, int h ) { document = d; svg = s; height = h; }
-  public Document getDocument() { return document; }
+  SVGDocument document;
+  public SvgConversionResult( SVGDocument d, String s, int h ) { document = d; svg = s; height = h; }
+  public SVGDocument getDocument() { return document; }
   public String getSvg() { return svg; }
   public int getHeight() { return height; }
 }

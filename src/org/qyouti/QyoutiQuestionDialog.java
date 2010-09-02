@@ -16,9 +16,6 @@
  *
  *
  */
-
-
-
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -29,27 +26,48 @@
  *
  * Created on 08-Apr-2010, 22:03:11
  */
-
 package org.qyouti;
 
 import javax.swing.JScrollPane;
+import org.apache.batik.swing.JSVGCanvas;
+import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.gui.*;
+import org.qyouti.qti1.gui.QTIItemRenderer;
+import org.w3c.dom.svg.SVGDocument;
 
 /**
  *
  * @author jon
  */
-public class QyoutiQuestionDialog extends javax.swing.JDialog {
-    
+public class QyoutiQuestionDialog extends javax.swing.JDialog
+{
+    QTIElementItem item = null;
+    QTIItemRenderer renderer = null;
+
     /** Creates new form QyoutiQuestionDialog */
-    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal) {
+    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal)
+    {
         super(parent, modal);
         getRootPane().setDefaultButton(closeButton);
         initComponents();
     }
 
+    public void setItem( QTIElementItem item )
+    {
+        this.item = item;
+
+        renderer = new QTIItemRenderer( item );
+        if ( renderer != null )
+        {
+            JSVGCanvas canvas = new JSVGCanvas();
+            canvas.setSVGDocument( (SVGDocument) renderer.getSVGDocument());
+            scrollpane.setViewportView( canvas );
+        }
+    }
+
     public JScrollPane getScrollPane()
     {
-        return scrollPane;
+        return scrollpane;
     }
 
     /** This method is called from within the constructor to
@@ -61,21 +79,20 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel2 = new javax.swing.JPanel();
+        scrollpane = new javax.swing.JScrollPane();
+        bottompanel = new javax.swing.JPanel();
         closeButton = new javax.swing.JButton();
-        scrollPane = new javax.swing.JScrollPane();
-        jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setName("Form"); // NOI18N
+        getContentPane().setLayout(new java.awt.BorderLayout(1, 0));
 
-        jPanel2.setName("jPanel2"); // NOI18N
+        scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollpane.setName("scrollpane"); // NOI18N
+        getContentPane().add(scrollpane, java.awt.BorderLayout.CENTER);
+
+        bottompanel.setName("bottompanel"); // NOI18N
 
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.qyouti.QyoutiApp.class).getContext().getResourceMap(QyoutiQuestionDialog.class);
         closeButton.setText(resourceMap.getString("closeButton.text")); // NOI18N
@@ -85,43 +102,9 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog {
                 closeButtonActionPerformed(evt);
             }
         });
-        jPanel2.add(closeButton);
+        bottompanel.add(closeButton);
 
-        getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
-
-        scrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setName("scrollPane"); // NOI18N
-
-        jPanel1.setName("jPanel1"); // NOI18N
-
-        jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
-        jButton1.setName("jButton1"); // NOI18N
-        jPanel1.add(jButton1);
-
-        jButton2.setText(resourceMap.getString("jButton2.text")); // NOI18N
-        jButton2.setName("jButton2"); // NOI18N
-        jPanel1.add(jButton2);
-
-        jButton3.setText(resourceMap.getString("jButton3.text")); // NOI18N
-        jButton3.setName("jButton3"); // NOI18N
-        jPanel1.add(jButton3);
-
-        jButton4.setText(resourceMap.getString("jButton4.text")); // NOI18N
-        jButton4.setName("jButton4"); // NOI18N
-        jPanel1.add(jButton4);
-
-        jButton5.setText(resourceMap.getString("jButton5.text")); // NOI18N
-        jButton5.setName("jButton5"); // NOI18N
-        jPanel1.add(jButton5);
-
-        jButton6.setText(resourceMap.getString("jButton6.text")); // NOI18N
-        jButton6.setName("jButton6"); // NOI18N
-        jPanel1.add(jButton6);
-
-        scrollPane.setViewportView(jPanel1);
-
-        getContentPane().add(scrollPane, java.awt.BorderLayout.CENTER);
+        getContentPane().add(bottompanel, java.awt.BorderLayout.SOUTH);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -133,34 +116,9 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog {
 
     }//GEN-LAST:event_closeButtonActionPerformed
 
-    /**
-    * @param args the command line arguments
-    */
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                QyoutiQuestionDialog dialog = new QyoutiQuestionDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel bottompanel;
     private javax.swing.JButton closeButton;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JScrollPane scrollPane;
+    private javax.swing.JScrollPane scrollpane;
     // End of variables declaration//GEN-END:variables
-
 }

@@ -47,6 +47,7 @@ import org.qyouti.dialog.NewExamination;
 import org.qyouti.dialog.PreferencesDialog;
 import org.qyouti.print.PrintTask;
 import org.qyouti.qrcode.QRCodec;
+import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.util.QyoutiUtils;
 
 /**
@@ -1359,19 +1360,20 @@ public class QyoutiView extends FrameView
     {//GEN-HEADEREND:event_questionPreviewButtonActionPerformed
         // TODO add your handling code here:
         int row = questionTable.getSelectedRow();
+        QTIElementItem item = exam.qdefs.qti.getItems().elementAt(row);
+
+        System.out.println( "Row " + row + " IDent " + item.getIdent() );
+
         if ( row >= 0 )
         {
             if (questionDialog == null)
             {
               JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
-              questionDialog = new QyoutiQuestionDialog(mainFrame, true);
+              questionDialog = new QyoutiQuestionDialog(mainFrame, true );
               questionDialog.setLocationRelativeTo(mainFrame);
-            }
-            //JLabel l = new JLabel();
-            //l.setText( "Just Testing" );
-            //questionDialog.getScrollPane().removeAll();
-            //questionDialog.getScrollPane().setViewportView( l );
-            //questionDialog.getScrollPane().doLayout();
+            }            
+            questionDialog.setItem( exam.qdefs.qti.getItems().elementAt(row) );
+
             QyoutiApp.getApplication().show(questionDialog);
             
         }
