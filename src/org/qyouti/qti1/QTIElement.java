@@ -139,5 +139,22 @@ public abstract class QTIElement
     for ( int c=0; c<children.size(); c++ )
       children.get( c ).toString( buffer, indent+4 );
   }
+
+    public String getAttribute( String name )
+    {
+        return domelement.getAttribute( name );
+    }
+    public int getIntAttribute( String name )
+    {
+        String dim = domelement.getAttribute( name );
+        if ( dim == null || dim.length() == 0 )
+            return -1;
+        dim = dim.trim();
+        if ( dim.length() == 0 )
+            return -1;
+        try { return Integer.parseInt(dim); }
+        catch ( Exception e ) {}
+        return -1;
+    }
   
 }

@@ -447,6 +447,7 @@ public class ExaminationData
           throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
     Document document = builder.parse( examfile );
 

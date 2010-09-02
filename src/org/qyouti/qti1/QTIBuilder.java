@@ -36,6 +36,7 @@ import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.qyouti.qti1.element.*;
+import org.qyouti.qti1.ext.QTIExtensionResolver;
 import org.w3c.dom.*;
 
 /**
@@ -57,25 +58,43 @@ public class QTIBuilder
     return buffer.toString();
   }
 
-  static Class getElementClass( String element_name )
+  static Class getElementClass( Element element )
   {
-    String class_name = elementNameToClassName( element_name );
-    try
+    String nodename = element.getNodeName();
+    String namespaceprefix = element.getPrefix();
+    String namespace;
+    if ( namespaceprefix == null )
+        namespace = element.getNamespaceURI();
+    else
     {
-      return Class.forName( class_name );
+        namespace = element.lookupNamespaceURI(namespaceprefix);
+        if ( nodename.startsWith(namespaceprefix+":") )
+            nodename = nodename.substring( namespaceprefix.length() + 1 );
     }
-    catch (ClassNotFoundException ex)
+    //System.out.println( "=================   " + namespace + " ----- " + nodename );
+    if ( namespace == null || "http://www.imsglobal.org/xsd/ims_qtiasiv1p2".equals(namespace) )
     {
-      return null;
+
+        String class_name = elementNameToClassName( nodename );
+        try
+        {
+          return Class.forName( class_name );
+        }
+        catch (ClassNotFoundException ex)
+        {
+          return null;
+        }
     }
+    
+    return QTIExtensionResolver.resolve(namespace, nodename);
   }
 
 
   QTIElement buildOne(Element element, QTIElement parent)
   {
-    String nodename = element.getNodeName();
+
     QTIElement qtielement=new UnrecognisedQTIElement();
-    Class c = getElementClass( nodename );
+    Class c = getElementClass( element );
     if ( c != null )
     {
       try

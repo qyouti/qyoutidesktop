@@ -24,22 +24,14 @@
  * and open the template in the editor.
  */
 
-package org.qyouti.print;
+package org.qyouti.qti1.element;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.svg.SVGDocument;
 
 /**
  *
  * @author jon
  */
-public class SvgConversionResult
+public class QTIElementMatemtext
+        extends QTIElementMattext
 {
-  String svg;
-  int height;  // in 100th inch
-  SVGDocument document;
-  public SvgConversionResult( SVGDocument d, String s, int h ) { document = d; svg = s; height = h; }
-  public SVGDocument getDocument() { return document; }
-  public String getSvg() { return svg; }
-  public int getHeight() { return height; }
 }
