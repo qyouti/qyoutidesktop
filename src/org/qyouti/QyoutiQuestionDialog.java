@@ -28,7 +28,12 @@
  */
 package org.qyouti;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JScrollPane;
+import org.apache.batik.dom.util.DOMUtilities;
 import org.apache.batik.swing.JSVGCanvas;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.*;
@@ -44,12 +49,16 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     QTIElementItem item = null;
     QTIItemRenderer renderer = null;
 
-    /** Creates new form QyoutiQuestionDialog */
+    /** Creates new form QyoutiQuestionDialog
+     * @param parent
+     * @param modal 
+     */
     public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal)
     {
         super(parent, modal);
         getRootPane().setDefaultButton(closeButton);
         initComponents();
+        
     }
 
     public void setItem( QTIElementItem item )
@@ -57,18 +66,41 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         this.item = item;
 
         renderer = new QTIItemRenderer( item );
-        if ( renderer != null )
+        if ( renderer == null )
         {
-            JSVGCanvas canvas = new JSVGCanvas();
-            canvas.setSVGDocument( (SVGDocument) renderer.getSVGDocument());
-            scrollpane.setViewportView( canvas );
+            previewcanvas.setSVGDocument(null);
+            return;
         }
+
+        String strsvg = DOMUtilities.getXML(renderer.getSVGDocument().getDocumentElement());
+
+        {
+            FileWriter writer = null;
+            try
+            {
+                writer = new FileWriter("/home/jon/Desktop/debug.svg");
+                writer.write("<?xml version=\"1.0\"?>\n");
+                writer.write(strsvg);
+            } catch (IOException ex)
+            {
+                Logger.getLogger(QyoutiQuestionDialog.class.getName()).log(Level.SEVERE, null, ex);
+            } finally
+            {
+                try
+                {
+                    writer.close();
+                } catch (IOException ex)
+                {
+                    Logger.getLogger(QyoutiQuestionDialog.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        System.out.println( "=====================================" );
+        System.out.println( strsvg );
+        System.out.println( "=====================================" );
+        previewcanvas.setSVGDocument( (SVGDocument) renderer.getSVGDocument());
     }
 
-    public JScrollPane getScrollPane()
-    {
-        return scrollpane;
-    }
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -79,7 +111,9 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        scrollpane = new javax.swing.JScrollPane();
+        toppanel = new javax.swing.JPanel();
+        centrepanel = new javax.swing.JPanel();
+        previewcanvas = new org.apache.batik.swing.JSVGCanvas();
         bottompanel = new javax.swing.JPanel();
         closeButton = new javax.swing.JButton();
 
@@ -87,10 +121,18 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         setName("Form"); // NOI18N
         getContentPane().setLayout(new java.awt.BorderLayout(1, 0));
 
-        scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollpane.setName("scrollpane"); // NOI18N
-        getContentPane().add(scrollpane, java.awt.BorderLayout.CENTER);
+        toppanel.setName("toppanel"); // NOI18N
+        toppanel.setLayout(new java.awt.BorderLayout());
+
+        centrepanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5), javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED)));
+        centrepanel.setName("centrepanel"); // NOI18N
+        centrepanel.setLayout(new java.awt.BorderLayout());
+
+        previewcanvas.setEnableRotateInteractor(false);
+        previewcanvas.setName("previewcanvas"); // NOI18N
+        centrepanel.add(previewcanvas, java.awt.BorderLayout.CENTER);
+
+        toppanel.add(centrepanel, java.awt.BorderLayout.CENTER);
 
         bottompanel.setName("bottompanel"); // NOI18N
 
@@ -104,7 +146,9 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         });
         bottompanel.add(closeButton);
 
-        getContentPane().add(bottompanel, java.awt.BorderLayout.SOUTH);
+        toppanel.add(bottompanel, java.awt.BorderLayout.SOUTH);
+
+        getContentPane().add(toppanel, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -118,7 +162,9 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottompanel;
+    private javax.swing.JPanel centrepanel;
     private javax.swing.JButton closeButton;
-    private javax.swing.JScrollPane scrollpane;
+    private org.apache.batik.swing.JSVGCanvas previewcanvas;
+    private javax.swing.JPanel toppanel;
     // End of variables declaration//GEN-END:variables
 }
