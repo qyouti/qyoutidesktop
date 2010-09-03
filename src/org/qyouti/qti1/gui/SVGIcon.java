@@ -33,6 +33,9 @@ public class SVGIcon
     {
       this.x = new Integer( x );
       this.y = new Integer( y );
+      g.setColor(Color.red);
+      g.drawLine(x, y, x+width, y+height);
+      g.drawLine(x, y+height, x+width, y);
     }
 
     public void setSVG( Element fragment )

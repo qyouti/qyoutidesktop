@@ -5,8 +5,10 @@
 
 package org.qyouti.qti1.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Insets;
+import java.awt.geom.Rectangle2D;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +31,7 @@ import org.qyouti.print.ComponentToSvg;
 import org.qyouti.print.SvgConversionResult;
 import org.qyouti.qti1.QTIElement;
 import org.qyouti.qti1.QTIMatmedia;
+import org.qyouti.qti1.QTIMetrics;
 import org.qyouti.qti1.UnrecognisedQTIElement;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.ext.webct.QTIExtensionWebctMaterialwebeq;
@@ -46,11 +49,9 @@ public class QTIItemRenderer
     JTextPane textPane;
     SvgConversionResult svgres;
 
-    public static void main(String args[])
-    {
-        new QTIItemRenderer( null );
-    }
-
+    // width of space on page for a question
+    // in milli-inches
+    public final int itemwidth_minch=5500;
 
 
     private void renderElement( QTIElement e, RenderState state )
@@ -63,7 +64,11 @@ public class QTIItemRenderer
 
         if ( e instanceof QTIElementPresentation )
         {
-            state.html.append("<html><body><div>");
+            state.html.append("<html><body style=\"font-size: "
+                    +
+                    (int)QTIMetrics.inchesToSvg( 0.1 )
+                    +
+                    "px\"><div>");
             state.open_block = true;
         }
 
@@ -80,6 +85,7 @@ public class QTIItemRenderer
                 if ( e instanceof QTIElementMatimage )
                 {
                     QTIElementMatimage matimage = (QTIElementMatimage)e;
+                    SVGImageIcon imicon;
                     String uri = matimage.getUri();
                     if ( uri == null || uri.length() == 0 )
                     {
@@ -87,7 +93,17 @@ public class QTIItemRenderer
                     }
                     else
                     {
-                        state.html.append("<img src=\"" + uri + "\" />");
+                        int w, h;
+                        w = matimage.getWidth();
+                        h = matimage.getHeight();
+                        if ( w<1 || h<1 )
+                            h = w = 100;
+                        imicon = new SVGImageIcon( uri,
+                                (int)QTIMetrics.qtiToSvg( w ),
+                                (int)QTIMetrics.qtiToSvg( h )
+                            );
+                        state.inserts.add( new InteractionInsert(state.next_id, e, null, imicon ) );
+                        state.html.append( "<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n" );
                     }
                 }
                 if ( e instanceof QTIElementMattext || e instanceof QTIElementMatemtext)
@@ -117,7 +133,11 @@ public class QTIItemRenderer
                         if ( fragments[i] instanceof QTIExtensionWebctMaterialwebeq.MatMLEq )
                         {
                             eq = (QTIExtensionWebctMaterialwebeq.MatMLEq)fragments[i];
-                            mathicon = new MathMLIcon( eq.getMathML(), eq.getWidth(), eq.getHeight() );
+                            mathicon = new MathMLIcon( 
+                                    eq.getMathML(),
+                                    (int)QTIMetrics.qtiToSvg( eq.getWidth()  ),
+                                    (int)QTIMetrics.qtiToSvg( eq.getHeight() )
+                                );
                             state.inserts.add( new InteractionInsert(state.next_id, e, null, mathicon ) );
                             state.html.append( "<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n" );
                         }
@@ -142,17 +162,27 @@ public class QTIItemRenderer
                 state.html.append("</div>\n");
                 state.open_block = false;
             }
-            state.html.append( "\n<table>\n" );
+            state.html.append( "\n<table style=\"margin: " );
+            state.html.append( " " + (int)QTIMetrics.inchesToSvg(0.1) + "px 0px" );
+            state.html.append( " " + (int)QTIMetrics.inchesToSvg(0.1) + "px " );
+            state.html.append( " 0px;\">" );
         }
 
         if ( e instanceof QTIElementResponselabel )
         {
-            state.inserts.add( new InteractionInsert(state.next_id, e, null, new PinkIcon(25,25,4) ) );
+            state.inserts.add( new InteractionInsert(state.next_id, e, null, 
+                    new PinkIcon(  (int)QTIMetrics.inchesToSvg(0.24),
+                                   (int)QTIMetrics.inchesToSvg(0.24),
+                                   (int)QTIMetrics.inchesToSvg(0.02)  )  )  );
             state.html.append( "<tr>\n" );
             // The span will always have one character in it - which will be
             // deleted and replaced with a component.
-            state.html.append( "<td><span id=\"qti_insert_" + (state.next_id++) + "\">*</span></td>\n" );
-            state.html.append( "<td><div>" );
+            state.html.append( "<td valign=\"top\"><div style=\"margin: 0px" );
+            state.html.append( " " + (int)QTIMetrics.inchesToSvg(0.1) + "px " );
+            state.html.append( " " + (int)QTIMetrics.inchesToSvg(0.05) + "px " );
+            state.html.append( " 0px;\">" );
+            state.html.append( "<span id=\"qti_insert_" + (state.next_id++) + "\">*</span></div></td>\n" );
+            state.html.append( "<td valign=\"top\"><div>" );
             state.open_block = true;
         }
 
@@ -213,12 +243,13 @@ public class QTIItemRenderer
         RenderState state = new RenderState();
         renderElement( presentation, state );
         // Iterate child elements.
-        System.out.println( "==================================================" );
+        System.out.println( "===============================================" );
         System.out.println( state.html );
-        System.out.println( "==================================================" );
+        System.out.println( "===============================================" );
 
         // Put the HTML into the Text Pane
         textPane = new TextPaneWrapper();
+        textPane.setBackground(Color.WHITE);
         textPane.setContentType("text/html");
         textPane.setText( state.html.toString() );
 
@@ -259,15 +290,26 @@ public class QTIItemRenderer
         scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         scrollpane.setViewportView( textPane );
-        scrollpane.getViewport().setSize(400, 50);
+        scrollpane.getViewport().setSize(itemwidth_minch, 50);
         scrollpane.getViewport().doLayout();
 
         //System.out.println( "Edit component location: " + field.getX() + " " + field.getY() );
         System.out.println( "textpane size: " + textPane.getSize() );
 
         // Get the textPane to paint itself into an SVG document.
-        // This will have blank rectangles whereever SCGIcon object are.
+        // This will have blank rectangles whereever SVGIcon objects are.
         svgres = ComponentToSvg.convert( textPane );
+        Rectangle2D bounds = svgres.getBounds();
+        org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
+        svgroot.setAttribute( "width",  "" + ((int)QTIMetrics.svgToInches(bounds.getWidth())) + "in" );
+        svgroot.setAttribute( "height", "" + ((int)QTIMetrics.svgToInches(bounds.getHeight())) + "in" );
+        svgroot.setAttribute( "viewBox", "" +
+                bounds.getMinX() + " " +
+                bounds.getMinY() + " " +
+                bounds.getMaxX() + " " +
+                bounds.getMaxY()
+                );
+
         for ( int i=0; i< state.inserts.size(); i++ )
         {
             insert = state.inserts.get(i);

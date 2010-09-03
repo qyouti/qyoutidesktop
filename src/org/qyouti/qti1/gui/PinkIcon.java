@@ -35,14 +35,25 @@ public class PinkIcon
         DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
         String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
         Document doc = impl.createDocument(svgNS, "svg", null);
-        org.w3c.dom.Element e = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
-        e.setAttribute("x", "0" );
-        e.setAttribute("y", "0" );
-        e.setAttribute("width", Integer.toString(width) );
-        e.setAttribute("height", Integer.toString(height) );
-        e.setAttribute("style", "fill:rgb(255,128,255)" );
+        org.w3c.dom.Element g  = (org.w3c.dom.Element) doc.createElementNS(svgNS,"g");
+        org.w3c.dom.Element r1 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
+        org.w3c.dom.Element r2 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
+        r1.setAttribute("x", "0" );
+        r1.setAttribute("y", "0" );
+        r1.setAttribute("width", Integer.toString(width) );
+        r1.setAttribute("height", Integer.toString(height) );
+        r1.setAttribute("fill",  "#ff80ff" );
+        r1.setAttribute("stroke", "none" );
+        r2.setAttribute("x", Integer.toString(borderwidth) );
+        r2.setAttribute("y", Integer.toString(borderwidth) );
+        r2.setAttribute("width",  Integer.toString(width-2*borderwidth)  );
+        r2.setAttribute("height", Integer.toString(height-2*borderwidth) );
+        r2.setAttribute("fill",  "#ffc0ff" );
+        r2.setAttribute("stroke", "none" );
 
-        setSVG( e );
+        g.appendChild(r1);
+        g.appendChild(r2);
+        setSVG( g );
     }
 
 }

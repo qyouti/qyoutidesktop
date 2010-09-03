@@ -63,7 +63,7 @@ public class ComponentToSvg
             Rectangle2D rect = gvtRoot.getSensitiveBounds();
             System.out.println("SVG bounds : " + rect.toString());
 
-            SvgConversionResult svgresult = new SvgConversionResult(svgdoc, svg, (int) Math.ceil(rect.getMaxY()));
+            SvgConversionResult svgresult = new SvgConversionResult(svgdoc, svg, rect);
 
             /*
             Element svgelement = svgresult.getDocument().getDocumentElement();

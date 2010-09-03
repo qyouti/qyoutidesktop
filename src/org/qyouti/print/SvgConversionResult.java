@@ -26,6 +26,7 @@
 
 package org.qyouti.print;
 
+import java.awt.geom.Rectangle2D;
 import org.w3c.dom.Document;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -36,10 +37,11 @@ import org.w3c.dom.svg.SVGDocument;
 public class SvgConversionResult
 {
   String svg;
-  int height;  // in 100th inch
+  Rectangle2D bounds;       // in SVG units
   SVGDocument document;
-  public SvgConversionResult( SVGDocument d, String s, int h ) { document = d; svg = s; height = h; }
+  public SvgConversionResult( SVGDocument d, String s, Rectangle2D b ) { document = d; svg = s; bounds = b; }
   public SVGDocument getDocument() { return document; }
   public String getSvg() { return svg; }
-  public int getHeight() { return height; }
+  public int getHeight() { return (int) Math.ceil(bounds.getMaxY()); }
+  public Rectangle2D getBounds() { return bounds; }
 }
