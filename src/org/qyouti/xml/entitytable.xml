@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : entitytable.xml
+    Created on : 06 September 2010, 21:19
+    Author     : jon
+    Description:
+        Purpose of the document follows.
+-->
+
+<entitytable>
+
+<!-- IMS QTI DTDs  -->
+<!-- TODO - What are the definitive public and HTTP based system IDs??  -->
+<!-- Seems to be more common to put just file names in as system IDs  -->
+<entity file="ims_qtiasiv1p2.dtd" local="org/qyouti/xml/entities/qti/ims_qtiasiv1p2.dtd" />
+<entity file="ims_qtiasiv1p2p1.dtd" local="org/qyouti/xml/entities/qti/ims_qtiasiv1p2p1.dtd" />
+<entity file="ims_qtiresv1p2p1.dtd" local="org/qyouti/xml/entities/qti/ims_qtiresv1p2p1.dtd" />
+
+
+<!-- MathML2 DTD and referenced entity files  -->
+<entity publicid="" systemid="http://www.w3.org/Math/DTD/mathml2/mathml2.dtd" file="mathml2.dtd" local="org/qyouti/xml/entities/mathml2/mathml2.dtd" />
+<entity publicid="-//W3C//ENTITIES MathML 2.0 Qualified Names 1.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/mathml2-qname-1.mod" file="mathml2-qname-1.mod" local="org/qyouti/xml/entities/mathml2/mathml2-qname-1.mod" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Arrow Relations for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamsa.ent" file="isoamsa.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamsa.ent" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Binary Operators for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamsb.ent" file="isoamsb.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamsb.ent" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Delimiters for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamsc.ent" file="isoamsc.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamsc.ent" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Negated Relations for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamsn.ent" file="isoamsn.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamsn.ent" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Ordinary for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamso.ent" file="isoamso.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamso.ent" />
+<entity publicid="-//W3C//ENTITIES Added Math Symbols: Relations for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isoamsr.ent" file="isoamsr.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isoamsr.ent" />
+<entity publicid="-//W3C//ENTITIES Greek Symbols for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isogrk3.ent" file="isogrk3.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isogrk3.ent" />
+<entity publicid="-//W3C//ENTITIES Math Alphabets: Fraktur for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isomfrk.ent" file="isomfrk.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isomfrk.ent" />
+<entity publicid="-//W3C//ENTITIES Math Alphabets: Open Face for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isomopf.ent" file="isomopf.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isomopf.ent" />
+<entity publicid="-//W3C//ENTITIES Math Alphabets: Script for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isomscr.ent" file="isomscr.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isomscr.ent" />
+<entity publicid="-//W3C//ENTITIES General Technical for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso9573-13/isotech.ent" file="isotech.ent" local="org/qyouti/xml/entities/mathml2/iso9573-13/isotech.ent" />
+<entity publicid="-//W3C//ENTITIES Box and Line Drawing for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isobox.ent" file="isobox.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isobox.ent" />
+<entity publicid="-//W3C//ENTITIES Russian Cyrillic for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isocyr1.ent" file="isocyr1.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isocyr1.ent" />
+<entity publicid="-//W3C//ENTITIES Non-Russian Cyrillic for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isocyr2.ent" file="isocyr2.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isocyr2.ent" />
+<entity publicid="-//W3C//ENTITIES Diacritical Marks for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isodia.ent" file="isodia.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isodia.ent" />
+<entity publicid="-//W3C//ENTITIES Added Latin 1 for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isolat1.ent" file="isolat1.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isolat1.ent" />
+<entity publicid="-//W3C//ENTITIES Added Latin 2 for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isolat2.ent" file="isolat2.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isolat2.ent" />
+<entity publicid="-//W3C//ENTITIES Numeric and Special Graphic for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isonum.ent" file="isonum.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isonum.ent" />
+<entity publicid="-//W3C//ENTITIES Publishing for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/iso8879/isopub.ent" file="isopub.ent" local="org/qyouti/xml/entities/mathml2/iso8879/isopub.ent" />
+<entity publicid="-//W3C//ENTITIES Extra for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/mathml/mmlextra.ent" file="mmlextra.ent" local="org/qyouti/xml/entities/mathml2/mathml/mmlextra.ent" />
+<entity publicid="-//W3C//ENTITIES Aliases for MathML 2.0//EN" systemid="http://www.w3.org/Math/DTD/mathml2/mathml/mmlalias.ent" file="mmlalias.ent" local="org/qyouti/xml/entities/mathml2/mathml/mmlalias.ent" />
+
+</entitytable>

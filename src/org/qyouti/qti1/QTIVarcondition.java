@@ -73,15 +73,21 @@ public abstract class QTIVarcondition
     String index = domelement.getAttribute("index");
     if ( index!=null && index.length()>0 )
       return;
-    
-    NodeList nl = domelement.getChildNodes();
-    if ( nl.getLength() != 1 )
-      throw new IllegalArgumentException( "Must be one text node in varcondition element." );
+
+    // Blackboard has empty 'varequal' which are perhaps intended
+    // for use as 'varexists' tests - something not supported by QTI.
+
+    //NodeList nl = domelement.getChildNodes();
+    //if ( nl.getLength() != 1 )
+    //  throw new IllegalArgumentException( "Must be one text node in varcondition element." );
       //return;
 
     textcontent =  domelement.getTextContent();
+    if ( textcontent == null )
+      textcontent = "";
 
-    supported= textcontent!=null && textcontent.length()>0;
+    //supported= textcontent!=null && textcontent.length()>0;
+    supported = true;
   }
 
 }

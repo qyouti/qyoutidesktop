@@ -126,6 +126,16 @@ public class QTIElementItem
     return decvar.getCurrentValue();
   }
 
+  public String getOutcomeMaximum( String ident )
+  {
+    if ( !supported )
+      throw new IllegalArgumentException( "Can't calculate outcome maximum in unsupported assessment item " + getIdent() + "." );
+    QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
+    if ( decvar == null )
+      throw new IllegalArgumentException( "Unknown outcome variable " + ident + " in assessment item " + getIdent() + "." );
+    return decvar.getMaximumValue();
+  }
+
   public void setOutcome( String ident, Object value )
   {
     if ( !supported )

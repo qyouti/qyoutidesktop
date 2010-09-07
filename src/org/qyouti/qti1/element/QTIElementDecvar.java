@@ -51,6 +51,11 @@ public class QTIElementDecvar
       current = v;
   }
 
+  public String getMaximumValue()
+  {
+    return domelement.getAttribute( "maxvalue" );
+  }
+
   
   public String getVarname()
   {

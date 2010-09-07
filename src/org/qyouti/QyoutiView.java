@@ -1069,16 +1069,35 @@ public class QyoutiView extends FrameView
             {
               return true;
             }
+            return f.getName().toLowerCase().endsWith(".xml");
+          }
+
+          @Override
+          public String getDescription()
+          {
+            return "Questions in standalone file (XML)";
+          }
+        });
+
+        fc.addChoosableFileFilter(new javax.swing.filechooser.FileFilter()
+        {
+
+          @Override
+          public boolean accept(File f)
+          {
+            if (f.isDirectory())
+            {
+              return true;
+            }
             return f.getName().toLowerCase().endsWith(".zip");
           }
 
           @Override
           public String getDescription()
           {
-            return "ZIP archive files.";
+            return "Questions bundled in IMS content package (ZIP)";
           }
         });
-
 
         int returnVal = fc.showOpenDialog(mainFrame);
 
@@ -1088,46 +1107,25 @@ public class QyoutiView extends FrameView
         }
 
         File file = fc.getSelectedFile();
-        try
+        if ( file.getName().toLowerCase().endsWith( ".zip" ) )
         {
-          ZipFile zipfile = new ZipFile(file);
-          Enumeration<? extends ZipEntry> e = zipfile.entries();
-          ZipEntry zipentry;
           File importfolder = new File(examfolder, "importedquestions");
-          File entryfile;
-          int b;
-
-          while (e.hasMoreElements())
+          try
           {
-            zipentry = e.nextElement();
-            System.out.println(zipentry.getName());
-            entryfile = new File(importfolder, zipentry.getName());
-            System.out.println(entryfile.getCanonicalPath());
-            FileOutputStream fout;
-            InputStream in;
-            if (zipentry.isDirectory())
-            {
-              entryfile.mkdirs();
-            } else
-            {
-              entryfile.getParentFile().mkdirs();
-              in = zipfile.getInputStream(zipentry);
-              fout = new FileOutputStream(entryfile);
-              while ((b = in.read()) >= 0)
-              {
-                fout.write(b);
-              }
-              fout.close();
-              in.close();
-            }
+            QyoutiUtils.unpackZip(file, importfolder);
+          } catch (Exception ze)
+          {
+            JOptionPane.showMessageDialog(mainFrame, "Unable to read the selected file - corrupted or not a ZIP archive.");
+            return;
           }
-        } catch (Exception ze)
-        {
-          JOptionPane.showMessageDialog(mainFrame, "Unable to read the selected file - corrupted or not a ZIP archive.");
-          return;
+          exam.importQuestionsFromPackage(new File(examfolder, "importedquestions/imsmanifest.xml"));
         }
+        else
+        {
+          exam.importQuestionsFromQTI(file.getParentFile(), file);
+        }
+        
 
-        exam.importQuestions(new File(examfolder, "importedquestions/imsmanifest.xml"));
         exam.save();
         questionTable.setModel(exam.qdefs);
       } catch (Exception ex)
@@ -1369,7 +1367,14 @@ public class QyoutiView extends FrameView
             if (questionDialog == null)
             {
               JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
-              questionDialog = new QyoutiQuestionDialog(mainFrame, true );
+              try
+              {
+                questionDialog = new QyoutiQuestionDialog(mainFrame, true,
+                        exam.examfile.getParentFile().getCanonicalFile().toURI());
+              } catch (IOException ex)
+              {
+                Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
+              }
               questionDialog.setLocationRelativeTo(mainFrame);
             }            
             questionDialog.setItem( exam.qdefs.qti.getItems().elementAt(row) );

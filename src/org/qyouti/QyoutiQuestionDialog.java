@@ -30,6 +30,7 @@ package org.qyouti;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JScrollPane;
@@ -48,14 +49,16 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
 {
     QTIElementItem item = null;
     QTIItemRenderer renderer = null;
+    URI examfolderuri;
 
     /** Creates new form QyoutiQuestionDialog
      * @param parent
      * @param modal 
      */
-    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal)
+    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal, URI examfolderuri)
     {
         super(parent, modal);
+        this.examfolderuri = examfolderuri;
         getRootPane().setDefaultButton(closeButton);
         initComponents();
         
@@ -65,7 +68,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     {
         this.item = item;
 
-        renderer = new QTIItemRenderer( item );
+        renderer = new QTIItemRenderer( examfolderuri, item );
         if ( renderer == null )
         {
             previewcanvas.setSVGDocument(null);
@@ -113,6 +116,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
 
         toppanel = new javax.swing.JPanel();
         centrepanel = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
         previewcanvas = new org.apache.batik.swing.JSVGCanvas();
         bottompanel = new javax.swing.JPanel();
         closeButton = new javax.swing.JButton();
@@ -128,9 +132,14 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         centrepanel.setName("centrepanel"); // NOI18N
         centrepanel.setLayout(new java.awt.BorderLayout());
 
+        jScrollPane1.setName("jScrollPane1"); // NOI18N
+
         previewcanvas.setEnableRotateInteractor(false);
         previewcanvas.setName("previewcanvas"); // NOI18N
-        centrepanel.add(previewcanvas, java.awt.BorderLayout.CENTER);
+        previewcanvas.setRecenterOnResize(false);
+        jScrollPane1.setViewportView(previewcanvas);
+
+        centrepanel.add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
         toppanel.add(centrepanel, java.awt.BorderLayout.CENTER);
 
@@ -164,6 +173,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     private javax.swing.JPanel bottompanel;
     private javax.swing.JPanel centrepanel;
     private javax.swing.JButton closeButton;
+    private javax.swing.JScrollPane jScrollPane1;
     private org.apache.batik.swing.JSVGCanvas previewcanvas;
     private javax.swing.JPanel toppanel;
     // End of variables declaration//GEN-END:variables

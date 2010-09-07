@@ -16,20 +16,27 @@
  *
  *
  */
-
-
-
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.qyouti.util;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.qyouti.xml.RepoEntityResolver;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -38,13 +45,13 @@ import java.util.logging.Logger;
 public class QyoutiUtils
 {
 
-  public static boolean copyFile( File source, File destination )
+  public static boolean copyFile(File source, File destination)
   {
     try
     {
       FileChannel sourcechan = new FileInputStream(source).getChannel();
       FileChannel destinationchan = new FileOutputStream(destination).getChannel();
-      destinationchan.transferFrom( sourcechan, 0, sourcechan.size() );
+      destinationchan.transferFrom(sourcechan, 0, sourcechan.size());
       sourcechan.close();
       destinationchan.close();
     } catch (Exception ex)
@@ -54,4 +61,42 @@ public class QyoutiUtils
     }
     return true;
   }
+
+  public static boolean unpackZip(File file, File importfolder) throws ZipException, IOException
+  {
+      ZipFile zipfile = new ZipFile(file);
+      Enumeration<? extends ZipEntry> e = zipfile.entries();
+      ZipEntry zipentry;
+      File entryfile;
+      int b;
+
+      while (e.hasMoreElements())
+      {
+        zipentry = e.nextElement();
+        System.out.println(zipentry.getName());
+        entryfile = new File(importfolder, zipentry.getName());
+        System.out.println(entryfile.getCanonicalPath());
+        FileOutputStream fout;
+        InputStream in;
+        if (zipentry.isDirectory())
+        {
+          entryfile.mkdirs();
+        } else
+        {
+          entryfile.getParentFile().mkdirs();
+          in = zipfile.getInputStream(zipentry);
+          fout = new FileOutputStream(entryfile);
+          while ((b = in.read()) >= 0)
+          {
+            fout.write(b);
+          }
+          fout.close();
+          in.close();
+        }
+      }
+
+    return true;
+  }
+
 }
+

@@ -10,7 +10,6 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -20,6 +19,8 @@ import net.sourceforge.jeuclid.context.LayoutContextImpl;
 import net.sourceforge.jeuclid.converter.Converter;
 import net.sourceforge.jeuclid.converter.ConverterPlugin;
 import org.qyouti.qti1.QTIMatmedia;
+import org.qyouti.util.QyoutiUtils;
+import org.qyouti.xml.QyoutiDocBuilderFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -143,8 +144,7 @@ public class QTIExtensionWebctMaterialwebeq
             eqn = doctype + eqn;
             try
             {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
+                DocumentBuilder builder = QyoutiDocBuilderFactory.getDocumentBuilder();
                 return builder.parse(new InputSource(new StringReader(eqn)));
             } catch (Exception e)
             {
