@@ -82,7 +82,7 @@ public class QTIBuilder
         }
         catch (ClassNotFoundException ex)
         {
-          return null;
+          //return null;
         }
     }
     

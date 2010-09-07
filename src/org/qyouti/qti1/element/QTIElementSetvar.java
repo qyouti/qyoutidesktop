@@ -35,14 +35,35 @@ import org.qyouti.qti1.*;
 public class QTIElementSetvar
         extends QTIItemAncestor
 {
+
+  public String getVarName()
+  {
+    String vn = domelement.getAttribute( "varname" );
+    if ( vn != null && vn.length() > 0 ) return vn;
+
+    // Those sons of bitches at Blackboard decided to use
+    // the attribute name 'variablename' for no god damned
+    // reason so this code is required:
+    return domelement.getAttribute( "variablename" );
+  }
+
   public void process()
   {
     String action = domelement.getAttribute( "action" );
     if ( action == null ) action = "Set";
     action = action.toLowerCase();
-    String varname = domelement.getAttribute( "varname" );
+    String varname = getVarName();
     if ( varname == null ) varname = "SCORE";
     String newvalue = domelement.getTextContent();
+
+
+    // Have those tossers at Blackboard thrown another spanner in the works?
+    String sourcevarname;
+    if ( newvalue.endsWith( ".max" ) )
+    {
+      sourcevarname = newvalue.substring( 0, newvalue.length() - 4 );
+      newvalue = getItem().getOutcomeMaximum( sourcevarname );
+    }
 
     if ( !"set".equals( action ) && !"add".equals( action ))
       throw new IllegalArgumentException( "Setvar actions other than set and add are not yet implemented." );
@@ -71,7 +92,7 @@ public class QTIElementSetvar
     if ( currentvalue instanceof Double )
     {
       Double dcurrentvalue = (Double)currentvalue;
-      Double dvalue = new Double( newvalue );
+      Double dvalue = new Double(newvalue);
       if ( "set".equals( action ) )
         getItem().setOutcome( varname, dvalue );
       if ( "add".equals( action ) )

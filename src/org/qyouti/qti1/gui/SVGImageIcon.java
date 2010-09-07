@@ -8,6 +8,7 @@ package org.qyouti.qti1.gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.net.URI;
 import javax.swing.Icon;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
@@ -20,13 +21,13 @@ import org.w3c.dom.Document;
 public class SVGImageIcon
         extends SVGIcon
 {
-    String uri;
+    URI uri;
 
-    public SVGImageIcon( String u, int w, int h )
+    public SVGImageIcon( URI u, int w, int h )
     {
         width = w;
         height = h;
-        uri = "file:///home/jon/Desktop/aleph.png"; // u;
+        uri = u;
 
         DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
         String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -38,8 +39,10 @@ public class SVGImageIcon
         e.setAttribute("y", "0" );
         e.setAttribute("width", Integer.toString(width) );
         e.setAttribute("height", Integer.toString(height) );
-        e.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", uri );
-        //e.setAttribute("xml:base", "/home/jon/Desktop");
+        System.out.println( "++++++++++++++++++++++" );
+        System.out.println( "Setting image uri to " + uri.toASCIIString() );
+        System.out.println( "++++++++++++++++++++++" );
+        e.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", uri.toASCIIString() );
 
         setSVG( e );
     }

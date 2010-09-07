@@ -16,19 +16,18 @@
  *
  *
  */
-
-
-
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.qyouti.data;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,12 +43,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.util.QyoutiUtils;
+import org.qyouti.xml.QyoutiDocBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 
 /**
  *
@@ -58,270 +58,375 @@ import org.xml.sax.SAXException;
 public class ExaminationData
         extends AbstractTableModel
 {
-  public Hashtable<String,CandidateData> candidates = new Hashtable<String,CandidateData>();
+
+  public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
-
-  public Hashtable<String,Element> assessmentitemelements = new Hashtable<String,Element>();
-  public Vector<Element> assessmentitemelementssorted = new Vector<Element>();
-
   public QuestionDefinitions qdefs = null;
-
-  public Hashtable<String,QuestionAnalysis> analysistable = null;
+  public Hashtable<String, QuestionAnalysis> analysistable = null;
   public Vector<QuestionAnalysis> analyses = null;
-
   public File examfile;
 
-
-  public ExaminationData( File xmlfile )
+  public ExaminationData(File xmlfile)
   {
-    examfile=xmlfile;
+    examfile = xmlfile;
   }
-
-
 
   public void itemAnalysis()
   {
-    if ( qdefs == null )
-      return;
-    if ( qdefs.qti == null )
-      return;
-    analyses = new Vector<QuestionAnalysis>();
-    analysistable = new Hashtable<String,QuestionAnalysis>();
-
-    qdefs.itemAnalysis( candidates_sorted, analyses );
-    ResponseAnalysis ranal;
-    System.out.print( ",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 95% limit\",\"Upper 95% limit\",,,,,,,\n" );
-    for ( int i=0; i<analyses.size(); i++ )
+    if (qdefs == null)
     {
-      for ( int j=0; j<analyses.get(i).response_analyses.size(); j++ )
+      return;
+    }
+    if (qdefs.qti == null)
+    {
+      return;
+    }
+    analyses = new Vector<QuestionAnalysis>();
+    analysistable = new Hashtable<String, QuestionAnalysis>();
+
+    qdefs.itemAnalysis(candidates_sorted, analyses);
+    ResponseAnalysis ranal;
+    System.out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 95% limit\",\"Upper 95% limit\",,,,,,,\n");
+    for (int i = 0; i < analyses.size(); i++)
+    {
+      for (int j = 0; j < analyses.get(i).response_analyses.size(); j++)
       {
         ranal = analyses.get(i).response_analyses.get(j);
 
-        if ( j==0 )
-          System.out.print( "\"Question " + analyses.get(i).offset + "\"");
-        else
-          System.out.print( "\"\"");
-        System.out.print( ",\"" );
-        System.out.print( (char)('a' + ranal.offset -1) );
-        System.out.print( "\"," );
-        System.out.print( ranal.correct?"\"T\"":"\"F\"" );
-        System.out.print( "," );
-        System.out.print( ranal.right );
-        System.out.print( "," );
-        System.out.print( ranal.wrong );
-        System.out.print( "," );
-        if ( (ranal.right + ranal.wrong) > 0 )
-          System.out.print( (double)ranal.right /  (double)(ranal.right + ranal.wrong) );
-        
-        if ( ranal.right <2 || ranal.wrong <2 )
+        if (j == 0)
         {
-          System.out.print( ",,," );
-          if ( ranal.right + ranal.wrong < 10 )
-            System.out.print( ",*,,,,,,\"Not enough data.\"" );
-          else
+          System.out.print("\"Question " + analyses.get(i).offset + "\"");
+        } else
+        {
+          System.out.print("\"\"");
+        }
+        System.out.print(",\"");
+        System.out.print((char) ('a' + ranal.offset - 1));
+        System.out.print("\",");
+        System.out.print(ranal.correct ? "\"T\"" : "\"F\"");
+        System.out.print(",");
+        System.out.print(ranal.right);
+        System.out.print(",");
+        System.out.print(ranal.wrong);
+        System.out.print(",");
+        if ((ranal.right + ranal.wrong) > 0)
+        {
+          System.out.print((double) ranal.right / (double) (ranal.right + ranal.wrong));
+        }
+
+        if (ranal.right < 2 || ranal.wrong < 2)
+        {
+          System.out.print(",,,");
+          if (ranal.right + ranal.wrong < 10)
           {
-            if ( ranal.right > ranal.wrong )
-              System.out.print( ",,*,,,,,\"Too easy. Can't calculate stats.\"" );
-            else if ( ranal.right < ranal.wrong )
-              System.out.print( ",,,*,,,,\"Too difficult. Can't calculate stats.\"" );
-            else
-              System.out.print( ",*,,,,,,\"Not enough data.\"" );
+            System.out.print(",*,,,,,,\"Not enough data.\"");
+          } else
+          {
+            if (ranal.right > ranal.wrong)
+            {
+              System.out.print(",,*,,,,,\"Too easy. Can't calculate stats.\"");
+            } else if (ranal.right < ranal.wrong)
+            {
+              System.out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
+            } else
+            {
+              System.out.print(",*,,,,,,\"Not enough data.\"");
+            }
+          }
+        } else
+        {
+          System.out.print(",");
+          System.out.print(ranal.median_difference);
+          System.out.print(",");
+          System.out.print(ranal.median_difference_lower);
+          System.out.print(",");
+          System.out.print(ranal.median_difference_upper);
+          if (ranal.median_difference_lower >= 0.0 && ranal.median_difference_upper > 0.0)
+          {
+            System.out.print(",,,,*,,,\"Positive discriminator.\"");
+          } else if (ranal.median_difference_upper <= 0.0 && ranal.median_difference_lower < 0.0)
+          {
+            System.out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
+          } else
+          {
+            System.out.print(",,,,,,*,\"No significant discrimination\"");
           }
         }
-        else
+        System.out.print("\n");
+        if ((j + 1) == analyses.get(i).response_analyses.size())
         {
-          System.out.print( "," );
-          System.out.print( ranal.median_difference );
-          System.out.print( "," );
-          System.out.print( ranal.median_difference_lower );
-          System.out.print( "," );
-          System.out.print( ranal.median_difference_upper );
-          if ( ranal.median_difference_lower >= 0.0 && ranal.median_difference_upper > 0.0)
-          {
-            System.out.print( ",,,,*,,,\"Positive discriminator.\"" );
-          }
-          else if ( ranal.median_difference_upper <= 0.0 && ranal.median_difference_lower < 0.0)
-          {
-            System.out.print( ",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"" );
-          }
-          else
-          {
-            System.out.print( ",,,,,,*,\"No significant discrimination\"" );
-          }
+          System.out.print(",,,,,,,,,,,,,,\n");
         }
-        System.out.print( "\n" );
-        if ( (j+1) == analyses.get(i).response_analyses.size() )
-          System.out.print( ",,,,,,,,,,,,,,\n" );
       }
     }
   }
 
-
-  public void importCandidates( File xmlfile )
+  public void importCandidates(File xmlfile)
           throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
-    Document document = builder.parse( xmlfile );
+    Document document = builder.parse(xmlfile);
 
     Element roote = document.getDocumentElement();
-    System.out.println( roote.getNodeName() );
-    NodeList nl = roote.getElementsByTagName( "candidate" );
+    System.out.println(roote.getNodeName());
+    NodeList nl = roote.getElementsByTagName("candidate");
     Element ecandidate;
     CandidateData candidate;
-    for ( int i=0; i<nl.getLength(); i++ )
+    for (int i = 0; i < nl.getLength(); i++)
     {
-      ecandidate = (Element)nl.item( i );
-      candidate = new CandidateData( this, ecandidate.getAttribute( "name" ), ecandidate.getAttribute("id") );
-      candidates.put( candidate.id, candidate );
-      candidates_sorted.add( candidate );
+      ecandidate = (Element) nl.item(i);
+      candidate = new CandidateData(this, ecandidate.getAttribute("name"), ecandidate.getAttribute("id"));
+      candidates.put(candidate.id, candidate);
+      candidates_sorted.add(candidate);
       fireTableDataChanged();
     }
   }
 
-
-  public void importCsvCandidates( File csvfile )
+  public void importCsvCandidates(File csvfile)
           throws ParserConfigurationException, SAXException, IOException
   {
-    int i, j, lastnamecolumn=-1, firstnamecolumn=-1, idcolumn=-1;
+    int i, j, lastnamecolumn = -1, firstnamecolumn = -1, idcolumn = -1;
     CandidateData candidate;
-    CSVReader reader = new CSVReader( new FileReader( csvfile ) );
+    CSVReader reader = new CSVReader(new FileReader(csvfile));
     String[] line = reader.readNext();
-    for ( j=0; j<line.length; j++ )
+    for (j = 0; j < line.length; j++)
     {
-      System.out.println( line[j] );
-      if ( "Last Name".equals( line[j] ) )
+      System.out.println(line[j]);
+      if ("Last Name".equals(line[j]))
+      {
         lastnamecolumn = j;
-      if ( "First Name".equals( line[j] ) )
+      }
+      if ("First Name".equals(line[j]))
+      {
         firstnamecolumn = j;
-      if ( "User ID".equals( line[j] ) )
+      }
+      if ("User ID".equals(line[j]))
+      {
         idcolumn = j;
+      }
     }
-    if ( lastnamecolumn<0 || firstnamecolumn<0 || idcolumn<0 )
-      throw new IOException( "CSV file doesn't contain the necessary columns: 'Last Name', 'First Name' and 'User ID'." );
-    while ( (line = reader.readNext()) != null )
+    if (lastnamecolumn < 0 || firstnamecolumn < 0 || idcolumn < 0)
     {
-      for ( j=0; j<line.length; j++ ) System.out.println( line[j] );
-      candidate = new CandidateData( this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn] );
-      candidates.put( candidate.id, candidate );
-      candidates_sorted.add( candidate );
+      throw new IOException("CSV file doesn't contain the necessary columns: 'Last Name', 'First Name' and 'User ID'.");
+    }
+    while ((line = reader.readNext()) != null)
+    {
+      for (j = 0; j < line.length; j++)
+      {
+        System.out.println(line[j]);
+      }
+      candidate = new CandidateData(this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn]);
+      candidates.put(candidate.id, candidate);
+      candidates_sorted.add(candidate);
       fireTableDataChanged();
     }
   }
 
-  public void exportCsvScores( File csvfile )
+  public void exportCsvScores(File csvfile)
           throws ParserConfigurationException, SAXException, IOException
   {
     int i;
     CandidateData candidate;
-    CSVWriter csvwriter = new CSVWriter( new FileWriter( csvfile ) );
+    CSVWriter csvwriter = new CSVWriter(new FileWriter(csvfile));
     String[] line = new String[3];
 
-    for ( i=0; i < candidates_sorted.size(); i++ )
+    for (i = 0; i < candidates_sorted.size(); i++)
     {
-      candidate = candidates_sorted.get( i );
-      line[0]=candidate.id;
-      line[1]=candidate.name;
-      line[2]="";
-      if ( candidate.score != null )
-        line[2]=candidate.score.toString();
-      csvwriter.writeNext( line );
+      candidate = candidates_sorted.get(i);
+      line[0] = candidate.id;
+      line[1] = candidate.name;
+      line[2] = "";
+      if (candidate.score != null)
+      {
+        line[2] = candidate.score.toString();
+      }
+      csvwriter.writeNext(line);
     }
     csvwriter.close();
   }
 
-  public void importQuestions( File imsmanifest )
+  public void importQuestionsFromPackage(File imsmanifest)
           throws ParserConfigurationException, SAXException, IOException
   {
+    int i;
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
-    Document manifestdoc = builder.parse( imsmanifest );
+    Document manifestdoc = builder.parse(imsmanifest);
 
     Element roote = manifestdoc.getDocumentElement();
-    System.out.println( roote.getNodeName() );
-    NodeList nl = roote.getElementsByTagName( "resources" );
-    if ( nl.getLength() != 1 )
+    System.out.println(roote.getNodeName());
+    NodeList nl = roote.getElementsByTagName("resources");
+    if (nl.getLength() != 1)
+    {
       return;
+    }
 
-    Element resources = (Element)nl.item( 0 );
+    Element resources = (Element) nl.item(0);
     Element resource;
     Element imsresource = null;
-    nl = resources.getElementsByTagName( "resource" );
+    String type;
+    nl = resources.getElementsByTagName("resource");
     // Look for first resource which is a QTI 1.2 file
-    for ( int i=0; i<nl.getLength(); i++ )
+    for (i = 0; i < nl.getLength(); i++)
     {
-      resource = (Element)nl.item( i );
-      if ( !"ims_qtiasiv1p2".equals( resource.getAttribute( "type" ) ) )
+      resource = (Element) nl.item(i);
+      type = resource.getAttribute("type");
+      if ( type == null)
+      {
         continue;
+      }
+      if (
+              !type.startsWith("ims_qtiasiv1") &&
+              !type.equals( "assessment/x-bb-qti-test")  // BB specific type
+         )
+      {
+        continue;
+      }
       imsresource = resource;
     }
 
-    if ( imsresource == null )
-      return;
-
-    nl = imsresource.getElementsByTagName( "file" );
-    if ( nl.getLength() != 1 )
-      return;
-    Element fileelement = (Element)nl.item( 0 );
-
-    File qtiexamfile = new File( imsmanifest.getParentFile(), fileelement.getAttribute( "href" ) );
-    if ( !qtiexamfile.exists() || !qtiexamfile.isFile() )
-      return;
-
-    Document qti12doc = builder.parse( qtiexamfile );
-    Element qtiexamroote = qti12doc.getDocumentElement();
-    System.out.println( qtiexamroote.getNodeName() );
-    nl = qtiexamroote.getElementsByTagName( "assessment" );
-    if ( nl.getLength() != 1 )
-      return;
-
-    Element assessment = (Element)nl.item( 0 );
-    nl = assessment.getElementsByTagName( "section" );
-    if ( nl.getLength() != 1 )
-      return;
-
-    Element section = (Element)nl.item( 0 );
-    Element itemref;
-    Vector<Element> itemrefs = new Vector<Element>();
-    nl = assessment.getElementsByTagName( "itemref" );
-    for ( int i=0; i<nl.getLength(); i++ )
+    if (imsresource == null)
     {
-      itemref = (Element)nl.item( i );
-      itemrefs.add( itemref );
+      return;
     }
 
-    // scan directory that holds the qti exam and look for questions.
-    File parent = qtiexamfile.getParentFile();
-    File[] files = parent.listFiles( new XMLFileFilter() );
+    // Does the resource tag have an href to identify one of multiple files?
+    Element fileelement = null;
+    String href = imsresource.getAttribute("href");
+    String testhref;
+    nl = imsresource.getElementsByTagName("file");
+    if (href != null && href.length() > 0 )
+    {
+      // look for the referenced file element
+      for (i = 0; i < nl.getLength(); i++)
+      {
+        fileelement = (Element) nl.item(i);
+        testhref = fileelement.getAttribute("href");
+        if (!href.equals(testhref))
+        {
+          fileelement = null;
+        } else
+        {
+          break;
+        }
+      }
+    }
+
+    if (fileelement == null && nl.getLength() == 1)
+    {
+      fileelement = (Element) nl.item(0);
+    }
+
+    // Could be BB specific screw up
+    if ( fileelement == null )
+    {
+      //String prefix = imsresource.lookupPrefix( "http://www.blackboard.com/content-packaging/" );
+      href = imsresource.getAttribute( "bb:file" );
+      if ( href== null || href.length() == 0 )
+        return;  // BB peculiarity not found
+    }
+    else
+      href = fileelement.getAttribute("href");
+
+    File qtiexamfile = new File(imsmanifest.getParentFile(), href);
+    if (!qtiexamfile.exists() || !qtiexamfile.isFile())
+    {
+      return;
+    }
+
+    importQuestionsFromQTI(imsmanifest.getParentFile(),qtiexamfile);
+  }
+
+  public void importQuestionsFromQTI(File basefolder, File qtiexamfile)
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    int i;
+    DocumentBuilder builder = QyoutiDocBuilderFactory.getDocumentBuilder();
+    NodeList nl;
+
+    Document qti12doc = builder.parse(qtiexamfile);
+    Element qtiexamroote = qti12doc.getDocumentElement();
+    System.out.println(qtiexamroote.getNodeName());
+//    nl = qtiexamroote.getElementsByTagName("assessment");
+//    if (nl.getLength() != 1)
+//    {
+//      return;
+//    }
+//
+//    Element assessment = (Element) nl.item(0);
+//    nl = assessment.getElementsByTagName("section");
+//    if (nl.getLength() != 1)
+//    {
+//      return;
+//    }
+
+    Element itemref;
+    Vector<Element> itemrefs = new Vector<Element>();
+    nl = qtiexamroote.getElementsByTagName("itemref");
+    for (i = 0; i < nl.getLength(); i++)
+    {
+      itemref = (Element) nl.item(i);
+      itemrefs.add(itemref);
+    }
+
+    if ( itemrefs.size() > 0 )
+      resolveItemReferences( qtiexamfile.getParentFile(), qti12doc, itemrefs );
+
+    nl = qtiexamroote.getElementsByTagName("matimage");
+    resolveMediaReferences( examfile.getParentFile(), basefolder, qtiexamfile.getParentFile(), nl );
+
+
+    qdefs = new QuestionDefinitions(qtiexamroote);
+  }
+
+  
+  private void resolveItemReferences( File folder, Document qti12doc, Vector<Element> itemrefs )
+          throws ParserConfigurationException
+  {
+    int i;
     Document qdocument;
     Element qroote, qelement;
     String elementname;
-    for ( int i=0; i< files.length; i++ )
-    {
-      if ( !files[i].isFile() )
-        continue;
-      try
-      {
-        qdocument = builder.parse( files[i] );
-      }
-      catch ( Exception ex )
-      {
-        continue;  // not well formed XML
-      }
-      qroote = qdocument.getDocumentElement();
-      // well formed xml but what is in it?
-      elementname = qroote.getNodeName();
-      if ( !"questestinterop".equals( elementname ) )
-        continue;
-      //if ( !"http://www.imsglobal.org/xsd/ims_qtiasiv1p2".equals(qroote.getNamespaceURI() ) )
-      //  continue;
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    NodeList nl;
+    Hashtable<String, Element> assessmentitemelements = new Hashtable<String, Element>();
 
-      //This is a qti file so look for questions inside top level
-      nl = qroote.getElementsByTagName( "item" );
-      for ( int j=0; j<nl.getLength(); j++ )
+    if (itemrefs.size() > 0)
+    {
+      // scan directory that holds the qti exam and look for questions.
+      File[] files = folder.listFiles(new XMLFileFilter());
+      for (i = 0; i < files.length; i++)
       {
-        qelement = (Element)nl.item( j );
-        assessmentitemelements.put( qelement.getAttribute("ident"), qelement );
+        if (!files[i].isFile())
+        {
+          continue;
+        }
+        try
+        {
+          qdocument = builder.parse(files[i]);
+        } catch (Exception ex)
+        {
+          continue;  // not well formed XML
+          }
+        qroote = qdocument.getDocumentElement();
+        // well formed xml but what is in it?
+        elementname = qroote.getNodeName();
+        if (!"questestinterop".equals(elementname))
+        {
+          continue;
+        }
+        //if ( !"http://www.imsglobal.org/xsd/ims_qtiasiv1p2".equals(qroote.getNamespaceURI() ) )
+        //  continue;
+
+        //This is a qti file so look for questions inside top level
+        nl = qroote.getElementsByTagName("item");
+        for (int j = 0; j < nl.getLength(); j++)
+        {
+          qelement = (Element) nl.item(j);
+          assessmentitemelements.put(qelement.getAttribute("ident"), qelement);
+        }
       }
     }
 
@@ -329,62 +434,149 @@ public class ExaminationData
     // and 'transplant' the nodes
     String ident;
     Node duplicate;
-    for ( int i=0; i< itemrefs.size(); i++ )
+    Element itemref;
+    for (i = 0; i < itemrefs.size(); i++)
     {
-      itemref = itemrefs.get( i );
-      ident = itemref.getAttribute( "linkrefid" );
-      qelement = assessmentitemelements.get( ident );
-      if ( qelement != null )
+      itemref = itemrefs.get(i);
+      ident = itemref.getAttribute("linkrefid");
+      qelement = assessmentitemelements.get(ident);
+      if (qelement != null)
       {
-        duplicate = qti12doc.importNode( qelement, true );
-        itemref.getParentNode().appendChild( duplicate );
+        duplicate = qti12doc.importNode(qelement, true);
+        itemref.getParentNode().appendChild(duplicate);
       }
-      itemref.getParentNode().removeChild( itemref );
+      itemref.getParentNode().removeChild(itemref);
     }
     qti12doc.normalizeDocument();
-    qdefs = new QuestionDefinitions( qtiexamroote );
-    
+
     //  qelement = assessmentitemelements.get( refids.get( i ) );
     //  if ( qelement != null )
     //    assessmentitemelementssorted.add( qelement );
   }
 
+
+  private void resolveMediaReferences( File examfolder, File basefolder, File qtifolder, NodeList nl )
+  {
+    int i;
+    Element e;
+    URI uri;
+    String attr_uri;
+    File imagefile=null;
+    File[] files;
+    String exampath, query, contentid;
+    WebCTIDFileFilter filter;
+    
+    try
+    {
+      exampath = examfolder.getCanonicalPath();
+    } catch (IOException ex)
+    {
+      return;
+    }
+
+    for (i = 0; i < nl.getLength(); i++)
+    {
+      imagefile=null;
+      e = (Element) nl.item(i);
+      attr_uri = e.getAttribute("uri");
+      if ( attr_uri== null || attr_uri.length() == 0 )
+        continue;
+      try { uri = new URI(attr_uri); } catch (Exception ex) {continue;}
+      if ( uri.getScheme() == null && uri.getQuery() != null )
+      {
+        // Special case - probably WebCT Vista
+        query = uri.getQuery();
+        System.out.println("Image query: " + query );
+        if ( query.startsWith("contentID=") && !query.contains( "&" ) )
+        {
+          contentid = query.substring( "contentID=".length() );
+          filter = new WebCTIDFileFilter( contentid );
+          files = qtifolder.listFiles(filter);
+          if ( files.length == 1 )
+            imagefile = files[0];
+        }
+      }
+      else
+      {
+        if ( uri.getScheme() == null && !uri.getPath().startsWith("/") )
+        {
+          // bog standard relative reference it seems
+          // Try relative to QTI file.
+          imagefile = new File( qtifolder, uri.getPath() );
+          if ( !imagefile.exists() || !imagefile.isFile() )
+            imagefile = new File( basefolder, uri.getPath() );
+        }
+        // Assume it is a network or absolute file ref and leave the
+        // reference as it is.
+      }
+
+
+      // Found file - make relative to exam folder
+      if ( imagefile!=null && imagefile.exists() && imagefile.isFile() )
+      {
+        String imgpath=null;
+        try
+        {
+          imgpath = imagefile.getCanonicalPath();
+        } catch (IOException ex) {}
+
+        if ( imgpath.startsWith( exampath ) )
+          e.setAttribute( "uri", imgpath.substring( exampath.length()+1 ) );
+      }
+      // otherwise leave the uri untouched.
+    }
+  }
+
+
+
+
+  class WebCTIDFileFilter implements FilenameFilter
+  {
+    String id;
+    public WebCTIDFileFilter( String id )
+    {
+      this.id = "." + id;
+    }
+    public boolean accept(File dir, String name)
+    {
+      return name.contains(id) && !name.endsWith(".xml");
+    }
+  }
+
   class XMLFileFilter implements FilenameFilter
   {
+
     public boolean accept(File dir, String name)
     {
       return name.endsWith(".xml");
     }
   }
 
-
-  public CandidateData addPage( PageData page )
+  public CandidateData addPage(PageData page)
   {
-    CandidateData candidate = candidates.get( page.candidate_number );
-    if ( candidate == null )
+    CandidateData candidate = candidates.get(page.candidate_number);
+    if (candidate == null)
     {
-      candidate = new CandidateData( this, page.candidate_name, page.candidate_number );
-      candidates.put( page.candidate_number, candidate );
-      candidates_sorted.add( candidate );
+      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
+      candidates.put(page.candidate_number, candidate);
+      candidates_sorted.add(candidate);
     }
-    candidate.pages.add( page );
+    candidate.pages.add(page);
     fireTableDataChanged();
     return candidate;
   }
 
-
-  public QTIElementItem getAssessmentItem( String id )
+  public QTIElementItem getAssessmentItem(String id)
   {
-    return qdefs.qti.getItem( id );
+    return qdefs.qti.getItem(id);
   }
-
 
   public boolean save()
   {
     Writer writer = null;
     try
     {
-      writer = new OutputStreamWriter(new FileOutputStream( examfile ), "utf8");
+      writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
       emit(writer);
       writer.close();
     } catch (Exception ex)
@@ -404,44 +596,46 @@ public class ExaminationData
     return true;
   }
 
-
-  public void emit( Writer writer )
+  public void emit(Writer writer)
           throws IOException
   {
-      writer.write( "<?xml version=\"1.0\"?>\n" );
-      writer.write( "<examination>\n" );
+    writer.write("<?xml version=\"1.0\"?>\n");
+    writer.write("<examination>\n");
 
-      if ( qdefs != null )
+    if (qdefs != null)
+    {
+      try
       {
-        try
-        {
-          qdefs.emit(writer);
-        } catch (TransformerConfigurationException ex)
-        {
-          Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (TransformerException ex)
-        {
-          Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-        }
-      }
-
-      writer.write( "<candidates>\n" );
-      Enumeration<CandidateData> e = candidates.elements();
-      for ( int i=0; i<candidates_sorted.size(); i++ )
-        candidates_sorted.get( i ).emit( writer );
-      writer.write( "</candidates>\n" );
-
-      writer.write( "<analysis>\n" );
-      if ( analyses != null )
+        qdefs.emit(writer);
+      } catch (TransformerConfigurationException ex)
       {
-        for ( int i=0; i<analyses.size(); i++ )
-          analyses.get(i).emit(writer);
+        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (TransformerException ex)
+      {
+        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
       }
-      writer.write( "</analysis>\n" );
+    }
 
-      writer.write( "</examination>\n" );
+    writer.write("<candidates>\n");
+    Enumeration<CandidateData> e = candidates.elements();
+    for (int i = 0; i < candidates_sorted.size(); i++)
+    {
+      candidates_sorted.get(i).emit(writer);
+    }
+    writer.write("</candidates>\n");
+
+    writer.write("<analysis>\n");
+    if (analyses != null)
+    {
+      for (int i = 0; i < analyses.size(); i++)
+      {
+        analyses.get(i).emit(writer);
+      }
+    }
+    writer.write("</analysis>\n");
+
+    writer.write("</examination>\n");
   }
-
 
   public void load()
           throws ParserConfigurationException, SAXException, IOException
@@ -449,41 +643,44 @@ public class ExaminationData
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
-    Document document = builder.parse( examfile );
+    if ( !examfile.exists() || !examfile.isFile() )
+      return;
+    
+    Document document = builder.parse(examfile);
 
     Element roote = document.getDocumentElement();
-    System.out.println( roote.getNodeName() );
+    System.out.println(roote.getNodeName());
     NodeList nl = roote.getChildNodes();
     NodeList cnl;
     Element e;
     Node node;
     CandidateData candidate;
 
-    for ( int i=0; i<nl.getLength(); i++ )
+    for (int i = 0; i < nl.getLength(); i++)
     {
       node = nl.item(i);
-      if ( !(node instanceof Element) )
-        continue;
-      e = (Element)node;
-      if ( "questestinterop".equals( e.getNodeName() ) )
+      if (!(node instanceof Element))
       {
-        qdefs = new QuestionDefinitions( e );
+        continue;
+      }
+      e = (Element) node;
+      if ("questestinterop".equals(e.getNodeName()))
+      {
+        qdefs = new QuestionDefinitions(e);
       }
 
 
-      if ( "candidates".equals( e.getNodeName() ) )
+      if ("candidates".equals(e.getNodeName()))
       {
-        cnl = e.getElementsByTagName( "candidate" );
-        for ( int j=0; j<cnl.getLength(); j++ )
+        cnl = e.getElementsByTagName("candidate");
+        for (int j = 0; j < cnl.getLength(); j++)
         {
-          candidate = new CandidateData( this, (Element)cnl.item( j ) );
+          candidate = new CandidateData(this, (Element) cnl.item(j));
         }
       }
     }
     fireTableDataChanged();
   }
-
-
 
   public int getRowCount()
   {
@@ -499,7 +696,7 @@ public class ExaminationData
   public String getColumnName(int columnIndex)
   {
     System.out.println("getColumnName");
-    switch ( columnIndex )
+    switch (columnIndex)
     {
       case 0:
         return "*";
@@ -523,7 +720,7 @@ public class ExaminationData
   @Override
   public Class getColumnClass(int columnIndex)
   {
-    switch ( columnIndex )
+    switch (columnIndex)
     {
       case 0:
         return Object.class;
@@ -544,15 +741,15 @@ public class ExaminationData
   }
 
   @Override
-  public boolean isCellEditable( int rowIndex, int columnIndex )
+  public boolean isCellEditable(int rowIndex, int columnIndex)
   {
     return false;
   }
 
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    CandidateData candidate = candidates_sorted.get( rowIndex );
-    switch ( columnIndex )
+    CandidateData candidate = candidates_sorted.get(rowIndex);
+    switch (columnIndex)
     {
       case 0:
         return null;
@@ -563,14 +760,18 @@ public class ExaminationData
       case 3:
         return candidate.score;
       case 4:
-        return new Integer( candidate.pages.size() );
+        return new Integer(candidate.pages.size());
       case 5:
-        return new Integer( candidate.questionsScanned() );
+        return new Integer(candidate.questionsScanned());
       case 6:
-        if ( candidate.questionsScanned() < qdefs.qti.getItems().size() )
+        if (candidate.questionsScanned() < qdefs.qti.getItems().size())
+        {
           return "Unscanned questions.";
-        if ( candidate.questionsScanned() > qdefs.qti.getItems().size() )
+        }
+        if (candidate.questionsScanned() > qdefs.qti.getItems().size())
+        {
           return "Too many scanned questions!";
+        }
         return "";
     }
     return null;
