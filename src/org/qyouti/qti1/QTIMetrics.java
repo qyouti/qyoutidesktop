@@ -6,15 +6,17 @@
 package org.qyouti.qti1;
 
 import java.awt.Toolkit;
+import java.util.Properties;
 
 /**
  *
  * @author jon
  */
 public class QTIMetrics
+        extends Properties
 {
     public static final double TYPICAL_VDU_DPI = 100.0;
-    public static final double SVG_UNITS_PER_PAGE_INCH = 1000.0;
+    public static final double SVG_UNITS_PER_PAGE_INCH = 100.0;
 
     public static final double ACTUAL_VDU_DPI =
             (double)Toolkit.getDefaultToolkit().getScreenResolution();
@@ -42,4 +44,33 @@ public class QTIMetrics
         return (s / SVG_UNITS_PER_PAGE_INCH)*ACTUAL_VDU_DPI;
     }
 
+
+    public QTIMetrics()
+    {
+      try
+      {
+        loadFromXML(getClass().getClassLoader().getResourceAsStream("org/qyouti/qti1/gui/defaultmetrics.xml"));
+      } catch (Exception ex)
+      {
+        ex.printStackTrace();
+      }
+    }
+    
+    public double getPropertyInches( String name )
+    {
+      String s = this.getProperty(name);
+      if ( s == null ) return 0.0;
+      return Double.parseDouble(s);
+    }
+    
+    public double getPropertySvgUnits( String name )
+    {
+      String s = this.getProperty(name);
+      if ( s == null ) return 0.0;
+      return inchesToSvg( Double.parseDouble(s) );
+    }
+    public int getPropertySvgUnitsInt( String name )
+    {
+      return (int)getPropertySvgUnits( name );
+    }
 }
