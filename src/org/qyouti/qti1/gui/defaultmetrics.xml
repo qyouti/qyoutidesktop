@@ -16,12 +16,14 @@
 
   <entry key="page-width">8.3</entry>
   <entry key="page-height">11.7</entry>
+  <entry key="page-margin-left">0.3</entry>
+  <entry key="page-margin-right">0.3</entry>
+  <entry key="page-margin-top">0.5</entry>
+  <entry key="page-margin-bottom">0.5</entry>
 
-  <entry key="qrcode-xoffset">0.5</entry>
   <entry key="qrcode-width">0.6</entry>
+  <entry key="qrcode-full-width">1.3</entry>
 
-  <entry key="item-xoffset">1.6</entry>
-  <entry key="item-width">5.5</entry>
   <entry key="item-title-height">0.25</entry>
   <entry key="item-title-font-height">0.2</entry>
 
