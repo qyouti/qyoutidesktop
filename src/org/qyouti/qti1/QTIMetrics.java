@@ -58,6 +58,14 @@ public class QTIMetrics
     
     public double getPropertyInches( String name )
     {
+      if ( "item-width".equals(name) )
+      {
+        return getPropertyInches("page-width")
+                -getPropertyInches("page-margin-left")
+                -getPropertyInches("page-margin-right")
+                -getPropertyInches("qrcode-full-width");
+      }
+      
       String s = this.getProperty(name);
       if ( s == null ) return 0.0;
       return Double.parseDouble(s);
@@ -65,10 +73,9 @@ public class QTIMetrics
     
     public double getPropertySvgUnits( String name )
     {
-      String s = this.getProperty(name);
-      if ( s == null ) return 0.0;
-      return inchesToSvg( Double.parseDouble(s) );
+      return inchesToSvg( getPropertyInches(name) );
     }
+    
     public int getPropertySvgUnitsInt( String name )
     {
       return (int)getPropertySvgUnits( name );

@@ -34,6 +34,7 @@ import org.qyouti.qti1.*;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.ext.webct.QTIExtensionWebctMaterialwebeq;
 import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.svg.SVGDocument;
 import org.w3c.dom.svg.SVGSVGElement;
@@ -67,28 +68,32 @@ public class QTIItemRenderer
     if (e instanceof QTIElementPresentation)
     {
       state.html.append("<html>\n<body style=\"font-size: " +
-              metrics.getPropertySvgUnitsInt("fontsize") +
+              getMetrics().getPropertySvgUnitsInt("fontsize") +
               "px\">\n");
-      state.html.append( "<table><tr><td valign=\"top\">" );
+      state.html.append( "<table border=\"0\">" );
+      state.html.append( "<tr>" );
+      state.html.append( "<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-left") + "\"></td>\n" );
+      state.html.append( "<td width=\"" + getMetrics().getPropertySvgUnitsInt("qrcode-full-width") + "\" valign=\"top\" style=\"bgcolor; green;\" >" );
 
       QRCodeIcon qricon = new QRCodeIcon(
-              metrics.getPropertySvgUnitsInt("item-xoffset")-
-              metrics.getPropertySvgUnitsInt("qrcode-xoffset"),
-              metrics.getPropertySvgUnitsInt("qrcode-width"),
+              getMetrics().getPropertySvgUnitsInt("item-xoffset")-
+              getMetrics().getPropertySvgUnitsInt("qrcode-xoffset"),
+              getMetrics().getPropertySvgUnitsInt("qrcode-width"),
               state.item.getIdent(),
-              metrics.getPropertySvgUnitsInt("qrcode-width")
+              getMetrics().getPropertySvgUnitsInt("qrcode-width")
               );
+      
       state.inserts.add(new InteractionInsert(state.next_id, e, null, qricon));
       // this is also recorded separately because it needs to be (re)processed last
       state.qriconinsert = new InteractionInsert(state.next_id, e, null, qricon);
       state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
 
-      state.html.append( "</td><td>" );
+      state.html.append( "</td><td  width=\"" + getMetrics().getPropertySvgUnitsInt("item-width") + "\" style=\"bgcolor; green;\">" );
       state.html.append("<div>");
       TitleIcon titicon = new TitleIcon(
-              metrics.getPropertySvgUnitsInt("item-width"),
-              metrics.getPropertySvgUnitsInt("item-title-height"),
-              metrics.getPropertySvgUnitsInt("item-title-font-height")
+              getMetrics().getPropertySvgUnitsInt("item-width"),
+              getMetrics().getPropertySvgUnitsInt("item-title-height"),
+              getMetrics().getPropertySvgUnitsInt("item-title-font-height")
               );
       state.inserts.add(new InteractionInsert(state.next_id, e, null, titicon));
       state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
@@ -264,7 +269,7 @@ public class QTIItemRenderer
         state.html.append("</div>\n");
         state.open_block = false;
       }
-      state.html.append("\n</td>\n</tr>\n</table>\n</body>\n<html>");
+      state.html.append("\n</td>\n<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-right") + "\"> </td>\n</tr>\n</table>\n</body>\n<html>");
       state.open_block = true;
     }
 
@@ -286,8 +291,6 @@ public class QTIItemRenderer
     this.examfolderuri = examfolderuri;
     QTIElementPresentation presentation = item.getPresentation();
 
-    if ( metrics == null )
-      metrics = new QTIMetrics();
 
     // Compose the HTML
     RenderState state = new RenderState();
@@ -345,10 +348,11 @@ public class QTIItemRenderer
     scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
     scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
     scrollpane.setViewportView(textPane);
-    scrollpane.getViewport().setSize(
-            (metrics.getPropertySvgUnitsInt("item-xoffset")-
-              metrics.getPropertySvgUnitsInt("qrcode-xoffset"))
-              +metrics.getPropertySvgUnitsInt("item-width"), 50);
+    scrollpane.getViewport().setSize( getMetrics().getPropertySvgUnitsInt("page-width"), 50);
+//    scrollpane.getViewport().setSize(
+//            (getMetrics().getPropertySvgUnitsInt("item-xoffset")-
+//              getMetrics().getPropertySvgUnitsInt("qrcode-xoffset"))
+//              +getMetrics().getPropertySvgUnitsInt("item-width"), 50);
     scrollpane.getViewport().doLayout();
 
     //System.out.println( "Edit component location: " + field.getX() + " " + field.getY() );
@@ -360,7 +364,7 @@ public class QTIItemRenderer
     Rectangle2D bounds = svgres.getBounds();
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
 //    svgroot.setAttribute(   "width", "" + QTIMetrics.svgToInches(bounds.getWidth())  + "in");
-//    svgroot.setAttribute(  "height", "" + QTIMetrics.svgToInches(bounds.getHeight()) + "in");
+    svgroot.setAttribute(  "height", "" + textPane.getSize().height );
 //    svgroot.setAttribute( "viewBox", "" +
 //            (int)QTIMetrics.inchesToSvg( -0.25 ) + " " +
 //            (int)QTIMetrics.inchesToSvg( -0.25 ) + " " +
@@ -368,7 +372,7 @@ public class QTIItemRenderer
 //            bounds.getMaxY());
 //    svgroot.setAttribute("transform", "translate( 1000 0 )" );
 
-    // 'Paint' all the icons bar the qrcode
+    // 'Paint' all the icons
     for ( i = 0; i < state.inserts.size(); i++)
     {
       insert = state.inserts.get(i);
@@ -377,6 +381,9 @@ public class QTIItemRenderer
         insert.icon.paintSVG(svgres.getDocument());
       }
     }
+
+    // Where did the QRCode go?
+    QRCodeIcon qricon = (QRCodeIcon)state.qriconinsert.icon;
     // Find out where all the pink icons ended up and codify
     StringBuffer coords = new StringBuffer();
     PinkIcon picon;
@@ -386,29 +393,78 @@ public class QTIItemRenderer
       if (insert.icon != null && insert.icon instanceof PinkIcon )
       {
         picon = (PinkIcon)insert.icon;
-        coords.append( picon.x );
+        coords.append( picon.x - qricon.qrorigin_x );
         coords.append( " " );
-        coords.append( picon.y );
+        coords.append( picon.y - qricon.qrorigin_y );
         coords.append( " " );
       }
     }
     
     // do the qr code again last so the pink icon coordinates can be passed in.
-    QRCodeIcon qricon = (QRCodeIcon)state.qriconinsert.icon;
-    qricon.update( bounds.getHeight(), coords.toString() );
+    qricon.update( textPane.getSize().height, coords.toString() );
 
     previewdoc = decorateItemForPreview( (SVGDocument) svgres.getDocument().cloneNode(true));
   }
 
 
-  public SVGDocument decorateItemForPreview( SVGDocument docpreview )
+  public static SVGDocument decorateItemForPreview( SVGDocument itemdoc )
+  {
+    Vector<SVGDocument> list = new Vector<SVGDocument>();
+    list.add(itemdoc );
+    return decorateItemForPreview( list );
+  }
+
+  public static Vector<SVGDocument> paginateItems( URI examfolderuri, Vector<QTIElementItem> items )
+  {
+      int i;
+      Vector<Vector<SVGDocument>> pages = new Vector<Vector<SVGDocument>>();
+      Vector<SVGDocument> page;
+      SVGDocument svgdocs[]=null;
+
+      page = new Vector<SVGDocument>();
+      pages.add( page );
+
+      double totalspace = getMetrics().getPropertySvgUnits("page-height")
+              -getMetrics().getPropertySvgUnits("page-margin-top")
+              -getMetrics().getPropertySvgUnits("page-margin-bottom");
+      double spaceleft = totalspace;
+      double itemheight;
+
+      svgdocs = new SVGDocument[items.size()];
+      QTIItemRenderer renderer;
+      for ( i=0; i<items.size(); i++ )
+      {
+        renderer = new QTIItemRenderer( examfolderuri, items.elementAt(i) );
+        svgdocs[i] = renderer.getSVGDocument();
+        itemheight = Integer.parseInt( svgdocs[i].getRootElement().getAttribute("height") );
+        if ( itemheight > spaceleft )
+        {
+          page = new Vector<SVGDocument>();
+          pages.add( page );
+          spaceleft = totalspace;
+        }
+        page.add( svgdocs[i] );
+        spaceleft -= itemheight;
+      }
+
+      Vector<SVGDocument> paginated = new Vector<SVGDocument>();
+      for ( i=0; i<pages.size(); i++ )
+        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) ) );
+
+      return paginated;
+  }
+
+  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs )
   {
     int i;
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
-    double widthinches = metrics.getPropertyInches("page-width") + 0.5;
-    double heightinches = metrics.getPropertyInches("page-height") + 0.5;
+    DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+    SVGDocument pdoc = (SVGDocument) impl.createDocument(svgNS, "svg", null);
 
-    SVGSVGElement svg = docpreview.getRootElement();
+    double widthinches = getMetrics().getPropertyInches("page-width") + 0.5;
+    double heightinches = getMetrics().getPropertyInches("page-height") + 0.5;
+
+    SVGSVGElement svg = pdoc.getRootElement();
     //        (org.w3c.dom.Element) docpreview.removeChild(docpreview.getDocumentElement());
     //org.w3c.dom.Element svg = docpreview.createElement( "svg" );
     svg.setAttribute("viewBox", "" +
@@ -420,59 +476,51 @@ public class QTIItemRenderer
     svg.setAttribute("width",  ""+widthinches+"in" );
     svg.setAttribute("height", ""+heightinches+"in" );
 
-    org.w3c.dom.Element itemg = docpreview.createElementNS( svgNS, "g" );
-    itemg.setAttribute("transform",
-            "translate(" +
-            (int)QTIMetrics.inchesToSvg( 0.5 + metrics.getPropertyInches("qrcode-xoffset") ) +
-            "," +
-            (int)QTIMetrics.inchesToSvg( 1.0 ) +
-            ")"
-            );
 
-    while ( svg.getChildNodes().getLength() != 0 )
-    {
-      itemg.appendChild( svg.getFirstChild().cloneNode(true) );
-      svg.removeChild( svg.getFirstChild() );
-    }
+//    while ( svg.getChildNodes().getLength() != 0 )
+//    {
+//      itemg.appendChild( svg.getFirstChild().cloneNode(true) );
+//      svg.removeChild( svg.getFirstChild() );
+//    }
 
-    org.w3c.dom.Element decorationgroup = docpreview.createElementNS( svgNS, "g");
+    org.w3c.dom.Element decorationgroup = pdoc.createElementNS( svgNS, "g");
     svg.appendChild(decorationgroup);
   
-    org.w3c.dom.Element r = docpreview.createElementNS( svgNS, "rect");
+    org.w3c.dom.Element r = pdoc.createElementNS( svgNS, "rect");
     r.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "stroke", "rgb(0,0,0)" );
     r.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
     r.setAttribute( "fill", "rgb(255,255,255)" );
-    r.setAttribute( "width",  "" + metrics.getPropertySvgUnitsInt("page-width") );
-    r.setAttribute( "height", "" + metrics.getPropertySvgUnitsInt("page-height") );
+    r.setAttribute( "width",  "" + getMetrics().getPropertySvgUnitsInt("page-width") );
+    r.setAttribute( "height", "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( r );
 
-    r = docpreview.createElementNS( svgNS, "rect");
+    r = pdoc.createElementNS( svgNS, "rect");
     r.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "stroke", "none" );
     r.setAttribute( "fill", "rgb(180,180,200)" );
     r.setAttribute( "width",  "" + QTIMetrics.inchesToSvg( 1.5 ) );
-    r.setAttribute( "height", "" + metrics.getPropertySvgUnitsInt("page-height") );
+    r.setAttribute( "height", "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( r );
 
-    org.w3c.dom.Element rt = docpreview.createElementNS( svgNS, "rect");
+    org.w3c.dom.Element rt = pdoc.createElementNS( svgNS, "rect");
     rt.setAttribute( "x", "" + QTIMetrics.inchesToSvg( 0.5 ) );
     rt.setAttribute( "y", "" + QTIMetrics.inchesToSvg( 0.0 ) );
     rt.setAttribute( "stroke", "rgb(0,0,0)" );
     rt.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
     rt.setAttribute( "fill", "rgb(255,255,200)" );
-    rt.setAttribute( "width",  "" + metrics.getPropertySvgUnitsInt("page-width") );
+    rt.setAttribute( "width",  "" + getMetrics().getPropertySvgUnitsInt("page-width") );
     rt.setAttribute( "height", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     decorationgroup.appendChild( rt );
 
     org.w3c.dom.Element line;
     org.w3c.dom.Element t;
     double x;
-    for ( x=0.0, i=0; x<metrics.getPropertySvgUnits("page-width"); x+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
+    for ( x=0.0, i=0; x<getMetrics().getPropertySvgUnits("page-width"); x+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
     {
-      line = docpreview.createElementNS(svgNS, "line");
+      line = pdoc.createElementNS(svgNS, "line");
       line.setAttribute( "x1", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
       line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
       line.setAttribute( "x2", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
@@ -482,7 +530,7 @@ public class QTIItemRenderer
       decorationgroup.appendChild(line);
       if ( (i%5)==0 && i>0 )
       {
-        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
+        t = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
         t.setAttribute("text-anchor", "middle" );
         t.setAttribute("x", "" + (x + QTIMetrics.inchesToSvg( 0.5 ) ) );
         t.setAttribute("y", "" + QTIMetrics.inchesToSvg( 0.3 ) );
@@ -492,19 +540,19 @@ public class QTIItemRenderer
       }
     }
 
-    org.w3c.dom.Element rl = docpreview.createElementNS( svgNS, "rect");
+    org.w3c.dom.Element rl = pdoc.createElementNS( svgNS, "rect");
     rl.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.0 ) );
     rl.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     rl.setAttribute( "stroke", "rgb(0,0,0)" );
     rl.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
     rl.setAttribute( "fill", "rgb(255,255,220)" );
     rl.setAttribute( "width", "" + QTIMetrics.inchesToSvg( 0.5 ) );
-    rl.setAttribute( "height",  "" + metrics.getPropertySvgUnitsInt("page-height") );
+    rl.setAttribute( "height",  "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( rl );
     double y;
-    for ( y=0.0, i=0; y<metrics.getPropertySvgUnits("page-height"); y+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
+    for ( y=0.0, i=0; y<getMetrics().getPropertySvgUnits("page-height"); y+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
     {
-      line = docpreview.createElementNS(svgNS, "line");
+      line = pdoc.createElementNS(svgNS, "line");
       line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
       line.setAttribute( "y1", "" + (y+QTIMetrics.inchesToSvg( 0.5 )) );
       line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( (i%5)==0?0.4:0.45 ) );
@@ -514,7 +562,7 @@ public class QTIItemRenderer
       decorationgroup.appendChild(line);
       if ( (i%5)==0 && i>0 )
       {
-        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
+        t = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
         t.setAttribute("text-anchor", "end" );
         t.setAttribute("x", "" + QTIMetrics.inchesToSvg( 0.4 ) );
         t.setAttribute("y", "" + (y + QTIMetrics.inchesToSvg( 0.55 ) ) );
@@ -524,17 +572,47 @@ public class QTIItemRenderer
       }
     }
 
-    svg.appendChild(itemg);
-    docpreview.normalizeDocument();
-    return (SVGDocument)docpreview;
+    org.w3c.dom.Element itemg;
+    SVGDocument itemdoc;
+    SVGSVGElement itemsvg;
+    double vertical_offset = QTIMetrics.inchesToSvg( 1.0 );
+    double itemheight;
+    for ( i=0; i<itemdocs.size(); i++ )
+    {
+      itemdoc = itemdocs.elementAt(i);
+      itemg = pdoc.createElementNS( svgNS, "g" );
+      itemg.setAttribute("transform",
+              "translate( " +
+              (int)QTIMetrics.inchesToSvg( 0.5 ) + ", "+
+              (int)vertical_offset + ")");
+      svg.appendChild(itemg);
+      itemsvg = (SVGSVGElement) pdoc.importNode( itemdoc.getDocumentElement(), true );
+      itemg.appendChild(itemsvg);
+      itemheight = Double.parseDouble( itemsvg.getAttribute("height") );
+      vertical_offset+=itemheight;
+    }
+    pdoc.normalizeDocument();
+    return pdoc;
   }
 
 
 
-  public org.w3c.dom.Document getSVGDocument()
+  public SVGDocument getPreviewSVGDocument()
   {
     return previewdoc;
-    //return svgres.getDocument();
+  }
+
+  public SVGDocument getSVGDocument()
+  {
+    return svgres.getDocument();
+  }
+
+
+  public static QTIMetrics getMetrics()
+  {
+    if ( metrics == null )
+      metrics = new QTIMetrics();
+    return metrics;
   }
 
   private class InteractionInsert

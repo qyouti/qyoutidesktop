@@ -75,7 +75,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
             return;
         }
 
-        String strsvg = DOMUtilities.getXML(renderer.getSVGDocument().getDocumentElement());
+        String strsvg = DOMUtilities.getXML(renderer.getPreviewSVGDocument().getDocumentElement());
 
         {
             FileWriter writer = null;
@@ -101,7 +101,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         System.out.println( "=====================================" );
         System.out.println( strsvg );
         System.out.println( "=====================================" );
-        previewcanvas.setSVGDocument( (SVGDocument) renderer.getSVGDocument());
+        previewcanvas.setSVGDocument( (SVGDocument) renderer.getPreviewSVGDocument());
     }
 
 
