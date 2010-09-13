@@ -25,6 +25,7 @@ package org.qyouti.util;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.Enumeration;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -44,6 +45,21 @@ import org.xml.sax.SAXException;
  */
 public class QyoutiUtils
 {
+  static Random random = new Random( System.currentTimeMillis() );
+
+  public static String randomIdent()
+  {
+    byte[] b = new byte[16];
+    random.nextBytes(b);
+    StringBuffer ident = new StringBuffer();
+    for ( int i=0; i<b.length; i++ )
+    {
+      ident.append( Integer.toHexString( (int)b[i] & 0x0f ) );
+      ident.append( Integer.toHexString( ((int)b[i] & 0xf0) >> 4 ) );
+    }
+    return ident.toString();
+  }
+
 
   public static boolean copyFile(File source, File destination)
   {

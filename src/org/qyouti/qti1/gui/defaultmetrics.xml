@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!--
+    Document   : defaultmetrics.xml.xml
+    Created on : 10 September 2010, 19:11
+    Author     : jon
+    Description:
+        Purpose of the document follows.
+-->
+
+<properties>
+  <comment>All metrics are in inches because that maps better onto printer
+  dot densities - typically multiple of 100 dpi.
+  </comment>
+
+  <entry key="page-width">8.3</entry>
+  <entry key="page-height">11.7</entry>
+
+  <entry key="qrcode-xoffset">0.5</entry>
+  <entry key="qrcode-width">0.6</entry>
+
+  <entry key="item-xoffset">1.6</entry>
+  <entry key="item-width">5.5</entry>
+  <entry key="item-title-height">0.25</entry>
+  <entry key="item-title-font-height">0.2</entry>
+
+  <entry key="fontsize">0.1</entry>
+  <entry key="fontface">Sans</entry>
+</properties>
+

@@ -376,10 +376,27 @@ public class ExaminationData
     nl = qtiexamroote.getElementsByTagName("matimage");
     resolveMediaReferences( examfile.getParentFile(), basefolder, qtiexamfile.getParentFile(), nl );
 
+    checkItemIDs( qti12doc );
 
     qdefs = new QuestionDefinitions(qtiexamroote);
   }
 
+  private void checkItemIDs( Document qti12doc )
+  {
+    NodeList nl = qti12doc.getElementsByTagName("item");
+    Element item;
+    String ident, title;
+    for ( int i=0; i < nl.getLength(); i++ )
+    {
+      item = (Element)nl.item(i);
+      ident = item.getAttribute( "ident" );
+      if ( ident==null || ident.length()==0 )
+        item.setAttribute( "ident", QyoutiUtils.randomIdent() );
+      title = item.getAttribute( "title" );
+      if ( title==null || title.length()==0 )
+        item.setAttribute( "title", "Unnamed" );
+    }
+  }
   
   private void resolveItemReferences( File folder, Document qti12doc, Vector<Element> itemrefs )
           throws ParserConfigurationException

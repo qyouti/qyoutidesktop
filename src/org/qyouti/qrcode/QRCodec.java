@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.xml.parsers.*;
+import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.*;
 
 
@@ -240,10 +241,12 @@ public class QRCodec
     double mark_size = width / ((double)matrix.length - 7);  // 100th of Inch
 
 
-    Document doc = docbuilder.newDocument();
-    Element g = doc.createElement("g");
+    DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+    String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+    Document doc = impl.createDocument(svgNS, "svg", null);
+    Element g = doc.createElementNS(svgNS, "g");
     g.setAttribute( "id", "qrcode_" + n++ );
-    Element whiterect = doc.createElement("rect");
+    Element whiterect = doc.createElementNS(svgNS,"rect");
     whiterect.setAttribute( "x", Double.toString( -0.4 * width ) );
     whiterect.setAttribute( "y", Double.toString( -0.4 * width ) );
     whiterect.setAttribute( "stroke", "none" );
@@ -267,7 +270,7 @@ public class QRCodec
       {
         if (matrix[j][i] != 0)  // make a black rectangle
         {
-          mark = doc.createElement( "rect" );
+          mark = doc.createElementNS(svgNS, "rect" );
           mark.setAttribute( "x", Double.toString( ((double)i - 3.5) * mark_size ) );
           mark.setAttribute( "y", Double.toString( ((double)j - 3.5) * mark_size ) );
           mark.setAttribute( "width",  Double.toString( mark_size * 1.1 ) );
