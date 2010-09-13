@@ -35,6 +35,8 @@ import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.ext.webct.QTIExtensionWebctMaterialwebeq;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.svg.SVGDocument;
+import org.w3c.dom.svg.SVGSVGElement;
 
 /**
  *
@@ -51,6 +53,8 @@ public class QTIItemRenderer
   // in milli-inches
 
   static QTIMetrics metrics = null;
+  
+  SVGDocument previewdoc;
 
   private void renderElement(QTIElement e, RenderState state)
   {
@@ -392,60 +396,49 @@ public class QTIItemRenderer
     // do the qr code again last so the pink icon coordinates can be passed in.
     QRCodeIcon qricon = (QRCodeIcon)state.qriconinsert.icon;
     qricon.update( bounds.getHeight(), coords.toString() );
+
+    previewdoc = decorateItemForPreview( (SVGDocument) svgres.getDocument().cloneNode(true));
   }
 
 
-  public org.w3c.dom.Document decorateItemForPreview( org.w3c.dom.Document docpreview )
+  public SVGDocument decorateItemForPreview( SVGDocument docpreview )
   {
     int i;
-    DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
-    //org.w3c.dom.Document docpreview = impl.createDocument(svgNS, "svg", null);
     double widthinches = metrics.getPropertyInches("page-width") + 0.5;
     double heightinches = metrics.getPropertyInches("page-height") + 0.5;
 
-    org.w3c.dom.Element svg = docpreview.createElementNS( svgNS, "svg" );
-    svg.setAttributeNS(svgNS, "viewBox", "" +
+    SVGSVGElement svg = docpreview.getRootElement();
+    //        (org.w3c.dom.Element) docpreview.removeChild(docpreview.getDocumentElement());
+    //org.w3c.dom.Element svg = docpreview.createElement( "svg" );
+    svg.setAttribute("viewBox", "" +
             QTIMetrics.inchesToSvg(  0.0 )         + " " +
             QTIMetrics.inchesToSvg(  0.0 )         + " " +
             QTIMetrics.inchesToSvg(  widthinches ) + " " +
             QTIMetrics.inchesToSvg(  heightinches )
             );
-    svg.setAttributeNS(svgNS, "width",  ""+widthinches+"in" );
-    svg.setAttributeNS(svgNS, "height", ""+heightinches+"in" );
+    svg.setAttribute("width",  ""+widthinches+"in" );
+    svg.setAttribute("height", ""+heightinches+"in" );
 
-    org.w3c.dom.Element g = docpreview.createElementNS(svgNS, "g");
-    svg.appendChild(g);
-
-    org.w3c.dom.Element svginner =
-            (org.w3c.dom.Element) docpreview.removeChild(docpreview.getDocumentElement());
     org.w3c.dom.Element itemg = docpreview.createElementNS( svgNS, "g" );
-    itemg.setAttributeNS(svgNS, "transform",
+    itemg.setAttribute("transform",
             "translate(" +
             (int)QTIMetrics.inchesToSvg( 0.5 + metrics.getPropertyInches("qrcode-xoffset") ) +
             "," +
             (int)QTIMetrics.inchesToSvg( 1.0 ) +
             ")"
             );
-    //while ( svginner.getChildNodes().getLength() != 0 )
-    //  itemg.appendChild(svginner.getFirstChild());
-    org.w3c.dom.Element rg = docpreview.createElementNS(svgNS, "rect");
-    rg.setAttribute( "x", "0" );
-    rg.setAttribute( "y", "0" );
-    rg.setAttribute( "stroke", "rgb(0,0,0)" );
-    rg.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
-    rg.setAttribute( "fill", "rgb(0,255,0)" );
-    rg.setAttribute( "width",  "" + QTIMetrics.inchesToSvg(  1.0 ) );
-    rg.setAttribute( "height", "" + QTIMetrics.inchesToSvg(  1.0 ) );
-    itemg.appendChild( rg );
 
-    svg.appendChild(itemg);
-    docpreview.appendChild(svg);
+    while ( svg.getChildNodes().getLength() != 0 )
+    {
+      itemg.appendChild( svg.getFirstChild().cloneNode(true) );
+      svg.removeChild( svg.getFirstChild() );
+    }
 
-
-
-
-    org.w3c.dom.Element r = docpreview.createElementNS(svgNS, "rect");
+    org.w3c.dom.Element decorationgroup = docpreview.createElementNS( svgNS, "g");
+    svg.appendChild(decorationgroup);
+  
+    org.w3c.dom.Element r = docpreview.createElementNS( svgNS, "rect");
     r.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "stroke", "rgb(0,0,0)" );
@@ -453,18 +446,18 @@ public class QTIItemRenderer
     r.setAttribute( "fill", "rgb(255,255,255)" );
     r.setAttribute( "width",  "" + metrics.getPropertySvgUnitsInt("page-width") );
     r.setAttribute( "height", "" + metrics.getPropertySvgUnitsInt("page-height") );
-    g.appendChild( r );
+    decorationgroup.appendChild( r );
 
-    r = docpreview.createElementNS(svgNS, "rect");
+    r = docpreview.createElementNS( svgNS, "rect");
     r.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     r.setAttribute( "stroke", "none" );
     r.setAttribute( "fill", "rgb(180,180,200)" );
     r.setAttribute( "width",  "" + QTIMetrics.inchesToSvg( 1.5 ) );
     r.setAttribute( "height", "" + metrics.getPropertySvgUnitsInt("page-height") );
-    g.appendChild( r );
+    decorationgroup.appendChild( r );
 
-    org.w3c.dom.Element rt = docpreview.createElementNS(svgNS, "rect");
+    org.w3c.dom.Element rt = docpreview.createElementNS( svgNS, "rect");
     rt.setAttribute( "x", "" + QTIMetrics.inchesToSvg( 0.5 ) );
     rt.setAttribute( "y", "" + QTIMetrics.inchesToSvg( 0.0 ) );
     rt.setAttribute( "stroke", "rgb(0,0,0)" );
@@ -472,34 +465,34 @@ public class QTIItemRenderer
     rt.setAttribute( "fill", "rgb(255,255,200)" );
     rt.setAttribute( "width",  "" + metrics.getPropertySvgUnitsInt("page-width") );
     rt.setAttribute( "height", "" + QTIMetrics.inchesToSvg(  0.5 ) );
-    g.appendChild( rt );
+    decorationgroup.appendChild( rt );
 
     org.w3c.dom.Element line;
     org.w3c.dom.Element t;
     double x;
-//    for ( x=0.0, i=0; x<metrics.getPropertySvgUnits("page-width"); x+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
-//    {
-//      line = docpreview.createElementNS(svgNS, "line");
-//      line.setAttribute( "x1", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
-//      line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
-//      line.setAttribute( "x2", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
-//      line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg( (i%5)==0?0.4:0.45 ) );
-//      line.setAttribute( "stroke", "rgb(0,0,0)" );
-//      line.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
-//      g.appendChild(line);
-//      if ( (i%5)==0 && i>0 )
-//      {
-//        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
-//        t.setAttribute("text-anchor", "middle" );
-//        t.setAttribute("x", "" + (x + QTIMetrics.inchesToSvg( 0.5 ) ) );
-//        t.setAttribute("y", "" + QTIMetrics.inchesToSvg( 0.3 ) );
-//        t.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.2 ) );
-//        t.setTextContent( "" + (i/5) + "\"" );
-//        g.appendChild(t);
-//      }
-//    }
+    for ( x=0.0, i=0; x<metrics.getPropertySvgUnits("page-width"); x+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
+    {
+      line = docpreview.createElementNS(svgNS, "line");
+      line.setAttribute( "x1", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
+      line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
+      line.setAttribute( "x2", "" + (x+QTIMetrics.inchesToSvg( 0.5 )) );
+      line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg( (i%5)==0?0.4:0.45 ) );
+      line.setAttribute( "stroke", "rgb(0,0,0)" );
+      line.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
+      decorationgroup.appendChild(line);
+      if ( (i%5)==0 && i>0 )
+      {
+        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
+        t.setAttribute("text-anchor", "middle" );
+        t.setAttribute("x", "" + (x + QTIMetrics.inchesToSvg( 0.5 ) ) );
+        t.setAttribute("y", "" + QTIMetrics.inchesToSvg( 0.3 ) );
+        t.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.2 ) );
+        t.setTextContent( "" + (i/5) + "\"" );
+        decorationgroup.appendChild(t);
+      }
+    }
 
-    org.w3c.dom.Element rl = docpreview.createElementNS(svgNS, "rect");
+    org.w3c.dom.Element rl = docpreview.createElementNS( svgNS, "rect");
     rl.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  0.0 ) );
     rl.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  0.5 ) );
     rl.setAttribute( "stroke", "rgb(0,0,0)" );
@@ -507,39 +500,40 @@ public class QTIItemRenderer
     rl.setAttribute( "fill", "rgb(255,255,220)" );
     rl.setAttribute( "width", "" + QTIMetrics.inchesToSvg( 0.5 ) );
     rl.setAttribute( "height",  "" + metrics.getPropertySvgUnitsInt("page-height") );
-    g.appendChild( rl );
+    decorationgroup.appendChild( rl );
     double y;
-//    for ( y=0.0, i=0; y<metrics.getPropertySvgUnits("page-height"); y+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
-//    {
-//      line = docpreview.createElementNS(svgNS, "line");
-//      line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
-//      line.setAttribute( "y1", "" + (y+QTIMetrics.inchesToSvg( 0.5 )) );
-//      line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( (i%5)==0?0.4:0.45 ) );
-//      line.setAttribute( "y2", "" + (y+QTIMetrics.inchesToSvg( 0.5 )) );
-//      line.setAttribute( "stroke", "rgb(0,0,0)" );
-//      line.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
-//      g.appendChild(line);
-//      if ( (i%5)==0 && i>0 )
-//      {
-//        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
-//        t.setAttribute("text-anchor", "end" );
-//        t.setAttribute("x", "" + QTIMetrics.inchesToSvg( 0.4 ) );
-//        t.setAttribute("y", "" + (y + QTIMetrics.inchesToSvg( 0.55 ) ) );
-//        t.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.2 ) );
-//        t.setTextContent( "" + (i/5) + "\"" );
-//        g.appendChild(t);
-//      }
-//    }
+    for ( y=0.0, i=0; y<metrics.getPropertySvgUnits("page-height"); y+=QTIMetrics.inchesToSvg(  0.2 ), i++ )
+    {
+      line = docpreview.createElementNS(svgNS, "line");
+      line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg( 0.5 ) );
+      line.setAttribute( "y1", "" + (y+QTIMetrics.inchesToSvg( 0.5 )) );
+      line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( (i%5)==0?0.4:0.45 ) );
+      line.setAttribute( "y2", "" + (y+QTIMetrics.inchesToSvg( 0.5 )) );
+      line.setAttribute( "stroke", "rgb(0,0,0)" );
+      line.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
+      decorationgroup.appendChild(line);
+      if ( (i%5)==0 && i>0 )
+      {
+        t = (org.w3c.dom.Element) docpreview.createElementNS(svgNS, "text");
+        t.setAttribute("text-anchor", "end" );
+        t.setAttribute("x", "" + QTIMetrics.inchesToSvg( 0.4 ) );
+        t.setAttribute("y", "" + (y + QTIMetrics.inchesToSvg( 0.55 ) ) );
+        t.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.2 ) );
+        t.setTextContent( "" + (i/5) + "\"" );
+        decorationgroup.appendChild(t);
+      }
+    }
 
+    svg.appendChild(itemg);
     docpreview.normalizeDocument();
-    return docpreview;
+    return (SVGDocument)docpreview;
   }
 
 
 
   public org.w3c.dom.Document getSVGDocument()
   {
-    return decorateItemForPreview( svgres.getDocument() );
+    return previewdoc;
     //return svgres.getDocument();
   }
 

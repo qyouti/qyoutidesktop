@@ -16,7 +16,7 @@ public class QTIMetrics
         extends Properties
 {
     public static final double TYPICAL_VDU_DPI = 100.0;
-    public static final double SVG_UNITS_PER_PAGE_INCH = 100.0;
+    public static final double SVG_UNITS_PER_PAGE_INCH = 1000.0;
 
     public static final double ACTUAL_VDU_DPI =
             (double)Toolkit.getDefaultToolkit().getScreenResolution();
