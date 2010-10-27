@@ -56,7 +56,8 @@ import org.qyouti.scan.image.QRCodeColourLookupTable;
 public class PageDecoder
 {
 
-
+  static final boolean pinkboxfullcoords = true;
+  
   static final double metrics_top_qr_to_bottom_qr =  975.0;
   static final double metrics_top_qr_width        =   60.0;
   static final double metrics_qstn_qr_width       =   60.0;
@@ -70,7 +71,7 @@ public class PageDecoder
 
 
 
-  public static PageData decodeOneArgument(ExaminationData exam, String argument )
+  public static PageData decode(ExaminationData exam, String argument )
           throws IOException, URISyntaxException
   {
 
@@ -91,27 +92,28 @@ public class PageDecoder
     QRScanResult result;
     //MonochromeBitmapSource source = new BufferedImageMonochromeBitmapSource( image, x1, y1, x2, y2 );
     BufferedImage cropped = image.getSubimage(x1, y1, x2-x1, y2-y1);
-    BufferedImage img_filt = new BufferedImage( cropped.getWidth(), cropped.getHeight(),
-                                                BufferedImage.TYPE_INT_RGB );
+    BufferedImage img_filt =  new BufferedImage( cropped.getWidth(), cropped.getHeight(),
+                                                cropped.getType() );
 
-    QRCodeColourLookupTable lookup = new QRCodeColourLookupTable();
+    QRCodeColourLookupTable lookup = new QRCodeColourLookupTable( cropped.getColorModel().getNumComponents() );
     LookupOp lop = new LookupOp( lookup, null );
 
     for ( int n = 0; n < 80; n = (n<0) ? (-(n-5)) : (-(n+5))    )
     {
       lookup.setThreshold( 160 + n );
-      lop.filter( cropped, img_filt );
+      img_filt = lop.filter( cropped, img_filt );
       System.out.println( "DECODING QRCode threshold = " + n );
       try
       {
-        result = QRCodec.decode(img_filt);
+        result = QRCodec.decode( img_filt );
+        try {Thread.sleep(2000);} catch (InterruptedException ex){}
         return result;
       } catch (Exception ex)
       {
         //System.out.println( "No QRCode - exception thrown." );
         //Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
       }
-      //try {Thread.sleep(1000);} catch (InterruptedException ex){}
+      try {Thread.sleep(2000);} catch (InterruptedException ex){}
     }
 
     System.out.println( "No QRCode - exception thrown." );
@@ -163,26 +165,64 @@ public class PageDecoder
               (( data[offset + 1] << 8 ) & 0xff00 );
   }
 
-  private static QuestionCode decodeQuestion( byte[] data )
+  private static QuestionCode decodeQuestion( QRScanResult scanresult )
           throws UnsupportedEncodingException
   {
+    System.out.println( "QRCode contains string: " + scanresult.getText() );
     QuestionCode qcode = new QuestionCode();
-    qcode.id = decodeCString( data, 0 );
-    qcode.next = data[ qcode.id.length()+1 ];
-    int boxes = (data.length - qcode.id.length() - 2) / 8;
-    int offset, n;
-    qcode.box_xoffset = new int[boxes];
-    qcode.box_yoffset = new int[boxes];
-    qcode.box_width = new int[boxes];
-    qcode.box_height = new int[boxes];
-    for ( int i=0; i<boxes; i++ )
+
+    int boxes;
+    if ( pinkboxfullcoords )
     {
-      offset = qcode.id.length()+2+ (i*8);
-      qcode.box_xoffset[i] =  bytesToInteger( data, offset );
-      qcode.box_yoffset[i] =  bytesToInteger( data, offset+2 );
-      qcode.box_width[i] =  bytesToInteger( data, offset+4 );
-      qcode.box_height[i] =  bytesToInteger( data, offset+6 );
+      DataInputStream in = new DataInputStream( new ByteArrayInputStream( scanresult.getBytes() ) );
+      Vector<Short> sarray = new Vector<Short>();
+      try
+      {
+        qcode.id = in.readUTF();
+        qcode.next = in.readShort();
+        while ( in.available() > 0 )
+          sarray.add( new Short(in.readShort()) );
+
+      } catch (IOException ex)
+      {
+        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+      boxes = sarray.size() / 4;
+      System.out.println( "no. boxes " + boxes );
+              qcode.box_xoffset = new int[boxes];
+      qcode.box_yoffset = new int[boxes];
+      qcode.box_width = new int[boxes];
+      qcode.box_height = new int[boxes];
+      for ( int i=0; i<boxes; i++ )
+      {
+        qcode.box_xoffset[i] =  sarray.elementAt(i*4 + 0);
+        qcode.box_yoffset[i] =  sarray.elementAt(i*4 + 1);
+        qcode.box_width[i]   =  sarray.elementAt(i*4 + 2);
+        qcode.box_height[i]  =  sarray.elementAt(i*4 + 3);
+        System.out.println( "box " + qcode.box_xoffset[i] + ", " + qcode.box_yoffset[i] + ", " + qcode.box_width[i] + ", " + qcode.box_height[i] );
+      }
     }
+    else
+    {
+      qcode.id = decodeCString( scanresult.getBytes(), 0 );
+      qcode.next = scanresult.getBytes()[ qcode.id.length()+1 ];
+      boxes = (scanresult.getBytes().length - qcode.id.length() - 2) / 2;
+      qcode.box_xoffset = new int[boxes];
+      qcode.box_yoffset = new int[boxes];
+      qcode.box_width = new int[boxes];
+      qcode.box_height = new int[boxes];
+      for ( int i=0; i<boxes; i++ )
+      {
+        qcode.box_xoffset[i] = (int)metrics_qstn_qr_hzntl_box;
+        qcode.box_width[i] = 21;
+        qcode.box_height[i] = 21;
+        qcode.box_yoffset[i] =  ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2)     ] & 0xff )
+                                |
+                             ( ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2) + 1 ] << 8 ) & 0xff00 );
+      }
+    }
+
     return qcode;
   }
 
@@ -190,15 +230,7 @@ public class PageDecoder
   private static PageData decode(ExaminationData exam, URI uri)
           throws IOException
   {
-    int i;
-    PageData page;
-    QuestionData question;
-    ResponseData response;
     BufferedImage image;
-    QRScanResult result;
-
-    System.out.println( "\n\n\nDecoding a page." );
-    
     try {
       image = ImageIO.read(uri.toURL());
     } catch (IllegalArgumentException iae) {
@@ -208,6 +240,21 @@ public class PageDecoder
       System.err.println(uri.toString() + ": Could not load image");
       return null;
     }
+    return decode( exam, image, uri.toString() );
+  }
+
+  public static PageData decode(ExaminationData exam, BufferedImage image, String sourcename )
+          throws IOException
+  {
+    int i;
+    PageData page;
+    QuestionData question;
+    ResponseData response;
+    QRScanResult result;
+
+    System.out.println( "\n\n\nDecoding a page." );
+    
+
     try {
       double[] triangle = new double[6];
 
@@ -218,14 +265,14 @@ public class PageDecoder
       // Bottom left corner
       System.out.println( "Decoding page qr." );
       result = decodeQR( image,
-              (int)(rough_dpi*0.5),
+              (int)(rough_dpi*0.3),
               image.getHeight()-(int)(rough_dpi*1.9),
               (int)(rough_dpi*2.0),
-              image.getHeight()-(int)(rough_dpi*0.5)
+              image.getHeight()-(int)(rough_dpi*0.3)
               );
       if ( result == null )
         return null;
-      System.out.println( "Processing decoded QR." );
+      System.out.println( "Processing decoded QR.  [" + result.getText() + "]" );
       StringTokenizer ptok = new StringTokenizer( result.getText(), "/" );
       String candidate_name = ptok.nextToken();
       String candidate_number = ptok.nextToken();
@@ -237,7 +284,7 @@ public class PageDecoder
       catch ( NumberFormatException nfe ) {}
 
       // Silly bug work around
-      if ( question_count > 4 ) question_count = 4;
+      //if ( question_count > 4 ) question_count = 4;
 
       System.out.println( "     name: " + candidate_name );
       System.out.println( "   number: " + candidate_number );
@@ -245,7 +292,7 @@ public class PageDecoder
       System.out.println( "questions: " + question_count );
 
       page = new PageData( exam, candidate_name, candidate_number, page_number );
-      page.source = uri.toString();
+      page.source = sourcename;
       System.out.println( "Done decoding page qr." );
       if ( question_count == 0 )
         return page;
@@ -258,11 +305,14 @@ public class PageDecoder
       // Take top left corner only
       result = decodeQR( image,
               (int)(rough_dpi*0.1 ),
-              (int)(rough_dpi*0.75),
+              (int)(rough_dpi*0.5),
               (int)(rough_dpi*1.75 ),
               (int)(rough_dpi*2.5 )  );
       if ( result == null )
+      {
+        System.out.println( "No top left corner QR code." );
         return null;
+      }
       // Not really interested in data right now
       ResultPoint[] top_left_points = result.getResultPoints();
       triangle[0] = top_left_points[1].getX() + (int)(rough_dpi*0.1 );
@@ -273,8 +323,11 @@ public class PageDecoder
       //page.height = Math.rint( checkpagescale( triangle ) * 100.0) / 100.0;
       page.height = checkpagescale( triangle );
       // are some scan lines missing?
-      if ( page.height < 16.4 )
+      if ( page.height < 16 )
+      {
+        System.out.println( "Bailing out on this page. page.height = " + page.height );
         return null;
+      }
       
       //for ( i=0; i<6; i++ )
       //  System.out.println( "triangle[" + i + "] = " + triangle[i] );
@@ -302,7 +355,6 @@ public class PageDecoder
       voffset_hnth_inch = 0.0;
       for ( int q=0; q<question_count; q++ )
       {
-        question = new QuestionData( page );
         
         System.out.println( "==================================" );
         hoffset_hnth_inch = 0.0;
@@ -323,7 +375,9 @@ public class PageDecoder
                 (int)(triangle[0]+offset_x+(int)(rough_dpi)),
                 (int)(triangle[1]+offset_y+(int)(rough_dpi))       );
         if ( result == null )
-          return null;
+          break;
+
+        question = new QuestionData( page );
         
         question_points = result.getResultPoints();
 
@@ -340,7 +394,7 @@ public class PageDecoder
         //  System.out.println( "question_scale[" + i + "] = " + question_scale[i] );
 
 
-        question_code = decodeQuestion( result.getBytes() );
+        question_code = decodeQuestion( result );
         System.out.println( "Question ID " + question_code.id   );
         System.out.println( "       Next " + question_code.next );
         voffset_hnth_inch += question_code.next * 10;
@@ -378,7 +432,7 @@ public class PageDecoder
       return page;
     } catch (ReaderException e) {
       e.printStackTrace();
-      System.err.println(uri.toString() + ": No barcode found");
+      System.err.println(sourcename + ": No barcode found");
       return null;
     }
   }
@@ -388,10 +442,10 @@ public class PageDecoder
   {
     QuestionData question;
     ResponseData response;
-    ResponseBoxColourLookupTable lookup = new ResponseBoxColourLookupTable();
-    LookupOp lop = new LookupOp( lookup, null );
-    IdentityLookupTable idlookup = new IdentityLookupTable();
-    LookupOp idlop = new LookupOp( idlookup, null );
+    ResponseBoxColourLookupTable lookup = null;
+    LookupOp lop = null;
+    IdentityLookupTable idlookup = null;
+    LookupOp idlop = null;
     BufferedImage temp;
     QTIElementItem qti_item;
     boolean one_only;
@@ -419,9 +473,18 @@ public class PageDecoder
         temp = response.box_image;
 
         response.box_image = new BufferedImage( temp.getWidth(), temp.getHeight(),
-                                                BufferedImage.TYPE_INT_RGB );
+                                                temp.getType() );
         response.filtered_image = new BufferedImage( temp.getWidth(), temp.getHeight(),
-                                                      BufferedImage.TYPE_INT_RGB );
+                                                      temp.getType() );
+
+        if ( lookup == null )
+        {
+          lookup = new ResponseBoxColourLookupTable( temp.getColorModel().getNumComponents() );
+          lop = new LookupOp( lookup, null );
+          idlookup = new IdentityLookupTable( temp.getColorModel().getNumComponents() );
+          idlop = new LookupOp( idlookup, null );
+        }
+
         idlop.filter( temp, response.box_image );
         lookup.resetStatistics();
         lop.filter( temp, response.filtered_image );
@@ -438,7 +501,7 @@ public class PageDecoder
       {
         // now processing single available option
         // low threshold for accepting a mark
-        if ( darkest >= 0 && darkest_dark_pixels > 0.02 )
+        if ( darkest >= 0 && darkest_dark_pixels > 0.01 )
         {
           // find next darkest selection
           next_darkest = -1;

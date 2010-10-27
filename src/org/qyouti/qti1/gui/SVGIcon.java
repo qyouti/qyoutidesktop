@@ -24,8 +24,8 @@ public class SVGIcon
     int width=100;
     int height=50;
 
-    Integer x = null;
-    Integer y = null;
+    public Integer x = null;
+    public Integer y = null;
     Element fragment;
 
     @Override

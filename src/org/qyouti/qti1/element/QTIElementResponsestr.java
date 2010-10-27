@@ -26,6 +26,8 @@
 
 package org.qyouti.qti1.element;
 
+import java.util.Vector;
+import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.QTIResponseUnsupported;
 
 /**
@@ -33,7 +35,71 @@ import org.qyouti.qti1.QTIResponseUnsupported;
  * @author jon
  */
 public class QTIElementResponsestr
-        extends QTIResponseUnsupported
+        extends QTIResponse
 {
+  QTIElementRenderfib renderfib;
+  boolean supported = false;
+  
+  String[] current;
 
+
+  @Override
+  public boolean isSupported()
+  {
+    return supported;
+  }
+
+  @Override
+  public Object getCurrentValue()
+  {
+    return current;
+  }
+
+  @Override
+  public void setCurrentValue(Object value)
+  {
+    if ( !(value instanceof String[]) )
+      throw new IllegalArgumentException( "Attempt to set response string to non-String array value." );
+
+    String[] newcurrent = (String[])value;
+
+    // passed all checks so go ahead and set it!
+    current = newcurrent;
+  }
+
+  @Override
+  public boolean areResponsesAllowed()
+  {
+    // any response is an allowed response right now but in
+    // the future this might check that numerical input is numerical etc.
+    return true;
+  }
+
+
+
+
+    @Override
+  public void initialize()
+  {
+    super.initialize();
+
+    supported = false;
+
+    Vector<QTIElementRenderfib> fibs = findElements( QTIElementRenderfib.class, true );
+    if ( fibs.size() != 1 )
+      return;
+
+    renderfib = fibs.get(0);
+
+    supported = true;
+  }
+
+
+  @Override
+  public void reset()
+  {
+    current = new String[0];
+  }
+
+  
 }

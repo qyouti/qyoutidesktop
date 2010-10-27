@@ -36,13 +36,19 @@ public class ResponseBoxColourLookupTable
         extends LookupTable
 {
   int n_black, n_white;
+  int threshold = 220;
 
-  public ResponseBoxColourLookupTable()
+  public ResponseBoxColourLookupTable( int components )
   {
-    super( 0, 3 );
+    super( 0, components );
     n_black = n_white = 0;
   }
 
+
+  public void setThreshold( double t )
+  {
+       threshold = (int)(t * 255.0);
+  }
 
   @Override
   public int[] lookupPixel(int[] src, int[] dest)
@@ -52,9 +58,11 @@ public class ResponseBoxColourLookupTable
     // output based on threshold applied to red channel
 
     //dest[0] = src[0] < 174 ? 0 : 255;
-    dest[0] = src[0] < 200 ? 0 : 255;
+    dest[0] = src[0] < threshold ? 0 : 255;
     dest[1] = dest[0];
     dest[2] = dest[0];
+    if ( dest.length == 4 )
+      dest[3] = 255;
 
     if ( dest[0] == 0 ) n_black++; else n_white++;
     return dest;

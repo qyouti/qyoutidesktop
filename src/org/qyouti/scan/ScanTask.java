@@ -26,10 +26,16 @@
 
 package org.qyouti.scan;
 
+import com.sun.pdfview.PDFFile;
+import com.sun.pdfview.PDFPage;
 import org.qyouti.QyoutiView;
 import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.*;
@@ -48,6 +54,7 @@ public class ScanTask
   ExaminationData exam;
   File scanfolder;
   public boolean active=false;
+  Vector<String> errorpages= new Vector<String>();
 
   public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder )
   {
@@ -60,50 +67,53 @@ public class ScanTask
   public void run()
   {
     active=true;
-    Vector<String> errorpages= new Vector<String>();
 
     try
     {
       File[] filenames;
       
-      /*
-      filenames = folder.listFiles();
-      Arrays.sort(filenames);
-      for ( int i=0; i<filenames.length; i++ )
-      {
-        if ( filenames[i].getName().startsWith( "QUE_" ) &&
-             filenames[i].getName().endsWith( ".xml" )   )
-          exam.loadAssessmentItem( filenames[i] );
-      }
-      */
-
       PageData page;
       filenames = scanfolder.listFiles();
       Arrays.sort(filenames);
+      FileInputStream fis;
+      FileChannel fc;
+      MappedByteBuffer bb;
+      PDFFile pdffile;
+      PDFPage pdfpage;
+      Image image;
+
       for ( int i=0; i<filenames.length; i++ )
       {
-        if ( filenames[i].getName().endsWith( ".png" ) )
+        if ( filenames[i].getName().endsWith( ".png" ) ||
+             filenames[i].getName().endsWith( ".jpg" ) )
         {
           // Read data from page.
-          page = PageDecoder.decodeOneArgument( exam, filenames[i].getCanonicalPath() );
-          if ( page == null )
+          page = PageDecoder.decode( exam, filenames[i].getCanonicalPath() );
+          postProcessPage( page, filenames[i].getCanonicalPath() );
+        }
+        if ( filenames[i].getName().endsWith( ".pdf" ) )
+        {
+          // Open the file and then get a channel from the stream
+          fis = new FileInputStream(filenames[i].getCanonicalPath());
+          fc = fis.getChannel();
+
+          // Get the file's size and then map it into memory
+          int sz = (int)fc.size();
+          bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, sz);
+          pdffile = new PDFFile( bb );
+          for ( int j=0; j<pdffile.getNumPages(); j++ )
           {
-            errorpages.add( filenames[i].getName() );
-            continue;
-            //break;
+            //  Pages start at 1 and asking for 0 also returns 1!!!
+            pdfpage = pdffile.getPage(j+1,true);
+            System.out.println( "Scanning PDF file " + (pdfpage.getWidth()/72.0) + "\" by " + (pdfpage.getHeight()/72.0) + "\"" );
+            image = pdfpage.getImage(
+                (int)(300.0*pdfpage.getWidth()/72.0),
+                (int)(300.0*pdfpage.getHeight()/72.0), null, null );
+            System.out.println( "Class " + image.getClass().getCanonicalName() );
+            page = PageDecoder.decode( exam, (BufferedImage)image, filenames[i].getCanonicalPath() + " page " + (j+1) );
+            postProcessPage( page, filenames[i].getCanonicalPath() + " page " + (j+1) );
           }
-          // Compute outcomes based on QTI def of question
-          for ( int j=0; j<page.questions.size(); j++ )
-          {
-            page.questions.get( j ).processResponses();
-          }
-          if ( page.questions.size() > 0 )
-          {
-            // recalculates total score after every page
-            page.candidate.processAllResponses();
-            // and updates presentation of data
-            view.gotoQuestion( page.questions.lastElement() );
-          }
+          fc.close();
         }
       }
 
@@ -122,5 +132,26 @@ public class ScanTask
     active=false;
   }
 
+  private void postProcessPage( PageData page, String sourcename )
+  {
+    if ( page == null )
+    {
+      errorpages.add( sourcename );
+      return;
+      //break;
+    }
+    // Compute outcomes based on QTI def of question
+    for ( int j=0; j<page.questions.size(); j++ )
+    {
+      page.questions.get( j ).processResponses();
+    }
+    if ( page.questions.size() > 0 )
+    {
+      // recalculates total score after every page
+      page.candidate.processAllResponses();
+      // and updates presentation of data
+      view.gotoQuestion( page.questions.lastElement() );
+    }
+  }
 
 }

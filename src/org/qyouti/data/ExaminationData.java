@@ -86,7 +86,7 @@ public class ExaminationData
 
     qdefs.itemAnalysis(candidates_sorted, analyses);
     ResponseAnalysis ranal;
-    System.out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 95% limit\",\"Upper 95% limit\",,,,,,,\n");
+    System.out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 90% limit\",\"Upper 90% limit\",,,,,,,\n");
     for (int i = 0; i < analyses.size(); i++)
     {
       for (int j = 0; j < analyses.get(i).response_analyses.size(); j++)
@@ -119,18 +119,18 @@ public class ExaminationData
           System.out.print(",,,");
           if (ranal.right + ranal.wrong < 10)
           {
-            System.out.print(",*,,,,,,\"Not enough data.\"");
+            System.out.print(",*,,,,,,");
           } else
           {
             if (ranal.right > ranal.wrong)
             {
-              System.out.print(",,*,,,,,\"Too easy. Can't calculate stats.\"");
+              System.out.print(",,*,,,,,");
             } else if (ranal.right < ranal.wrong)
             {
               System.out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
             } else
             {
-              System.out.print(",*,,,,,,\"Not enough data.\"");
+              System.out.print(",*,,,,,,");
             }
           }
         } else
@@ -149,7 +149,7 @@ public class ExaminationData
             System.out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
           } else
           {
-            System.out.print(",,,,,,*,\"No significant discrimination\"");
+            System.out.print(",,,,,,*,");
           }
         }
         System.out.print("\n");

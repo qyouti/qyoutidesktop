@@ -32,6 +32,7 @@ import org.apache.batik.dom.svg.*;
 import org.apache.batik.gvt.GraphicsNode;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.svggen.SVGIDGenerator;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.*;
 import org.w3c.dom.svg.SVGDocument;
@@ -42,6 +43,7 @@ import org.w3c.dom.svg.SVGDocument;
  */
 public class ComponentToSvg
 {
+  private static SVGIDGenerator idgen = new SVGIDGenerator();
 
     public ComponentToSvg()
     {
@@ -52,36 +54,25 @@ public class ComponentToSvg
         String svg = null;
         try
         {
-            svg = convertToString(component);
-            CharArrayReader reader = new CharArrayReader(svg.toCharArray());
-            SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
-            SVGDocument svgdoc = f.createSVGDocument("?", reader);
+            // Get component to render into SVG
+            DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+            SVGDocument document = (SVGDocument) impl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null);
+            SVGGeneratorContext genctx = SVGGeneratorContext.createDefault(document);
+            genctx.setEmbeddedFontsOn(true);
+            genctx.setIDGenerator(idgen);
+            SVGGraphics2D svgGenerator = new SVGGraphics2D(genctx, true);
+            component.paint(svgGenerator);
+            Element root = document.getDocumentElement();
+            svgGenerator.getRoot(root);
+
             BridgeContext ctx = new BridgeContext(new UserAgentAdapter());
             GVTBuilder builder = new GVTBuilder();
 
-            GraphicsNode gvtRoot = builder.build(ctx, svgdoc);
+            GraphicsNode gvtRoot = builder.build(ctx, document);
             Rectangle2D rect = gvtRoot.getSensitiveBounds();
-            System.out.println("SVG bounds : " + rect.toString());
+            System.out.println("SVG bounds : " + rect );
 
-            SvgConversionResult svgresult = new SvgConversionResult(svgdoc, svg, gvtRoot);
-
-            /*
-            Element svgelement = svgresult.getDocument().getDocumentElement();
-            System.out.println("SVG Doc tag name: " + svgelement.getTagName());
-            NodeList nl = svgelement.getElementsByTagName("g");
-            if (nl.getLength() > 0)
-            {
-                System.out.println("Processing transform on svg tree.");
-                Element gelement = (Element) nl.item(0);
-                if (gelement == null)
-                {
-                    System.out.println("No 'g' element.");
-                } else
-                {
-                    gelement.setAttribute("transform", "scale(0.1)");
-                }
-            }
-            */
+            SvgConversionResult svgresult = new SvgConversionResult(document, gvtRoot);
             
             return svgresult;
         } catch (Exception e)

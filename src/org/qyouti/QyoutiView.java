@@ -37,18 +37,27 @@ import org.jdesktop.application.FrameView;
 import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
 import java.util.Enumeration;
+import java.util.Vector;
 import java.util.zip.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.print.PrintTranscoder;
+import org.apache.fop.svg.PDFTranscoder;
 import org.qyouti.dialog.NewExamination;
 import org.qyouti.dialog.PreferencesDialog;
+import org.qyouti.print.MultiPagePDFTranscoder;
 import org.qyouti.print.PrintTask;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.gui.QTIItemRenderer;
 import org.qyouti.util.QyoutiUtils;
+import org.w3c.dom.svg.SVGDocument;
 
 /**
  * The application's main frame.
@@ -245,7 +254,7 @@ public class QyoutiView extends FrameView
       aboutBox = new QyoutiAboutBox(mainFrame);
       aboutBox.setLocationRelativeTo(mainFrame);
     }
-    QyoutiApp.getApplication().show(aboutBox);
+    //QyoutiApp.getApplication().show(aboutBox);
   }
 
   /** This method is called from within the constructor to
@@ -279,6 +288,7 @@ public class QyoutiView extends FrameView
     newExamButton = new javax.swing.JButton();
     jPanel17 = new javax.swing.JPanel();
     printexamButton = new javax.swing.JButton();
+    examtopdfButton = new javax.swing.JButton();
     previewexamButton = new javax.swing.JButton();
     importscansButton = new javax.swing.JButton();
     jPanel18 = new javax.swing.JPanel();
@@ -392,11 +402,11 @@ public class QyoutiView extends FrameView
     statusPanel.setLayout(statusPanelLayout);
     statusPanelLayout.setHorizontalGroup(
       statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 562, Short.MAX_VALUE)
+      .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 678, Short.MAX_VALUE)
       .addGroup(statusPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addComponent(statusMessageLabel)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 376, Short.MAX_VALUE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 492, Short.MAX_VALUE)
         .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(statusAnimationLabel)
@@ -462,6 +472,15 @@ public class QyoutiView extends FrameView
       }
     });
     jPanel17.add(printexamButton);
+
+    examtopdfButton.setText(resourceMap.getString("examtopdfButton.text")); // NOI18N
+    examtopdfButton.setName("examtopdfButton"); // NOI18N
+    examtopdfButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        examtopdfButtonActionPerformed(evt);
+      }
+    });
+    jPanel17.add(examtopdfButton);
 
     previewexamButton.setText(resourceMap.getString("previewexamButton.text")); // NOI18N
     previewexamButton.setName("previewexamButton"); // NOI18N
@@ -1149,6 +1168,7 @@ public class QyoutiView extends FrameView
 
     private void printexamButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_printexamButtonActionPerformed
     {//GEN-HEADEREND:event_printexamButtonActionPerformed
+      int i, j;
       JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
 
       if (exam == null)
@@ -1168,6 +1188,40 @@ public class QyoutiView extends FrameView
         JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no candidates in the exam.");
         return;
       }
+
+      PrintTranscoder printtranscoder = new PrintTranscoder();
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SHOW_PRINTER_DIALOG, Boolean.TRUE );
+      //printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SHOW_PAGE_DIALOG,    Boolean.TRUE );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SCALE_TO_PAGE,       Boolean.TRUE );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_BOTTOM, new Float(0.01) );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_LEFT,   new Float(0.01) );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_RIGHT,  new Float(0.01) );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
+
+      try
+      {
+        URI examfolderuri;
+        Vector<SVGDocument> paginated;
+        TranscoderInput tinput;
+
+        for ( j=0; j<exam.candidates_sorted.size(); j++ )
+        {
+          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
+          paginated = QTIItemRenderer.paginateItems(examfolderuri, exam.qdefs.qti.getItems(), exam.candidates_sorted.elementAt(j));
+          for ( i=0; i<paginated.size(); i++ )
+          {
+            tinput = new TranscoderInput( paginated.elementAt(i) );
+            printtranscoder.transcode( tinput, new TranscoderOutput() );
+          }
+        }
+        printtranscoder.print();
+      } catch (Exception ex)
+      {
+        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+      /*
       File renderfolder = new File(examfolder, "render");
       if (!renderfolder.exists())
       {
@@ -1175,6 +1229,8 @@ public class QyoutiView extends FrameView
       }
       PrintTask ptask = new PrintTask(exam.examfile, renderfolder, preferences );
       ptask.start();
+      */
+
 
 }//GEN-LAST:event_printexamButtonActionPerformed
 
@@ -1387,7 +1443,7 @@ public class QyoutiView extends FrameView
               }
               questionDialog.setLocationRelativeTo(mainFrame);
             }            
-            questionDialog.setItem( exam.qdefs.qti.getItems().elementAt(row) );
+            questionDialog.setItem( exam.qdefs.qti.getItems().elementAt(row), row+1 );
 
             QyoutiApp.getApplication().show(questionDialog);
             
@@ -1415,6 +1471,63 @@ public class QyoutiView extends FrameView
       QyoutiApp.getApplication().show(printpreviewDialog);
 
     }//GEN-LAST:event_previewexamButtonActionPerformed
+
+    private void examtopdfButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_examtopdfButtonActionPerformed
+    {//GEN-HEADEREND:event_examtopdfButtonActionPerformed
+      // TODO add your handling code here:
+
+      
+      int i, j;
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam == null)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before printing.");
+        return;
+      }
+
+
+      if (exam.qdefs == null || exam.qdefs.getRowCount() == 0)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no questions in the exam.");
+        return;
+      }
+      if (exam.candidates_sorted.isEmpty())
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no candidates in the exam.");
+        return;
+      }
+
+      
+      MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
+      try
+      {
+        URI examfolderuri;
+        Vector<SVGDocument> paginated;
+        TranscoderInput tinput;
+        TranscoderOutput transout = new TranscoderOutput( new FileOutputStream( "/home/jon/Desktop/test.pdf" ) );
+
+        for ( j=0; j<exam.candidates_sorted.size(); j++ )
+        {
+          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
+          paginated = QTIItemRenderer.paginateItems(examfolderuri, exam.qdefs.qti.getItems(), exam.candidates_sorted.elementAt(j));
+          for ( i=0; i<paginated.size(); i++ )
+          {
+            tinput = new TranscoderInput( paginated.elementAt(i) );
+            pdftranscoder.transcode( tinput, transout );
+          }
+
+        }
+        pdftranscoder.complete();
+        transout.getOutputStream().close();
+      } catch (Exception ex)
+      {
+        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+
+
+    }//GEN-LAST:event_examtopdfButtonActionPerformed
 
 
 
@@ -1470,6 +1583,7 @@ public class QyoutiView extends FrameView
   private javax.swing.JLabel debugImageLabel;
   private javax.swing.JComboBox examCombo;
   private javax.swing.JPanel examTabPanel;
+  private javax.swing.JButton examtopdfButton;
   private javax.swing.JButton exportScoresButton;
   private javax.swing.JButton importCandidatesButton;
   private javax.swing.JButton importQuestionsButton;

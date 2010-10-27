@@ -36,4 +36,28 @@ public class QTIElementRenderfib
         extends QTIRenderUnsupported
 {
 
+  public int getMaxChars()
+  {
+    int m = this.getIntAttribute("maxchars");
+    if ( m < 1 ) m = 10;
+    return m;
+  }
+
+  public int getRows()
+  {
+    int r = this.getIntAttribute("rows");
+    if ( r < 1 ) r = 1;
+    return r;
+  }
+
+  public int getColumns()
+  {
+    int m = getMaxChars();
+
+    int c = this.getIntAttribute("columns");
+    if ( c < 1 )
+      c = m;
+    return c;
+  }
+
 }

@@ -37,12 +37,12 @@ import org.w3c.dom.svg.SVGDocument;
  */
 public class SvgConversionResult
 {
-  String svg;
+  //String svg;
   SVGDocument document;
   GraphicsNode gvtRoot;
-  public SvgConversionResult( SVGDocument d, String s, GraphicsNode g ) { document = d; svg = s; gvtRoot = g; }
+  public SvgConversionResult( SVGDocument d, /*String s,*/ GraphicsNode g ) { document = d; /*svg = s;*/ gvtRoot = g; }
   public SVGDocument getDocument() { return document; }
-  public String getSvg() { return svg; }
+  //public String getSvg() { return svg; }
   public int getHeight() { return (int) Math.ceil(gvtRoot.getGeometryBounds().getMaxY()); }
   public Rectangle2D getBounds() { return gvtRoot.getGeometryBounds(); }
 }

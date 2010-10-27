@@ -90,7 +90,7 @@ public class HtmlToSvg
       Rectangle2D rect = gvtRoot.getSensitiveBounds();
       System.out.println( "SVG bounds : " + rect.toString() );
 
-      SvgConversionResult svgresult = new SvgConversionResult( svgdoc, svg, gvtRoot );
+      SvgConversionResult svgresult = new SvgConversionResult( svgdoc, /*svg,*/ gvtRoot );
       Element svgelement = svgresult.getDocument().getDocumentElement();
       System.out.println( "SVG Doc tag name: " + svgelement.getTagName() );
       NodeList nl = svgelement.getElementsByTagName( "g" );
@@ -114,7 +114,7 @@ public class HtmlToSvg
     return null;
   }
 
-
+/*
   public static void main( String[] args )
   {
     HtmlToSvg instance = new HtmlToSvg();
@@ -128,4 +128,5 @@ public class HtmlToSvg
       System.out.println( "====================================" );
     }
   }
+ */
 }

@@ -41,9 +41,11 @@ import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.print.PrintTranscoder;
+import org.qyouti.data.CandidateData;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.*;
 import org.qyouti.qti1.gui.QTIItemRenderer;
+import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -76,8 +78,13 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     public void setItems( Vector<QTIElementItem> items )
     {
 //examfolderuri
-      paginated = QTIItemRenderer.paginateItems(examfolderuri, items);
+      paginated = QTIItemRenderer.paginateItems(examfolderuri, items, new CandidateData( null, "A.Student", "00000000"));
+      //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", paginated.get(0).getDocumentElement(), true );
+
       previewcanvas.setSVGDocument( paginated.firstElement() );
+      page = 0;
+      upbutton.setEnabled(false);
+      downbutton.setEnabled( paginated.size() > 1 );
     }
 
 
@@ -95,8 +102,8 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     jScrollPane1 = new javax.swing.JScrollPane();
     previewcanvas = new org.apache.batik.swing.JSVGCanvas();
     bottompanel = new javax.swing.JPanel();
-    jButton2 = new javax.swing.JButton();
-    jButton1 = new javax.swing.JButton();
+    upbutton = new javax.swing.JButton();
+    downbutton = new javax.swing.JButton();
     printButton = new javax.swing.JButton();
     closeButton = new javax.swing.JButton();
 
@@ -113,6 +120,8 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
 
     jScrollPane1.setName("jScrollPane1"); // NOI18N
 
+    org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.qyouti.QyoutiApp.class).getContext().getResourceMap(QyoutiPrintPreviewDialog.class);
+    previewcanvas.setBackground(resourceMap.getColor("previewcanvas.background")); // NOI18N
     previewcanvas.setEnableRotateInteractor(false);
     previewcanvas.setName("previewcanvas"); // NOI18N
     previewcanvas.setRecenterOnResize(false);
@@ -124,17 +133,27 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
 
     bottompanel.setName("bottompanel"); // NOI18N
 
-    org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.qyouti.QyoutiApp.class).getContext().getResourceMap(QyoutiPrintPreviewDialog.class);
-    jButton2.setText(resourceMap.getString("jButton2.text")); // NOI18N
-    jButton2.setName("jButton2"); // NOI18N
-    bottompanel.add(jButton2);
+    upbutton.setText(resourceMap.getString("upbutton.text")); // NOI18N
+    upbutton.setName("upbutton"); // NOI18N
+    upbutton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        upbuttonActionPerformed(evt);
+      }
+    });
+    bottompanel.add(upbutton);
 
-    jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
-    jButton1.setName("jButton1"); // NOI18N
-    bottompanel.add(jButton1);
+    downbutton.setText(resourceMap.getString("downbutton.text")); // NOI18N
+    downbutton.setName("downbutton"); // NOI18N
+    downbutton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        downbuttonActionPerformed(evt);
+      }
+    });
+    bottompanel.add(downbutton);
 
     printButton.setText(resourceMap.getString("printButton.text")); // NOI18N
     printButton.setName("printButton"); // NOI18N
+    printButton.setPreferredSize(null);
     printButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         printButtonActionPerformed(evt);
@@ -176,6 +195,9 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
       printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_LEFT,   new Float(0.01) );
       printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_RIGHT,  new Float(0.01) );
       printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
+      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
+
+
     try
     {
       TranscoderInput tinput;
@@ -191,15 +213,35 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     }
     }//GEN-LAST:event_printButtonActionPerformed
 
+    private void upbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_upbuttonActionPerformed
+    {//GEN-HEADEREND:event_upbuttonActionPerformed
+      // TODO add your handling code here:
+      page--;
+      previewcanvas.setSVGDocument( paginated.elementAt(page) );
+      upbutton.setEnabled( page > 0 );
+      downbutton.setEnabled( page < (paginated.size()-1) );
+
+    }//GEN-LAST:event_upbuttonActionPerformed
+
+    private void downbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_downbuttonActionPerformed
+    {//GEN-HEADEREND:event_downbuttonActionPerformed
+      // TODO add your handling code here:
+      page++;
+      previewcanvas.setSVGDocument( paginated.elementAt(page) );
+      upbutton.setEnabled( page > 0 );
+      downbutton.setEnabled( page < (paginated.size()-1) );;
+
+    }//GEN-LAST:event_downbuttonActionPerformed
+
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel bottompanel;
   private javax.swing.JPanel centrepanel;
   private javax.swing.JButton closeButton;
-  private javax.swing.JButton jButton1;
-  private javax.swing.JButton jButton2;
+  private javax.swing.JButton downbutton;
   private javax.swing.JScrollPane jScrollPane1;
   private org.apache.batik.swing.JSVGCanvas previewcanvas;
   private javax.swing.JButton printButton;
   private javax.swing.JPanel toppanel;
+  private javax.swing.JButton upbutton;
   // End of variables declaration//GEN-END:variables
 }

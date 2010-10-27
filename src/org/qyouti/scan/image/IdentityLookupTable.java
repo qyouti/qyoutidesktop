@@ -36,9 +36,9 @@ public class IdentityLookupTable
         extends LookupTable
 {
 
-  public IdentityLookupTable()
+  public IdentityLookupTable( int components )
   {
-    super( 0, 3 );
+    super( 0, components );
   }
 
   @Override
