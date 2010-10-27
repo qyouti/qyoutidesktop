@@ -38,9 +38,9 @@ public class QRCodeColourLookupTable
   int n_black, n_white;
   int threshold = 128;
 
-  public QRCodeColourLookupTable()
+  public QRCodeColourLookupTable( int components )
   {
-    super( 0, 3 );
+    super( 0, components );
     n_black = n_white = 0;
   }
 
@@ -59,6 +59,9 @@ public class QRCodeColourLookupTable
     dest[2] = src[2] < threshold ? 0 : 255;
     dest[0] = dest[2];
     dest[1] = dest[2];
+
+    if ( dest.length == 4 )
+      dest[3] = 255;
 
     if ( dest[2] == 0 ) n_black++; else n_white++;
     return dest;

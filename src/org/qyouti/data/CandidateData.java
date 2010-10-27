@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.io.*;
 import java.util.*;
+import org.qyouti.qti1.gui.UserRenderPreferences;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -43,6 +44,7 @@ public class CandidateData
   public String id;
   public Double score = null;
 
+  public UserRenderPreferences preferences = null;
 
   public CandidateData( ExaminationData exam, String name, String id )
   {
@@ -50,6 +52,7 @@ public class CandidateData
     this.name = name;
     this.id = id;
     this.score = null;
+    this.preferences = null;
   }
 
 
@@ -71,6 +74,11 @@ public class CandidateData
     {
       page = new PageData( exam, name, id, (Element)nl.item( j ) );
     }
+    nl = element.getElementsByTagName( "preferences" );
+    if ( nl.getLength() > 0 )
+      preferences = new UserRenderPreferences( (Element)nl.item( 0 ) );
+    else
+      preferences = null;
   }
 
 
@@ -115,7 +123,8 @@ public class CandidateData
     if ( score != null )
       writer.write( " score=\"" + score + "\"" );
     writer.write( ">\n" );
-
+    if ( preferences != null )
+      preferences.emit(writer);
     for ( int i=0; i<pages.size(); i++ )
       pages.get( i ).emit( writer );
 

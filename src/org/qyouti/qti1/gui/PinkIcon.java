@@ -21,7 +21,7 @@ public class PinkIcon
         extends SVGIcon
 {
     static Color bordercolor = new Color( 255,   0, 255 );
-    static Color   fillcolor = new Color( 255, 128, 255 );
+    static Color   fillcolor = new Color( 255, 200, 255 );
 
     int borderwidth;
 

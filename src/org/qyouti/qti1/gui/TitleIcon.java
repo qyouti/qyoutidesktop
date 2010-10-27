@@ -22,7 +22,7 @@ public class TitleIcon
 
   String content;
 
-  public TitleIcon(int w, int h, int fs )
+  public TitleIcon( int qnumber, int w, int h, int fs )
   {
     width = w;
     height = h;
@@ -36,7 +36,7 @@ public class TitleIcon
     t.setAttribute("x", "0");
     t.setAttribute("y", Integer.toString(  fs + ((h-fs)/2)  )  );
     t.setAttribute("font-size", Integer.toString(fs));
-    t.setTextContent( "Question #" );
+    t.setTextContent( "Question " + qnumber );
 
     g.appendChild(t);
     setSVG(g);

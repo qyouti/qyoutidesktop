@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -75,7 +76,7 @@ public class ResponseData
         line = (Element) lines.item( x );
         text = line.getTextContent();
         for ( y=0; y<text.length(); y+=10 )
-          image.setRGB( x, y/10, Integer.parseInt( text.substring( y+3, y+9 ), 16 ) | 0xff000000 );
+          image.setRGB( x, y/10, QyoutiUtils.parseInt( text, y+3, 6, 16 ) | 0xff000000 );
       }
       box_image = image;
     }
@@ -92,7 +93,8 @@ public class ResponseData
         line = (Element) lines.item( x );
         text = line.getTextContent();
         for ( y=0; y<text.length(); y++ )
-          image.setRGB( x, y, "#".equals( text.substring( y, y+1 ) )?0xff000000:0xffffffff );
+          //image.setRGB( x, y, "#".equals( text.substring( y, y+1 ) )?0xff000000:0xffffffff );
+          image.setRGB( x, y, (text.charAt(y) == '#')?0xff000000:0xffffffff );
       }
       filtered_image = image;
     }

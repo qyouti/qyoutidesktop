@@ -48,20 +48,9 @@ public class QTIResponseUnsupported
   }
 
   @Override
-  public int getResponsePermutations( String ident )
-  {
-    return -1;
-  }
-
-  @Override
-  public void setResponsePermutation( String ident, int perm)
-  {
-    throw new UnsupportedOperationException( "setResponsePermutation unsupported in this response type");
-  }
-
-  @Override
   public boolean areResponsesAllowed()
   {
-    return false;
+    return true;
   }
+
 }

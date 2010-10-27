@@ -149,11 +149,11 @@ public class QuestionDefinitions
                   candidates_right.toArray( new Double[0] ),
                   candidates_wrong.toArray( new Double[0] ) );
           ranal.median_difference = hodges_lehmann.getDelta();
-          ranal.median_difference_lower = hodges_lehmann.getLowerDelta();
-          ranal.median_difference_upper = hodges_lehmann.getUpperDelta();
+          ranal.median_difference_lower = hodges_lehmann.getLower90Delta();
+          ranal.median_difference_upper = hodges_lehmann.getUpper90Delta();
           System.out.println( "Median difference " + hodges_lehmann.getDelta() );
-          System.out.println( "lower 95% limit  " + hodges_lehmann.getLowerDelta() );
-          System.out.println( "upper 95% limit  " + hodges_lehmann.getUpperDelta() );
+          System.out.println( "lower 95% limit  " + hodges_lehmann.getLower95Delta() );
+          System.out.println( "upper 95% limit  " + hodges_lehmann.getUpper95Delta() );
         }
       }
     }

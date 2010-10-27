@@ -39,6 +39,7 @@ import org.apache.batik.swing.JSVGCanvas;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.*;
 import org.qyouti.qti1.gui.QTIItemRenderer;
+import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.svg.SVGDocument;
 
 /**
@@ -64,43 +65,19 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
         
     }
 
-    public void setItem( QTIElementItem item )
+    public void setItem( QTIElementItem item, int qnumber )
     {
         this.item = item;
 
-        renderer = new QTIItemRenderer( examfolderuri, item );
+        renderer = new QTIItemRenderer( examfolderuri, item, qnumber, null );
         if ( renderer == null )
         {
             previewcanvas.setSVGDocument(null);
             return;
         }
 
-        String strsvg = DOMUtilities.getXML(renderer.getPreviewSVGDocument().getDocumentElement());
+        //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", renderer.getPreviewSVGDocument().getDocumentElement(), true );
 
-        {
-            FileWriter writer = null;
-            try
-            {
-                writer = new FileWriter("/home/jon/Desktop/debug.svg");
-                writer.write("<?xml version=\"1.0\"?>\n");
-                writer.write(strsvg);
-            } catch (IOException ex)
-            {
-                Logger.getLogger(QyoutiQuestionDialog.class.getName()).log(Level.SEVERE, null, ex);
-            } finally
-            {
-                try
-                {
-                    writer.close();
-                } catch (IOException ex)
-                {
-                    Logger.getLogger(QyoutiQuestionDialog.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-        System.out.println( "=====================================" );
-        System.out.println( strsvg );
-        System.out.println( "=====================================" );
         previewcanvas.setSVGDocument( (SVGDocument) renderer.getPreviewSVGDocument());
     }
 

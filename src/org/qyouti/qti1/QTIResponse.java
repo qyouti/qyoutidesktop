@@ -41,6 +41,6 @@ public abstract class QTIResponse
 
   abstract public boolean areResponsesAllowed();
   
-  abstract public int getResponsePermutations( String ident );
-  abstract public void setResponsePermutation( String ident, int perm );
+  //abstract public int getResponsePermutations( String ident );
+  //abstract public void setResponsePermutation( String ident, int perm );
 }

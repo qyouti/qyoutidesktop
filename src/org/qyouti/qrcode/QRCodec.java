@@ -42,6 +42,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Hashtable;
 import java.util.Random;
@@ -290,34 +293,35 @@ public class QRCodec
 
 
 
-  
+  /*
+   * 
+   */
   public static Element svgQuestionQRCode( String qid, double qheight, String qcoords, double width )
   {
     try
     {
-      byte h = (byte)Math.floor( qheight / 10 );
+      ByteArrayOutputStream baout = new ByteArrayOutputStream();
+      DataOutputStream out = new DataOutputStream( baout );
+
+
+      out.writeUTF(qid);
+      short h = (short)Math.floor( qheight/10 ); //tenths of an inch
+      out.writeShort( h );
+
       StringTokenizer tok = new StringTokenizer( qcoords, " " );
-      byte[] coords = new byte[tok.countTokens()*2];
       short coord;
-      for ( int i=0; i< (coords.length/2); i++ )
+      for ( int i=0; tok.hasMoreTokens(); i++ )
       {
         coord = Short.parseShort( tok.nextToken() );
-        coords[i*2] = (byte)(coord & 0xff);
-        coords[i*2+1] = (byte)((coord >> 8) & 0xff);
+        out.writeShort(coord);
       }
-      byte[] ba_qid = qid.getBytes("utf8");
+
       
-      byte[] buffer = new byte[ba_qid.length+1 + 1 + coords.length];
-      System.arraycopy( ba_qid, 0, buffer, 0, ba_qid.length );
-      buffer[ba_qid.length] = 0; // zero terminate
-      buffer[ba_qid.length+1] = h;
-      System.arraycopy( coords, 0, buffer, ba_qid.length+2, coords.length );
-      
+      byte[] buffer = baout.toByteArray();
       return encodeSVG(buffer, width);
     }
-    catch (UnsupportedEncodingException ex)
+    catch (IOException ex)
     {
-      Logger.getLogger(QRCodec.class.getName()).log(Level.SEVERE, null, ex);
     }
 
     return null;

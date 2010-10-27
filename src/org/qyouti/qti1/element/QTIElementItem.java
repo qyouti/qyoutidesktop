@@ -169,6 +169,7 @@ public class QTIElementItem
   public void initialize()
   {
     super.initialize();
+    int rlids=0, rstrs=0;
 
     supported = false;
 
@@ -181,10 +182,17 @@ public class QTIElementItem
     {
       if ( responses.get(i) instanceof QTIResponseUnsupported )
         return;
+      if ( responses.get(i) instanceof QTIElementResponselid )
+        rlids++;
+      if ( responses.get(i) instanceof QTIElementResponsestr )
+        rstrs++;
       response_table.put( responses.get(i).getIdent(), responses.get(i) );
     }
 
-    
+    // one multi choice or one text entry is supported
+    if ( (rlids+rstrs) != 1 )
+      return;
+
     Vector<QTIElementPresentation> presentations = findElements( QTIElementPresentation.class, true );
     if ( presentations.size() == 1 )
       presentation = presentations.get( 0 );
@@ -209,13 +217,14 @@ public class QTIElementItem
 
     // now determine correct statements in multi choice.
     Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() != 1 )
-      return;
-
-    reset();
-    responselids.get(0).computeCorrectResponses();
-    highest_possible_score_known=true;
-    highest_possible_score=responselids.get(0).highest_possible_score;
+    if ( responselids.size() == 1 )
+    {
+      reset();
+      responselids.get(0).computeCorrectResponses();
+      highest_possible_score_known=true;
+      highest_possible_score=responselids.get(0).highest_possible_score;
+    }
+    
     reset();
   }
 

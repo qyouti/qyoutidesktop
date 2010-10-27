@@ -170,7 +170,7 @@ public class QTIElementResponselid
     return true;
   }
 
-  @Override
+
   public int getResponsePermutations( String ident )
   {
     String card = getCardinality();
@@ -179,7 +179,6 @@ public class QTIElementResponselid
     return 1 << (renderchoice.responselabels.size() - 1);
   }
 
-  @Override
   public void setResponsePermutation( String ident, int perm )
   {
     String card = getCardinality();
@@ -323,6 +322,10 @@ public class QTIElementResponselid
   @Override
   public boolean areResponsesAllowed()
   {
+    // is the response given an allowable response according to
+    // the definition of the item?
+    // If only one answer allowed and user has given multiple
+    // answers, this is not an allowed response.
     if ( "single".equals( getCardinality() ) &&
             current != null &&
             current.length > 1 )
