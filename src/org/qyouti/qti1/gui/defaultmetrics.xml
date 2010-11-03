@@ -26,6 +26,7 @@
 
   <entry key="qrcode-page-x">0.3</entry>
   <entry key="qrcode-page-y">10.2</entry>
+  <entry key="qrcode-page-encroachment">1.1</entry>
 
 
   <entry key="item-title-height">0.25</entry>

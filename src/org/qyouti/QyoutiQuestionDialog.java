@@ -51,15 +51,17 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     QTIElementItem item = null;
     QTIItemRenderer renderer = null;
     URI examfolderuri;
+    QTIRenderOptions options;
 
     /** Creates new form QyoutiQuestionDialog
      * @param parent
      * @param modal 
      */
-    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal, URI examfolderuri)
+    public QyoutiQuestionDialog(java.awt.Frame parent, boolean modal, URI examfolderuri, QTIRenderOptions options )
     {
         super(parent, modal);
         this.examfolderuri = examfolderuri;
+        this.options = options;
         getRootPane().setDefaultButton(closeButton);
         initComponents();
         
@@ -78,7 +80,7 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
 
         //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", renderer.getPreviewSVGDocument().getDocumentElement(), true );
 
-        previewcanvas.setSVGDocument( (SVGDocument) renderer.getPreviewSVGDocument());
+        previewcanvas.setSVGDocument( (SVGDocument) renderer.getPreviewSVGDocument( options ));
     }
 
 
