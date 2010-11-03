@@ -49,6 +49,7 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.print.PrintTranscoder;
 import org.apache.fop.svg.PDFTranscoder;
+import org.qyouti.dialog.ExamOptionsDialog;
 import org.qyouti.dialog.NewExamination;
 import org.qyouti.dialog.PreferencesDialog;
 import org.qyouti.print.MultiPagePDFTranscoder;
@@ -287,6 +288,7 @@ public class QyoutiView extends FrameView
     examCombo = new javax.swing.JComboBox();
     newExamButton = new javax.swing.JButton();
     jPanel17 = new javax.swing.JPanel();
+    optionsButton = new javax.swing.JToggleButton();
     printexamButton = new javax.swing.JButton();
     examtopdfButton = new javax.swing.JButton();
     previewexamButton = new javax.swing.JButton();
@@ -402,11 +404,11 @@ public class QyoutiView extends FrameView
     statusPanel.setLayout(statusPanelLayout);
     statusPanelLayout.setHorizontalGroup(
       statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 678, Short.MAX_VALUE)
+      .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 724, Short.MAX_VALUE)
       .addGroup(statusPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addComponent(statusMessageLabel)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 492, Short.MAX_VALUE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 538, Short.MAX_VALUE)
         .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(statusAnimationLabel)
@@ -463,6 +465,15 @@ public class QyoutiView extends FrameView
 
     jPanel17.setName("jPanel17"); // NOI18N
     jPanel17.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 25, 5));
+
+    optionsButton.setText(resourceMap.getString("optionsButton.text")); // NOI18N
+    optionsButton.setName("optionsButton"); // NOI18N
+    optionsButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        optionsButtonActionPerformed(evt);
+      }
+    });
+    jPanel17.add(optionsButton);
 
     printexamButton.setText(resourceMap.getString("printexamButton.text")); // NOI18N
     printexamButton.setName("printexamButton"); // NOI18N
@@ -1208,7 +1219,12 @@ public class QyoutiView extends FrameView
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-          paginated = QTIItemRenderer.paginateItems(examfolderuri, exam.qdefs.qti.getItems(), exam.candidates_sorted.elementAt(j));
+          paginated = QTIItemRenderer.paginateItems(
+              examfolderuri,
+              exam.qdefs.qti.getItems(),
+              exam.candidates_sorted.elementAt(j),
+              exam
+              );
           for ( i=0; i<paginated.size(); i++ )
           {
             tinput = new TranscoderInput( paginated.elementAt(i) );
@@ -1436,7 +1452,8 @@ public class QyoutiView extends FrameView
               try
               {
                 questionDialog = new QyoutiQuestionDialog(mainFrame, true,
-                        exam.examfile.getParentFile().getCanonicalFile().toURI());
+                        exam.examfile.getParentFile().getCanonicalFile().toURI(),
+                        exam );
               } catch (IOException ex)
               {
                 Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -1459,7 +1476,7 @@ public class QyoutiView extends FrameView
         try
         {
           printpreviewDialog = new QyoutiPrintPreviewDialog(mainFrame, true,
-                  exam.examfile.getParentFile().getCanonicalFile().toURI());
+                  exam.examfile.getParentFile().getCanonicalFile().toURI(), exam );
         } catch (IOException ex)
         {
           Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -1510,7 +1527,11 @@ public class QyoutiView extends FrameView
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-          paginated = QTIItemRenderer.paginateItems(examfolderuri, exam.qdefs.qti.getItems(), exam.candidates_sorted.elementAt(j));
+          paginated = QTIItemRenderer.paginateItems(
+              examfolderuri,
+              exam.qdefs.qti.getItems(),
+              exam.candidates_sorted.elementAt(j),
+              exam );
           for ( i=0; i<paginated.size(); i++ )
           {
             tinput = new TranscoderInput( paginated.elementAt(i) );
@@ -1528,6 +1549,26 @@ public class QyoutiView extends FrameView
 
 
     }//GEN-LAST:event_examtopdfButtonActionPerformed
+
+    private void optionsButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_optionsButtonActionPerformed
+    {//GEN-HEADEREND:event_optionsButtonActionPerformed
+      // TODO add your handling code here:
+
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+      ExamOptionsDialog dialog;
+
+      if (exam == null)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before setting options.");
+        return;
+      }
+
+      dialog = new ExamOptionsDialog( mainFrame, true, exam );
+      dialog.setLocationRelativeTo(mainFrame);
+      QyoutiApp.getApplication().show(dialog);
+      if ( !dialog.wasCancelled() )
+        exam.save();
+    }//GEN-LAST:event_optionsButtonActionPerformed
 
 
 
@@ -1628,6 +1669,7 @@ public class QyoutiView extends FrameView
   private javax.swing.JButton newExamButton;
   private javax.swing.JButton nextCandidateButton;
   private javax.swing.JButton nextResponseButton;
+  private javax.swing.JToggleButton optionsButton;
   private javax.swing.JTable outcometable;
   private javax.swing.JMenuItem prefsMenuItem;
   private javax.swing.JButton previewexamButton;

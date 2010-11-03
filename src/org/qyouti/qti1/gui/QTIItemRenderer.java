@@ -190,9 +190,12 @@ public class QTIItemRenderer
     svgres = ComponentToSvg.convert(textPane);
     Rectangle2D bounds = svgres.getBounds();
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
-    
-    svgroot.setAttribute(  "height", "" + textPane.getSize().height );
-    svgroot.setAttribute(  "viewBox", "0 0 " + getMetrics().getPropertySvgUnitsInt("page-width") + " " + textPane.getSize().height );
+
+    int effective_height = textPane.getSize().height;
+    if ( effective_height < QTIMetrics.inchesToSvg( 1 ) )
+      effective_height = (int) QTIMetrics.inchesToSvg( 1 );
+    svgroot.setAttribute(  "height", "" + effective_height );
+    svgroot.setAttribute(  "viewBox", "0 0 " + getMetrics().getPropertySvgUnitsInt("page-width") + " " + effective_height );
 
     // Where did the QRCode go?
     QRCodeIcon qricon = (QRCodeIcon)state.qriconinsert.icon;
@@ -228,7 +231,7 @@ public class QTIItemRenderer
     }
     
     // do the qr code again last so the pink icon coordinates can be passed in.
-    qricon.update( textPane.getSize().height / 10.0, coords.toString() );
+    qricon.update( effective_height / 10.0, coords.toString() );
     qricon.paintSVG(svgres.getDocument());
   }
 
@@ -296,28 +299,52 @@ public class QTIItemRenderer
       state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
       state.html.append("</div>");
       state.html.append("<div>");
-      state.open_block = true;
+//      state.open_block = true;
 
       renderSubElements( e, state );
 
-      if (state.open_block)
-      {
-        state.html.append("</div>\n");
-        state.open_block = false;
-      }
+//      if (state.open_block)
+//      {
+//        state.html.append("</div>\n");
+//        state.open_block = false;
+//      }
       state.html.append("\n</td>\n<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-right") + "\"> </td>\n</tr>\n</table>\n</body>\n<html>");
-      state.open_block = true;
+//      state.open_block = true;
+      return;
+    }
+
+    if (e instanceof QTIElementFlow)
+    {
+      state.flow_depth++;
+      renderSubElements( e, state );
+      state.flow_depth--;
+      return;
+    }
+
+    if (e instanceof QTIElementFlowmat)
+    {
+      state.html.append( "<div>" );
+      renderSubElements( e, state );
+      state.html.append( "</div>" );
+      return;
+    }
+
+    if (e instanceof QTIElementFlowlabel)
+    {
+      state.html.append( "<div>" );
+      renderSubElements( e, state );
+      state.html.append( "</div>" );
       return;
     }
 
 
     if (e instanceof QTIMatmedia)
     {
-      if (!state.open_block)
-      {
-        state.html.append("<div>");
-        state.open_block = true;
-      }
+//      if (!state.open_block)
+//      {
+//        state.html.append("<div>");
+//        state.open_block = true;
+//      }
       QTIMatmedia matmedia = (QTIMatmedia) e;
       if (matmedia.isSupported())
       {
@@ -373,6 +400,7 @@ public class QTIItemRenderer
           }
           QTIElementMattext mattext = (QTIElementMattext) e;
           state.html.append(mattext.getContent());
+          state.html.append(" &nbsp; ");
           if (e instanceof QTIElementMatemtext)
           {
             state.html.append("</em>");
@@ -385,11 +413,11 @@ public class QTIItemRenderer
           QTIExtensionWebctMaterialwebeq.MatMLEq eq;
           fragments = webeq.getContentFragments();
           MathMLIcon mathicon;
-          if (state.open_block)
-          {
-            state.html.append("</div>\n");
-            state.open_block = false;
-          }
+//          if (state.open_block)
+//          {
+//            state.html.append("</div>\n");
+//            state.open_block = false;
+//          }
           state.html.append("<div>\n");
           for (int i = 0; i < fragments.length; i++)
           {
@@ -418,32 +446,39 @@ public class QTIItemRenderer
 
     if (e instanceof QTIElementRenderchoice)
     {
-      if (state.open_block)
-      {
-        state.html.append("</div>\n");
-        state.open_block = false;
-      }
-      state.html.append("\n<table style=\"margin: ");
-      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px 0px");
-      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
-      state.html.append(" 0px;\">");
+//      if (state.open_block)
+//      {
+//        state.html.append("</div>\n");
+//        state.open_block = false;
+//      }
+
+//      state.html.append("\n<table style=\"margin: ");
+//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px 0px");
+//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
+//      state.html.append(" 0px;\">");
+
+      if ( state.flow_depth == 0 )
+        state.html.append( "<div>" );
 
       state.in_choice = true;
       renderSubElements( e, state );
       state.in_choice = false;
 
-      state.html.append("</table>\n");
+      if ( state.flow_depth == 0 )
+        state.html.append( "</div>" );
+
+//      state.html.append("</table>\n");
       return;
     }
 
     if (e instanceof QTIElementRenderfib)
     {
       QTIElementRenderfib efib = (QTIElementRenderfib)e;
-      if (state.open_block)
-      {
-        state.html.append("</div>\n");
-        state.open_block = false;
-      }
+//      if (state.open_block)
+//      {
+//        state.html.append("</div>\n");
+//        state.open_block = false;
+//      }
  
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon(
@@ -459,30 +494,39 @@ public class QTIItemRenderer
     {
       if ( state.in_fib )
         return;
-      
+
+
+      if ( state.flow_depth == 0 )
+        state.html.append( "<div>" );
+
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon((int) QTIMetrics.inchesToSvg(0.24),
               (int) QTIMetrics.inchesToSvg(0.24),
               (int) QTIMetrics.inchesToSvg(0.02))));
-      state.html.append("<tr>\n");
+
+//      state.html.append("<tr>\n");
       // The span will always have one character in it - which will be
       // deleted and replaced with a component.
-      state.html.append("<td valign=\"top\"><div style=\"margin: 0px");
-      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
-      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
-      state.html.append(" 0px;\">");
-      state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span></div></td>\n");
-      state.html.append("<td valign=\"top\"><div>");
-      state.open_block = true;
+//      state.html.append("<td valign=\"top\"><div style=\"margin: 0px");
+//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
+//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
+//      state.html.append(" 0px;\">");
+      state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span> ");
+//      state.html.append("</div></td>\n");
+//      state.html.append("<td valign=\"top\"><div>");
+//      state.open_block = true;
 
       renderSubElements( e, state );
 
-      if (state.open_block)
-      {
-        state.html.append("</div>\n");
-        state.open_block = false;
-      }
-      state.html.append("</td>\n</tr>\n");
+//      if (state.open_block)
+//      {
+//        state.html.append("</div>\n");
+//        state.open_block = false;
+//      }
+//      state.html.append("</td>\n</tr>\n");
+
+      if ( state.flow_depth == 0 )
+        state.html.append( "</div>" );
       return;
     }
 
@@ -496,14 +540,14 @@ public class QTIItemRenderer
 
 
 
-  public static SVGDocument decorateItemForPreview( SVGDocument itemdoc , boolean rulers )
+  public static SVGDocument decorateItemForPreview( SVGDocument itemdoc , boolean rulers, QTIRenderOptions options )
   {
     Vector<SVGDocument> list = new Vector<SVGDocument>();
     list.add(itemdoc );
-    return decorateItemForPreview( list , false, null, null );
+    return decorateItemForPreview( list , false, null, null, options );
   }
 
-  public static Vector<SVGDocument> paginateItems( URI examfolderuri, Vector<QTIElementItem> items, CandidateData candidate  )
+  public static Vector<SVGDocument> paginateItems( URI examfolderuri, Vector<QTIElementItem> items, CandidateData candidate, QTIRenderOptions options  )
   {
       int i;
       Vector<Vector<SVGDocument>> pages = new Vector<Vector<SVGDocument>>();
@@ -519,6 +563,11 @@ public class QTIItemRenderer
       double spaceleft = totalspace;
       double itemheight;
 
+      // how much does the qr code stick up above bottom margin?
+      double qrpokeup = getMetrics().getPropertySvgUnits("qrcode-page-encroachment");
+      // how much space needed for question qr?
+      double qrheight = getMetrics().getPropertySvgUnits("qrcode-full-width");
+
       svgdocs = new SVGDocument[items.size()];
       QTIItemRenderer renderer;
       for ( i=0; i<items.size(); i++ )
@@ -526,7 +575,7 @@ public class QTIItemRenderer
         renderer = new QTIItemRenderer( examfolderuri, items.elementAt(i), i+1, candidate.preferences );
         svgdocs[i] = renderer.getSVGDocument();
         itemheight = Integer.parseInt( svgdocs[i].getRootElement().getAttribute("height") );
-        if ( itemheight > spaceleft )
+        if ( itemheight > spaceleft || spaceleft < (qrpokeup + qrheight) )
         {
           page = new Vector<SVGDocument>();
           pages.add( page );
@@ -541,15 +590,20 @@ public class QTIItemRenderer
       for ( i=0; i<pages.size(); i++ )
       {
         qrout = candidate.name + "/" + candidate.id + "/" + i + "/" + pages.elementAt(i).size();
-        footer = candidate.name + "   " + candidate.id + "   Page " + (i+1) + " of " + pages.size();
-        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) , false,  qrout, footer ) );
+        footer = "";
+        if ( options.getQTIRenderBooleanOption( "name_in_footer" ) )
+          footer += candidate.name + "   ";
+        if ( options.getQTIRenderBooleanOption( "id_in_footer" ) )
+          footer += candidate.id + "   ";
+        footer += "Page " + (i+1) + " of " + pages.size();
+        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) , false,  qrout, footer, options ) );
         System.out.println( "Paginated: " + qrout );
       }
 
       return paginated;
   }
 
-  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs , boolean rulers, String pageqr, String footer )
+  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs , boolean rulers, String pageqr, String footer, QTIRenderOptions options )
   {
     int i;
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -615,6 +669,18 @@ public class QTIItemRenderer
       qricon.x = new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-page-x") );
       qricon.y = new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-page-y") );
       qricon.paintSVG(pdoc);
+    }
+
+    if ( options.getQTIRenderOption("header") != null )
+    {
+      org.w3c.dom.Element theader;
+      theader = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+      theader.setAttribute("text-anchor", "end" );
+      theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("page-width") -getMetrics().getPropertySvgUnitsInt("page-margin-right")) );
+      theader.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-margin-top")/2) );
+      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
+      theader.setTextContent( options.getQTIRenderOption("header") );
+      decorationgroup.appendChild(theader);
     }
 
     if ( footer != null )
@@ -729,9 +795,9 @@ public class QTIItemRenderer
 
 
 
-  public SVGDocument getPreviewSVGDocument()
+  public SVGDocument getPreviewSVGDocument( QTIRenderOptions options )
   {
-    return decorateItemForPreview( (SVGDocument) svgres.getDocument().cloneNode(true), true);
+    return decorateItemForPreview( (SVGDocument) svgres.getDocument().cloneNode(true), true, options);
   }
 
   public SVGDocument getSVGDocument()
@@ -768,11 +834,12 @@ public class QTIItemRenderer
   {
     QTIElementItem item;
     StringBuffer html = new StringBuffer();
-    boolean open_block = false;
+//    boolean open_block = false;
     int next_id = 1001;
 
     boolean in_fib=false;
     boolean in_choice=false;
+    int flow_depth = 0;
     
     // This is held separately from those in the inserts vector
     // because it needs to be rendered last. This is because it encodes

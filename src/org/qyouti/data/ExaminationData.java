@@ -36,6 +36,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -43,6 +44,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.gui.QTIRenderOptions;
 import org.qyouti.util.QyoutiUtils;
 import org.qyouti.xml.QyoutiDocBuilderFactory;
 import org.w3c.dom.Document;
@@ -56,7 +58,7 @@ import org.xml.sax.SAXException;
  * @author jon
  */
 public class ExaminationData
-        extends AbstractTableModel
+        extends AbstractTableModel implements QTIRenderOptions
 {
 
   public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
@@ -66,9 +68,45 @@ public class ExaminationData
   public Vector<QuestionAnalysis> analyses = null;
   public File examfile;
 
+
+  public Properties options = new Properties();
+  public Properties default_options = new Properties();
+
+
   public ExaminationData(File xmlfile)
   {
     examfile = xmlfile;
+
+    default_options.setProperty( "name_in_footer", "true" );
+    default_options.setProperty( "id_in_footer", "true" );
+  }
+
+
+  @Override
+  public String getQTIRenderOption( String name )
+  {
+    String def = default_options.getProperty(name);
+    if ( def != null )
+      return options.getProperty(name, def);
+    return options.getProperty(name);
+  }
+
+  @Override
+  public boolean getQTIRenderBooleanOption( String name )
+  {
+    String value = getQTIRenderOption( name );
+    return "true".equalsIgnoreCase( value ) || "yes".equalsIgnoreCase( value ) || "y".equalsIgnoreCase( value );
+  }
+
+  public void setOption( String name, String value )
+  {
+    options.setProperty(name, value);
+  }
+
+
+  public void setOption( String name, boolean value )
+  {
+    options.setProperty( name, value?"true":"false" );
   }
 
   public void itemAnalysis()
@@ -613,11 +651,58 @@ public class ExaminationData
     return true;
   }
 
+  public void emitOptions(Writer writer)
+          throws IOException
+  {
+    try {
+      writer.write("\n\n");
+
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      Document document = builder.newDocument();
+
+      Element options_e = document.createElement("options");
+      Element option_e;
+      document.appendChild( options_e );
+
+      Iterator<String> names = options.stringPropertyNames().iterator();
+      String name;
+      while ( names.hasNext() )
+      {
+        option_e = document.createElement("option");
+        name = names.next();
+        option_e.setAttribute("name", name);
+        option_e.setTextContent( options.getProperty( name ) );
+        options_e.appendChild(option_e);
+      }
+
+      // Prepare the DOM document for writing Source
+      DOMSource source = new DOMSource(options_e);
+      // Prepare the output file
+      Result result = new StreamResult(writer);
+      // Write the DOM document to the file
+      Transformer xformer = TransformerFactory.newInstance().newTransformer();
+      xformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      xformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+      xformer.transform(source, result);
+
+      writer.write("\n\n");
+    }
+    catch (Exception e) 
+    {
+      e.printStackTrace();
+    }
+  }
+
   public void emit(Writer writer)
           throws IOException
   {
     writer.write("<?xml version=\"1.0\"?>\n");
     writer.write("<examination>\n");
+
+
+    emitOptions( writer );
 
     if (qdefs != null)
     {
@@ -654,6 +739,29 @@ public class ExaminationData
     writer.write("</examination>\n");
   }
 
+  public void loadOptions( Element e )
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    NodeList nl = e.getChildNodes();
+    Element ec;
+    String name, value;
+    for ( int i=0; i<nl.getLength(); i++ )
+    {
+      if ( !(nl.item(i) instanceof Element) )
+        continue;
+      ec = (Element)nl.item(i);
+      if ( !"option".equals(ec.getNodeName()))
+        continue;
+
+      name = ec.getAttribute("name");
+      if ( name == null || name.length() == 0 )
+        continue;
+
+      value = ec.getTextContent();
+      options.setProperty(name, value);
+    }
+  }
+
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -681,6 +789,12 @@ public class ExaminationData
         continue;
       }
       e = (Element) node;
+
+      if ("options".equals(e.getNodeName()))
+      {
+        loadOptions( e );
+      }
+
       if ("questestinterop".equals(e.getNodeName()))
       {
         qdefs = new QuestionDefinitions(e);

@@ -111,7 +111,7 @@ public class ResponseData
     writer.write( ">\n" );
 
     writer.write( "            <box>\n" );
-    for ( int i=0; i<box_image.getHeight(); i++ )
+    for ( int i=0; i<box_image.getWidth(); i++ )
     {
       writer.write( "                <line>" );
       for ( int j=0; j<box_image.getHeight(); j++ )
@@ -125,7 +125,7 @@ public class ResponseData
     if ( filtered_image != null )
     {
         writer.write( "            <filtered>\n" );
-        for ( int i=0; i<filtered_image.getHeight(); i++ )
+        for ( int i=0; i<filtered_image.getWidth(); i++ )
         {
           writer.write( "                <line>" );
           for ( int j=0; j<filtered_image.getHeight(); j++ )

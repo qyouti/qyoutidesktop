@@ -36,6 +36,9 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.client.result.*;
 import com.google.zxing.common.LocalBlockBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
+import java.awt.Point;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
@@ -252,14 +255,15 @@ public class PageDecoder
     ResponseData response;
     QRScanResult result;
 
+    Point subimage_topleft;
+    Point subimage_bottomright;
+    double[] triangle = new double[6];
+
     System.out.println( "\n\n\nDecoding a page." );
     
 
     try {
-      double[] triangle = new double[6];
-
       double rough_dpi = (double)image.getHeight() / 11.69;
-
       System.out.println( "Rough DPI of image = " + rough_dpi );
 
       // Bottom left corner
@@ -303,24 +307,26 @@ public class PageDecoder
 
 
       // Take top left corner only
+      subimage_topleft     = new Point( (int)(rough_dpi*0.0 ), (int)(rough_dpi*0.0) );
+      subimage_bottomright = new Point( (int)(rough_dpi*1.75), (int)(rough_dpi*2.0) );
       result = decodeQR( image,
-              (int)(rough_dpi*0.1 ),
-              (int)(rough_dpi*0.5),
-              (int)(rough_dpi*1.75 ),
-              (int)(rough_dpi*2.5 )  );
+              subimage_topleft.x,
+              subimage_topleft.y,
+              subimage_bottomright.x,
+              subimage_bottomright.y  );
       if ( result == null )
       {
         System.out.println( "No top left corner QR code." );
         return null;
       }
+      
       // Not really interested in data right now
       ResultPoint[] top_left_points = result.getResultPoints();
-      triangle[0] = top_left_points[1].getX() + (int)(rough_dpi*0.1 );
-      triangle[1] = top_left_points[1].getY() + (int)(rough_dpi*0.75);
-      triangle[2] = top_left_points[2].getX() + (int)(rough_dpi*0.1 );
-      triangle[3] = top_left_points[2].getY() + (int)(rough_dpi*0.75);
+      triangle[0] = top_left_points[1].getX() + (int)subimage_topleft.getX();
+      triangle[1] = top_left_points[1].getY() + (int)subimage_topleft.getY();
+      triangle[2] = top_left_points[2].getX() + (int)subimage_topleft.getX();
+      triangle[3] = top_left_points[2].getY() + (int)subimage_topleft.getY();
 
-      //page.height = Math.rint( checkpagescale( triangle ) * 100.0) / 100.0;
       page.height = checkpagescale( triangle );
       // are some scan lines missing?
       if ( page.height < 16 )
@@ -329,75 +335,32 @@ public class PageDecoder
         return null;
       }
       
-      //for ( i=0; i<6; i++ )
-      //  System.out.println( "triangle[" + i + "] = " + triangle[i] );
-      double[] page_scale = calibrate( triangle, metrics_top_qr_width, metrics_top_qr_to_bottom_qr );
-      //for ( i=0; i<4; i++ )
-      //  System.out.println( "page_scale[" + i + "] = " + page_scale[i] );
+      AffineTransform questiontransform = qrtransform( subimage_topleft, result, metrics_top_qr_width/100.0 , metrics_top_qr_width/100.0 );
 
-      double voffset_hnth_inch, hoffset_hnth_inch;
-      double voffset_pix_x;
-      double voffset_pix_y;
-      double offset_x, offset_y;
-      double[] question_scale;
-      double[] question_triangle = new double[6];
-      ResultPoint[] question_points;
-      String response_offsets;
-      String qvoffset;
-      double qvoffset_hnth_inch, qhoffset_hnth_inch;
-      double qvoffset_pix_x;
-      double qvoffset_pix_y;
-      double qoffset_x, qoffset_y;
-      int x, y, w, h;
-      byte[] question_qr_data;
+      double voffset_hnth_inch=0.0;
+      int w, h;
       QuestionCode question_code=null;
 
-      voffset_hnth_inch = 0.0;
       for ( int q=0; q<question_count; q++ )
       {
-        
         System.out.println( "==================================" );
-        hoffset_hnth_inch = 0.0;
-        offset_x = hoffset_hnth_inch*page_scale[0] + voffset_hnth_inch * page_scale[2];
-        offset_y = hoffset_hnth_inch*page_scale[1] + voffset_hnth_inch * page_scale[3];
-        System.out.println( "Next question at " + hoffset_hnth_inch + ":" + voffset_hnth_inch + " hnth inch" );
-        System.out.println( "Next question at " + offset_x + ":" + offset_y + " scan pixels" );
-       
+        subimage_topleft = qrinchtopixels( questiontransform,  -0.2, voffset_hnth_inch/100.0-0.2 );
+        subimage_bottomright = qrinchtopixels( questiontransform, metrics_top_qr_width/100.0+0.2, (voffset_hnth_inch+metrics_top_qr_width)/100.0+0.2 );
         System.out.println( "Look for question code here: " +
-                (int)(triangle[0]+offset_x-(int)(rough_dpi*0.4)) + ":" +
-                (int)(triangle[1]+offset_y-(int)(rough_dpi*0.4)) + ":" +
-                (int)(triangle[0]+offset_x+(int)(rough_dpi)) + ":" +
-                (int)(triangle[1]+offset_y+(int)(rough_dpi)) + ":"       );
-                
+                subimage_topleft.x     + ":" + subimage_topleft.y     + ":" +
+                subimage_bottomright.x + ":" + subimage_bottomright.y + ":"       );
         result = decodeQR( image,
-                (int)(triangle[0]+offset_x-(int)(rough_dpi*0.4)),
-                (int)(triangle[1]+offset_y-(int)(rough_dpi*0.4)),
-                (int)(triangle[0]+offset_x+(int)(rough_dpi)),
-                (int)(triangle[1]+offset_y+(int)(rough_dpi))       );
+                subimage_topleft.x,     subimage_topleft.y,
+                subimage_bottomright.x, subimage_bottomright.y       );
         if ( result == null )
           break;
 
+        questiontransform = qrtransform( subimage_topleft, result, metrics_top_qr_width/100.0, metrics_top_qr_width/100.0 );
         question = new QuestionData( page );
-        
-        question_points = result.getResultPoints();
-
-        question_triangle[0] = question_points[1].getX();
-        question_triangle[1] = question_points[1].getY();
-        question_triangle[2] = question_points[2].getX();
-        question_triangle[3] = question_points[2].getY();
-        question_triangle[4] = question_points[0].getX();
-        question_triangle[5] = question_points[0].getY();
-        //for ( i=0; i<6; i++ )
-        //  System.out.println( "question_triangle[" + i + "] = " + question_triangle[i] );
-        question_scale = calibrate( question_triangle, metrics_qstn_qr_width, metrics_qstn_qr_width );
-        //for ( i=0; i<4; i++ )
-        //  System.out.println( "question_scale[" + i + "] = " + question_scale[i] );
-
-
         question_code = decodeQuestion( result );
         System.out.println( "Question ID " + question_code.id   );
         System.out.println( "       Next " + question_code.next );
-        voffset_hnth_inch += question_code.next * 10;
+        voffset_hnth_inch = question_code.next * 10;
         question.ident = question_code.id;
 
         for ( int r=0; r<question_code.box_yoffset.length; r++ )
@@ -405,23 +368,19 @@ public class PageDecoder
           System.out.println( "-----------------------------------" );
           System.out.println( "Response " + r + " at " + question_code.box_xoffset[r] + ", " + question_code.box_yoffset[r] );
           System.out.println( "                 W, H " + question_code.box_width[r]   + ", " + question_code.box_height[r] );
-
+          subimage_topleft     = qrinchtopixels( questiontransform, question_code.box_xoffset[r]/100.0, question_code.box_yoffset[r]/100.0 );
+          subimage_bottomright = qrinchtopixels(
+              questiontransform,
+              (question_code.box_xoffset[r] + question_code.box_width[r])/100.0,
+              (question_code.box_yoffset[r] + question_code.box_height[r])/100.0
+              );
           response = new ResponseData( question );
           response.position = r;
           response.ident = null;
-          qhoffset_hnth_inch = question_code.box_xoffset[r];
-          qvoffset_hnth_inch = question_code.box_yoffset[r];
-          qoffset_x = qhoffset_hnth_inch*question_scale[0] + qvoffset_hnth_inch * question_scale[2];
-          qoffset_y = qhoffset_hnth_inch*question_scale[1] + qvoffset_hnth_inch * question_scale[3];
-          //System.out.println( "Next box at " + qhoffset_hnth_inch + " : " + qvoffset_hnth_inch + " hnth inch" );
-          //System.out.println( "Next box at " + qoffset_x + " : " + qoffset_y + " scan pixels" );
-
-          x = (int)(triangle[0]+offset_x-(int)(rough_dpi*0.4)  + question_triangle[0]+qoffset_x);
-          y = (int)(triangle[1]+offset_y-(int)(rough_dpi*0.4)  + question_triangle[1]+qoffset_y);
-          w = (int)((rough_dpi*(double)question_code.box_width[r])/100.0);
-          h = (int)((rough_dpi*(double)question_code.box_height[r])/100.0);
-          System.out.println( "Look for box here: " + x + " : " + y + " : " + w + " : " + h );
-          response.box_image = image.getSubimage(x, y, w, h );
+          w = subimage_bottomright.x - subimage_topleft.x;
+          h = subimage_bottomright.y - subimage_topleft.y;
+          System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
+          response.box_image = image.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h );
         }
       }
 
@@ -534,7 +493,7 @@ public class PageDecoder
         for ( int j=0; j<question.responses.size(); j++ )
         {
           response = question.responses.get( j );
-          response.selected = ( (double)lookup.countBlackPixels() / (double)lookup.countWhitePixels() ) > 0.05;
+          response.selected = response.dark_pixels > 0.05;
           response.examiner_selected = response.selected;
         }
       }
@@ -543,6 +502,12 @@ public class PageDecoder
   }
 
 
+  private static Point qrinchtopixels( AffineTransform t, double x, double y )
+  {
+    Point2D point = new Point2D.Double( x, y );
+    Point2D tpoint = t.transform(point, null);
+    return new Point( (int)tpoint.getX(), (int)tpoint.getY() );
+  }
 
   private static double checkpagescale( double[] triangle )
   {
@@ -582,6 +547,48 @@ public class PageDecoder
     //  System.out.println( "scale = " + scale[i] );
 
     return scale;
+  }
+
+
+
+  private static AffineTransform qrtransform( Point2D subimagepos, QRScanResult result, double width, double height )
+  {
+    double horizontal_dx, horizontal_dy;
+    double vertical_dx,   vertical_dy;
+
+    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
+
+    ResultPoint[] points = result.getResultPoints();
+    // point[0] = bottom left  point[1] = top left    point[2] = top right
+
+    // measure input vectors - pixel units
+    horizontal_dx = points[2].getX() - points[1].getX();
+    horizontal_dy = points[2].getY() - points[1].getY();
+    vertical_dx   = points[0].getX() - points[1].getX();
+    vertical_dy   = points[0].getY() - points[1].getY();
+
+    //System.out.println( "input v " + horizontal_dx );
+    //System.out.println( "input v " + horizontal_dy );
+    //System.out.println( "input v " + vertical_dx );
+    //System.out.println( "input v " + vertical_dy );
+
+    // convert to hundreths of inch
+    horizontal_dx = horizontal_dx / width;  
+    horizontal_dy = horizontal_dy / width;
+    vertical_dx   = vertical_dx   / height;
+    vertical_dy   = vertical_dy   / height;
+
+    //for ( int i=0; i<scale.length; i++ )
+    //  System.out.println( "scale = " + scale[i] );
+
+    return new AffineTransform(
+        horizontal_dx,
+        vertical_dx,
+        horizontal_dy,
+        vertical_dy,
+        subimagepos.getX() + points[1].getX(),
+        subimagepos.getY() + points[1].getY()
+        );
   }
 
 }

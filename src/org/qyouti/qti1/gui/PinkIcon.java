@@ -21,7 +21,7 @@ public class PinkIcon
         extends SVGIcon
 {
     static Color bordercolor = new Color( 255,   0, 255 );
-    static Color   fillcolor = new Color( 255, 200, 255 );
+    static Color   fillcolor = new Color( 255, 220, 255 );
 
     int borderwidth;
 
@@ -42,13 +42,13 @@ public class PinkIcon
         r1.setAttribute("y", "0" );
         r1.setAttribute("width", Integer.toString(width) );
         r1.setAttribute("height", Integer.toString(height) );
-        r1.setAttribute("fill",  "#ff80ff" );
+        r1.setAttribute("fill",  "#ffa0ff" );
         r1.setAttribute("stroke", "none" );
         r2.setAttribute("x", Integer.toString(borderwidth) );
         r2.setAttribute("y", Integer.toString(borderwidth) );
         r2.setAttribute("width",  Integer.toString(width-2*borderwidth)  );
         r2.setAttribute("height", Integer.toString(height-2*borderwidth) );
-        r2.setAttribute("fill",  "#ffc0ff" );
+        r2.setAttribute("fill",  "#fff0ff" );
         r2.setAttribute("stroke", "none" );
 
         g.appendChild(r1);
