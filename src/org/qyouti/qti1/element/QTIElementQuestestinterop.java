@@ -48,6 +48,11 @@ public class QTIElementQuestestinterop
   public void initialize()
   {
     super.initialize();
+
+    Vector<QTIElementAssessment> assessments = findElements( QTIElementAssessment.class, false );
+    if ( assessments !=null && assessments.size() != 0 )
+      assessment = assessments.get(0);
+
     items = findElements( org.qyouti.qti1.element.QTIElementItem.class, true );
     for ( int i=0; i<items.size(); i++ )
       item_table.put( items.get(i).getIdent(), items.get(i) );

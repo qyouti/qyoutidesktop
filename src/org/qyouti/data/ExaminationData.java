@@ -37,21 +37,34 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import org.apache.fop.apps.FOUserAgent;
+import org.apache.fop.apps.Fop;
+import org.apache.fop.apps.FopFactory;
+import org.apache.fop.apps.MimeConstants;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.element.QTIElementMaterial;
+import org.qyouti.qti1.element.QTIElementMattext;
 import org.qyouti.qti1.gui.QTIRenderOptions;
+import org.qyouti.qti1.gui.QuestionMetricsRecordSetCache;
+import org.qyouti.statistics.Histogram;
 import org.qyouti.util.QyoutiUtils;
 import org.qyouti.xml.QyoutiDocBuilderFactory;
+import org.qyouti.xml.StringProcessor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
 
 /**
  *
@@ -72,11 +85,12 @@ public class ExaminationData
   public Properties options = new Properties();
   public Properties default_options = new Properties();
 
+  public QuestionMetricsRecordSetCache qmrcache;
 
   public ExaminationData(File xmlfile)
   {
     examfile = xmlfile;
-
+    qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
   }
@@ -108,6 +122,21 @@ public class ExaminationData
   {
     options.setProperty( name, value?"true":"false" );
   }
+
+
+
+  public String getPreamble()
+  {
+    if ( qdefs == null ) return null;
+    if ( qdefs.qti == null ) return null;
+    QTIElementMaterial material = qdefs.qti.getAssessmentMaterial();
+    if ( material == null ) return null;
+    Vector<QTIElementMattext> mattexts = material.findElements( QTIElementMattext.class );
+    if ( mattexts == null || mattexts.size() == 0 ) return null;
+    return mattexts.get(0).getContent();
+  }
+
+
 
   public void itemAnalysis()
   {
@@ -207,7 +236,7 @@ public class ExaminationData
     Document document = builder.parse(xmlfile);
 
     Element roote = document.getDocumentElement();
-    System.out.println(roote.getNodeName());
+    //System.out.println(roote.getNodeName());
     NodeList nl = roote.getElementsByTagName("candidate");
     Element ecandidate;
     CandidateData candidate;
@@ -219,6 +248,8 @@ public class ExaminationData
       candidates_sorted.add(candidate);
       fireTableDataChanged();
     }
+    sortCandidates();
+    fireTableDataChanged();
   }
 
   public void importCsvCandidates(File csvfile)
@@ -259,6 +290,8 @@ public class ExaminationData
       candidates_sorted.add(candidate);
       fireTableDataChanged();
     }
+    sortCandidates();
+    fireTableDataChanged();
   }
 
   public void exportCsvScores(File csvfile)
@@ -284,6 +317,342 @@ public class ExaminationData
     csvwriter.close();
   }
 
+
+
+  private static final String[] likertcolour =
+  {
+    "#880000",
+    "#ff8888",
+    "#cccccc",
+    "#88ff88",
+    "#008800"
+  };
+
+  public void exportReport(File pdffile)
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    int i, j, k;
+    String likertoutcome;
+    CandidateData candidate;
+
+    Vector<QTIElementItem> items = qdefs.qti.getItems();
+    QTIElementItem item;
+    QuestionData qd;
+    ItemOutcomeDatum iod;
+    String[] outcomenames;
+
+    File htmlfile = File.createTempFile( "temp", ".html" );
+    BufferedWriter htmlwriter = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( htmlfile ), "UTF-8" ) );
+    htmlwriter.write( "<?xml version=\"1.0\"?>\n" );
+    htmlwriter.write( "<!DOCTYPE html [<!ENTITY nbsp             \"&#x000A0;\" >]>\n" );
+    htmlwriter.write( "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" );
+    htmlwriter.write( "<body style=\"font-family: Helvetica; font-size: 75%;\">\n" );
+
+
+    htmlwriter.write("<h1>Survey Report</h1>\n");
+    htmlwriter.write("<h2>Likert scale histograms</h2>\n");
+    Histogram histogram;
+    for ( j=0; j<items.size(); j++ )
+    {
+      htmlwriter.write("<div style=\"page-break-inside: avoid;\">" );
+      htmlwriter.write("<h3 style=\"margin-bottom: 0em;\">Question " + (j+1) + "</h3>\n");
+      item = items.get(j);
+      Vector<QTIElementMattext> mattexts = item.getPresentation().findElements( QTIElementMattext.class, true );
+      htmlwriter.write("<div style=\"margin-left: 4em; color: #000044; " +
+          "border: 1px dotted #000044; padding: 0.5em 0.5em 0.5em 0.5em;\">");
+      htmlwriter.write( StringProcessor.cleanXmlString( mattexts.get(0).getContent() ));
+      htmlwriter.write("</div>");
+
+      outcomenames = item.getOutcomeNames();
+      likertoutcome = null;
+      boolean bodge=false;
+      for ( i=0; i<outcomenames.length; i++ )
+      {
+        if ( bodge )
+        {
+          if ( j>=3 && j!=14 && !"SCORE".equals( outcomenames[i]) )
+          {
+            likertoutcome = outcomenames[i];
+            break;
+          }
+        }
+        else
+        {
+          if ( item.isOutcomeLikert( outcomenames[i] ) )
+          {
+            likertoutcome = outcomenames[i];
+            break;
+          }
+        }
+
+      }
+      if ( likertoutcome == null )
+      {
+        htmlwriter.write("<p style=\"text-align: right;\"><em>Not a likert scale question - please see table of data below.</em></p></div>\n");
+        continue;
+      }
+
+      histogram = new Histogram();
+      item = items.get(j);
+      for (i = 0; i < candidates_sorted.size(); i++)
+      {
+        candidate = candidates_sorted.get(i);
+        if ( candidate.pages.size() == 0 )
+          continue;
+        qd = candidate.getQuestionData( item.getIdent() );
+        if ( qd == null )
+          continue;
+        // another bodge
+        iod = qd.outcomes.getDatum( likertoutcome );
+        if ( iod == null )
+          continue;
+        histogram.add( iod.value.toString() );
+      }
+
+      htmlwriter.write("<table align=\"center\" style=\"margin-left: 2in; margin-top: 1em; height: 0.2in;\">\n");
+      htmlwriter.write("<tr>\n");
+      String[] labels = histogram.getHeadings();
+      String colour;
+      for ( k=1; k <= 5; k++ )
+      {
+        htmlwriter.write("<td style=\"background-color: " );
+        htmlwriter.write( likertcolour[k-1] );
+        htmlwriter.write( "; width: " + (histogram.getProportion( Integer.toString(k)) * 5) + "in;\">" );
+        htmlwriter.write( ".</td>\n");
+      }
+
+      htmlwriter.write("</tr></table>\n");
+
+      htmlwriter.write("<table style=\"width: 5in; margin-left: 2in; margin-top: 1em; font-size: 85%;\">\n");
+      htmlwriter.write("<tr><td align=\"center\">Strongly Disagree</td>\n");
+      htmlwriter.write("<td align=\"center\">Disagree</td>\n");
+      htmlwriter.write("<td align=\"center\">Neutral</td>\n");
+      htmlwriter.write("<td align=\"center\">Agree</td>\n");
+      htmlwriter.write("<td align=\"center\">Strongly Agree</td></tr>\n");
+      htmlwriter.write("<tr><td align=\"center\">" + histogram.getCount("1") + "</td>\n");
+      htmlwriter.write("<td align=\"center\">" + histogram.getCount("2") + "</td>\n");
+      htmlwriter.write("<td align=\"center\">" + histogram.getCount("3") + "</td>\n");
+      htmlwriter.write("<td align=\"center\">" + histogram.getCount("4") + "</td>\n");
+      htmlwriter.write("<td align=\"center\">" + histogram.getCount("5") + "</td>\n</tr>\n");
+      htmlwriter.write("</table></div>\n");
+    }
+
+
+    htmlwriter.write("<h2 style=\"page-break-before: always;\">Raw Multiple Choice Data</h2>\n");
+    htmlwriter.write( "<table>\n" );
+    StringBuffer line = new StringBuffer();
+    StringBuffer header = new StringBuffer();
+    header.append("<tr><th>id</th>\n" ); //<th>name</th>\n" );
+    for ( j=0; j<items.size(); j++ )
+    {
+      item = items.get(j);
+      outcomenames = item.getOutcomeNames();
+      for ( k=0; k<outcomenames.length; k++ )
+      {
+        if ( "score".equalsIgnoreCase( outcomenames[k] ) )
+          continue;
+        if ( "Reply".equalsIgnoreCase(outcomenames[k]))
+        {
+          header.append( "<th>" );
+          header.append( "Q" + (j+1) );
+        }
+        else
+        {
+          header.append( "<th style=\"font-size: 50%;\">" );
+          header.append( outcomenames[k] );
+        }
+        header.append( "</th>\n" );
+      }
+    }
+    header.append("</tr>\n");
+    htmlwriter.write(header.toString());
+
+    
+    for (i = 0; i < candidates_sorted.size(); i++)
+    {
+      line.setLength(0);
+      candidate = candidates_sorted.get(i);
+      if ( candidate.pages.size() == 0 )
+        continue;
+      line.append( "<tr>\n<td style=\"font-size: 90%;\">" );
+      line.append( candidate.id );
+      line.append( "</td>\n" );
+//      line.append( "<td>" );
+//      line.append( candidate.name );
+//      line.append( "</td>\n" );
+
+
+      for ( j=0; j<items.size(); j++ )
+      {
+        item = items.get(j);
+        qd = candidate.getQuestionData( item.getIdent() );
+
+        outcomenames = item.getOutcomeNames();
+        for ( k=0; k<outcomenames.length; k++ )
+        {
+          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
+          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
+          {
+            line.append( "<td style=\"text-align: center; font-size: 90%;\">" );
+            if ( iod != null )
+              line.append( iod.value.toString() );
+            line.append( "</td>\n" );
+          }
+        }
+      }
+      line.append( "</tr>\n" );
+      htmlwriter.write(line.toString());
+    }
+    htmlwriter.write( "</table>\n" );
+
+
+    htmlwriter.write("<h2>Written Comments</h2>\n");
+    for (i = 0; i < candidates_sorted.size(); i++)
+    {
+      line.setLength(0);
+      candidate = candidates_sorted.get(i);
+      if ( candidate.pages.size() == 0 )
+        continue;
+
+
+      for ( j=0; j<items.size(); j++ )
+      {
+        item = items.get(j);
+        qd = candidate.getQuestionData( item.getIdent() );
+
+        outcomenames = item.getOutcomeNames();
+        for ( k=0; k<outcomenames.length; k++ )
+        {
+          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
+          if ( iod !=null && "Image".equalsIgnoreCase( iod.value.toString() ) )
+          {
+            line.append("<div style=\"page-break-inside: avoid;\">" );
+            line.append( candidate.id );
+            line.append( "<br/>" );
+            line.append( "<img width=\"90%\" src=\"" );
+            line.append(
+                new File(
+                examfile.getParentFile(),
+                "scans/" +
+                item.getIdent() +
+                "_0_" +
+                candidate.id + ".gif"  ).toURI() );
+            line.append( "\"/>" );
+            line.append( "</div>\n" );
+            htmlwriter.write(line.toString());
+          }
+        }
+      }
+    }
+
+
+
+    htmlwriter.write( "</body>\n</html>\n" );
+    htmlwriter.close();
+
+
+    //File xsltfile = new File( "qyouti/xhtml2fo.xsl" );
+    FopFactory fopFactory = FopFactory.newInstance();
+    FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
+    // configure foUserAgent as desired
+
+    // Setup output
+    OutputStream out = new java.io.FileOutputStream(pdffile);
+    out = new java.io.BufferedOutputStream(out);
+
+    try
+    {
+      // Construct fop with desired output format
+      Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, out);
+
+      // Setup XSLT
+      TransformerFactory factory = TransformerFactory.newInstance();
+      Transformer transformer = factory.newTransformer(
+          new StreamSource(
+          getClass().getResourceAsStream("/resources/xhtml2fo.xsl")));
+
+      // Set the value of a <param> in the stylesheet
+      transformer.setParameter("page-width", "210mm");
+
+      transformer.setParameter("page-height", "297mm");
+
+      // Setup input for XSLT transformation
+      Source src = new StreamSource(htmlfile);
+
+      // Resulting SAX events (the generated FO) must be piped through to FOP
+      Result res = new SAXResult(fop.getDefaultHandler());
+
+      // Start XSLT transformation and FOP processing
+      transformer.transform(src, res);
+    }
+    catch ( Exception e )
+    {
+      e.printStackTrace();
+    }
+    finally
+    {
+      out.close();
+    }
+  }
+
+  public void exportCsvReplies(File csvfile)
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    int i, j, k;
+    CandidateData candidate;
+    CSVWriter csvwriter = new CSVWriter(new FileWriter(csvfile));
+
+    Vector<QTIElementItem> items = qdefs.qti.getItems();
+    String[] line= new String[0];
+    QuestionData qd;
+    QTIElementItem item;
+    ItemOutcomeDatum iod;
+    Vector<String> lines = new Vector<String>();
+    String[] outcomenames;
+
+    for (i = 0; i < candidates_sorted.size(); i++)
+    {
+      candidate = candidates_sorted.get(i);
+      if ( candidate.pages.isEmpty() )
+        continue;
+      lines.clear();
+      lines.add( candidate.id );
+      //lines.add( candidate.name );
+//      qd = candidate.firstQuestion();
+//      for ( j=0; qd!=null; j++ )
+//      {
+//        for ( k=0; k<qd.outcomes.data.size(); k++ )
+//        {
+//          iod = qd.outcomes.data.get(k);
+//          if ( !"score".equalsIgnoreCase( iod.name ) )
+//            lines.add( iod.value.toString() );
+//        }
+//        qd = qd.nextQuestionData();
+//      }
+
+      for ( j=0; j<items.size(); j++ )
+      {
+        item = items.get(j);
+        qd = candidate.getQuestionData( item.getIdent() );
+
+        outcomenames = item.getOutcomeNames();
+        for ( k=0; k<outcomenames.length; k++ )
+        {
+          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
+          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
+          {
+            lines.add( (iod == null)?"NA":iod.value.toString() );
+          }
+        }
+      }
+      line= new String[0];
+      line = lines.toArray(line);
+      csvwriter.writeNext(line);
+    }
+    csvwriter.close();
+  }
+
+
   public void importQuestionsFromPackage(File imsmanifest)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -293,7 +662,7 @@ public class ExaminationData
     Document manifestdoc = builder.parse(imsmanifest);
 
     Element roote = manifestdoc.getDocumentElement();
-    System.out.println(roote.getNodeName());
+    //System.out.println(roote.getNodeName());
     NodeList nl = roote.getElementsByTagName("resources");
     if (nl.getLength() != 1)
     {
@@ -385,7 +754,7 @@ public class ExaminationData
 
     Document qti12doc = builder.parse(qtiexamfile);
     Element qtiexamroote = qti12doc.getDocumentElement();
-    System.out.println(qtiexamroote.getNodeName());
+    //System.out.println(qtiexamroote.getNodeName());
 //    nl = qtiexamroote.getElementsByTagName("assessment");
 //    if (nl.getLength() != 1)
 //    {
@@ -615,6 +984,7 @@ public class ExaminationData
       candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
       candidates.put(page.candidate_number, candidate);
       candidates_sorted.add(candidate);
+      sortCandidates();
     }
     candidate.pages.add(page);
     fireTableDataChanged();
@@ -762,6 +1132,25 @@ public class ExaminationData
     }
   }
 
+
+  public class CandidateComparator implements Comparator
+  {
+    @Override
+    public int compare(Object o1, Object o2)
+    {
+      CandidateData a = (CandidateData) o1;
+      CandidateData b = (CandidateData) o2;
+      return a.id.compareToIgnoreCase(b.id);
+    }
+  }
+
+  public void sortCandidates()
+  {
+    Collections.sort( (Vector)candidates_sorted, new CandidateComparator() );
+  }
+
+
+
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -774,7 +1163,7 @@ public class ExaminationData
     Document document = builder.parse(examfile);
 
     Element roote = document.getDocumentElement();
-    System.out.println(roote.getNodeName());
+    //System.out.println(roote.getNodeName());
     NodeList nl = roote.getChildNodes();
     NodeList cnl;
     Element e;
@@ -808,6 +1197,7 @@ public class ExaminationData
         {
           candidate = new CandidateData(this, (Element) cnl.item(j));
         }
+        sortCandidates();
       }
     }
     fireTableDataChanged();
@@ -826,7 +1216,6 @@ public class ExaminationData
   @Override
   public String getColumnName(int columnIndex)
   {
-    System.out.println("getColumnName");
     switch (columnIndex)
     {
       case 0:
@@ -836,7 +1225,6 @@ public class ExaminationData
       case 2:
         return "ID";
       case 3:
-        System.out.println("SCORE COLUMN");
         return "Score";
       case 4:
         return "Pages";

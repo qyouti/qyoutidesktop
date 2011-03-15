@@ -49,6 +49,18 @@ public class ComponentToSvg
     {
     }
 
+    public static SvgConversionResult convert(Component component, int width)
+    {
+      JScrollPane scrollpane = new JScrollPane();
+      scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+      scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+      scrollpane.setViewportView(component);
+      scrollpane.getViewport().setSize( width, component.getSize().height );
+      scrollpane.getViewport().doLayout();
+      
+      return convert( component );
+    }
+
     public static SvgConversionResult convert(Component component)
     {
         String svg = null;
@@ -70,7 +82,7 @@ public class ComponentToSvg
 
             GraphicsNode gvtRoot = builder.build(ctx, document);
             Rectangle2D rect = gvtRoot.getSensitiveBounds();
-            System.out.println("SVG bounds : " + rect );
+            //System.out.println("SVG bounds : " + rect );
 
             SvgConversionResult svgresult = new SvgConversionResult(document, gvtRoot);
             
@@ -83,28 +95,28 @@ public class ComponentToSvg
         return null;
     }
 
-    public static String convertToString(Component component)
-    {
-        try
-        {
-            // Get component to render into SVG
-            DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
-            Document document = domImpl.createDocument("http://www.w3.org/200/svg", "svg", null);
-            SVGGeneratorContext genctx = SVGGeneratorContext.createDefault(document);
-            genctx.setEmbeddedFontsOn(false);
-            SVGGraphics2D svgGenerator = new SVGGraphics2D(genctx, true);
-            component.paint(svgGenerator);
-
-            CharArrayWriter writer = new CharArrayWriter();
-            svgGenerator.stream(writer, true);
-            writer.close();
-
-            return writer.toString();
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
+//    public static String convertToString(Component component)
+//    {
+//        try
+//        {
+//            // Get component to render into SVG
+//            DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+//            Document document = domImpl.createDocument("http://www.w3.org/200/svg", "svg", null);
+//            SVGGeneratorContext genctx = SVGGeneratorContext.createDefault(document);
+//            genctx.setEmbeddedFontsOn(false);
+//            SVGGraphics2D svgGenerator = new SVGGraphics2D(genctx, true);
+//            component.paint(svgGenerator);
+//
+//            CharArrayWriter writer = new CharArrayWriter();
+//            svgGenerator.stream(writer, true);
+//            writer.close();
+//
+//            return writer.toString();
+//        } catch (Exception e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
 }

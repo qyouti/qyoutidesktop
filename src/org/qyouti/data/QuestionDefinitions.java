@@ -60,18 +60,18 @@ public class QuestionDefinitions
     QTIElement qtielement = qtibuilder.build( questestinterop );
     //System.out.println( "========================================================================" );
     //System.out.println( qtielement.toString() );
-    System.out.println( "========================================================================" );
+    //System.out.println( "========================================================================" );
     if ( qtielement instanceof QTIElementQuestestinterop )
     {
       qti = (QTIElementQuestestinterop)qtielement;
       Vector<QTIElementItem> items = qti.getItems();
-      System.out.println( "Item count: " + items.size() );
-      for ( int i=0; i<items.size(); i++ )
-      {
-        System.out.println( "item" + items.get(i).getIdent() );
-      }
+      //System.out.println( "Item count: " + items.size() );
+//      for ( int i=0; i<items.size(); i++ )
+//      {
+//        System.out.println( "item" + items.get(i).getIdent() );
+//      }
     }
-    System.out.println( "========================================================================" );
+//    System.out.println( "========================================================================" );
   }
 
 

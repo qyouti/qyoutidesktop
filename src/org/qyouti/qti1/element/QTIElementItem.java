@@ -81,9 +81,14 @@ public class QTIElementItem
   public QTIElementResponselabel getResponselabelByOffset( int offset )
   {
     Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() != 1 )
-      throw new IllegalArgumentException( "Item must have exactly one response_lid element." );
-    return responselids.get(0).getResponselabelByOffset( offset );
+    if ( responselids.size() == 1 )
+      return responselids.get(0).getResponselabelByOffset( offset );
+
+    Vector<QTIElementResponselabel> responselabels = findElements( QTIElementResponselabel.class, true );
+    if ( offset<0 || offset >= responselabels.size() )
+      return null;
+
+    return responselabels.get(offset);
   }
 
 
@@ -110,6 +115,14 @@ public class QTIElementItem
     for ( int i=0; i< names.length; i++ )
       names[i] = resprocessing.outcomes.decvar_vector.get( i ).getVarname();
     return names;
+  }
+
+  public boolean isOutcomeLikert( String ident )
+  {
+    QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
+    if ( decvar == null )
+      return false;
+    return "true".equalsIgnoreCase(decvar.getAttribute("qyoutilikert") );
   }
 
   public Object getOutcome( String ident )
@@ -234,6 +247,20 @@ public class QTIElementItem
     if ( !isSupported() ) return false;
     if ( presentation == null ) return false;
     return presentation.isStandardMultipleChoice();
+  }
+
+  public boolean isMultipleChoice()
+  {
+    if ( !isSupported() ) return false;
+    if ( presentation == null ) return false;
+    return presentation.isMultipleChoice();
+  }
+
+  public boolean isString()
+  {
+    if ( !isSupported() ) return false;
+    if ( presentation == null ) return false;
+    return presentation.isString();
   }
 
 

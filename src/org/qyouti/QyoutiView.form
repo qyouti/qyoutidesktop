@@ -530,6 +530,24 @@
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportScoresButtonActionPerformed"/>
                       </Events>
                     </Component>
+                    <Component class="javax.swing.JButton" name="exportRepliesButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" resourceKey="exportRepliesButton.text"/>
+                        <Property name="name" type="java.lang.String" value="exportRepliesButton" noResource="true"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportRepliesButtonActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="exportReportButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" resourceKey="exportReportButton.text"/>
+                        <Property name="name" type="java.lang.String" value="exportReportButton" noResource="true"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportReportButtonActionPerformed"/>
+                      </Events>
+                    </Component>
                   </SubComponents>
                 </Container>
               </SubComponents>

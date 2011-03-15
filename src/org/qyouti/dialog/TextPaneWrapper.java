@@ -8,6 +8,8 @@ package org.qyouti.dialog;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import javax.swing.JTextPane;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLDocument;
 
 /**
  *
@@ -16,6 +18,22 @@ import javax.swing.JTextPane;
 public class TextPaneWrapper
         extends JTextPane
 {
+
+    public TextPaneWrapper( String html )
+    {
+      super();
+      setOpaque(false);
+      setContentType("text/html");
+      setText(html);
+    }
+
+    public HTMLDocument getHtmlDoc()
+    {
+      Document doc = getDocument();
+      if (!(doc instanceof HTMLDocument))
+        return null;
+      return (HTMLDocument) doc;
+    }
 
     @Override
     public void reshape(int x, int y, int w, int h)

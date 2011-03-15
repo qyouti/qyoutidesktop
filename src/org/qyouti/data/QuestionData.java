@@ -251,6 +251,8 @@ public class QuestionData
         if ( rl.isIncorrect() ) return "no";
         return "?";
       case 2:
+        if ( response.box_image == null )
+            return "?";
         return new ImageIcon( response.box_image );
       case 3:
         if ( response.filtered_image == null )

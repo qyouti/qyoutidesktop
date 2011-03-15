@@ -63,7 +63,7 @@ public class CandidateData
     id   = element.getAttribute( "id" );
     try { score = Double.valueOf( element.getAttribute( "score" ) ); }
     catch ( Exception e ) { score = null; }
-    System.out.println( "Adding candidate " + id );
+    //System.out.println( "Adding candidate " + id );
     exam.candidates.put( id, this );
     exam.candidates_sorted.add( this );
 
@@ -106,6 +106,24 @@ public class CandidateData
     return null;
   }
 
+  public QuestionData getQuestionData( String qid )
+  {
+    int i, j;
+    PageData page;
+    QuestionData question;
+    for ( i=0; i<pages.size(); i++ )
+    {
+      page = pages.get(i);
+      for ( j=0; j<page.questions.size(); j++ )
+      {
+        question = page.questions.get(j);
+        if ( qid.equals( question.ident ) )
+          return question;
+      }
+    }
+
+    return null;
+  }
 
 
   public int questionsScanned()
@@ -257,5 +275,10 @@ public class CandidateData
       return;
     }
   }
-  
+
+  @Override
+  public String toString()
+  {
+    return this.id;
+  }
 }

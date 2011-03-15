@@ -16,7 +16,7 @@ public class QTIExtensionResolver
 {
     public static Class resolve( String namespace, String name )
     {
-        System.out.println( "Resolving " + namespace + "  " + name );
+        //System.out.println( "Resolving " + namespace + "  " + name );
         if ( "http://www.webct.com/vista/assessment".equals( namespace ) )
         {
             if ( "material_webeq".equals(name) )

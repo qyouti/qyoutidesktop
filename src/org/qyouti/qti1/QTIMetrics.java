@@ -61,9 +61,8 @@ public class QTIMetrics
       if ( "item-width".equals(name) )
       {
         return getPropertyInches("page-width")
-                -getPropertyInches("page-margin-left")
-                -getPropertyInches("page-margin-right")
-                -getPropertyInches("qrcode-full-width");
+                -getPropertyInches("item-margin-left")
+                -getPropertyInches("page-margin-right");
       }
       
       String s = this.getProperty(name);

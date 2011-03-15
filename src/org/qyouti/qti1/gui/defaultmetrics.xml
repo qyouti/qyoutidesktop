@@ -21,19 +21,41 @@
   <entry key="page-margin-top">0.5</entry>
   <entry key="page-margin-bottom">0.5</entry>
 
-  <entry key="qrcode-width">0.6</entry>
+  <entry key="calibration-topleft-x">0.5</entry>
+  <entry key="calibration-topleft-y">0.5</entry>
+  <entry key="calibration-bottomright-x">7.5</entry>
+  <entry key="calibration-bottomright-y">11.0</entry>
+  <entry key="calibration-width">7.1</entry>
+  <entry key="calibration-height">10.2</entry>
+
+  <entry key="qrcode-item-width">0.6</entry>
+  <entry key="qrcode-item-width-small">0.3</entry>
+  <entry key="qrcode-page-width">0.6</entry>
+  <entry key="qrcode-calibration-width">0.3</entry>
+
+
+
+<!-- these deprecated?   -->
   <entry key="qrcode-full-width">1.3</entry>
-
-  <entry key="qrcode-page-x">0.3</entry>
-  <entry key="qrcode-page-y">10.2</entry>
   <entry key="qrcode-page-encroachment">1.1</entry>
+  <entry key="qrcode-calibrate-width">0.25</entry>
+  <entry key="qrcode-calibrate-full-width">0.4</entry>
 
 
+<!--  <entry key="item-padding-top">0.4</entry> -->
+  <entry key="item-margin-left">1.6</entry>
   <entry key="item-title-height">0.25</entry>
   <entry key="item-title-font-height">0.2</entry>
+
+
 
   <entry key="fontsize">0.1</entry>
   <entry key="fontfamily">Sans</entry>
   <entry key="fontfamily-serif">Serif</entry>
+
+  <entry key="header-anchor">start</entry>
+  <entry key="header-anchor-x">1.6</entry>
+  <entry key="header-anchor-y">0.4</entry>
+
 </properties>
 

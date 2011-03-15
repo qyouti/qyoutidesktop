@@ -37,7 +37,9 @@ import org.jdesktop.application.FrameView;
 import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.zip.*;
@@ -48,6 +50,7 @@ import javax.swing.table.TableModel;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.print.PrintTranscoder;
+import org.apache.fop.pdf.StreamCacheFactory;
 import org.apache.fop.svg.PDFTranscoder;
 import org.qyouti.dialog.ExamOptionsDialog;
 import org.qyouti.dialog.NewExamination;
@@ -57,6 +60,7 @@ import org.qyouti.print.PrintTask;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.QTIItemRenderer;
+import org.qyouti.qti1.gui.QuestionMetricsRecordSet;
 import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -75,7 +79,7 @@ public class QyoutiView extends FrameView
   QyoutiPreferences preferences;
   
 
-  public QyoutiView(SingleFrameApplication app)
+  public QyoutiView(SingleFrameApplication app, String basefoldername, String examname, boolean pdf, boolean exit )
   {
     super(app);
 
@@ -83,13 +87,19 @@ public class QyoutiView extends FrameView
 
     QRCodec.setDebugImageLabel( this.debugImageLabel );
 
-    File homefolder = new File(System.getProperty("user.home"));
-    if (homefolder == null || !homefolder.exists() || !homefolder.isDirectory())
+    if ( basefoldername == null )
     {
-      throw new IllegalArgumentException("Can't access user home folder.");
-    }
+      File homefolder = new File(System.getProperty("user.home"));
+      if (homefolder == null || !homefolder.exists() || !homefolder.isDirectory())
+      {
+        throw new IllegalArgumentException("Can't access user home folder.");
+      }
 
-    appfolder = new File(homefolder, "qyouti");
+      appfolder = new File(homefolder, "qyouti");
+    }
+    else
+      appfolder = new File(basefoldername);
+
     if (appfolder.exists() && !appfolder.isDirectory())
     {
       throw new IllegalArgumentException("File is named after Qyouti folder.");
@@ -114,6 +124,7 @@ public class QyoutiView extends FrameView
     examCombo.removeAllItems();
     examCombo.addItem("Select an examination here");
     File[] childfiles = appfolder.listFiles();
+    Arrays.sort(childfiles);
     File examconfig;
     for (int i = 0; i < childfiles.length; i++)
     {
@@ -236,7 +247,18 @@ public class QyoutiView extends FrameView
       }
     });
 
-    showAboutBox();
+
+    if ( examname != null )
+    {
+      loadExamName( examname );
+      examCombo.setEnabled( false );
+      if ( pdf )
+        examtopdfButtonActionPerformed( null );
+      if ( exit )
+        app.exit();
+    }
+    else
+      showAboutBox();
   }
 
 
@@ -309,6 +331,8 @@ public class QyoutiView extends FrameView
     jPanel14 = new javax.swing.JPanel();
     importCandidatesButton = new javax.swing.JButton();
     exportScoresButton = new javax.swing.JButton();
+    exportRepliesButton = new javax.swing.JButton();
+    exportReportButton = new javax.swing.JButton();
     responseTabPanel = new javax.swing.JPanel();
     jPanel2 = new javax.swing.JPanel();
     jPanel8 = new javax.swing.JPanel();
@@ -641,6 +665,24 @@ public class QyoutiView extends FrameView
     });
     jPanel14.add(exportScoresButton);
 
+    exportRepliesButton.setText(resourceMap.getString("exportRepliesButton.text")); // NOI18N
+    exportRepliesButton.setName("exportRepliesButton"); // NOI18N
+    exportRepliesButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        exportRepliesButtonActionPerformed(evt);
+      }
+    });
+    jPanel14.add(exportRepliesButton);
+
+    exportReportButton.setText(resourceMap.getString("exportReportButton.text")); // NOI18N
+    exportReportButton.setName("exportReportButton"); // NOI18N
+    exportReportButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        exportReportButtonActionPerformed(evt);
+      }
+    });
+    jPanel14.add(exportReportButton);
+
     candidateTabPanel.add(jPanel14, java.awt.BorderLayout.NORTH);
 
     tabbedPane.addTab(resourceMap.getString("candidateTabPanel.TabConstraints.tabTitle"), candidateTabPanel); // NOI18N
@@ -956,6 +998,39 @@ public class QyoutiView extends FrameView
 
     }//GEN-LAST:event_newExamButtonActionPerformed
 
+
+    private void loadExamName( String examname )
+    {
+
+      File newexamfolder = new File(appfolder, examname);
+      try
+      {
+        examfolder = newexamfolder;
+        exam = new ExaminationData(new File(examfolder, "qyouti.xml"));
+        candidateTable.setModel(exam);
+        exam.load();
+        if (exam.qdefs != null)
+        {
+          questionTable.setModel(exam.qdefs);
+        }
+        for (int i = 0; i < exam.candidates_sorted.size(); i++)
+        {
+          for (int j = 0; j < exam.candidates_sorted.get(i).pages.size(); j++)
+          {
+            if (exam.candidates_sorted.get(i).pages.get(j).questions.size() > 0)
+            {
+              gotoQuestion(exam.candidates_sorted.get(i).pages.get(j).questions.firstElement());
+              return;
+            }
+          }
+        }
+      } catch (Exception ex)
+      {
+        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+    }
+
     private void examComboItemStateChanged(java.awt.event.ItemEvent evt)//GEN-FIRST:event_examComboItemStateChanged
     {//GEN-HEADEREND:event_examComboItemStateChanged
 
@@ -991,33 +1066,7 @@ public class QyoutiView extends FrameView
         return;
       }
 
-      File newexamfolder = new File(appfolder, examCombo.getSelectedItem().toString());
-      try
-      {
-        examfolder = newexamfolder;
-        exam = new ExaminationData(new File(examfolder, "qyouti.xml"));
-        candidateTable.setModel(exam);
-        exam.load();
-        if (exam.qdefs != null)
-        {
-          questionTable.setModel(exam.qdefs);
-        }
-        for (int i = 0; i < exam.candidates_sorted.size(); i++)
-        {
-          for (int j = 0; j < exam.candidates_sorted.get(i).pages.size(); j++)
-          {
-            if (exam.candidates_sorted.get(i).pages.get(j).questions.size() > 0)
-            {
-              gotoQuestion(exam.candidates_sorted.get(i).pages.get(j).questions.firstElement());
-              return;
-            }
-          }
-        }
-      } catch (Exception ex)
-      {
-        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
-      }
-
+      loadExamName( examCombo.getSelectedItem().toString() );
     }//GEN-LAST:event_examComboItemStateChanged
 
     private void importCandidatesButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importCandidatesButtonActionPerformed
@@ -1215,15 +1264,19 @@ public class QyoutiView extends FrameView
         URI examfolderuri;
         Vector<SVGDocument> paginated;
         TranscoderInput tinput;
+        String printid = Long.toHexString( System.currentTimeMillis() );
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
           paginated = QTIItemRenderer.paginateItems(
+              printid,
               examfolderuri,
               exam.qdefs.qti.getItems(),
               exam.candidates_sorted.elementAt(j),
-              exam
+              exam,
+              new QuestionMetricsRecordSet(printid),
+              exam.getPreamble()
               );
           for ( i=0; i<paginated.size(); i++ )
           {
@@ -1232,6 +1285,7 @@ public class QyoutiView extends FrameView
           }
         }
         printtranscoder.print();
+        exam.setOption("last_print_id", printid);
       } catch (Exception ex)
       {
         Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -1476,7 +1530,7 @@ public class QyoutiView extends FrameView
         try
         {
           printpreviewDialog = new QyoutiPrintPreviewDialog(mainFrame, true,
-                  exam.examfile.getParentFile().getCanonicalFile().toURI(), exam );
+                  exam.examfile.getParentFile().getCanonicalFile().toURI(), exam, exam.getPreamble() );
         } catch (IOException ex)
         {
           Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -1515,32 +1569,50 @@ public class QyoutiView extends FrameView
         return;
       }
 
-      
-      MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
+      StreamCacheFactory.setDefaultCacheToFile(true);
+
       try
       {
         URI examfolderuri;
+          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
         Vector<SVGDocument> paginated;
         TranscoderInput tinput;
-        TranscoderOutput transout = new TranscoderOutput( new FileOutputStream( "/home/jon/Desktop/test.pdf" ) );
+        TranscoderOutput transout = new TranscoderOutput(
+            new FileOutputStream(
+                new File( appfolder, examfolder.getName() + ".pdf" ) ) );
+        String printid = Long.toHexString( System.currentTimeMillis() );
+        QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
+        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
-          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
           paginated = QTIItemRenderer.paginateItems(
+              printid,
               examfolderuri,
               exam.qdefs.qti.getItems(),
               exam.candidates_sorted.elementAt(j),
-              exam );
+              exam,
+              qmrset,
+              exam.getPreamble() );
           for ( i=0; i<paginated.size(); i++ )
           {
             tinput = new TranscoderInput( paginated.elementAt(i) );
             pdftranscoder.transcode( tinput, transout );
+            paginated.set(i, null);
           }
-
+          paginated.clear();
         }
         pdftranscoder.complete();
         transout.getOutputStream().close();
+        exam.setOption("last_print_id", printid);
+
+        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
+        if ( qmrrecfile.exists() )
+          throw new IllegalArgumentException( "Unable to save print metrics." );
+
+        FileWriter writer = new FileWriter( qmrrecfile );
+        qmrset.emit(writer);
+        writer.close();
       } catch (Exception ex)
       {
         Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -1569,6 +1641,155 @@ public class QyoutiView extends FrameView
       if ( !dialog.wasCancelled() )
         exam.save();
     }//GEN-LAST:event_optionsButtonActionPerformed
+
+
+
+
+    private void exportRepliesButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_exportRepliesButtonActionPerformed
+    {//GEN-HEADEREND:event_exportRepliesButtonActionPerformed
+      // TODO add your handling code here:
+
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam == null)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before exporting replies.");
+        return;
+      }
+
+      if (exam.candidates.isEmpty())
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You can't export replies when there are no candidates listed in the selected exam.");
+        return;
+      }
+
+      try
+      {
+        final JFileChooser fc = new JFileChooser();
+        fc.addChoosableFileFilter(new javax.swing.filechooser.FileFilter()
+        {
+
+          @Override
+          public boolean accept(File f)
+          {
+            if (f.isDirectory())
+            {
+              return true;
+            }
+            return f.getName().toLowerCase().endsWith(".csv");
+          }
+
+          @Override
+          public String getDescription()
+          {
+            return "Comma Separated Value files.";
+          }
+        });
+
+
+        int returnVal = fc.showOpenDialog(mainFrame);
+
+        if (returnVal != JFileChooser.APPROVE_OPTION)
+        {
+          return;
+        }
+        File file = fc.getSelectedFile();
+        if ( file.exists() )
+        {
+          if ( !file.canWrite() )
+          {
+            JOptionPane.showMessageDialog(mainFrame, "The selected output file cannot be overwritten." );
+            return;
+          }
+          if ( JOptionPane.showConfirmDialog(mainFrame, "Do you really want to overwrite the selected file?" )
+                  != JOptionPane.YES_OPTION )
+          {
+            return;
+          }
+        }
+        exam.exportCsvReplies( file );
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(mainFrame, "Technical error exporting replies.");
+      }
+    
+
+
+    }//GEN-LAST:event_exportRepliesButtonActionPerformed
+
+    private void exportReportButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_exportReportButtonActionPerformed
+    {//GEN-HEADEREND:event_exportReportButtonActionPerformed
+      // TODO add your handling code here:
+
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam == null)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before exporting replies.");
+        return;
+      }
+
+      if (exam.candidates.isEmpty())
+      {
+        JOptionPane.showMessageDialog(mainFrame, "You can't export replies when there are no candidates listed in the selected exam.");
+        return;
+      }
+
+      try
+      {
+        final JFileChooser fc = new JFileChooser();
+        fc.addChoosableFileFilter(new javax.swing.filechooser.FileFilter()
+        {
+
+          @Override
+          public boolean accept(File f)
+          {
+            if (f.isDirectory())
+            {
+              return true;
+            }
+            return f.getName().toLowerCase().endsWith(".pdf");
+          }
+
+          @Override
+          public String getDescription()
+          {
+            return "PDF files.";
+          }
+        });
+
+
+        int returnVal = fc.showOpenDialog(mainFrame);
+
+        if (returnVal != JFileChooser.APPROVE_OPTION)
+        {
+          return;
+        }
+        File file = fc.getSelectedFile();
+        if ( file.exists() )
+        {
+          if ( !file.canWrite() )
+          {
+            JOptionPane.showMessageDialog(mainFrame, "The selected output file cannot be overwritten." );
+            return;
+          }
+          if ( JOptionPane.showConfirmDialog(mainFrame, "Do you really want to overwrite the selected file?" )
+                  != JOptionPane.YES_OPTION )
+          {
+            return;
+          }
+        }
+        exam.exportReport(file);
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(mainFrame, "Technical error exporting replies.");
+      }
+
+    }//GEN-LAST:event_exportReportButtonActionPerformed
 
 
 
@@ -1625,6 +1846,8 @@ public class QyoutiView extends FrameView
   private javax.swing.JComboBox examCombo;
   private javax.swing.JPanel examTabPanel;
   private javax.swing.JButton examtopdfButton;
+  private javax.swing.JButton exportRepliesButton;
+  private javax.swing.JButton exportReportButton;
   private javax.swing.JButton exportScoresButton;
   private javax.swing.JButton importCandidatesButton;
   private javax.swing.JButton importQuestionsButton;

@@ -25,6 +25,7 @@ import org.apache.batik.util.ParsedURL;
 
 import org.apache.fop.Version;
 import org.apache.fop.fonts.FontInfo;
+import org.apache.fop.pdf.StreamCacheFactory;
 import org.apache.fop.svg.*;
 import org.apache.xmlgraphics.image.loader.ImageContext;
 import org.apache.xmlgraphics.image.loader.ImageManager;
@@ -107,7 +108,7 @@ public class MultiPagePDFTranscoder
       throws TranscoderException
   {
     pagecount++;
-    System.out.println("transcode pagecount = " + pagecount);
+    //System.out.println("transcode pagecount = " + pagecount);
 
     if (pagecount == 1)
     {
@@ -241,50 +242,52 @@ public class MultiPagePDFTranscoder
     }
   }
 
-  private void setupImageInfrastructure(final String baseURI)
-  {
-    final ImageContext imageContext = new ImageContext()
-    {
 
-      public float getSourceResolution()
-      {
-        return 25.4f / userAgent.getPixelUnitToMillimeter();
-      }
-    };
-    this.imageManager = new ImageManager(imageContext);
-    this.imageSessionContext = new AbstractImageSessionContext()
-    {
 
-      @Override
-      public ImageContext getParentContext()
-      {
-        return imageContext;
-      }
-
-      @Override
-      public float getTargetResolution()
-      {
-        return graphics.getDeviceDPI();
-      }
-
-      @Override
-      public Source resolveURI(String uri)
-      {
-        System.out.println("resolve " + uri);
-        try
-        {
-          ParsedURL url = new ParsedURL(baseURI, uri);
-          InputStream in = url.openStream();
-          StreamSource source = new StreamSource(in, url.toString());
-          return source;
-        } catch (IOException ioe)
-        {
-          userAgent.displayError(ioe);
-          return null;
-        }
-      }
-    };
-  }
+//  void setupImageInfrastructure(final String baseURI)
+//  {
+//    final ImageContext imageContext = new ImageContext()
+//    {
+//
+//      public float getSourceResolution()
+//      {
+//        return 25.4f / userAgent.getPixelUnitToMillimeter();
+//      }
+//    };
+//    this.imageManager = new ImageManager(imageContext);
+//    this.imageSessionContext = new AbstractImageSessionContext()
+//    {
+//
+//      @Override
+//      public ImageContext getParentContext()
+//      {
+//        return imageContext;
+//      }
+//
+//      @Override
+//      public float getTargetResolution()
+//      {
+//        return graphics.getDeviceDPI();
+//      }
+//
+//      @Override
+//      public Source resolveURI(String uri)
+//      {
+//        System.out.println("resolve " + uri);
+//        try
+//        {
+//          ParsedURL url = new ParsedURL(baseURI, uri);
+//          InputStream in = url.openStream();
+//          StreamSource source = new StreamSource(in, url.toString());
+//          return source;
+//        } catch (IOException ioe)
+//        {
+//          userAgent.displayError(ioe);
+//          return null;
+//        }
+//      }
+//    };
+//  }
 
   /** {@inheritDoc} */
   @Override

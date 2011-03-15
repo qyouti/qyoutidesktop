@@ -32,6 +32,7 @@ import org.qyouti.QyoutiView;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.MappedByteBuffer;
@@ -49,12 +50,14 @@ import org.qyouti.scan.process.PageDecoder;
  */
 public class ScanTask
         extends Thread
+        implements ImageObserver
 {
   QyoutiView view;
   ExaminationData exam;
   File scanfolder;
   public boolean active=false;
   Vector<String> errorpages= new Vector<String>();
+  boolean image_ready;
 
   public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder )
   {
@@ -84,6 +87,7 @@ public class ScanTask
 
       for ( int i=0; i<filenames.length; i++ )
       {
+        System.out.println( "\n\nProcessing " + filenames[i].getName() );
         if ( filenames[i].getName().endsWith( ".png" ) ||
              filenames[i].getName().endsWith( ".jpg" ) )
         {
@@ -105,12 +109,16 @@ public class ScanTask
           {
             //  Pages start at 1 and asking for 0 also returns 1!!!
             pdfpage = pdffile.getPage(j+1,true);
-            System.out.println( "Scanning PDF file " + (pdfpage.getWidth()/72.0) + "\" by " + (pdfpage.getHeight()/72.0) + "\"" );
+            //System.out.println( "Scanning PDF file " + (pdfpage.getWidth()/72.0) + "\" by " + (pdfpage.getHeight()/72.0) + "\"" );
+            image_ready = false;
             image = pdfpage.getImage(
                 (int)(300.0*pdfpage.getWidth()/72.0),
-                (int)(300.0*pdfpage.getHeight()/72.0), null, null );
-            System.out.println( "Class " + image.getClass().getCanonicalName() );
+                (int)(300.0*pdfpage.getHeight()/72.0), null, this );
+            //System.out.println( "Class " + image.getClass().getCanonicalName() );
+            while ( !image_ready )
+              Thread.sleep( 100 );
             page = PageDecoder.decode( exam, (BufferedImage)image, filenames[i].getCanonicalPath() + " page " + (j+1) );
+            image.flush();
             postProcessPage( page, filenames[i].getCanonicalPath() + " page " + (j+1) );
           }
           fc.close();
@@ -120,8 +128,8 @@ public class ScanTask
       for ( int n=0; n<errorpages.size(); n++ )
         System.out.println( "ERROR with " + errorpages.get(n) );
 
-      if ( errorpages.size() == 0 )
-        exam.save();
+//      if ( errorpages.size() == 0 )
+//        exam.save();
 
     } catch (Exception ex)
     {
@@ -152,6 +160,16 @@ public class ScanTask
       // and updates presentation of data
       view.gotoQuestion( page.questions.lastElement() );
     }
+  }
+
+  @Override
+  public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height)
+  {
+//    System.out.println( "=====================================" );
+//    System.out.println( "Image flags + " + Integer.toBinaryString(infoflags) );
+//    System.out.println( "=====================================" );
+    image_ready = (infoflags & ImageObserver.ALLBITS ) != 0;
+    return !image_ready;
   }
 
 }

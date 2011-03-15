@@ -39,11 +39,30 @@ import org.jdesktop.application.SingleFrameApplication;
  */
 public class QyoutiApp extends SingleFrameApplication {
 
+  static String[] app_args;
+
     /**
      * At startup create and show the main frame of the application.
      */
     @Override protected void startup() {
-      QyoutiView view = new QyoutiView(this);
+      String basefoldername=null;
+      String exam=null;
+      boolean pdf=false;
+      boolean exit=false;
+
+      for ( int i=0; i<app_args.length; i++ )
+      {
+        if ( app_args[i].startsWith( "-base=") )
+          basefoldername = app_args[i].substring( "-base=".length() );
+        if ( app_args[i].startsWith( "-exam=") )
+          exam = app_args[i].substring( "-exam=".length() );
+        if ( app_args[i].equals( "-pdf") )
+          pdf = true;
+        if ( app_args[i].equals( "-exit") )
+          exit = true;
+      }
+
+      QyoutiView view = new QyoutiView(this, basefoldername, exam, pdf, exit);
         show( view );
       view.getFrame().addWindowListener( new MainFrameListener() );
     }
@@ -68,7 +87,8 @@ public class QyoutiApp extends SingleFrameApplication {
      * Main method launching the application.
      */
     public static void main(String[] args) {
-        launch(QyoutiApp.class, args);
+      app_args = args;
+      launch(QyoutiApp.class, args);
     }
 
      private class MainFrameListener extends WindowAdapter {

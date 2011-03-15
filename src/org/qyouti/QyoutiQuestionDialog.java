@@ -71,16 +71,18 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
     {
         this.item = item;
 
-        renderer = new QTIItemRenderer( examfolderuri, item, qnumber, null );
+        renderer = new QTIItemRenderer( 
+            examfolderuri, item, qnumber, options, null );
         if ( renderer == null )
         {
             previewcanvas.setSVGDocument(null);
             return;
         }
 
-        //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", renderer.getPreviewSVGDocument().getDocumentElement(), true );
+        SVGDocument svg = (SVGDocument) renderer.getPreviewSVGDocument( options );
+        QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svg.getDocumentElement(), true );
 
-        previewcanvas.setSVGDocument( (SVGDocument) renderer.getPreviewSVGDocument( options ));
+        previewcanvas.setSVGDocument( svg );
     }
 
 
