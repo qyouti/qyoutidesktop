@@ -33,7 +33,7 @@ package org.qyouti.scan.process;
 public class QuestionCode
 {
     String id;
-    int next;
+    int next;             // 100th inch
     int[] box_xoffset;
     int[] box_yoffset;
     int[] box_width;

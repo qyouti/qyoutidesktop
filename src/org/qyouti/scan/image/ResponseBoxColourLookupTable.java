@@ -26,6 +26,7 @@
 
 package org.qyouti.scan.image;
 
+import java.awt.Color;
 import java.awt.image.LookupTable;
 
 /**
@@ -36,18 +37,23 @@ public class ResponseBoxColourLookupTable
         extends LookupTable
 {
   int n_black, n_white;
-  int threshold = 220;
+  int threshold;
 
-  public ResponseBoxColourLookupTable( int components )
+  double blackness, range;
+
+  public ResponseBoxColourLookupTable( int components, double blackness, double lightness )
   {
     super( 0, components );
+    this.blackness = blackness;
+    this.range = lightness - blackness;
     n_black = n_white = 0;
+    setThreshold( 0.85 );
   }
 
 
   public void setThreshold( double t )
   {
-       threshold = (int)(t * 255.0);
+    threshold = (int) (blackness + (range*t));
   }
 
   @Override
@@ -58,11 +64,17 @@ public class ResponseBoxColourLookupTable
     // output based on threshold applied to red channel
 
     //dest[0] = src[0] < 174 ? 0 : 255;
-    dest[0] = src[0] < threshold ? 0 : 255;
+    // extra check - pink pixels to white
+//    float[] hsv = Color.RGBtoHSB( src[0], src[1], src[2], null );
+//    if ( hsv[1] > 0.2 && (hsv[0] > (290.0/360.0) ) )
+//      dest[0] = 255;
+//    else
+      dest[0] = src[0] < threshold ? 0 : 255;
     dest[1] = dest[0];
     dest[2] = dest[0];
     if ( dest.length == 4 )
       dest[3] = 255;
+
 
     if ( dest[0] == 0 ) n_black++; else n_white++;
     return dest;

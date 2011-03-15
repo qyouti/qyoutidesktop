@@ -88,7 +88,7 @@ public class HtmlToSvg
       
       GraphicsNode gvtRoot = builder.build( ctx, svgdoc );
       Rectangle2D rect = gvtRoot.getSensitiveBounds();
-      System.out.println( "SVG bounds : " + rect.toString() );
+      //System.out.println( "SVG bounds : " + rect.toString() );
 
       SvgConversionResult svgresult = new SvgConversionResult( svgdoc, /*svg,*/ gvtRoot );
       Element svgelement = svgresult.getDocument().getDocumentElement();

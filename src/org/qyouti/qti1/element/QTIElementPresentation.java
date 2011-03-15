@@ -39,6 +39,7 @@ public class QTIElementPresentation
   boolean supported=false;
   QTIElementMaterial material;
   QTIElementResponselid responselid;
+  QTIElementResponsestr responsestr;
 
   QTIElementItem item=null;
 
@@ -48,6 +49,18 @@ public class QTIElementPresentation
     if ( !isSupported() ) return false;
     if ( responselid == null ) return false;
     return responselid.isStandardMultipleChoice();
+  }
+
+  public boolean isMultipleChoice()
+  {
+    if ( !isSupported() ) return false;
+    return responselid != null;
+  }
+
+  public boolean isString()
+  {
+    if ( !isSupported() ) return false;
+    return responsestr != null;
   }
 
 
@@ -69,12 +82,26 @@ public class QTIElementPresentation
       return;
 
     
-    Vector<QTIElementResponselid> rlids = findElements( QTIElementResponselid.class, true );
-    if ( rlids.size() != 1 )
+    Vector<QTIElementResponsestr> rstrs = findElements( QTIElementResponsestr.class, true );
+    if ( rstrs.size() > 1 )
       return;
-    responselid = rlids.get( 0 );
 
-    supported = responselid.isSupported();
+    Vector<QTIElementResponselid> rlids = findElements( QTIElementResponselid.class, true );
+    if ( rlids.size() > 1 )
+      return;
+
+    if ( (rlids.size()+rstrs.size()) != 1 )
+      return;
+
+    if ( rlids.size() == 1 )
+    {
+      responselid = rlids.get( 0 );
+      supported = responselid.isSupported();
+      return;
+    }
+
+    responsestr = rstrs.get( 0 );
+    supported = rstrs.get(0).isSupported();
   }
 
   public void setItem(QTIElementItem item)

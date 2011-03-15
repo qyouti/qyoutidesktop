@@ -91,7 +91,7 @@ public class QTIElementOutcomesprocessing
       for ( int k=0; k<items.size(); k++ )
         conditions.get( j ).process(scorevar, items.get(k) );
     }
-    System.out.println( "Grand total score: " + scorevar.getCurrentValue() );
+    //System.out.println( "Grand total score: " + scorevar.getCurrentValue() );
   }
 
   @Override

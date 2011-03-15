@@ -28,8 +28,9 @@ public class QRCodeIcon
         height = h;
         codedstring=str;
         qrwidth = qrw;
-        padding = (int)(0.4*qrw);
-        update( 0.0, null );
+        //padding = (int)(0.4*qrw);
+        padding = 0;
+        update( null );
     }
 
     public int getPadding()
@@ -37,15 +38,14 @@ public class QRCodeIcon
       return padding;
     }
 
-    public void update( double qh, String c )
+    public void update( QuestionMetricsRecord mrec )
     {
-        qheight = qh;
-        coords = c;
         org.w3c.dom.Element g;
-        if ( c == null )
+        if ( mrec == null )
           g = QRCodec.encodeSVG(codedstring, qrwidth);
         else
-          g  = QRCodec.svgQuestionQRCode(codedstring, qheight, coords, qrwidth);
+          g = QRCodec.encodeSVG( mrec.toByteArray(), qrwidth);
+
         g.setAttribute("transform", "translate(" + padding + ", " + padding + ")" );
         setSVG( g );
     }

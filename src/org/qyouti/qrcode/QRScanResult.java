@@ -38,12 +38,14 @@ import java.util.Vector;
 public class QRScanResult
 {
   Result wrapped_result;
+  double blackness;
 
-  public QRScanResult( Result wr )
+  public QRScanResult( Result wr, double blackness )
   {
     if  ( wr==null )
       throw new IllegalArgumentException( "Null qrcode result." );
     wrapped_result = wr;
+    this.blackness = blackness;
 
   }
 
@@ -52,6 +54,11 @@ public class QRScanResult
     return wrapped_result.getResultPoints();
   }
 
+  public double getBlackness()
+  {
+    return blackness;
+  }
+  
   public String getText()
   {
     String str = wrapped_result.getText();

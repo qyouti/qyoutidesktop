@@ -31,6 +31,8 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
         coversheetCheckbox.setSelected(exam.getQTIRenderBooleanOption("cover_sheet"));
         doublesidedCheckbox.setSelected(exam.getQTIRenderBooleanOption("double_sided"));
         ignoreflowCheckbox.setSelected(exam.getQTIRenderBooleanOption("ignore_flow"));
+        questiontitleCheckbox.setSelected(exam.getQTIRenderBooleanOption("question_titles"));
+        questionmetricsCheckbox.setSelected(exam.getQTIRenderBooleanOption("question_metrics_qr"));
         headerTextField.setText( exam.getQTIRenderOption( "header" ) );
         nameinfooterCheckbox.setSelected(  exam.getQTIRenderBooleanOption("name_in_footer"));
         idinfooterCheckbox.setSelected(  exam.getQTIRenderBooleanOption("id_in_footer"));
@@ -56,6 +58,8 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
     coversheetCheckbox = new javax.swing.JCheckBox();
     doublesidedCheckbox = new javax.swing.JCheckBox();
     ignoreflowCheckbox = new javax.swing.JCheckBox();
+    questiontitleCheckbox = new javax.swing.JCheckBox();
+    questionmetricsCheckbox = new javax.swing.JCheckBox();
     jPanel3 = new javax.swing.JPanel();
     jLabel1 = new javax.swing.JLabel();
     headerTextField = new javax.swing.JTextField();
@@ -70,7 +74,7 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
 
     jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
     jPanel1.setName("jPanel1"); // NOI18N
-    jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.Y_AXIS));
+    jPanel1.setLayout(new java.awt.GridLayout(0, 1));
 
     org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.qyouti.QyoutiApp.class).getContext().getResourceMap(ExamOptionsDialog.class);
     coversheetCheckbox.setText(resourceMap.getString("coversheetCheckbox.text")); // NOI18N
@@ -84,6 +88,14 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
     ignoreflowCheckbox.setText(resourceMap.getString("ignoreflowCheckbox.text")); // NOI18N
     ignoreflowCheckbox.setName("ignoreflowCheckbox"); // NOI18N
     jPanel1.add(ignoreflowCheckbox);
+
+    questiontitleCheckbox.setText(resourceMap.getString("questiontitleCheckbox.text")); // NOI18N
+    questiontitleCheckbox.setName("questiontitleCheckbox"); // NOI18N
+    jPanel1.add(questiontitleCheckbox);
+
+    questionmetricsCheckbox.setText(resourceMap.getString("questionmetricsCheckbox.text")); // NOI18N
+    questionmetricsCheckbox.setName("questionmetricsCheckbox"); // NOI18N
+    jPanel1.add(questionmetricsCheckbox);
 
     jPanel3.setName("jPanel3"); // NOI18N
     jPanel3.setLayout(new java.awt.BorderLayout());
@@ -106,7 +118,7 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
     idinfooterCheckbox.setName("idinfooterCheckbox"); // NOI18N
     jPanel1.add(idinfooterCheckbox);
 
-    getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
+    getContentPane().add(jPanel1, java.awt.BorderLayout.NORTH);
 
     jPanel2.setName("jPanel2"); // NOI18N
 
@@ -146,6 +158,8 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
 
       exam.setOption("cover_sheet", coversheetCheckbox.isSelected() );
       exam.setOption("ignore_flow", ignoreflowCheckbox.isSelected() );
+      exam.setOption("question_titles", questiontitleCheckbox.isSelected() );
+      exam.setOption("question_metrics_qr", questionmetricsCheckbox.isSelected() );
       exam.setOption("double_sided", doublesidedCheckbox.isSelected() );
       exam.setOption( "header", headerTextField.getText() );
       exam.setOption("name_in_footer", nameinfooterCheckbox.isSelected() );
@@ -167,6 +181,8 @@ public class ExamOptionsDialog extends javax.swing.JDialog {
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JCheckBox nameinfooterCheckbox;
+  private javax.swing.JCheckBox questionmetricsCheckbox;
+  private javax.swing.JCheckBox questiontitleCheckbox;
   // End of variables declaration//GEN-END:variables
 
 }

@@ -57,4 +57,11 @@ public class ItemOutcomeData
     return datum.value.toString();
   }
 
+  public ItemOutcomeDatum getDatum( String name )
+  {
+    for ( int i=0; i<data.size(); i++ )
+      if ( data.get(i).name.equals( name ) )
+        return data.get(i);
+    return null;
+  }
 }

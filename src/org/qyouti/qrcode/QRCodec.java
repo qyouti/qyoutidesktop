@@ -31,6 +31,7 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
+import com.google.zxing.ResultPoint;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.ByteMatrix;
 import com.google.zxing.common.LocalBlockBinarizer;
@@ -346,38 +347,44 @@ public class QRCodec
     return result.getText();
   }
 
-  public static byte[] decodeToByteArray( BufferedImage image )
-          throws ReaderException, UnsupportedEncodingException
-  {
-    QRScanResult result = decode( image );
-    if ( result == null ) return null;
-    return result.getBytes();
-  }
+//  public static byte[] decodeToByteArray( BufferedImage image )
+//          throws ReaderException, UnsupportedEncodingException
+//  {
+//    QRScanResult result = decode( image );
+//    if ( result == null ) return null;
+//    return result.getBytes();
+//  }
 
 
   public static QRScanResult decode( BufferedImage image )
           throws ReaderException, UnsupportedEncodingException
   {
+    return decode( image, null );
+  }
+    
+  public static QRScanResult decode( BufferedImage image, BufferedImage originalimage )
+          throws ReaderException, UnsupportedEncodingException
+  {
     BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( image );
     if ( debugImageLabel != null )
       debugImageLabel.setIcon( new ImageIcon( image ) );
-    return decode( source );
+    return decode( source, originalimage );
   }
 
-  public static QRScanResult decode( BufferedImage image, int x, int y, int width, int height )
-          throws ReaderException, UnsupportedEncodingException
-  {
-    BufferedImage cropped = new BufferedImage( width, height, BufferedImage.TYPE_INT_RGB );
-    int[] rgbArray = image.getRGB( x, y, width, height, null, 0,  width );
-    cropped.setRGB( 0, 0, width, height, rgbArray, 0, width );
-    if ( debugImageLabel != null )
-      debugImageLabel.setIcon( new ImageIcon( cropped ) );
-    
-    BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( cropped );
-    return decode( source );
-  }
+//  public static QRScanResult decode( BufferedImage image, int x, int y, int width, int height )
+//          throws ReaderException, UnsupportedEncodingException
+//  {
+//    BufferedImage cropped = new BufferedImage( width, height, BufferedImage.TYPE_INT_RGB );
+//    int[] rgbArray = image.getRGB( x, y, width, height, null, 0,  width );
+//    cropped.setRGB( 0, 0, width, height, rgbArray, 0, width );
+//    if ( debugImageLabel != null )
+//      debugImageLabel.setIcon( new ImageIcon( cropped ) );
+//
+//    BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( cropped );
+//    return decode( source, cropped );
+//  }
 
-  public static QRScanResult decode( BufferedImageLuminanceSource source )
+  private static QRScanResult decode( BufferedImageLuminanceSource source, BufferedImage originalimage )
           throws ReaderException, UnsupportedEncodingException
   {
     Result result=null;
@@ -396,9 +403,29 @@ public class QRCodec
       return null;
     }
 
-    return new QRScanResult( result );
+    double blackness = 0.0;
+    if ( originalimage !=null )
+      blackness = calibrateBlack( originalimage, result.getResultPoints() );
+    return new QRScanResult( result, blackness );
   }
 
+  public static double calibrateBlack( BufferedImage image, ResultPoint[] points )
+  {
+    int i, j, k, x, y, rgb;
+    double total=0.0;
+
+    for ( i=0; i<points.length; i++ )
+      for ( j=-1; j<=1; j++ )
+        for ( k=-1; k<=1; k++ )
+        {
+          x = (int)points[i].getX() + j;
+          y = (int)points[i].getY() + k;
+          rgb = image.getRGB( x, y );
+          total += (double)((rgb >> 16) & 0xff);
+        }
+
+    return total / (9.0 * points.length);
+  }
 
 
   /**

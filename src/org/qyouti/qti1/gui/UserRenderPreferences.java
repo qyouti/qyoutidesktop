@@ -18,7 +18,7 @@ public class UserRenderPreferences
   boolean serif=false;
   double fontsize;
 
-  boolean hashed=false;
+  String packed=null;
   int hash;
 
   public UserRenderPreferences()
@@ -44,7 +44,13 @@ public class UserRenderPreferences
     writer.write( "/>\n" );
   }
 
-
+  public String packedRepresentation()
+  {
+    if ( packed != null ) return packed;
+    packed = "version1_" + Double.toString(fontsize) + (serif?"s":"");
+    hash = packed.hashCode();
+    return packed;
+  }
 
   public double getFontsize()
   {
@@ -79,11 +85,7 @@ public class UserRenderPreferences
   @Override
   public int hashCode()
   {
-    if ( !hashed )
-    {
-      hash = (Double.toString(fontsize) + (serif?"s":"") ).hashCode();
-      hashed = true;
-    }
+    packedRepresentation();
     return hash;
   }
 

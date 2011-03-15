@@ -61,17 +61,24 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     QTIItemRenderer renderer = null;
     URI examfolderuri;
     QTIRenderOptions options;
+    String preamble;
     int page=0;
 
     /** Creates new form QyoutiQuestionDialog
      * @param parent
      * @param modal 
      */
-    public QyoutiPrintPreviewDialog(java.awt.Frame parent, boolean modal, URI examfolderuri, QTIRenderOptions options)
+    public QyoutiPrintPreviewDialog(
+        java.awt.Frame parent,
+        boolean modal,
+        URI examfolderuri,
+        QTIRenderOptions options,
+        String preamble )
     {
         super(parent, modal);
         this.examfolderuri = examfolderuri;
         this.options = options;
+        this.preamble = preamble;
         getRootPane().setDefaultButton(closeButton);
         initComponents();
         
@@ -80,7 +87,11 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     public void setItems( Vector<QTIElementItem> items )
     {
 //examfolderuri
-      paginated = QTIItemRenderer.paginateItems(examfolderuri, items, new CandidateData( null, "A.Student", "00000000"), options);
+      paginated = QTIItemRenderer.paginateItems( 
+          "dummyid", examfolderuri, items,
+          new CandidateData( null, "A.Student", "00000000"),
+          options, new QuestionMetricsRecordSet("dummyprintid"),
+              preamble );
       //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", paginated.get(0).getDocumentElement(), true );
 
       previewcanvas.setSVGDocument( paginated.firstElement() );
