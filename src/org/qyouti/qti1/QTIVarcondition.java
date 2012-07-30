@@ -58,7 +58,7 @@ public abstract class QTIVarcondition
 
   public Object getResponse()
   {
-    return item.getResponse( getRespident() );
+    return item.getResponseValue( getRespident() );
   }
 
 

@@ -34,18 +34,18 @@ import org.w3c.dom.Element;
  *
  * @author jon
  */
-public class ItemOutcomeDatum
+public class OutcomeDatum
 {
   String name;
   Object value;
   
 
-  public ItemOutcomeDatum()
+  public OutcomeDatum()
   {
 
   }
 
-  public ItemOutcomeDatum( Element element )
+  public OutcomeDatum( Element element )
   {
     name = element.getAttribute( "ident" );
     String type = element.getAttribute( "type" );

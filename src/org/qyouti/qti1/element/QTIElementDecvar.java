@@ -33,10 +33,11 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementDecvar
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   Object current;
   boolean supported=false;
+  boolean duplicate=false;
 
   public Object getCurrentValue()
   {
@@ -105,7 +106,7 @@ public class QTIElementDecvar
 
   public boolean isSupported()
   {
-    return supported;
+    return supported && !duplicate;
   }
 
 

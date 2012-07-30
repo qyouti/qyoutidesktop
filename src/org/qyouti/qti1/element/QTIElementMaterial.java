@@ -33,7 +33,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementMaterial
-         extends QTIItemAncestor
+         extends QTIItemDescendant
 {
 
 

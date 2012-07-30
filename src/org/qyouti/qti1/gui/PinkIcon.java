@@ -16,21 +16,26 @@ import org.w3c.dom.Document;
  * @author jon
  */
 public class PinkIcon
-        extends SVGIcon
+        extends UserInputIcon
 {
-    static String bordercolor = "#ffbbff";
+    static String bordercolor = "#ffc4ff";
     static String   fillcolor = "#ffccff";
+    static String  crosscolor = "#ffd8ff";
 
     int borderwidth;
     int padding;
+    boolean crossed=false;
 
 
-    public PinkIcon( int w, int h, int b, int p )
+    public PinkIcon( int w, int h, int b, int p, boolean crossed, String type, String ident )
     {
         width = w;
         height = h;
         borderwidth = b;
         padding = p;
+        this.crossed = crossed;
+        setType( type );
+        setIdent( ident );
 
         DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
         String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -39,6 +44,8 @@ public class PinkIcon
         org.w3c.dom.Element rw = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
         org.w3c.dom.Element r1 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
         org.w3c.dom.Element r2 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
+        org.w3c.dom.Element ln1 = null;
+        org.w3c.dom.Element ln2 = null;
         rw.setAttribute("x", "0" );
         rw.setAttribute("y", "0" );
         rw.setAttribute("width", Integer.toString(width) );
@@ -58,8 +65,34 @@ public class PinkIcon
         r2.setAttribute("fill",  fillcolor );
         r2.setAttribute("stroke", "none" );
 
+        int inset = 3*borderwidth+padding;
+
         g.appendChild(r1);
         g.appendChild(r2);
+
+        if ( crossed )
+        {
+          ln1 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"line");
+          ln2 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"line");
+          ln1.setAttribute("x1", Integer.toString( inset ) );
+          ln1.setAttribute("y1", Integer.toString( inset ) );
+          ln1.setAttribute("x2", Integer.toString( width-inset ) );
+          ln1.setAttribute("y2", Integer.toString( height-inset ) );
+          ln1.setAttribute("stroke", crosscolor );
+          ln1.setAttribute("stroke-linecap", "round" );
+          ln1.setAttribute("stroke-width", Integer.toString( height / 10 ) );
+
+          ln2.setAttribute("x1", Integer.toString( inset ) );
+          ln2.setAttribute("y2", Integer.toString( inset ) );
+          ln2.setAttribute("x2", Integer.toString( width-inset ) );
+          ln2.setAttribute("y1", Integer.toString( height-inset ) );
+          ln2.setAttribute("stroke", crosscolor );
+          ln2.setAttribute("stroke-linecap", "round" );
+          ln2.setAttribute("stroke-width", Integer.toString( height / 10 ) );
+
+          g.appendChild( ln1 );
+          g.appendChild( ln2 );
+        }
         setSVG( g );
     }
 

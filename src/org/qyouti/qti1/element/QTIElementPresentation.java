@@ -34,7 +34,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementPresentation
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   boolean supported=false;
   QTIElementMaterial material;
@@ -44,18 +44,18 @@ public class QTIElementPresentation
   QTIElementItem item=null;
 
 
-  public boolean isStandardMultipleChoice()
-  {
-    if ( !isSupported() ) return false;
-    if ( responselid == null ) return false;
-    return responselid.isStandardMultipleChoice();
-  }
-
-  public boolean isMultipleChoice()
-  {
-    if ( !isSupported() ) return false;
-    return responselid != null;
-  }
+//  public boolean isStandardMultipleChoice()
+//  {
+//    if ( !isSupported() ) return false;
+//    if ( responselid == null ) return false;
+//    return responselid.isStandardMultipleChoice();
+//  }
+//
+//  public boolean isMultipleChoice()
+//  {
+//    if ( !isSupported() ) return false;
+//    return responselid != null;
+//  }
 
   public boolean isString()
   {
@@ -76,32 +76,37 @@ public class QTIElementPresentation
     super.initialize();
     
     supported = false;
-
-    Vector<QTIResponseUnsupported> urlids = findElements( QTIResponseUnsupported.class, true );
-    if ( urlids.size() != 0 )
-      return;
-
-    
-    Vector<QTIElementResponsestr> rstrs = findElements( QTIElementResponsestr.class, true );
-    if ( rstrs.size() > 1 )
-      return;
-
-    Vector<QTIElementResponselid> rlids = findElements( QTIElementResponselid.class, true );
-    if ( rlids.size() > 1 )
-      return;
-
-    if ( (rlids.size()+rstrs.size()) != 1 )
-      return;
-
-    if ( rlids.size() == 1 )
+    Vector<QTIResponse> responses = findElements( QTIResponse.class, true );
+    for ( int i=0; i<responses.size(); i++ )
     {
-      responselid = rlids.get( 0 );
-      supported = responselid.isSupported();
-      return;
+      if ( responses.get(i) instanceof QTIResponseUnsupported )
+        return;
+      if ( responses.get(i) instanceof QTIElementResponselid )
+      {
+        // responselid must come before responsestr
+        if ( responselid != null || responsestr != null)
+          return;
+        responselid = (QTIElementResponselid)responses.get(i);
+      }
+      if ( responses.get(i) instanceof QTIElementResponsestr )
+      {
+        if ( responsestr != null )
+          responsestr = (QTIElementResponsestr)responses.get(i);
+      }
     }
 
-    responsestr = rstrs.get( 0 );
-    supported = rstrs.get(0).isSupported();
+    if ( responselid != null )
+    {
+      if ( ! responselid.isSupported() )
+        return;
+    }
+
+    if ( responsestr != null )
+    {
+      if ( ! responsestr.isSupported() )
+        return;
+    }
+    supported = true;
   }
 
   public void setItem(QTIElementItem item)

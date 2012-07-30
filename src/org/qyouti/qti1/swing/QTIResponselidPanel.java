@@ -41,9 +41,9 @@ public class QTIResponselidPanel
     public QTIResponselidPanel( QTIElementResponselid rlid )
     {
         JLabel errlabel;
-        Vector<QTIItemAncestor> children;
-        children = rlid.findElements(QTIItemAncestor.class);
-        QTIItemAncestor child;
+        Vector<QTIItemDescendant> children;
+        children = rlid.findElements(QTIItemDescendant.class);
+        QTIItemDescendant child;
         for (int i = 0; i < children.size(); i++)
         {
             child = children.get(i);

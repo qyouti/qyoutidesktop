@@ -34,6 +34,8 @@ public class QuestionCode
 {
     String id;
     int next;             // 100th inch
+    String[] types;
+    String[] idents;
     int[] box_xoffset;
     int[] box_yoffset;
     int[] box_width;

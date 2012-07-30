@@ -36,13 +36,18 @@ import org.w3c.dom.NamedNodeMap;
  * @author jon
  */
 public class QTIElementResponselabel
-         extends QTIItemAncestor
+         extends QTIItemDescendant
 {
   boolean supported = false;
 
   boolean correct = false;
   boolean incorrect = false;
 
+
+  public QTIElementResponselid findResponselid()
+  {
+    return findAncestorElement( QTIElementResponselid.class );
+  }
 
   public void setCorrectAttribute()
   {

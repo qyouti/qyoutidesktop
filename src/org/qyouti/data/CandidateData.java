@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.io.*;
 import java.util.*;
+import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.UserRenderPreferences;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -42,9 +43,14 @@ public class CandidateData
   public Vector<PageData> pages = new Vector<PageData>();
   public String name;
   public String id;
+
   public Double score = null;
+  public OutcomeData outcomes = new OutcomeData();
 
   public UserRenderPreferences preferences = null;
+
+  public Vector<String> itemidents = null;
+  
 
   public CandidateData( ExaminationData exam, String name, String id )
   {
@@ -67,12 +73,50 @@ public class CandidateData
     exam.candidates.put( id, this );
     exam.candidates_sorted.add( this );
 
-    NodeList nl = element.getChildNodes();
+    NodeList nl;
+    itemidents = null;
+    nl = element.getElementsByTagName( "items" );
+    Element items, itemref;
+    String ident;
+    if ( nl.getLength() == 1 )
+    {
+      itemidents = new Vector<String>();
+      items = (Element)nl.item( 0 );
+      nl = items.getElementsByTagName( "itemref" );
+      for ( int j=0; j<nl.getLength(); j++ )
+      {
+        itemref = (Element)nl.item( j );
+        ident = itemref.getAttribute( "ident" );
+        if ( ident != null && ident.length() > 0 )
+          itemidents.add( ident );
+      }
+    }
+
     nl = element.getElementsByTagName( "page" );
     PageData page;
+    int seq;
+    Element eseq;
     for ( int j=0; j<nl.getLength(); j++ )
     {
-      page = new PageData( exam, name, id, (Element)nl.item( j ) );
+      eseq = (Element)nl.item( j );
+      try
+      {
+        seq = Integer.parseInt( eseq.getAttribute( "seq" ) );
+        if ( seq>=0 && seq < exam.pages.size() )
+        {
+          pages.add( exam.pages.get( seq ) );
+        }
+      }
+      catch ( NumberFormatException numberFormatException )
+      {
+      }
+    }
+    nl = element.getElementsByTagName( "outcome" );
+    OutcomeDatum outcome;
+    for ( int j=0; j<nl.getLength(); j++ )
+    {
+      outcome = new OutcomeDatum( (Element)nl.item(j) );
+      outcomes.data.add( outcome );
     }
     nl = element.getElementsByTagName( "preferences" );
     if ( nl.getLength() > 0 )
@@ -96,8 +140,8 @@ public class CandidateData
         if ( qid.equals( question.ident ) )
         {
           //System.out.println( "found q " );
-          if ( resp_offset>=0 && resp_offset < question.responses.size() )
-            return question.responses.get( resp_offset );
+          if ( resp_offset>=0 && resp_offset < question.responsedatas.size() )
+            return question.responsedatas.get( resp_offset );
           return null;
         }
       }
@@ -141,11 +185,23 @@ public class CandidateData
     if ( score != null )
       writer.write( " score=\"" + score + "\"" );
     writer.write( ">\n" );
+    if ( itemidents != null )
+    {
+      writer.write( "    <items>\n" );
+      for ( int i=0; i<itemidents.size(); i++ )
+        writer.write( "      <itemref ident=\"" + itemidents.elementAt( i ) + "\"/>\n" );
+      writer.write( "    </items>\n" );
+    }
     if ( preferences != null )
       preferences.emit(writer);
     for ( int i=0; i<pages.size(); i++ )
-      pages.get( i ).emit( writer );
-
+    {
+      writer.write( "    <page seq=\"" );
+      writer.write( pages.get( i ).scanorder.toString() );
+      writer.write( "\"/>\n" );
+    }
+    for ( int i=0; i<outcomes.data.size(); i++ )
+      outcomes.data.get( i ).emit( writer );
     writer.write( "  </candidate>\n" );
   }
 
@@ -186,7 +242,7 @@ public class CandidateData
   }
 
 
-  public QuestionData firstQuestion()
+  public QuestionData firstQuestionData()
   {
     for ( int i=0; i< pages.size(); i++ )
     {
@@ -197,7 +253,7 @@ public class CandidateData
     return null;
   }
 
-  public QuestionData lastQuestion()
+  public QuestionData lastQuestionData()
   {
     for ( int i=pages.size()-1; i>=0; i-- )
     {
@@ -245,12 +301,34 @@ public class CandidateData
     return null;
   }
 
+
+  public Vector<QTIElementItem> getItems()
+  {
+    if ( this.itemidents == null )
+      return exam.qdefs.qti.getItems();
+
+    Vector<QTIElementItem> v = new Vector<QTIElementItem>();
+    for ( int i=0; i<itemidents.size(); i++ )
+      v.add( exam.qdefs.qti.getItem( itemidents.elementAt( i ) ) );
+    for ( int i=0; i<v.size(); i++ )
+      if ( v.elementAt( i ) == null )
+        v.remove( i );
+    return v;
+  }
+
+
   public void processAllResponses()
   {
     // all questions need to be processed to ensure that
     // QTI structure is fully populated with this candidate's
     // responses and item outcomes.
+
+    // reset the qti elements so it's ready to receive
+    // and process this candidate's responses
     exam.qdefs.qti.reset();
+
+    // Process item responses  and calculate item outcomes
+    // for each question that we have data for
     for ( int p=0; p<pages.size(); p++ )
     {
       for ( int q=0; q<pages.get(p).questions.size(); q++ )
@@ -258,10 +336,44 @@ public class CandidateData
         pages.get(p).questions.get(q).processResponses();
       }
     }
-    // add up scores etc.
-    exam.qdefs.qti.getOutcomesprocessing().process();
+
+    // If there are questions set the candidate for which we
+    // have no data, include them in the overall outcome
+    // processing anyway so we get default values calculated
+    // as if the candidate didn't answer the questions.
+    Vector<QTIElementItem> items = getItems();
+    for ( int i=0; i<items.size(); i++ )
+    {
+      if ( !items.get( i ).isReferencedByCandidate() )
+      {
+        items.get( i ).reset();
+        items.get( i ).setReferencedByCandidate();
+      }
+    }
+
+    // Process item outcomes to produce top level outcomes
+    // for the candidate
+    exam.qdefs.qti.processOutcomes();
+
+    // Copy over outcomes from the qti structures into this CandidateData
+    // object.
+    String[] outcome_names = exam.qdefs.qti.getOutcomeNames();
+    OutcomeDatum outcomedata;
+    outcomes.data.clear();
+    for ( int i=0; i<outcome_names.length; i++ )
+    {
+      outcomedata = new OutcomeDatum();
+      outcomedata.name = outcome_names[i];
+      outcomedata.value = exam.qdefs.qti.getOutcomeValue( outcome_names[i] );
+      //System.out.println( "Outcome " + outcomedata.name );
+      //System.out.println( "Value " + outcomedata.value );
+      outcomes.data.add( outcomedata );
+    }
+    outcomes.fireTableDataChanged();
+
+
     score = null;
-    Object value = exam.qdefs.qti.getOutcomesprocessing().getOutcomeValue("SCORE");
+    Object value = outcomes.getDatum("SCORE");
     if ( value == null )
       return;
     if ( value instanceof Double )

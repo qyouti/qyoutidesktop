@@ -56,14 +56,16 @@ public class QRCodeColourLookupTable
     // source red and green are ignored
     // output based on threshold applied to blue channel
 
-    dest[2] = src[2] < threshold ? 0 : 255;
-    dest[0] = dest[2];
-    dest[1] = dest[2];
+    int channel = (dest.length < 4) ? (dest.length - 1) : 2;
+
+    dest[channel] = src[channel] < threshold ? 0 : 255;
+    if ( dest[channel] == 0 ) n_black++; else n_white++;
+    for ( ; channel > 0; channel-- )
+      dest[channel-1] = dest[channel];
 
     if ( dest.length == 4 )
       dest[3] = 255;
 
-    if ( dest[2] == 0 ) n_black++; else n_white++;
     return dest;
   }
 

@@ -33,7 +33,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementSetvar
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
 
   public String getVarName()
@@ -68,7 +68,7 @@ public class QTIElementSetvar
     if ( !"set".equals( action ) && !"add".equals( action ))
       throw new IllegalArgumentException( "Setvar actions other than set and add are not yet implemented." );
 
-    Object currentvalue = getItem().getOutcome( varname );
+    Object currentvalue = getItem().getOutcomeValue( varname );
     if ( currentvalue == null )
       throw new IllegalArgumentException( "Setvar can't process null outcome." );
     if ( currentvalue instanceof String )

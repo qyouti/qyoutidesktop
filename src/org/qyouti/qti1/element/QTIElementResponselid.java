@@ -49,12 +49,22 @@ public class QTIElementResponselid
     return supported;
   }
 
+  public boolean isSingleChoice()
+  {
+    return "single".equalsIgnoreCase( getCardinality() );
+  }
+
   public boolean isStandardMultipleChoice()
   {
     if ( !isSupported() ) return false;
     return "single".equalsIgnoreCase( getCardinality() );
   }
 
+  public boolean isMultipleChoice()
+  {
+    if ( !isSupported() ) return false;
+    return true;
+  }
   public Object getCurrentValue()
   {
     return current;
@@ -75,6 +85,12 @@ public class QTIElementResponselid
   }
 
 
+  public QTIElementResponselabel[] getResponseLabels()
+  {
+    QTIElementResponselabel[] a = new QTIElementResponselabel[renderchoice.responselabels.size()];
+    return renderchoice.responselabels.toArray( a );
+  }
+  
   public QTIElementResponselabel getResponselabelByOffset( int offset )
   {
     if ( offset < 0 || offset >= renderchoice.responselabels.size() )
@@ -106,37 +122,36 @@ public class QTIElementResponselid
 
   public void setCurrentValueByOffset( int offset )
   {
-    Vector<QTIElementResponselabel> responselabels =
-            findElements( QTIElementResponselabel.class, true );
-    if ( offset >= responselabels.size() )
+    QTIElementResponselabel responselabel = renderchoice.responselabels.get( offset );
+    if ( responselabel == null )
       throw new IllegalArgumentException( "Attempting to set response to unavailable option." );
-
-    String decodedvalue = responselabels.get( offset ).getIdent();
-    setCurrentValue( new String[] {decodedvalue} );
+    setCurrentValue( new String[] {responselabel.getIdent()} );
   }
 
   public void addCurrentValueByOffset( int offset )
   {
-    Vector<QTIElementResponselabel> responselabels =
-            findElements( QTIElementResponselabel.class, true );
-    if ( offset >= responselabels.size() )
+    QTIElementResponselabel responselabel = renderchoice.responselabels.get( offset );
+    if ( responselabel == null )
       throw new IllegalArgumentException( "Attempting to set response to unavailable option." );
+    addCurrentValue( responselabel.getIdent() );
+  }
 
-    String decodedvalue = responselabels.get( offset ).getIdent();
+  public void addCurrentValue( String ident )
+  {
     String[] newcurrent;
     if ( current != null )
     {
       for ( int i=0; i<current.length; i++ )
-        if ( current[i].equals( decodedvalue ) )
+        if ( current[i].equals( ident ) )
           return;  // already added to response list
       newcurrent = new String[current.length+1];
       for ( int i=0; i<current.length; i++ )
         newcurrent[i] = current[i];
-      newcurrent[current.length] = decodedvalue;
+      newcurrent[current.length] = ident;
       setCurrentValue( newcurrent );
       return;
     }
-    setCurrentValue( new String[] {decodedvalue} );
+    setCurrentValue( new String[] {ident} );
   }
 
 
@@ -221,7 +236,7 @@ public class QTIElementResponselid
   public void computeCorrectResponses()
   {
     int i, j, permcount, perm;
-    Object outcome = getItem().getOutcome( "SCORE" );
+    Object outcome = getItem().getOutcomeValue( "SCORE" );
     if ( outcome == null || !(outcome instanceof Number) )
       return;
 
@@ -256,11 +271,11 @@ public class QTIElementResponselid
         //  System.out.println( current[k] );
         //}
         getItem().computeOutcomes();
-        outcomes_unselected[j] = (Number)getItem().getOutcome( "SCORE" );
+        outcomes_unselected[j] = (Number)getItem().getOutcomeValue( "SCORE" );
         //System.out.println( "score = " + outcomes_unselected[j] );
         setCurrentValueByOffset( i );
         getItem().computeOutcomes();
-        outcomes_selected[j] = (Number)getItem().getOutcome( "SCORE" );
+        outcomes_selected[j] = (Number)getItem().getOutcomeValue( "SCORE" );
         //System.out.println( "score = " + outcomes_selected[j] );
         if ( outcomes_selected[j].doubleValue() > outcomes_unselected[j].doubleValue() )
           up = true;
@@ -318,9 +333,18 @@ public class QTIElementResponselid
     supported = true;
   }
 
+  @Override
+  public int getResponsePartCount()
+  {
+    if ( renderchoice == null )
+      return 0;
+    if ( renderchoice.responselabels == null )
+      return 0;
+    return renderchoice.responselabels.size();
+  }
 
   @Override
-  public boolean areResponsesAllowed()
+  public boolean areCurrentResponseValuesAllowed()
   {
     // is the response given an allowable response according to
     // the definition of the item?

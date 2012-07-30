@@ -44,6 +44,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 import java.util.zip.*;
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -73,15 +74,34 @@ public class QyoutiView extends FrameView
   File appfolder = null;
   File examfolder = null;
   int selected_exam_index = 0;
+  ExaminationCatalogue examcatalogue = null;
   ExaminationData exam = null;
   ScanTask scantask = null;
   PreferencesDialog prefsDialog;
-  QyoutiPreferences preferences;
-  
+  public QyoutiPreferences preferences;
 
-  public QyoutiView(SingleFrameApplication app, String basefoldername, String examname, boolean pdf, boolean exit )
+  String repliesfilename;
+  String reportfilename;
+  String scanfolder;
+  int classsize;
+
+  public QyoutiView(
+      SingleFrameApplication app,
+      String basefoldername,
+      String examname,
+      String repliesfilename,
+      String reportfilename,
+      String scanfolder,
+      int classsize,
+      boolean pdf,
+      boolean exit )
   {
     super(app);
+
+    this.repliesfilename = repliesfilename;
+    this.reportfilename = reportfilename;
+    this.scanfolder = scanfolder;
+    this.classsize = classsize;
 
     initComponents();
 
@@ -105,6 +125,8 @@ public class QyoutiView extends FrameView
       throw new IllegalArgumentException("File is named after Qyouti folder.");
     }
 
+    System.out.println( appfolder.toString() );
+
     if (!appfolder.exists())
     {
       if (!appfolder.mkdir())
@@ -121,61 +143,19 @@ public class QyoutiView extends FrameView
       preferences.setDefaults();
 
 
+    examcatalogue = new ExaminationCatalogue( appfolder );
+    String[] names = examcatalogue.getNames();
+
     examCombo.removeAllItems();
     examCombo.addItem("Select an examination here");
-    File[] childfiles = appfolder.listFiles();
-    Arrays.sort(childfiles);
-    File examconfig;
-    for (int i = 0; i < childfiles.length; i++)
-    {
-      if (childfiles[i].isDirectory())
-      {
-        examconfig = new File(childfiles[i], "qyouti.xml");
-        if (examconfig.exists() && examconfig.isFile())
-        {
-          examCombo.addItem(childfiles[i].getName());
-        }
-      }
-    }
+    for (int i = 0; i < names.length; i++)
+      examCombo.addItem( names[i] );
     examCombo.setSelectedIndex(0);
 
 
 
     responseTable.setDefaultRenderer(Icon.class, new IconRenderer());
-    responseTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object[][]
-            {
-            },
-            new String[]
-            {
-              "*", "Response", "Enhanced", "Interpretation", "Overide"
-            })
-    {
-
-      Class[] types = new Class[]
-      {
-        java.lang.String.class,
-        javax.swing.Icon.class,
-        javax.swing.Icon.class,
-        java.lang.Boolean.class,
-        java.lang.Boolean.class
-      };
-      boolean[] canEdit = new boolean[]
-      {
-        false, false, false, false, true
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types[columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit[columnIndex];
-      }
-    });
-
+    clearResponseTable();
 
 
     // status bar initialization - message timeout, idle icon and busy animation, etc
@@ -262,6 +242,45 @@ public class QyoutiView extends FrameView
   }
 
 
+  private void clearResponseTable()
+  {
+    responseTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object[][]
+            {
+            },
+            new String[]
+            {
+              "*", "Response", "Enhanced", "Interpretation", "Overide"
+            })
+    {
+
+      Class[] types = new Class[]
+      {
+        java.lang.String.class,
+        javax.swing.Icon.class,
+        javax.swing.Icon.class,
+        java.lang.Boolean.class,
+        java.lang.Boolean.class
+      };
+      boolean[] canEdit = new boolean[]
+      {
+        false, false, false, false, true
+      };
+
+      public Class getColumnClass(int columnIndex)
+      {
+        return types[columnIndex];
+      }
+
+      public boolean isCellEditable(int rowIndex, int columnIndex)
+      {
+        return canEdit[columnIndex];
+      }
+    });
+  }
+
+
+
   public void setVisible( boolean v )
   {
 
@@ -314,7 +333,6 @@ public class QyoutiView extends FrameView
     printexamButton = new javax.swing.JButton();
     examtopdfButton = new javax.swing.JButton();
     previewexamButton = new javax.swing.JButton();
-    importscansButton = new javax.swing.JButton();
     jPanel18 = new javax.swing.JPanel();
     debugImageLabel = new javax.swing.JLabel();
     questionTabPanel = new javax.swing.JPanel();
@@ -325,6 +343,14 @@ public class QyoutiView extends FrameView
     jPanel16 = new javax.swing.JPanel();
     jScrollPane3 = new javax.swing.JScrollPane();
     questionTable = new javax.swing.JTable();
+    scansTabPanel = new javax.swing.JPanel();
+    jPanel19 = new javax.swing.JPanel();
+    preprocessscansButton = new javax.swing.JButton();
+    importscansButton = new javax.swing.JButton();
+    clearresponsesbutton = new javax.swing.JButton();
+    jPanel20 = new javax.swing.JPanel();
+    jScrollPane4 = new javax.swing.JScrollPane();
+    scanstable = new javax.swing.JTable();
     candidateTabPanel = new javax.swing.JPanel();
     jScrollPane1 = new javax.swing.JScrollPane();
     candidateTable = new javax.swing.JTable();
@@ -365,6 +391,8 @@ public class QyoutiView extends FrameView
     jPanel1 = new javax.swing.JPanel();
     jScrollPane2 = new javax.swing.JScrollPane();
     responseTable = new javax.swing.JTable();
+    jPanel21 = new javax.swing.JPanel();
+    examnamelabel = new javax.swing.JLabel();
 
     menuBar.setName("menuBar"); // NOI18N
 
@@ -432,7 +460,7 @@ public class QyoutiView extends FrameView
       .addGroup(statusPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addComponent(statusMessageLabel)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 538, Short.MAX_VALUE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 540, Short.MAX_VALUE)
         .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(statusAnimationLabel)
@@ -450,7 +478,7 @@ public class QyoutiView extends FrameView
         .addGap(3, 3, 3))
     );
 
-    centrePanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8), javax.swing.BorderFactory.createEtchedBorder()));
+    centrePanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
     centrePanel.setName("centrePanel"); // NOI18N
     centrePanel.setLayout(new java.awt.BorderLayout());
 
@@ -525,15 +553,6 @@ public class QyoutiView extends FrameView
       }
     });
     jPanel17.add(previewexamButton);
-
-    importscansButton.setText(resourceMap.getString("importscansButton.text")); // NOI18N
-    importscansButton.setName("importscansButton"); // NOI18N
-    importscansButton.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        importscansButtonActionPerformed(evt);
-      }
-    });
-    jPanel17.add(importscansButton);
 
     examTabPanel.add(jPanel17, java.awt.BorderLayout.CENTER);
 
@@ -611,6 +630,77 @@ public class QyoutiView extends FrameView
     questionTabPanel.add(jPanel16, java.awt.BorderLayout.CENTER);
 
     tabbedPane.addTab(resourceMap.getString("questionTabPanel.TabConstraints.tabTitle"), questionTabPanel); // NOI18N
+
+    scansTabPanel.setName("scansTabPanel"); // NOI18N
+    scansTabPanel.setLayout(new java.awt.BorderLayout());
+
+    jPanel19.setName("jPanel19"); // NOI18N
+
+    preprocessscansButton.setText(resourceMap.getString("preprocessscansButton.text")); // NOI18N
+    preprocessscansButton.setName("preprocessscansButton"); // NOI18N
+    preprocessscansButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        preprocessscansButtonActionPerformed(evt);
+      }
+    });
+    jPanel19.add(preprocessscansButton);
+
+    importscansButton.setText(resourceMap.getString("importscansButton.text")); // NOI18N
+    importscansButton.setName("importscansButton"); // NOI18N
+    importscansButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        importscansButtonActionPerformed(evt);
+      }
+    });
+    jPanel19.add(importscansButton);
+
+    clearresponsesbutton.setText(resourceMap.getString("clearresponsesbutton.text")); // NOI18N
+    clearresponsesbutton.setName("clearresponsesbutton"); // NOI18N
+    clearresponsesbutton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        clearresponsesbuttonActionPerformed(evt);
+      }
+    });
+    jPanel19.add(clearresponsesbutton);
+
+    scansTabPanel.add(jPanel19, java.awt.BorderLayout.NORTH);
+
+    jPanel20.setName("jPanel20"); // NOI18N
+    jPanel20.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane4.setName("jScrollPane4"); // NOI18N
+
+    scanstable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][] {
+
+      },
+      new String [] {
+        "No.", "File", "Code", "Error"
+      }
+    ) {
+      Class[] types = new Class [] {
+        java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+      };
+      boolean[] canEdit = new boolean [] {
+        false, false, false, false
+      };
+
+      public Class getColumnClass(int columnIndex) {
+        return types [columnIndex];
+      }
+
+      public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return canEdit [columnIndex];
+      }
+    });
+    scanstable.setName("scanstable"); // NOI18N
+    jScrollPane4.setViewportView(scanstable);
+
+    jPanel20.add(jScrollPane4, java.awt.BorderLayout.CENTER);
+
+    scansTabPanel.add(jPanel20, java.awt.BorderLayout.CENTER);
+
+    tabbedPane.addTab(resourceMap.getString("scansTabPanel.TabConstraints.tabTitle"), scansTabPanel); // NOI18N
 
     candidateTabPanel.setName("candidateTabPanel"); // NOI18N
     candidateTabPanel.setLayout(new java.awt.BorderLayout());
@@ -900,6 +990,15 @@ public class QyoutiView extends FrameView
 
     centrePanel.add(tabbedPane, java.awt.BorderLayout.CENTER);
 
+    jPanel21.setName("jPanel21"); // NOI18N
+    jPanel21.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 12, 16));
+
+    examnamelabel.setText(resourceMap.getString("examnamelabel.text")); // NOI18N
+    examnamelabel.setName("examnamelabel"); // NOI18N
+    jPanel21.add(examnamelabel);
+
+    centrePanel.add(jPanel21, java.awt.BorderLayout.NORTH);
+
     setComponent(centrePanel);
     setMenuBar(menuBar);
     setStatusBar(statusPanel);
@@ -943,7 +1042,7 @@ public class QyoutiView extends FrameView
       {
         gotoQuestion(null);
       }
-      gotoQuestion(other.lastQuestion());
+      gotoQuestion(other.lastQuestionData());
     }//GEN-LAST:event_previousCandidateButtonActionPerformed
 
     private void nextCandidateButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_nextCandidateButtonActionPerformed
@@ -960,7 +1059,7 @@ public class QyoutiView extends FrameView
       {
         gotoQuestion(null);
       }
-      gotoQuestion(other.firstQuestion());
+      gotoQuestion(other.firstQuestionData());
 
     }//GEN-LAST:event_nextCandidateButtonActionPerformed
 
@@ -989,7 +1088,7 @@ public class QyoutiView extends FrameView
         examCombo.setSelectedItem(name);
         examfolder = folder;
 
-        exam = new ExaminationData(new File(examfolder, "qyouti.xml"));
+        exam = new ExaminationData(examcatalogue, new File(examfolder, "qyouti.xml"));
         if (!exam.save())
         {
           JOptionPane.showMessageDialog(mainFrame, "It was not possible to save data.");
@@ -1006,19 +1105,25 @@ public class QyoutiView extends FrameView
       try
       {
         examfolder = newexamfolder;
-        exam = new ExaminationData(new File(examfolder, "qyouti.xml"));
+        exam = new ExaminationData(examcatalogue, new File(examfolder, "qyouti.xml"));
+        scanstable.setModel( exam.pagelistmodel );
         candidateTable.setModel(exam);
         exam.load();
+        examnamelabel.setText( "Exam/Survey - " + examname );
         if (exam.qdefs != null)
         {
           questionTable.setModel(exam.qdefs);
         }
+        gotoQuestion( null );
         for (int i = 0; i < exam.candidates_sorted.size(); i++)
         {
+          System.out.println( "Checking candidate " + exam.candidates_sorted.get( i ).name );
           for (int j = 0; j < exam.candidates_sorted.get(i).pages.size(); j++)
           {
+            System.out.println( "Checking page " + exam.candidates_sorted.get( i ).pages.get(j).source );
             if (exam.candidates_sorted.get(i).pages.get(j).questions.size() > 0)
             {
+              System.out.println( "Found first marked question " + exam.candidates_sorted.get(i).pages.get(j).questions.firstElement().ident );
               gotoQuestion(exam.candidates_sorted.get(i).pages.get(j).questions.firstElement());
               return;
             }
@@ -1051,7 +1156,7 @@ public class QyoutiView extends FrameView
 
       if (exam != null)
       {
-        JOptionPane.showMessageDialog(mainFrame, "There are unsaved changes in the currently selected exam - you can't select another one.");
+        JOptionPane.showMessageDialog(mainFrame, "Sorry you can't select another exam. Please restart the software.");
         examCombo.setSelectedIndex(selected_exam_index);
         return;
       }
@@ -1059,10 +1164,12 @@ public class QyoutiView extends FrameView
       selected_exam_index = new_selected_exam_index;
       if (new_selected_exam_index == 0)
       {
+        JOptionPane.showMessageDialog(mainFrame, "Sorry you can't unselect the exam.  Please restart the software.");
         examfolder = null;
         exam = null;
-        candidateTable.setModel(null);
-        questionTable.setModel(null);
+//        scanstable.setModel( null );
+//        candidateTable.setModel(null);
+//        questionTable.setModel(null);
         return;
       }
 
@@ -1265,17 +1372,17 @@ public class QyoutiView extends FrameView
         Vector<SVGDocument> paginated;
         TranscoderInput tinput;
         String printid = Long.toHexString( System.currentTimeMillis() );
-
+        QuestionMetricsRecordSet qmrecset = new QuestionMetricsRecordSet(printid);
+        qmrecset.setMonochromePrint( false );
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
           paginated = QTIItemRenderer.paginateItems(
               printid,
               examfolderuri,
-              exam.qdefs.qti.getItems(),
               exam.candidates_sorted.elementAt(j),
               exam,
-              new QuestionMetricsRecordSet(printid),
+              qmrecset,
               exam.getPreamble()
               );
           for ( i=0; i<paginated.size(); i++ )
@@ -1319,6 +1426,10 @@ public class QyoutiView extends FrameView
         final JFileChooser fc = new JFileChooser();
         fc.setDialogTitle( "Select directory that contains the scanned images." );
         fc.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+        if ( scanfolder != null )
+        {
+          fc.setCurrentDirectory( new File(scanfolder) );
+        }
         int returnVal = fc.showOpenDialog(mainFrame);
 
         if (returnVal != JFileChooser.APPROVE_OPTION)
@@ -1350,7 +1461,7 @@ public class QyoutiView extends FrameView
           QyoutiUtils.copyFile( images[i], target );
         }
          */
-        scantask = new ScanTask(this, exam, file);
+        scantask = new ScanTask(this, exam, file, false );
         scantask.start();
       }
       catch (Exception ex)
@@ -1582,14 +1693,14 @@ public class QyoutiView extends FrameView
                 new File( appfolder, examfolder.getName() + ".pdf" ) ) );
         String printid = Long.toHexString( System.currentTimeMillis() );
         QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
-        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
+        qmrset.setMonochromePrint( false );
+       MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
           paginated = QTIItemRenderer.paginateItems(
               printid,
               examfolderuri,
-              exam.qdefs.qti.getItems(),
               exam.candidates_sorted.elementAt(j),
               exam,
               qmrset,
@@ -1609,7 +1720,9 @@ public class QyoutiView extends FrameView
         File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
         if ( qmrrecfile.exists() )
           throw new IllegalArgumentException( "Unable to save print metrics." );
-
+        // This helps with dodgy file systems
+        try { qmrrecfile.createNewFile(); }
+        catch ( Exception ee ) {}
         FileWriter writer = new FileWriter( qmrrecfile );
         qmrset.emit(writer);
         writer.close();
@@ -1676,6 +1789,25 @@ public class QyoutiView extends FrameView
             {
               return true;
             }
+            return f.getName().toLowerCase().endsWith(".xml");
+          }
+
+          @Override
+          public String getDescription()
+          {
+            return "XML files.";
+          }
+        });
+        fc.addChoosableFileFilter(new javax.swing.filechooser.FileFilter()
+        {
+
+          @Override
+          public boolean accept(File f)
+          {
+            if (f.isDirectory())
+            {
+              return true;
+            }
             return f.getName().toLowerCase().endsWith(".csv");
           }
 
@@ -1686,8 +1818,13 @@ public class QyoutiView extends FrameView
           }
         });
 
+        if ( repliesfilename != null )
+        {
+          File targetfile = new File( repliesfilename );
+          fc.setSelectedFile(targetfile);
+        }
 
-        int returnVal = fc.showOpenDialog(mainFrame);
+        int returnVal = fc.showSaveDialog(mainFrame);
 
         if (returnVal != JFileChooser.APPROVE_OPTION)
         {
@@ -1707,7 +1844,10 @@ public class QyoutiView extends FrameView
             return;
           }
         }
-        exam.exportCsvReplies( file );
+        if ( file.getName().endsWith(".xml"))
+          exam.exportXmlReplies(file);
+        else
+          exam.exportCsvReplies( file );
       }
       catch (Exception ex)
       {
@@ -1761,6 +1901,13 @@ public class QyoutiView extends FrameView
         });
 
 
+        if ( reportfilename != null )
+        {
+          File targetfile = new File( reportfilename );
+          fc.setSelectedFile(targetfile);
+        }
+
+
         int returnVal = fc.showOpenDialog(mainFrame);
 
         if (returnVal != JFileChooser.APPROVE_OPTION)
@@ -1791,22 +1938,108 @@ public class QyoutiView extends FrameView
 
     }//GEN-LAST:event_exportReportButtonActionPerformed
 
+    private void clearresponsesbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_clearresponsesbuttonActionPerformed
+    {//GEN-HEADEREND:event_clearresponsesbuttonActionPerformed
+      CandidateData candidate;
+      PageData page;
+      QuestionData question;
+      ResponseData response;
+
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+      if ( JOptionPane.showConfirmDialog( mainFrame, 
+              "<html><p>Clearing Responses may take some time to complete - you will have to wait for confirmation of completion.</p>" +
+              "<p>Press ahead anyway?</p></html>", "Confirm",
+              JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
+        return;
+
+      for ( int i=0; i<exam.candidates_sorted.size(); i++ )
+      {
+        candidate = exam.candidates_sorted.get( i );
+        candidate.score = 0.0;
+        for ( int j=0; j<candidate.pages.size(); j++ )
+        {
+          page = candidate.pages.get( j );
+          for ( int k=0; k<page.questions.size(); k++ )
+          {
+            question = page.questions.get( k );
+            for ( int l=0; l<question.responsedatas.size(); l++ )
+            {
+              response = question.responsedatas.get( l );
+              if ( response.getFilteredImageFile().exists() )
+                response.getFilteredImageFile().delete();
+              if ( response.getImageFile().exists() )
+                response.getImageFile().delete();
+            }
+          }
+        }
+        candidate.pages.clear();
+      }
+      exam.pages.clear();
+      exam.save();
+      gotoQuestion( null );
+      exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+      JOptionPane.showMessageDialog( mainFrame, "Scanned responses cleared." );
+    }//GEN-LAST:event_clearresponsesbuttonActionPerformed
+
+    private void preprocessscansButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_preprocessscansButtonActionPerformed
+    {//GEN-HEADEREND:event_preprocessscansButtonActionPerformed
+
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam != null)
+      {
+        JOptionPane.showMessageDialog(mainFrame, "Preprocessing can only be done before you select an examination.");
+        return;
+      }
+
+      try
+      {
+        final JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle( "Select directory that contains the scanned images." );
+        fc.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+        if ( scanfolder != null )
+        {
+          fc.setCurrentDirectory( new File(scanfolder) );
+        }
+        int returnVal = fc.showOpenDialog(mainFrame);
+
+        if (returnVal != JFileChooser.APPROVE_OPTION)
+        {
+          return;
+        }
+        File file = fc.getSelectedFile();
+        if ( !file.exists() || !file.isDirectory() )
+          return;
+
+
+        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true );
+        scantask.start();
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(mainFrame, "Technical error preprocessing scans.");
+      }
+    }//GEN-LAST:event_preprocessscansButtonActionPerformed
+
 
 
   public void gotoQuestion(QuestionData question)
   {
     int i;
 
+    System.out.println( "gotoQuestion " + question );
+
     if (question == null)
     {
-      responseTable.setModel(null);
+      clearResponseTable();
       label_candidate_name.setText("");
       label_candidate_number.setText("");
       label_page_number.setText("");
       label_page_source.setText("");
       label_page_height.setText("");
       label_question_id.setText("");
-      outcometable.setModel(null);
+      outcometable.setModel( new OutcomeData() );
       nextResponseButton.setEnabled(false);
       previousResponseButton.setEnabled(false);
       nextCandidateButton.setEnabled(false);
@@ -1842,9 +2075,11 @@ public class QyoutiView extends FrameView
   private javax.swing.JPanel candidateTabPanel;
   javax.swing.JTable candidateTable;
   private javax.swing.JPanel centrePanel;
+  private javax.swing.JButton clearresponsesbutton;
   private javax.swing.JLabel debugImageLabel;
   private javax.swing.JComboBox examCombo;
   private javax.swing.JPanel examTabPanel;
+  private javax.swing.JLabel examnamelabel;
   private javax.swing.JButton examtopdfButton;
   private javax.swing.JButton exportRepliesButton;
   private javax.swing.JButton exportReportButton;
@@ -1870,7 +2105,10 @@ public class QyoutiView extends FrameView
   private javax.swing.JPanel jPanel16;
   private javax.swing.JPanel jPanel17;
   private javax.swing.JPanel jPanel18;
+  private javax.swing.JPanel jPanel19;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel jPanel20;
+  private javax.swing.JPanel jPanel21;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
@@ -1881,6 +2119,7 @@ public class QyoutiView extends FrameView
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JScrollPane jScrollPane3;
+  private javax.swing.JScrollPane jScrollPane4;
   private javax.swing.JSeparator jSeparator1;
   private javax.swing.JLabel label_candidate_name;
   private javax.swing.JLabel label_candidate_number;
@@ -1895,6 +2134,7 @@ public class QyoutiView extends FrameView
   private javax.swing.JToggleButton optionsButton;
   private javax.swing.JTable outcometable;
   private javax.swing.JMenuItem prefsMenuItem;
+  private javax.swing.JButton preprocessscansButton;
   private javax.swing.JButton previewexamButton;
   private javax.swing.JButton previousCandidateButton;
   private javax.swing.JButton previousResponseButton;
@@ -1906,6 +2146,8 @@ public class QyoutiView extends FrameView
   private javax.swing.JPanel responseTabPanel;
   private javax.swing.JTable responseTable;
   private javax.swing.JMenuItem saveMenuItem;
+  private javax.swing.JPanel scansTabPanel;
+  private javax.swing.JTable scanstable;
   private javax.swing.JLabel statusAnimationLabel;
   private javax.swing.JLabel statusMessageLabel;
   private javax.swing.JPanel statusPanel;

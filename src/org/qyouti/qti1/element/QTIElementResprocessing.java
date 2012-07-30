@@ -34,7 +34,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementResprocessing
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   boolean supported=false;
   QTIElementOutcomes outcomes;
@@ -96,7 +96,7 @@ public class QTIElementResprocessing
       Vector<QTIElementResponselid> responselids = getItem().findElements( QTIElementResponselid.class, true );
       if ( responselids.size() != 1 )
         throw new IllegalArgumentException( "Item must have exactly one response_lid element." );
-      Object score_outcome = getItem().getOutcome( "SCORE" );
+      Object score_outcome = getItem().getOutcomeValue( "SCORE" );
       if ( responselids.get(0).isResponsePerfect() )
       {
         System.out.println( "Perfect response." );

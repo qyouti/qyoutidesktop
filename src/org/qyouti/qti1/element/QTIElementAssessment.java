@@ -43,7 +43,11 @@ public class QTIElementAssessment
   {
     super.initialize();
 
-    Vector<QTIElementMaterial> ms = findElements( QTIElementMaterial.class, true );
+    Vector<QTIElementPresentationmaterial> pms = findElements( QTIElementPresentationmaterial.class, true );
+    if ( pms.size() == 0 )
+      return;
+    QTIElementPresentationmaterial pm = pms.firstElement();
+    Vector<QTIElementMaterial> ms = pm.findElements( QTIElementMaterial.class, true );
     if ( ms.size() > 0 )
     {
       material = ms.firstElement();

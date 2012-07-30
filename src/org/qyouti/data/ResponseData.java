@@ -28,6 +28,9 @@ package org.qyouti.data;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -38,48 +41,46 @@ import org.w3c.dom.NodeList;
  */
 public class ResponseData
 {
+  QuestionData question;
+
   public int position=-1;
-  public String ident="";
-  public BufferedImage box_image;
-  public BufferedImage filtered_image;
-  public double dark_pixels;
-  public boolean selected;
-  public boolean examiner_selected;
+  public String type;
+  public String ident;
+  private BufferedImage box_image;
+  private BufferedImage filtered_image;
+  public double dark_pixels=-1;
+  public boolean selected=false;
+  public boolean examiner_selected=false;
 
 
-  public ResponseData( QuestionData question )
+  public ResponseData( QuestionData question, int position, String type, String ident )
   {
-    question.responses.add( this );
+    this.question = question;
+    this.position = position;
+    this.type = type;
+    this.ident = ident;
+
+    question.responsedatas.add( this );
+    question.responsedatatable.put( ident, this );
   }
 
-  public ResponseData( QuestionData question, Element element )
+  public ResponseData( QuestionData question, Element element, int item )
   {
+    this.question = question;
+    position = item;
     selected          = "true".equalsIgnoreCase( element.getAttribute( "selected" ) );
     examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner" ) );
     ident = element.getAttribute( "ident" );
+    type = element.getAttribute( "type" );
     if ( "null".equalsIgnoreCase(ident)) ident = null;
-    NodeList nl = element.getElementsByTagName( "box" );
+    NodeList nl; // = element.getElementsByTagName( "box" );
     NodeList lines;
     BufferedImage image;
     Element box, filtered, line;
     String text;
     int x, y;
-    if ( nl.getLength() > 0 )
-    {
-      box = (Element) nl.item( 0 );
-      lines = box.getElementsByTagName( "line" );
-      line = (Element) lines.item( 0 );
-      text = line.getTextContent();
-      image = new BufferedImage( lines.getLength(), text.length() / 10, BufferedImage.TYPE_INT_RGB );
-      for ( x=0; x<lines.getLength(); x++ )
-      {
-        line = (Element) lines.item( x );
-        text = line.getTextContent();
-        for ( y=0; y<text.length(); y+=10 )
-          image.setRGB( x, y/10, QyoutiUtils.parseInt( text, y+3, 6, 16 ) | 0xff000000 );
-      }
-      box_image = image;
-    }
+
+
     nl = element.getElementsByTagName( "filtered" );
     if ( nl.getLength() > 0 )
     {
@@ -98,50 +99,117 @@ public class ResponseData
       }
       filtered_image = image;
     }
-    question.responses.add( this );
+    question.responsedatas.add( this );
+    question.responsedatatable.put( ident, this );
   }
+
+
+  private File getFile( String fname )
+  {
+    File examfolder = question.page.exam.examfile.getParentFile();
+    File scanfolder = new File( examfolder, "scans" );
+    return new File( scanfolder, fname );
+  }
+
+  private BufferedImage loadImage( String fname )
+  {
+    BufferedImage img=null;
+    try
+    {
+      File imgfile = getFile( fname );
+      if ( !imgfile.exists() )
+        return null;
+      img = ImageIO.read(imgfile);
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return img;
+  }
+
+  public BufferedImage getImage()
+  {
+    if ( box_image != null ) return box_image;
+    return box_image=loadImage( getImageFileName() );
+  }
+
+  public BufferedImage getFilteredImage()
+  {
+    if ( filtered_image != null ) return filtered_image;
+    return filtered_image=loadImage( getFilteredImageFileName() );
+  }
+
+
+  public File getImageFile()
+  {
+    return getFile( getImageFileName() );
+  }
+
+  public File getFilteredImageFile()
+  {
+    return getFile( getFilteredImageFileName() );
+  }
+
+  
+  public String getImageFileName()
+  {
+    return question.ident + "_" + position + "_" +
+                question.page.candidate_number +
+                ".jpg";
+  }
+
+  public String getFilteredImageFileName()
+  {
+    return question.ident + "_" + position + "_" +
+                question.page.candidate_number +
+                "_filt.jpg";
+  }
+
+
 
   public void emit( Writer writer )
           throws IOException
   {
     int rgb;
     writer.write( "          <response ident=\"" + ident + "\" " );
+    writer.write( "type=\"" + type + "\" " );
     writer.write( "selected=\"" + (selected?"true":"false") + "\" " );
     writer.write( "examiner=\"" + (examiner_selected?"true":"false") + "\" " );
-    writer.write( ">\n" );
+    writer.write( "/>\n" );
 
-    writer.write( "            <box>\n" );
-    for ( int i=0; i<box_image.getWidth(); i++ )
-    {
-      writer.write( "                <line>" );
-      for ( int j=0; j<box_image.getHeight(); j++ )
-      {
-        rgb = box_image.getRGB( i, j );
-        writer.write( "(" + Integer.toHexString( rgb ) + ")" );
-      }
-      writer.write( "</line>\n" );
-    }
-    writer.write( "            </box>\n" );
-    if ( filtered_image != null )
-    {
-        writer.write( "            <filtered>\n" );
-        for ( int i=0; i<filtered_image.getWidth(); i++ )
-        {
-          writer.write( "                <line>" );
-          for ( int j=0; j<filtered_image.getHeight(); j++ )
-          {
-            rgb = filtered_image.getRGB( i, j );
-            if ( (rgb & 1) == 0 )
-              writer.write( "#" );
-            else
-              writer.write( "." );
-          }
-          writer.write( "</line>\n" );
-        }
-        writer.write( "            </filtered>\n" );
-    }
+//    writer.write( "            <box>\n" );
+//    for ( int i=0; i<box_image.getWidth(); i++ )
+//    {
+//      writer.write( "                <line>" );
+//      for ( int j=0; j<box_image.getHeight(); j++ )
+//      {
+//        rgb = box_image.getRGB( i, j );
+//        writer.write( "(" + Integer.toHexString( rgb ) + ")" );
+//      }
+//      writer.write( "</line>\n" );
+//    }
+//    writer.write( "            </box>\n" );
 
-    writer.write( "          </response>\n" );
+//    if ( filtered_image != null )
+//    {
+//        writer.write( "            <filtered>\n" );
+//        for ( int i=0; i<filtered_image.getWidth(); i++ )
+//        {
+//          writer.write( "                <line>" );
+//          for ( int j=0; j<filtered_image.getHeight(); j++ )
+//          {
+//            rgb = filtered_image.getRGB( i, j );
+//            if ( (rgb & 1) == 0 )
+//              writer.write( "#" );
+//            else
+//              writer.write( "." );
+//          }
+//          writer.write( "</line>\n" );
+//        }
+//        writer.write( "            </filtered>\n" );
+//    }
+//
+//    writer.write( "          </response>\n" );
   }
 
 }

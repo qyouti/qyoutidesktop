@@ -31,7 +31,7 @@ package org.qyouti.qti1;
  * @author jon
  */
 public abstract class QTIMatmedia
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   public abstract boolean isSupported();
 }

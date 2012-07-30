@@ -6,6 +6,8 @@
 package org.qyouti.qti1.ext;
 
 import org.qyouti.qti1.ext.blackboard.QTIExtensionMatformattedtext;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
 import org.qyouti.qti1.ext.webct.*;
 
 /**
@@ -17,7 +19,16 @@ public class QTIExtensionResolver
     public static Class resolve( String namespace, String name )
     {
         //System.out.println( "Resolving " + namespace + "  " + name );
-        if ( "http://www.webct.com/vista/assessment".equals( namespace ) )
+
+      if ( "http://www.qyouti.org/qtiext".equals( namespace ) )
+        {
+            if ( "resp_extension".equals(name) )
+                return QTIExtensionRespextension.class;
+            if ( "render_sketcharea".equals(name) )
+                return QTIExtensionRendersketcharea.class;
+        }
+
+      if ( "http://www.webct.com/vista/assessment".equals( namespace ) )
         {
             if ( "material_webeq".equals(name) )
                 return QTIExtensionWebctMaterialwebeq.class;

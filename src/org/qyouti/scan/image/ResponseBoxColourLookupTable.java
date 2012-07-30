@@ -47,13 +47,14 @@ public class ResponseBoxColourLookupTable
     this.blackness = blackness;
     this.range = lightness - blackness;
     n_black = n_white = 0;
-    setThreshold( 0.85 );
+    setThreshold( 0.5 );   // was 0.85
   }
 
 
   public void setThreshold( double t )
   {
     threshold = (int) (blackness + (range*t));
+    System.out.println( "setThreshold, threshold = " + threshold );
   }
 
   @Override
@@ -70,8 +71,8 @@ public class ResponseBoxColourLookupTable
 //      dest[0] = 255;
 //    else
       dest[0] = src[0] < threshold ? 0 : 255;
-    dest[1] = dest[0];
-    dest[2] = dest[0];
+      for ( int i=1; i<dest.length; i++ )
+        dest[i] = dest[0];
     if ( dest.length == 4 )
       dest[3] = 255;
 

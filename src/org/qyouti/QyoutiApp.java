@@ -47,23 +47,49 @@ public class QyoutiApp extends SingleFrameApplication {
     @Override protected void startup() {
       String basefoldername=null;
       String exam=null;
+      String repliesfilename=null;
+      String reportfilename=null;
+      String scanfolder=null;
       boolean pdf=false;
       boolean exit=false;
+      int classsize=-1;
 
       for ( int i=0; i<app_args.length; i++ )
       {
+        System.out.println( app_args[i] );
         if ( app_args[i].startsWith( "-base=") )
           basefoldername = app_args[i].substring( "-base=".length() );
+        if ( app_args[i].startsWith( "-scans=") )
+          scanfolder = app_args[i].substring( "-scans=".length() );
         if ( app_args[i].startsWith( "-exam=") )
           exam = app_args[i].substring( "-exam=".length() );
+        if ( app_args[i].startsWith( "-replies=") )
+          repliesfilename = app_args[i].substring( "-replies=".length() );
+        if ( app_args[i].startsWith( "-report=") )
+          reportfilename = app_args[i].substring( "-report=".length() );
         if ( app_args[i].equals( "-pdf") )
           pdf = true;
         if ( app_args[i].equals( "-exit") )
           exit = true;
+        if ( app_args[i].equals( "-classsize") )
+        {
+          try {classsize = Integer.parseInt( app_args[i].substring( "-classsize=".length() ) );}
+          catch (NumberFormatException nfe ) {classsize=-1;}
+        }
       }
 
-      QyoutiView view = new QyoutiView(this, basefoldername, exam, pdf, exit);
-        show( view );
+      QyoutiView view = new QyoutiView(
+          this,
+          basefoldername,
+          exam,
+          repliesfilename,
+          reportfilename,
+          scanfolder,
+          classsize,
+          pdf,
+          exit
+          );
+      show( view );
       view.getFrame().addWindowListener( new MainFrameListener() );
     }
 

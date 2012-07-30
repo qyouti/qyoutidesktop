@@ -40,7 +40,13 @@ public class QTIElementQuestestinterop
   Vector<QTIElementItem> items=null;
   Hashtable<String,QTIElementItem> item_table = new Hashtable<String,QTIElementItem>();
 
-  QTIElementOutcomesprocessing outcomesprocessing=null;
+  // Actual declared processing sections...
+  Vector<QTIElementOutcomesprocessing> outcomesprocessings=null;
+
+  // references to decvars in multiple outcomesprocessing sections
+  // plus additional implicit decvars that result from individual questions
+  Hashtable<String,QTIElementDecvar> decvar_table = new Hashtable<String,QTIElementDecvar>();
+
 
   QTIElementAssessment assessment=null;
 
@@ -48,6 +54,7 @@ public class QTIElementQuestestinterop
   public void initialize()
   {
     super.initialize();
+
 
     Vector<QTIElementAssessment> assessments = findElements( QTIElementAssessment.class, false );
     if ( assessments !=null && assessments.size() != 0 )
@@ -57,15 +64,46 @@ public class QTIElementQuestestinterop
     for ( int i=0; i<items.size(); i++ )
       item_table.put( items.get(i).getIdent(), items.get(i) );
 
-    Vector<QTIElementOutcomesprocessing> list = findElements( QTIElementOutcomesprocessing.class, true );
-    if ( list.size() == 1 )
-      outcomesprocessing = list.get(0);
+    outcomesprocessings = findElements( QTIElementOutcomesprocessing.class, true );
+    Vector<QTIElementDecvar> decvars;
+
+    // get references to outcome variable declarations from the start
+    // these are declared up front....
+    for ( int i=0; i<outcomesprocessings.size(); i++ )
+    {
+      decvars = outcomesprocessings.get( i ).findElements( QTIElementDecvar.class, true );
+      for ( int j=0; j<decvars.size(); j++ )
+      {
+        if ( decvar_table.containsKey( decvars.get( j ).getVarname() ) )
+          decvars.get( j ).duplicate = true;
+        else
+          decvar_table.put( decvars.get( j ).getVarname(), decvars.get( j ) );
+      }
+    }
+
+    // also get those that are unique to single items and not declared up front
+    for ( int i=0; i<items.size(); i++ )
+    {
+      decvars = items.get( i ).findElements( QTIElementDecvar.class, true );
+      for ( int j=0; j<decvars.size(); j++ )
+      {
+        // only add item decvars if they haven't already appeared in
+        // outcomesprocessing.  Also skip "SCORE" which is implicit if not
+        // declared in an outcomesprocessing element
+        if ( "SCORE".equals( decvars.get( j ).getVarname() ) )
+          continue;
+        if ( !decvar_table.containsKey( decvars.get( j ).getVarname() ) )
+          decvar_table.put( decvars.get( j ).getVarname(), decvars.get( j ) );
+      }
+
+    }
+
   }
 
-  public QTIElementOutcomesprocessing getOutcomesprocessing()
-  {
-    return outcomesprocessing;
-  }
+//  public QTIElementOutcomesprocessing getOutcomesprocessing()
+//  {
+//    return outcomesprocessing;
+//  }
 
   public Vector<QTIElementItem> getItems()
   {
@@ -81,5 +119,30 @@ public class QTIElementQuestestinterop
   {
     if ( assessment == null ) return null;
     return assessment.getMaterial();
+  }
+
+  public void processOutcomes()
+  {
+    int i;
+
+    for ( i=0; i<outcomesprocessings.size(); i++ )
+      outcomesprocessings.get( i ).reset();
+    
+    for ( i=0; i<outcomesprocessings.size(); i++ )
+      outcomesprocessings.get( i ).process();
+  }
+
+  public String[] getOutcomeNames()
+  {
+    String[] names = new String[decvar_table.size()];
+    return decvar_table.keySet().toArray( names );
+  }
+
+  public Object getOutcomeValue( String name )
+  {
+    QTIElementDecvar var = decvar_table.get( name );
+    if ( var == null )
+      return null;
+    return var.getCurrentValue();
   }
 }

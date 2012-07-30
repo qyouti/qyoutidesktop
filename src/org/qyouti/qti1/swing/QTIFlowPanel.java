@@ -48,12 +48,12 @@ public class QTIFlowPanel
         this( flow, true );
     }
 
-    public QTIFlowPanel(QTIItemAncestor element, boolean flowing )
+    public QTIFlowPanel(QTIItemDescendant element, boolean flowing )
     {
         JLabel errlabel;
-        Vector<QTIItemAncestor> children;
-        children = element.findElements(QTIItemAncestor.class);
-        QTIItemAncestor child;
+        Vector<QTIItemDescendant> children;
+        children = element.findElements(QTIItemDescendant.class);
+        QTIItemDescendant child;
         for (int i = 0; i < children.size(); i++)
         {
             child = children.get(i);

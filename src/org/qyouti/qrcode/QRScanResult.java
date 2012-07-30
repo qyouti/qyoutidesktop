@@ -39,6 +39,7 @@ public class QRScanResult
 {
   Result wrapped_result;
   double blackness;
+  int image=0;               // if multiple images, index to one where qrcode was found
 
   public QRScanResult( Result wr, double blackness )
   {
@@ -77,5 +78,14 @@ public class QRScanResult
     byte[] output = new byte[xoutput.length-1];
     System.arraycopy( xoutput, 1, output, 0, output.length );
     return output;
+  }
+
+  public void setImageIndex( int i )
+  {
+    image = i;
+  }
+  public int getImageIndex()
+  {
+    return image;
   }
 }

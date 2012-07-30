@@ -31,7 +31,7 @@ package org.qyouti.qti1;
  * @author jon
  */
 public abstract class QTICondition
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   public abstract boolean isSupported();
   public abstract boolean isConditionMet();

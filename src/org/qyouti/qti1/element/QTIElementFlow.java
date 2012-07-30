@@ -33,7 +33,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementFlow
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
 
 }

@@ -72,6 +72,18 @@ public class PreferencesDialog extends javax.swing.JDialog {
           qrErrorCorrectionList.setSelectedIndex( 2 );
         if ( "Q".equalsIgnoreCase( qrec ) )
           qrErrorCorrectionList.setSelectedIndex( 3 );
+        scanthresholdslider.setValue( 50 );
+        try
+        {
+          scanthresholdslider.setValue( Integer.parseInt( preferences.getProperty( "qyouti.scan.threshold" ) ) );
+        }
+        catch ( NumberFormatException e ) {}
+        try
+        {
+          scaninsetslider.setValue( Integer.parseInt( preferences.getProperty( "qyouti.scan.inset" ) ) );
+        }
+        catch ( NumberFormatException e ) {}
+
       }
       super.setVisible( b );
     }
@@ -93,6 +105,11 @@ public class PreferencesDialog extends javax.swing.JDialog {
     jScrollPane1 = new javax.swing.JScrollPane();
     qrErrorCorrectionList = new javax.swing.JList();
     jLabel1 = new javax.swing.JLabel();
+    jPanel4 = new javax.swing.JPanel();
+    jLabel2 = new javax.swing.JLabel();
+    scanthresholdslider = new javax.swing.JSlider();
+    jLabel3 = new javax.swing.JLabel();
+    scaninsetslider = new javax.swing.JSlider();
     jPanel3 = new javax.swing.JPanel();
     prefsApplyButton = new javax.swing.JButton();
     prefsCancelButton = new javax.swing.JButton();
@@ -138,7 +155,7 @@ public class PreferencesDialog extends javax.swing.JDialog {
         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
           .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
           .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        .addContainerGap(366, Short.MAX_VALUE))
+        .addContainerGap(345, Short.MAX_VALUE))
     );
     jPanel2Layout.setVerticalGroup(
       jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -147,10 +164,32 @@ public class PreferencesDialog extends javax.swing.JDialog {
         .addComponent(jLabel1)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addContainerGap(180, Short.MAX_VALUE))
+        .addContainerGap(159, Short.MAX_VALUE))
     );
 
     jTabbedPane1.addTab(resourceMap.getString("jPanel2.TabConstraints.tabTitle"), jPanel2); // NOI18N
+
+    jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    jPanel4.setName("jPanel4"); // NOI18N
+    jPanel4.setLayout(new java.awt.GridLayout(2, 2));
+
+    jLabel2.setText(resourceMap.getString("jLabel2.text")); // NOI18N
+    jLabel2.setName("jLabel2"); // NOI18N
+    jPanel4.add(jLabel2);
+
+    scanthresholdslider.setName("scanthresholdslider"); // NOI18N
+    jPanel4.add(scanthresholdslider);
+
+    jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
+    jLabel3.setName("jLabel3"); // NOI18N
+    jPanel4.add(jLabel3);
+
+    scaninsetslider.setMaximum(20);
+    scaninsetslider.setValue(0);
+    scaninsetslider.setName("scaninsetslider"); // NOI18N
+    jPanel4.add(scaninsetslider);
+
+    jTabbedPane1.addTab(resourceMap.getString("jPanel4.TabConstraints.tabTitle"), jPanel4); // NOI18N
 
     getContentPane().add(jTabbedPane1, java.awt.BorderLayout.CENTER);
 
@@ -206,6 +245,8 @@ public class PreferencesDialog extends javax.swing.JDialog {
         default:
           preferences.setProperty( "qyouti.qrcode.error-correction", "L" );
       }
+      preferences.setProperty( "qyouti.scan.threshold", Integer.toString( scanthresholdslider.getValue() ) );
+      preferences.setProperty( "qyouti.scan.inset", Integer.toString( scaninsetslider.getValue() ) );
       dispose();
     }//GEN-LAST:event_prefsApplyButtonActionPerformed
 
@@ -213,14 +254,19 @@ public class PreferencesDialog extends javax.swing.JDialog {
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private say.swing.JFontChooser jFontChooser1;
   private javax.swing.JLabel jLabel1;
+  private javax.swing.JLabel jLabel2;
+  private javax.swing.JLabel jLabel3;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
+  private javax.swing.JPanel jPanel4;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JTabbedPane jTabbedPane1;
   private javax.swing.JButton prefsApplyButton;
   private javax.swing.JButton prefsCancelButton;
   private javax.swing.JList qrErrorCorrectionList;
+  private javax.swing.JSlider scaninsetslider;
+  private javax.swing.JSlider scanthresholdslider;
   // End of variables declaration//GEN-END:variables
 
 }

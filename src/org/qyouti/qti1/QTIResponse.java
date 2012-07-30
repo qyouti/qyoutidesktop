@@ -31,7 +31,7 @@ package org.qyouti.qti1;
  * @author jon
  */
 public abstract class QTIResponse
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   Object current;
 
@@ -39,7 +39,24 @@ public abstract class QTIResponse
   abstract public Object getCurrentValue();
   abstract public void setCurrentValue( Object value );
 
-  abstract public boolean areResponsesAllowed();
+  abstract public boolean areCurrentResponseValuesAllowed();
+
+  public int getResponsePartCount()
+  {
+    return 0;
+  }
+
+  public boolean isStandardMultipleChoice()
+  {
+    return false;
+  }
+
+  public boolean isMultipleChoice()
+  {
+    return false;
+  }
+
+
   
   //abstract public int getResponsePermutations( String ident );
   //abstract public void setResponsePermutation( String ident, int perm );
