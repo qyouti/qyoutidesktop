@@ -34,7 +34,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementConditionvar
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   boolean supported=false;
   QTICondition condition;

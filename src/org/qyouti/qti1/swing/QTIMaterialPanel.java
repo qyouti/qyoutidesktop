@@ -41,9 +41,9 @@ public class QTIMaterialPanel
     public QTIMaterialPanel(QTIElementMaterial material)
     {
         JLabel errlabel;
-        Vector<QTIItemAncestor> children;
-        children = material.findElements(QTIItemAncestor.class);
-        QTIItemAncestor child;
+        Vector<QTIItemDescendant> children;
+        children = material.findElements(QTIItemDescendant.class);
+        QTIItemDescendant child;
         String tagname;
         for (int i = 0; i < children.size(); i++)
         {

@@ -44,7 +44,8 @@ public class QRCodeIcon
         if ( mrec == null )
           g = QRCodec.encodeSVG(codedstring, qrwidth);
         else
-          g = QRCodec.encodeSVG( mrec.toByteArray(), qrwidth);
+          throw new IllegalArgumentException( "Binary encoded QRCode not supported any more." );
+          //g = QRCodec.encodeSVG( mrec.toByteArray(), qrwidth);
 
         g.setAttribute("transform", "translate(" + padding + ", " + padding + ")" );
         setSVG( g );

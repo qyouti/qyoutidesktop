@@ -12,6 +12,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -35,6 +37,8 @@ public class QuestionMetricsRecordSet
       new Hashtable<String,Hashtable<String,QuestionMetricsRecord>>();
   Vector<String> prefseq = new Vector<String>();
 
+  Hashtable<String,String> render_options = new Hashtable<String,String>();
+
   public QuestionMetricsRecordSet(String printid)
   {
     this.printid = printid;
@@ -42,6 +46,11 @@ public class QuestionMetricsRecordSet
 
   public QuestionMetricsRecordSet(File file)
   {
+    NodeList nli, nlb;
+    Element pref;
+    Element eitem, box;
+    int i, j, k;
+
     loaded = true;
     try
     {
@@ -50,14 +59,18 @@ public class QuestionMetricsRecordSet
       Document doc = builder.parse( file );
       Element root = doc.getDocumentElement();
       printid = root.getAttribute("print-id");
-      NodeList nl = root.getElementsByTagName( "preferences" );
-      NodeList nli, nlb;
-      Element pref;
-      Element eitem, box;
-      int i, j, k;
+      NodeList nl = root.getElementsByTagName( "render-option" );
+      Element ro;
+      for ( i=0; i<nl.getLength(); i++ )
+      {
+        ro = (Element)nl.item( i );
+        render_options.put( ro.getAttribute( "key" ), ro.getAttribute( "value" ) );
+      }
+
+      nl = root.getElementsByTagName( "preferences" );
       Hashtable<String,QuestionMetricsRecord> records;
-      Vector<Rectangle> boxes;
-      Rectangle r;
+      Vector<QuestionMetricBox> boxes;
+      QuestionMetricBox r;
       for ( i=0; i<nl.getLength(); i++ )
       {
         pref = (Element)nl.item(i);
@@ -68,16 +81,18 @@ public class QuestionMetricsRecordSet
         for ( j=0; j<nli.getLength(); j++)
         {
           eitem = (Element)nli.item(j);
-          boxes = new Vector<Rectangle>();
+          boxes = new Vector<QuestionMetricBox>();
           nlb = eitem.getElementsByTagName("box");
           for ( k=0; k<nlb.getLength(); k++ )
           {
             box = (Element)nlb.item(k);
-            r = new Rectangle(
+            r = new QuestionMetricBox(
                 Integer.parseInt(box.getAttribute("x")),
                 Integer.parseInt(box.getAttribute("y")),
                 Integer.parseInt(box.getAttribute("w")),
-                Integer.parseInt(box.getAttribute("h"))
+                Integer.parseInt(box.getAttribute("h")),
+                box.getAttribute( "type" ),
+                box.getAttribute( "ident" )
                 );
             boxes.add(r);
           }
@@ -94,6 +109,39 @@ public class QuestionMetricsRecordSet
       Logger.getLogger(QuestionMetricsRecordSet.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
+
+
+  public void setRenderOption( String key, String value )
+  {
+    render_options.put( key, value );
+  }
+
+  public String getRenderOption( String key )
+  {
+    return render_options.get( key );
+  }
+
+  public void setRenderOption( String key, boolean value )
+  {
+    render_options.put( key, value?"true":"false" );
+  }
+
+  public boolean isRenderOption( String key )
+  {
+    return "true".equalsIgnoreCase( render_options.get( key ) );
+  }
+
+
+  public void setMonochromePrint( boolean b )
+  {
+    setRenderOption( "monochrome_print", b );
+  }
+
+  public boolean isMonochromePrint()
+  {
+    return isRenderOption( "monochrome_print" );
+  }
+
 
   public void addItem( UserRenderPreferences prefs, QuestionMetricsRecord item )
   {
@@ -141,6 +189,16 @@ public class QuestionMetricsRecordSet
     writer.write("<question-metrics print-id=\"");
     writer.write(printid);
     writer.write("\">\n");
+
+    writer.write( "<render-options>\n");
+    Iterator<String> it = render_options.keySet().iterator();
+    String key;
+    while ( it.hasNext() )
+    {
+      key = it.next();
+      writer.write( "<render-option key=\"" + key + "\" value=\"" + render_options.get( key ) + "\"/>\n" );
+    }
+    writer.write( "</render-options>\n");
 
     Enumeration qids;
     for (int i = 0; i <prefseq.size(); i++)

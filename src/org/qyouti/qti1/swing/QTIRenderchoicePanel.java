@@ -42,9 +42,9 @@ public class QTIRenderchoicePanel
     public QTIRenderchoicePanel(QTIElementRenderchoice choice)
     {
         JLabel errlabel;
-        Vector<QTIItemAncestor> children;
-        children = choice.findElements(QTIItemAncestor.class);
-        QTIItemAncestor child;
+        Vector<QTIItemDescendant> children;
+        children = choice.findElements(QTIItemDescendant.class);
+        QTIItemDescendant child;
 
         for (int i = 0; i < children.size(); i++)
         {

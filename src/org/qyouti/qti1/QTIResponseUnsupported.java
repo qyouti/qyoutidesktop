@@ -48,9 +48,8 @@ public class QTIResponseUnsupported
   }
 
   @Override
-  public boolean areResponsesAllowed()
+  public boolean areCurrentResponseValuesAllowed()
   {
     return true;
   }
-
 }

@@ -31,7 +31,7 @@ package org.qyouti.qti1;
  * @author jon
  */
 public abstract class QTIRender
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   public abstract boolean isSupported();
 }

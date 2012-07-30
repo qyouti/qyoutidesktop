@@ -33,14 +33,12 @@ import org.qyouti.scan.image.ResponseBoxColourLookupTable;
 import org.qyouti.scan.image.IdentityLookupTable;
 import org.qyouti.data.*;
 import com.google.zxing.*;
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
-import com.google.zxing.client.result.*;
-import com.google.zxing.common.LocalBlockBinarizer;
-import com.google.zxing.qrcode.QRCodeReader;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
@@ -51,11 +49,18 @@ import java.util.Vector;
 import javax.imageio.ImageIO;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qrcode.QRScanResult;
+import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.element.QTIElementResponselabel;
+import org.qyouti.qti1.element.QTIElementResponselid;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
+import org.qyouti.qti1.gui.QuestionMetricBox;
 import org.qyouti.qti1.gui.QuestionMetricsRecord;
 import org.qyouti.qti1.gui.QuestionMetricsRecordSet;
 import org.qyouti.scan.image.CannyEdgeDetector;
+import org.qyouti.scan.image.PageRotator;
 import org.qyouti.scan.image.QRCodeColourLookupTable;
+import org.qyouti.scan.image.ResponseImageProcessor;
 
 /**
  *
@@ -64,77 +69,119 @@ import org.qyouti.scan.image.QRCodeColourLookupTable;
 public class PageDecoder
 {
 
-  static final boolean pinkboxfullcoords = true;
+  final boolean pinkboxfullcoords = true;
   
-  static final double metrics_top_qr_to_bottom_qr =  975.0;
-  static final double metrics_top_qr_width        =   60.0;
-  static final double metrics_qstn_qr_width       =   60.0;
-  static final double metrics_qstn_qr_hzntl_box   =  113.0;
+  final double metrics_top_qr_to_bottom_qr =  975.0;
+  final double metrics_top_qr_width        =   60.0;
+  final double metrics_qstn_qr_width       =   60.0;
+  final double metrics_qstn_qr_hzntl_box   =  113.0;
 
-  static final Hashtable hints = new Hashtable();
-  static
+  final double metrics_print_qr_search_size = 1.75;  // inches
+
+
+  final Hashtable hints = new Hashtable();
+
+  double boxthreshold;
+  int boxinset;
+
+  public PageDecoder( double threshold, int inset )
   {
     hints.put( DecodeHintType.TRY_HARDER, Boolean.TRUE );
+    boxthreshold = threshold;
+    boxinset = inset;
   }
 
-
-
-  public static PageData decode(ExaminationData exam, String argument )
+  public PageData decode(ExaminationData exam, String argument, int n )
           throws IOException, URISyntaxException
   {
 
     File inputFile = new File(argument);
     if (inputFile.exists()) {
-        return decode(exam,inputFile.toURI());
+        return decode(exam,inputFile.toURI(), n);
     } else {
-      return decode(exam,new URI(argument) );
+      return decode(exam,new URI(argument), n );
+    }
+  }
+
+  public PageData identifyPage(ExaminationData exam, String argument, int n )
+          throws IOException, URISyntaxException
+  {
+
+    File inputFile = new File(argument);
+    if (inputFile.exists()) {
+        return identifyPage(exam,inputFile.toURI(), n);
+    } else {
+      return identifyPage(exam,new URI(argument), n );
     }
   }
 
 
 
-  private static QRScanResult decodeQR( BufferedImage image, Rectangle r )
+  private QRScanResult decodeQR( BufferedImage image, Rectangle r )
           throws ReaderException
   {
-    return decodeQR( image, r.x, r.y, r.x + r.width, r.y + r.height );
+    Rectangle[] rarray = new Rectangle[1];
+    rarray[0] = r;
+    return decodeQR( image, rarray );
+    //return decodeQR( image, r.x, r.y, r.x + r.width, r.y + r.height );
   }
 
+  private QRScanResult decodeQR( BufferedImage image, Rectangle[] r )
+  //private QRScanResult decodeQR( BufferedImage image, int x1, int y1, int x2, int y2 )
+          throws ReaderException
+  {
+    return decodeQR( image, r, false );
+  }
 
-  private static int previous_threshold=120;
-  private static QRScanResult decodeQR( BufferedImage image, int x1, int y1, int x2, int y2 )
+  private int previous_threshold=120;
+  private QRScanResult decodeQR( BufferedImage image, Rectangle[] r, boolean qyoutiqrcheck )
           throws ReaderException
   {
     int threshold=0;
     QRScanResult result;
     //MonochromeBitmapSource source = new BufferedImageMonochromeBitmapSource( image, x1, y1, x2, y2 );
-    BufferedImage cropped = image.getSubimage(x1, y1, x2-x1, y2-y1);
-    BufferedImage img_filt =  new BufferedImage( cropped.getWidth(), cropped.getHeight(),
-                                                cropped.getType() );
+    BufferedImage[] cropped = new BufferedImage[r.length];
+    BufferedImage[] img_filt = new BufferedImage[r.length];
+    QRCodeColourLookupTable lookup;
+    LookupOp lop;
+    for ( int i=0; i<r.length; i++ )
+    {
+      cropped[i] = image.getSubimage(r[i].x, r[i].y, r[i].width, r[i].height);
+      img_filt[i] =  new BufferedImage( cropped[i].getWidth(), cropped[i].getHeight(),
+                                                cropped[i].getType() );
+    }
+    lookup = new QRCodeColourLookupTable( image.getColorModel().getNumComponents() );
+    lop = new LookupOp( lookup, null );
 
-    QRCodeColourLookupTable lookup = new QRCodeColourLookupTable( cropped.getColorModel().getNumComponents() );
-    LookupOp lop = new LookupOp( lookup, null );
 
-    for ( int n = 0; n < 200; n = (n<0) ? (-(n-2)) : (-(n+2))    )
+    for ( int n = 0; n < 200; n = (n<0) ? (-(n-1)) : (-(n+1))    )
     {
       threshold = previous_threshold + n;
       lookup.setThreshold( threshold );
-      img_filt = lop.filter( cropped, img_filt );
-      try
+      for ( int i=0; i<r.length; i++ )
       {
-        result = QRCodec.decode( img_filt, cropped );
-        try {Thread.sleep(20);} catch (InterruptedException ex){}
-        if ( n != 0 )
+        img_filt[i] = lop.filter( cropped[i], img_filt[i] );
+        try
         {
-          System.out.println( "DECODED QRCode at threshold = " + threshold );
-          previous_threshold = threshold;
+          result = QRCodec.decode( img_filt[i], cropped[i] );
+          try {Thread.sleep(20);} catch (InterruptedException ex){}
+          if ( n != 0 )
+          {
+            System.out.println( "DECODED QRCode at threshold = " + threshold + " in rectangle " + i );
+            previous_threshold = threshold;
+          }
+          result.setImageIndex( i );
+          if ( !qyoutiqrcheck )
+            return result;
+          if ( result.getText() != null && result.getText().contains( "qyouti") )
+            return result;
+        } catch (Exception ex)
+        {
+          //System.out.println( "No QRCode - exception thrown." );
+          //Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return result;
-      } catch (Exception ex)
-      {
-        //System.out.println( "No QRCode - exception thrown." );
-        //Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        try {Thread.sleep(20);} catch (InterruptedException ex){}
       }
-      try {Thread.sleep(20);} catch (InterruptedException ex){}
     }
 
     System.out.println( "No QRCode - exception thrown." );
@@ -144,7 +191,7 @@ public class PageDecoder
 
 
 
-  private static byte[] getQRBytes( Result result )
+  private byte[] getQRBytes( Result result )
   {
     Vector segments = (Vector)result.getResultMetadata().get( ResultMetadataType.BYTE_SEGMENTS );
     if ( segments != null )
@@ -166,7 +213,7 @@ public class PageDecoder
 
 
 
-  private static String decodeCString( byte[] data, int offset )
+  private String decodeCString( byte[] data, int offset )
           throws UnsupportedEncodingException
   {
     int i;
@@ -179,99 +226,100 @@ public class PageDecoder
   }
 
 
-  private static int bytesToInteger( byte[] data, int offset )
+  private int bytesToInteger( byte[] data, int offset )
   {
       return  ( data[offset] & 0xff )
              |
               (( data[offset + 1] << 8 ) & 0xff00 );
   }
 
-  private static QuestionCode decodeQuestion( QuestionMetricsRecordSet qmrset, int prefindex, QRScanResult scanresult )
+  private QuestionMetricsRecord decodeQuestion( QuestionMetricsRecordSet qmrset, int prefindex, QRScanResult scanresult )
           throws UnsupportedEncodingException
   {
     //System.out.println( "QRCode contains string: " + scanresult.getText() );
     QuestionCode qcode = new QuestionCode();
 
-    //if there is a qmrset then the metrics are in that file, not the qr code
-    if ( qmrset != null )
-    {
-      QuestionMetricsRecord record = qmrset.getQuestionMetricsRecord(prefindex, scanresult.getText() );
-      qcode.id = record.id;
-      qcode.next = (int)record.height;
-      qcode.box_xoffset = new int[record.boxes.size()];
-      qcode.box_yoffset = new int[record.boxes.size()];
-      qcode.box_width = new int[record.boxes.size()];
-      qcode.box_height = new int[record.boxes.size()];
-      for ( int i=0; i<record.boxes.size(); i++ )
-      {
-        qcode.box_xoffset[i] =  record.boxes.get(i).x+4;
-        qcode.box_yoffset[i] =  record.boxes.get(i).y+4;
-        qcode.box_width[i]   =  record.boxes.get(i).width-8;
-        qcode.box_height[i]  =  record.boxes.get(i).height-8;
-        //System.out.println( "box " + qcode.box_xoffset[i] + ", " + qcode.box_yoffset[i] + ", " + qcode.box_width[i] + ", " + qcode.box_height[i] );
-      }
-      return qcode;
-    }
+    if ( qmrset == null )
+      throw new IllegalArgumentException( "Binary data encoded in the qrcode is no longer supported.");
+
+    return qmrset.getQuestionMetricsRecord(prefindex, scanresult.getText() );
+
+//    QuestionMetricsRecord record = qmrset.getQuestionMetricsRecord(prefindex, scanresult.getText() );
+//    qcode.id = record.id;
+//    qcode.next = (int)record.height;
+//    qcode.box_xoffset = new int[record.boxes.size()];
+//    qcode.box_yoffset = new int[record.boxes.size()];
+//    qcode.box_width = new int[record.boxes.size()];
+//    qcode.box_height = new int[record.boxes.size()];
+//    for ( int i=0; i<record.boxes.size(); i++ )
+//    {
+//      qcode.box_xoffset[i] =  record.boxes.get(i).x + (boxinset/2);
+//      qcode.box_yoffset[i] =  record.boxes.get(i).y + (boxinset/2);
+//      qcode.box_width[i]   =  record.boxes.get(i).width - boxinset;
+//      qcode.box_height[i]  =  record.boxes.get(i).height - boxinset;
+//      //System.out.println( "box " + qcode.box_xoffset[i] + ", " + qcode.box_yoffset[i] + ", " + qcode.box_width[i] + ", " + qcode.box_height[i] );
+//    }
+//    return qcode;
 
 
-    int boxes;
-    if ( pinkboxfullcoords )
-    {
-      DataInputStream in = new DataInputStream( new ByteArrayInputStream( scanresult.getBytes() ) );
-      Vector<Short> sarray = new Vector<Short>();
-      try
-      {
-        qcode.id = in.readUTF();
-        qcode.next = in.readShort()*10;
-        while ( in.available() > 0 )
-          sarray.add( new Short(in.readShort()) );
-
-      } catch (IOException ex)
-      {
-        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-      }
-
-      boxes = sarray.size() / 4;
-      System.out.println( "no. boxes " + boxes );
-      qcode.box_xoffset = new int[boxes];
-      qcode.box_yoffset = new int[boxes];
-      qcode.box_width = new int[boxes];
-      qcode.box_height = new int[boxes];
-      for ( int i=0; i<boxes; i++ )
-      {
-        qcode.box_xoffset[i] =  sarray.elementAt(i*4 + 0);
-        qcode.box_yoffset[i] =  sarray.elementAt(i*4 + 1);
-        qcode.box_width[i]   =  sarray.elementAt(i*4 + 2);
-        qcode.box_height[i]  =  sarray.elementAt(i*4 + 3);
-        System.out.println( "box " + qcode.box_xoffset[i] + ", " + qcode.box_yoffset[i] + ", " + qcode.box_width[i] + ", " + qcode.box_height[i] );
-      }
-    }
-    else
-    {
-      qcode.id = decodeCString( scanresult.getBytes(), 0 );
-      qcode.next = scanresult.getBytes()[ qcode.id.length()+1 ];
-      qcode.next *= 10;
-      boxes = (scanresult.getBytes().length - qcode.id.length() - 2) / 2;
-      qcode.box_xoffset = new int[boxes];
-      qcode.box_yoffset = new int[boxes];
-      qcode.box_width = new int[boxes];
-      qcode.box_height = new int[boxes];
-      for ( int i=0; i<boxes; i++ )
-      {
-        qcode.box_xoffset[i] = (int)metrics_qstn_qr_hzntl_box;
-        qcode.box_width[i] = 21;
-        qcode.box_height[i] = 21;
-        qcode.box_yoffset[i] =  ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2)     ] & 0xff )
-                                |
-                             ( ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2) + 1 ] << 8 ) & 0xff00 );
-      }
-    }
-
-    return qcode;
+//    int boxes;
+//    if ( pinkboxfullcoords )
+//    {
+//      DataInputStream in = new DataInputStream( new ByteArrayInputStream( scanresult.getBytes() ) );
+//      Vector<Short> sarray = new Vector<Short>();
+//      try
+//      {
+//        qcode.id = in.readUTF();
+//        qcode.next = in.readShort()*10;
+//        while ( in.available() > 0 )
+//          sarray.add( new Short(in.readShort()) );
+//
+//      } catch (IOException ex)
+//      {
+//        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+//      }
+//
+//      boxes = sarray.size() / 4;
+//      System.out.println( "no. boxes " + boxes );
+//      qcode.box_xoffset = new int[boxes];
+//      qcode.box_yoffset = new int[boxes];
+//      qcode.box_width = new int[boxes];
+//      qcode.box_height = new int[boxes];
+//      for ( int i=0; i<boxes; i++ )
+//      {
+//        qcode.box_xoffset[i] =  sarray.elementAt(i*4 + 0);
+//        qcode.box_yoffset[i] =  sarray.elementAt(i*4 + 1);
+//        qcode.box_width[i]   =  sarray.elementAt(i*4 + 2);
+//        qcode.box_height[i]  =  sarray.elementAt(i*4 + 3);
+//        System.out.println( "box " + qcode.box_xoffset[i] + ", " + qcode.box_yoffset[i] + ", " + qcode.box_width[i] + ", " + qcode.box_height[i] );
+//      }
+//    }
+//    else
+//    {
+//      qcode.id = decodeCString( scanresult.getBytes(), 0 );
+//      qcode.next = scanresult.getBytes()[ qcode.id.length()+1 ];
+//      qcode.next *= 10;
+//      boxes = (scanresult.getBytes().length - qcode.id.length() - 2) / 2;
+//      qcode.box_xoffset = new int[boxes];
+//      qcode.box_yoffset = new int[boxes];
+//      qcode.box_width = new int[boxes];
+//      qcode.box_height = new int[boxes];
+//      for ( int i=0; i<boxes; i++ )
+//      {
+//        qcode.box_xoffset[i] = (int)metrics_qstn_qr_hzntl_box;
+//        qcode.box_width[i] = 21;
+//        qcode.box_height[i] = 21;
+//        qcode.box_yoffset[i] =  ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2)     ] & 0xff )
+//                                |
+//                             ( ( scanresult.getBytes()[ qcode.id.length()+2+ (i*2) + 1 ] << 8 ) & 0xff00 );
+//      }
+//    }
+//
+//    return qcode;
   }
 
 
-  private static PageData decode(ExaminationData exam, URI uri)
+  private PageData decode( ExaminationData exam, URI uri, int i )
           throws IOException
   {
     BufferedImage image;
@@ -284,62 +332,92 @@ public class PageDecoder
       System.err.println(uri.toString() + ": Could not load image");
       return null;
     }
-    return decode( exam, image, uri.toString() );
+    return decode( exam, image, uri.toString(), i );
   }
 
-  public static PageData decode(ExaminationData exam, BufferedImage image, String sourcename )
+
+  private PageData identifyPage( ExaminationData exam, URI uri, int i )
+          throws IOException
+  {
+    BufferedImage image;
+    try {
+      image = ImageIO.read(uri.toURL());
+    } catch (IllegalArgumentException iae) {
+      throw new FileNotFoundException("Resource not found: " + uri);
+    }
+    if (image == null) {
+      System.err.println(uri.toString() + ": Could not load image");
+      return null;
+    }
+    return identifyPage( exam, image, uri.toString(), i );
+  }
+
+
+
+  private PageData identifyPage(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
           throws IOException
   {
     int i;
     PageData page;
-    QuestionData question;
-    ResponseData response;
-    QRScanResult itemresult, pageresult, calibrationresult;
+    QRScanResult calibrationresult;
+    QRScanResult pageresult;
+    Rectangle[] calqrsearchrect = new Rectangle[2];
 
-    Point subimage_topleft;
-    Point subimage_bottomright;
-    double[] triangle = new double[6];
-    Rectangle pageqrsearchrect, calqrsearchrect, itemqrsearchrect;
-    AffineTransform questiontransform, pagetransform, revpagetransform;
-    
     System.out.println( "Decoding a page." );
-    
 
-    try {
+    page = new PageData( exam, sourcename, scanorder );
+    page.source = sourcename;
+
+    try
+    {
+      page.landscape = image.getWidth() > image.getHeight();
+
       double rough_dpi = (double)image.getHeight() / 11.69;
+      if ( page.landscape )
+        rough_dpi = (double)image.getWidth() / 11.69;
       //System.out.println( "Rough DPI of image = " + rough_dpi );
 
-      // Bottom left corner
-      pageqrsearchrect = new Rectangle(
-          0,
-          image.getHeight()-(int)(rough_dpi*1.5),
-          (int)(rough_dpi*1.5),
-          (int)(rough_dpi*1.5) );
+      //Bottom right corner but may be rotated in scan
+      if ( page.landscape )
+      {
+        // rotated 90deg anticlock
+        calqrsearchrect[0] = new Rectangle(
+            image.getWidth()-(int)(rough_dpi*1.2),
+            (int)(rough_dpi*0.1),
+            (int)(rough_dpi*1.1),
+            (int)(rough_dpi*1.1) );
+        // rotated 90deg clock
+        calqrsearchrect[1] = new Rectangle(
+            (int)(rough_dpi*0.1),
+            image.getHeight()-(int)(rough_dpi*1.2),
+            (int)(rough_dpi*1.1),
+            (int)(rough_dpi*1.1) );
+      }
+      else
+      {
+        // not rotated
+        calqrsearchrect[0] = new Rectangle(
+            image.getWidth()-(int)(rough_dpi*1.2),
+            image.getHeight()-(int)(rough_dpi*1.2),
+            (int)(rough_dpi*1.1),
+            (int)(rough_dpi*1.1) );
+        // rotated 180
+        calqrsearchrect[1] = new Rectangle(
+            (int)(rough_dpi*0.1),
+            (int)(rough_dpi*0.1),
+            (int)(rough_dpi*1.1),
+            (int)(rough_dpi*1.1) );
+      }
 
-      //Bottom right corner
-      calqrsearchrect = new Rectangle(
-          image.getWidth()-(int)(rough_dpi*1.2),
-          image.getHeight()-(int)(rough_dpi*1.2),
-          (int)(rough_dpi*1.1),
-          (int)(rough_dpi*1.1) );
-
-      // Top left corner
-      itemqrsearchrect = new Rectangle(
-          0,
-          0,
-          (int)(rough_dpi*1.5),
-          (int)(rough_dpi*1.5) );
 
       //System.out.println( "Decoding calibration qr." );
-      calibrationresult = decodeQR( image, calqrsearchrect );
+      calibrationresult = decodeQR( image, calqrsearchrect, true );
       if ( calibrationresult == null )
-        return null;
-      //System.out.println( "Processing calibration QR.  [" + calibrationresult.getText() + "]" );
-      if ( !calibrationresult.getText().startsWith("qyouti/") )
       {
-        System.out.println( "No qyouti signiture QR code in bottom right corner." );
-        return null;
+        page.error = "No qyouti signiture QR code in bottom right corner.";
+        return page;
       }
+
       StringTokenizer ptok = new StringTokenizer( calibrationresult.getText(), "/" );
       ptok.nextToken();
       double declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
@@ -350,19 +428,208 @@ public class PageDecoder
 //          );
 
 
-      double blackness = calibrationresult.getBlackness();
 
-      //System.out.println( "Decoding first item qr." );
-      itemresult = decodeQR( image, itemqrsearchrect );
-      if ( itemresult == null )
-        return null;
-      //System.out.println( "Processing first item QR.  [" + itemresult.getText() + "]" );
+      // does the source image need to be rotated?
+      page.quadrant = 0;
+      if ( page.landscape )
+      {
+        if ( calibrationresult.getImageIndex() == 0 )
+          page.quadrant = 1; //rotatedimage = rot.rotate90();
+        else
+          page.quadrant = 3; //rotatedimage = rot.rotate270();
+      }
+      else if ( calibrationresult.getImageIndex() == 1 )
+      {
+        page.quadrant = 2;  //rotatedimage = rot.rotate180();
+      }
 
+
+      // Top left corner
+      Rectangle pageqrsearchrect;
+      switch ( page.quadrant )
+      {
+        case 1:
+          pageqrsearchrect = new Rectangle(
+              image.getWidth()-(int)(rough_dpi*metrics_print_qr_search_size),
+              image.getHeight()-(int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size) );
+          break;
+        case 2:
+          pageqrsearchrect = new Rectangle(
+              image.getWidth()-(int)(rough_dpi*metrics_print_qr_search_size),
+              0,
+              (int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size) );
+          break;
+        case 3:
+          pageqrsearchrect = new Rectangle(
+              0,
+              0,
+              (int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size) );
+          break;
+        default:
+          pageqrsearchrect = new Rectangle(
+              0,
+              image.getHeight()-(int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size),
+              (int)(rough_dpi*metrics_print_qr_search_size) );
+      }
 
       //System.out.println( "Decoding page qr." );
       pageresult = decodeQR( image, pageqrsearchrect );
       if ( pageresult == null )
-        return null;
+      {
+        page.error = "Cannot find bottom left QRcode.";
+        return page;
+      }
+      System.out.println( "Processing decoded QR.  [" + pageresult.getText() + "]" );
+      ptok = new StringTokenizer( pageresult.getText(), "/" );
+      String version = ptok.nextToken();
+      String printid = ptok.nextToken();
+      int userpref = 0;
+      try  { userpref = Integer.parseInt(ptok.nextToken()); }
+      catch ( NumberFormatException nfe ) {}
+      userpref--;
+      String candidate_name = ptok.nextToken();
+      String candidate_number = ptok.nextToken();
+      int page_number = 0;
+      int question_count = 0;
+      try  { page_number = Integer.parseInt(ptok.nextToken()); }
+      catch ( NumberFormatException nfe ) {}
+      try  { question_count = Integer.parseInt(ptok.nextToken()); }
+      catch ( NumberFormatException nfe ) {}
+
+
+      System.out.println( "   version: " + version );
+      System.out.println( " print run: " + printid );
+      System.out.println( " pref. set: " + userpref );
+      System.out.println( "      name: " + candidate_name );
+      System.out.println( "    number: " + candidate_number );
+      System.out.println( "      page: " + page_number );
+      System.out.println( " questions: " + question_count );
+
+
+      page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( printid );
+      page.code = pageresult.getText();
+      page.printid = printid;
+      page.candidate_name = candidate_name;
+      page.candidate_number = candidate_number;
+      page.page_number = page_number;
+      page.source = sourcename;
+
+
+    }
+    catch (ReaderException e)
+    {
+      e.printStackTrace();
+      System.err.println(sourcename + ": No barcode found");
+      page.error = "Can't read question QRCode.";
+    }
+
+    return page;
+  }
+
+
+
+  private PageData decode(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
+          throws IOException
+  {
+    int i;
+    PageData page;
+    QuestionData question;
+    ResponseData response;
+    QRScanResult itemresult, pageresult, calibrationresult;
+
+    Point subimage_topleft;
+    Point subimage_bottomright;
+    Rectangle subimage_rect;
+    double[] triangle = new double[6];
+    Rectangle pageqrsearchrect, itemqrsearchrect;
+    Rectangle calqrsearchrect;
+    AffineTransform questiontransform, pagetransform, revpagetransform;
+    double pageblackness;
+    
+    System.out.println( "Decoding a page." );
+
+    page = identifyPage( exam, image, sourcename, scanorder );
+    if ( page == null || page.error != null )
+      return page;
+
+    try {
+
+      double rough_dpi = (double)image.getHeight() / 11.69;
+      if ( page.landscape )
+        rough_dpi = (double)image.getWidth() / 11.69;
+      //System.out.println( "Rough DPI of image = " + rough_dpi );
+
+
+      // does the source image need to be rotated?
+      BufferedImage rotatedimage = image;
+      PageRotator rot = new PageRotator( image );
+      switch ( page.quadrant )
+      {
+        case 1:
+          rotatedimage = rot.rotate90();
+          break;
+        case 2:
+          rotatedimage = rot.rotate180();
+          break;
+        case 3:
+          rotatedimage = rot.rotate270();
+          break;
+      }
+
+
+      // recalculated based on rotated image
+      calqrsearchrect = new Rectangle(
+          rotatedimage.getWidth()-(int)(rough_dpi*1.2),
+          rotatedimage.getHeight()-(int)(rough_dpi*1.2),
+          (int)(rough_dpi*1.1),
+          (int)(rough_dpi*1.1) );
+
+      // reread in the new rotated coordinates
+      calibrationresult = decodeQR( rotatedimage, calqrsearchrect );
+      if ( calibrationresult == null )
+      {
+        page.error = "No qyouti signiture QR code in bottom right corner.";
+        return page;
+      }
+
+      StringTokenizer ptok = new StringTokenizer( calibrationresult.getText(), "/" );
+      ptok.nextToken();
+      double declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
+      double declared_calibration_height = Double.parseDouble(ptok.nextToken()) / 10.0;
+
+      // Bottom left corner
+      pageqrsearchrect = new Rectangle(
+          0,
+          rotatedimage.getHeight()-(int)(rough_dpi*metrics_print_qr_search_size),
+          (int)(rough_dpi*metrics_print_qr_search_size),
+          (int)(rough_dpi*metrics_print_qr_search_size) );
+
+
+      // Top left corner
+      itemqrsearchrect = new Rectangle(
+          0,
+          0,
+          (int)(rough_dpi*1.5),
+          (int)(rough_dpi*1.5) );
+
+
+
+      pageblackness = calibrationresult.getBlackness();
+
+
+
+      //System.out.println( "Decoding page qr." );
+      pageresult = decodeQR( rotatedimage, pageqrsearchrect );
+      if ( pageresult == null )
+      {
+        page.error = "Cannot find bottom left QRcode.";
+        return page;
+      }
       System.out.println( "Processing decoded QR.  [" + pageresult.getText() + "]" );
       ptok = new StringTokenizer( pageresult.getText(), "/" );
       String version = ptok.nextToken();
@@ -391,15 +658,42 @@ public class PageDecoder
 //      System.out.println( "      page: " + page_number );
 //      System.out.println( " questions: " + question_count );
 
-      QuestionMetricsRecordSet qmrset = exam.qmrcache.getSet(printid);
+
+      page.code = pageresult.getText();
+      page.candidate_name = candidate_name;
+      page.candidate_number = candidate_number;
+      page.page_number = page_number;
+      page.source = sourcename;
+
+      QuestionMetricsRecordSet qmrset = null;
+      if ( printid!=null && printid.length()>0 )
+      {
+        qmrset = exam.qmrcache.getSet(printid);
+        if ( qmrset == null )
+        {
+          page.error = "Doesn't belong to this exam/survey.";
+          return page;
+        }
+      }
       QuestionMetricsRecord qmr;
 
-      page = new PageData( exam, candidate_name, candidate_number, page_number );
-      page.source = sourcename;
       //System.out.println( "Done decoding page qr." );
       if ( question_count == 0 )
         return page;
 
+      //System.out.println( "Decoding first item qr." );
+      itemresult = decodeQR( rotatedimage, itemqrsearchrect );
+      if ( itemresult == null )
+      {
+        // another silly work around - covers and blank pages
+        // were reporting 1 question present
+        if ( question_count == 1 )
+          return page;
+        
+        page.error = "Cannot find top left QRcode.";
+        return page;
+      }
+      //System.out.println( "Processing first item QR.  [" + itemresult.getText() + "]" );
 
       pagetransform = pageTransform( 
           itemqrsearchrect, itemresult,
@@ -413,13 +707,14 @@ public class PageDecoder
       } catch (NoninvertibleTransformException ex)
       {
         Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        return null;
+        page.error = "Technical error.";
+        return page;
       }
 
 
       double last_height=0.0;
       int w, h;
-      QuestionCode question_code=null;
+      QuestionMetricsRecord questionmetrics=null;
       Point2D measureditempos =new Point2D.Double();
       Point2D measureditempos_inches = new Point2D.Double();
       measureditempos_inches.setLocation(0.0, 0.0);
@@ -437,9 +732,10 @@ public class PageDecoder
 //        System.out.println( "Look for question code here: " +
 //                subimage_topleft.x     + ":" + subimage_topleft.y     + ":" +
 //                subimage_bottomright.x + ":" + subimage_bottomright.y + ":"       );
-        itemresult = decodeQR( image,
-                subimage_topleft.x,     subimage_topleft.y,
-                subimage_bottomright.x, subimage_bottomright.y       );
+        subimage_rect = new Rectangle( 
+                 subimage_topleft,
+                 new Dimension(subimage_bottomright.x-subimage_topleft.x,subimage_bottomright.y-subimage_topleft.y) );
+        itemresult = decodeQR( rotatedimage, subimage_rect );
         if ( itemresult == null )
           break;
 
@@ -448,248 +744,198 @@ public class PageDecoder
             itemresult.getResultPoints()[1].getY()+subimage_topleft.y );
 //        questiontransform = qrtransform( subimage_topleft, itemresult, metrics_top_qr_width/100.0, metrics_top_qr_width/100.0 );
         question = new QuestionData( page );
-        question_code = decodeQuestion( qmrset, userpref, itemresult );
+        questionmetrics = decodeQuestion( qmrset, userpref, itemresult );
         //System.out.println( "Question ID " + question_code.id   );
         //System.out.println( "       Next " + question_code.next );
-        last_height = ((double)question_code.next)/100.0;
-        question.ident = question_code.id;
+        last_height = ((double)questionmetrics.height)/100.0;
+        question.ident = questionmetrics.id;
 
         revpagetransform.transform( measureditempos, measureditempos_inches );
         //System.out.println( "Location: " + measureditempos_inches.getX() + "   " +measureditempos_inches.getY() );
 
-        for ( int r=0; r<question_code.box_yoffset.length; r++ )
+        QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
+        for ( int r=0; r<boxes.length; r++ )
         {
           //System.out.println( "-----------------------------------" );
           //System.out.println( "Response " + r + " at " + question_code.box_xoffset[r] + ", " + question_code.box_yoffset[r] );
           //System.out.println( "                 W, H " + question_code.box_width[r]   + ", " + question_code.box_height[r] );
           subimage_topleft     = qrinchtopixels(
               pagetransform,
-              measureditempos_inches.getX() + question_code.box_xoffset[r]/100.0,
-              measureditempos_inches.getY() + question_code.box_yoffset[r]/100.0 );
+              measureditempos_inches.getX() + boxes[r].x/100.0,
+              measureditempos_inches.getY() + boxes[r].y/100.0 );
           subimage_bottomright = qrinchtopixels(
               pagetransform,
-              measureditempos_inches.getX() + (question_code.box_xoffset[r] + question_code.box_width[r])/100.0,
-              measureditempos_inches.getY() + (question_code.box_yoffset[r] + question_code.box_height[r])/100.0
+              measureditempos_inches.getX() + (boxes[r].x + boxes[r].width)/100.0,
+              measureditempos_inches.getY() + (boxes[r].y + boxes[r].height)/100.0
               );
-          response = new ResponseData( question );
-          response.position = r;
-          response.ident = null;
+          response = new ResponseData( question, r, boxes[r].getType(), boxes[r].getIdent() );
           w = subimage_bottomright.x - subimage_topleft.x;
           h = subimage_bottomright.y - subimage_topleft.y;
           //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
-          response.box_image = image.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h );
+          if ( response.getImageFile().exists() )
+          {
+            page.error = "Scanned same page twice?";
+            return page;
+          }
+          try
+          {
+            ImageIO.write(
+                          rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
+                          "jpg",
+                          response.getImageFile()
+                    );
+          } catch (IOException ex)
+          {
+            Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            page.error = "Technical error saving box image.";
+            return page;
+          }
         }
       }
 
 
-      processBoxImages( page, blackness );
+      page.prepareImageProcessor( qmrset.isMonochromePrint(), pageblackness, boxthreshold );
+      try
+      {
+        processBoxImages( page );
+      } catch (IOException ex)
+      {
+        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        page.error = "Technical error saving filtered box image.";
+        return page;
+      }
 
 
       return page;
     } catch (ReaderException e) {
       e.printStackTrace();
       System.err.println(sourcename + ": No barcode found");
-      return null;
+      page.error = "Can't read question QRCode.";
+      return page;
     }
   }
 
-
-  private static void processBoxImages( PageData page, double blackness )
+  private void processBoxImages( PageData page ) throws IOException
   {
-    QuestionData question;
-    ResponseData response;
-    ResponseBoxColourLookupTable lookup = null;
-    LookupOp lop = null;
-    IdentityLookupTable idlookup = null;
-    LookupOp idlop = null;
-    BufferedImage temp;
+    QuestionData questiondata;
     QTIElementItem qti_item;
-    boolean one_only;
-    int darkest, next_darkest;
+    QTIResponse[] responses;
+
+    for ( int i=0; i<page.questions.size(); i++ )
+    {
+      questiondata = page.questions.get( i );
+      qti_item = page.exam.qdefs.qti.getItem( questiondata.ident );
+
+      // skip questions that aren't supported
+      if ( !qti_item.isSupported() )
+        continue;
+
+      // find all the response elements
+      responses = qti_item.getResponses();
+      for ( int j=0; j<responses.length; j++ )
+      {
+        if ( !responses[j].isSupported() )
+          continue;
+        if ( responses[j] instanceof QTIElementResponselid )
+        {
+          processBoxImagesForResponselid( (QTIElementResponselid)responses[j], questiondata );
+          continue;
+        }
+        if ( responses[j] instanceof QTIExtensionRespextension )
+          processBoxImagesForSketcharea( (QTIExtensionRespextension)responses[j], questiondata );
+      }
+    }
+  }
+
+  private void processBoxImagesForSketcharea( QTIExtensionRespextension responseext, QuestionData questiondata ) throws IOException
+  {
+    // At present no processing required - the image needs no special processing in
+    // sketch areas
+  }
+
+  private void processBoxImagesForResponselid( QTIElementResponselid responselid, QuestionData questiondata ) throws IOException
+  {
+    ResponseData responsedata;
+    BufferedImage temp;
+    String next_darkest_ident;
     double darkest_dark_pixels, next_darkest_dark_pixels;
-    double redmean, lightestredmean=0.0;
+    double redmean;
 
     CannyEdgeDetector detector;
 
-    File examfolder = page.exam.examfile.getParentFile();
-    File scanfolder = new File( examfolder, "scans" );
-    if ( !scanfolder.exists() )
-      scanfolder.mkdir();
+    ResponseImageProcessor responseimageprocessor = questiondata.page.responseimageprocessor;
 
-
-    // Look at the centres of all pink boxes and measure
-    // brightness of the red channel
-    // Find the lightest of all boxes to calibrate the
-    // page.
-    for ( int i=0; i<page.questions.size(); i++ )
-    {
-      question = page.questions.get( i );
-      for ( int j=0; j<question.responses.size(); j++ )
+      // reset question stats
+      responseimageprocessor.startQuestion();
+      // filter the images
+      // Iterate the response labels in this responselid and each time
+      // process the corresponding user input image
+      QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
+      for ( int j=0; j<rlabels.length; j++ )
       {
-        response = question.responses.get( j );
-        temp = response.box_image;
-        redmean=0.0;
-        for ( int x=(temp.getWidth()/2)-1; x<=(temp.getWidth()/2)+1; x++ )
-          for ( int y=(temp.getHeight()/2)-1; y<=(temp.getHeight()/2)+1; y++ )
-            redmean += (double)((temp.getRGB(x, y) & 0xff0000) >> 16);
-        redmean = redmean / 9.0;
-        if ( lightestredmean < redmean )
-          lightestredmean = redmean;
-      }
-    }
-
-
-    System.out.println( "Black level: " + blackness + "   Pink level: " + lightestredmean );
-
-    for ( int i=0; i<page.questions.size(); i++ )
-    {
-      question = page.questions.get( i );
-      qti_item = page.exam.qdefs.qti.getItem( question.ident );
-      one_only = qti_item != null && qti_item.isStandardMultipleChoice();
-
-      darkest = -1;
-      darkest_dark_pixels = 0.0;
-      for ( int j=0; j<question.responses.size(); j++ )
-      {
-        response = question.responses.get( j );
-        response.selected= false;
-        response.examiner_selected = false;
-        response.filtered_image = null;
-        response.dark_pixels = -1;
-
-        try
-        {
-          ImageIO.write(response.box_image, "gif",
-              new File( scanfolder,
-                question.ident + "_" + j + "_" + page.candidate_number + ".gif" ));
-        } catch (IOException ex)
-        {
-          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        if ( !qti_item.isSupported() )
-        {
-          response.box_image = null;
-          response.filtered_image = null;
-          continue;
-        }
-
-        if ( !qti_item.isMultipleChoice() )
-          continue;
-
-        temp = response.box_image;
-
-        response.box_image = new BufferedImage( temp.getWidth(), temp.getHeight(),
-                                                temp.getType() );
-        response.filtered_image = new BufferedImage( temp.getWidth(), temp.getHeight(),
-                                                      temp.getType() );
-
-        if ( lookup == null )
-        {
-          lookup = new ResponseBoxColourLookupTable(
-              temp.getColorModel().getNumComponents(),
-              blackness,
-              lightestredmean );
-          lop = new LookupOp( lookup, null );
-          idlookup = new IdentityLookupTable( temp.getColorModel().getNumComponents() );
-          idlop = new LookupOp( idlookup, null );
-        }
-
-//        detector = new CannyEdgeDetector();
-//        detector.setLowThreshold(0.5f);
-//        detector.setHighThreshold(1.0f);
-//        //detector.setGaussianKernelRadius(2.2f);
-//        //detector.setGaussianKernelWidth(20);
-//        detector.setOnlyRedChannel(true);
-//        detector.setContrastNormalized(true);
-//        detector.setSourceImage( temp );
-//        detector.process();
-//        BufferedImage edges = detector.getEdgesImage();
-//        try
-//        {
-//          ImageIO.write(edges, "gif",
-//              new File( scanfolder,
-//                question.ident + "_" + j + "_" + page.candidate_number + "_edges.gif" ));
-//        } catch (IOException ex)
-//        {
-//          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-
-
-        idlop.filter( temp, response.box_image );
-        lookup.resetStatistics();
-        lop.filter( temp, response.filtered_image );
-        //response.selected = ( (double)lookup.countBlackPixels() / (double)lookup.countWhitePixels() ) > 0.1;
-        response.dark_pixels = (double)lookup.countBlackPixels() / (double)(lookup.countWhitePixels()+lookup.countBlackPixels());
-        if ( response.dark_pixels > darkest_dark_pixels )
-        {
-          darkest = j;
-          darkest_dark_pixels = response.dark_pixels;
-        }
-
-        //response.box_image = null;
-        //response.filtered_image = null;
+        responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+        responseimageprocessor.filter( responsedata, questiondata.page.exam.scanfolder );
       }
 
-      if ( !qti_item.isSupported() )
-        continue;
-      if ( !qti_item.isMultipleChoice() )
-        continue;
 
-      if ( one_only )
+      // now look at image statistics to decide what the user's intended
+      // response was.
+      if ( responselid.isSingleChoice() )
       {
         // now processing single available option
         // low threshold for accepting a mark
-        if ( darkest >= 0 && darkest_dark_pixels > 0.01 )
+        if ( responseimageprocessor.darkest_ident != null &&
+                responseimageprocessor.darkest_dark_pixels > 0.01 )
         {
           // find next darkest selection
-          next_darkest = -1;
+          next_darkest_ident = null;
           next_darkest_dark_pixels = 0.0;
-          for ( int j=0; j<question.responses.size(); j++ )
+          for ( int j=0; j<rlabels.length; j++ )
           {
-            if ( j == darkest )
+            responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+            if ( responsedata.ident.equals( responseimageprocessor.darkest_ident ) )
               continue;
-            response = question.responses.get( j );
-            if ( response.dark_pixels > next_darkest_dark_pixels )
+            if ( responsedata.dark_pixels > next_darkest_dark_pixels )
             {
-              next_darkest = j;
-              next_darkest_dark_pixels = response.dark_pixels;
+              next_darkest_ident = responsedata.ident;
+              next_darkest_dark_pixels = responsedata.dark_pixels;
             }
           }
 
           // Only a clear distinct selection if no other dark box or
           // the next darkest
           // is less than 80% of the darkest
-          if ( next_darkest < 0 || (next_darkest_dark_pixels / darkest_dark_pixels) < 0.8 )
+          if ( next_darkest_ident == null || (next_darkest_dark_pixels / responseimageprocessor.darkest_dark_pixels) < 0.8 )
           {
-            response = question.responses.get( darkest );
-            response.selected = true;
-            response.examiner_selected = true;
+            responsedata = questiondata.getResponseData( responseimageprocessor.darkest_ident );
+            responsedata.selected = true;
+            responsedata.examiner_selected = true;
           }
         }
       }
       else
       {
-        for ( int j=0; j<question.responses.size(); j++ )
+        // processing question which can have multiple true statements
+        // use simple threshold.
+        for ( int j=0; j<rlabels.length; j++ )
         {
-          response = question.responses.get( j );
-          response.selected = response.dark_pixels > 0.05;
-          response.examiner_selected = response.selected;
+          responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+          responsedata.selected = responsedata.dark_pixels > 0.05;
+          responsedata.examiner_selected = responsedata.selected;
         }
       }
-    }
 
   }
 
 
-  private static Point qrinchtopixels( AffineTransform t, double x, double y )
+  private Point qrinchtopixels( AffineTransform t, double x, double y )
   {
     Point2D point = new Point2D.Double( x, y );
     Point2D tpoint = t.transform(point, null);
     return new Point( (int)tpoint.getX(), (int)tpoint.getY() );
   }
 
-  private static double checkpagescale( double[] triangle )
+  private double checkpagescale( double[] triangle )
   {
     double adx = triangle[2]-triangle[0];
     double ady = triangle[3]-triangle[1];
@@ -700,7 +946,7 @@ public class PageDecoder
     return blength / alength;
   }
 
-  private static double[] calibrate( double[] triangle, double width, double height )
+  private double[] calibrate( double[] triangle, double width, double height )
   {
     double horizontal_dx, horizontal_dy;
     double vertical_dx,   vertical_dy;
@@ -731,7 +977,7 @@ public class PageDecoder
 
 
 
-  private static AffineTransform qrtransform( Point2D subimagepos, QRScanResult result, double width, double height )
+  private AffineTransform qrtransform( Point2D subimagepos, QRScanResult result, double width, double height )
   {
     double horizontal_dx, horizontal_dy;
     double vertical_dx,   vertical_dy;
@@ -771,7 +1017,7 @@ public class PageDecoder
         );
   }
 
-  private static AffineTransform pageTransform(
+  private AffineTransform pageTransform(
       Rectangle ra, QRScanResult resulta,        // top left
       Rectangle rb, QRScanResult resultb,        // bottom left
       Rectangle rc, QRScanResult resultc,        // bottom right

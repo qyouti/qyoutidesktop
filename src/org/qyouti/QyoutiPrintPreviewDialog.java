@@ -87,10 +87,12 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     public void setItems( Vector<QTIElementItem> items )
     {
 //examfolderuri
+        QuestionMetricsRecordSet qmrecset = new QuestionMetricsRecordSet("dummyprintid");
+        qmrecset.setMonochromePrint( false );
       paginated = QTIItemRenderer.paginateItems( 
-          "dummyid", examfolderuri, items,
+          "dummyid", examfolderuri,
           new CandidateData( null, "A.Student", "00000000"),
-          options, new QuestionMetricsRecordSet("dummyprintid"),
+          options, qmrecset,
               preamble );
       //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", paginated.get(0).getDocumentElement(), true );
 

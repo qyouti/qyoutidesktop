@@ -72,11 +72,19 @@ public class QTIElementOutcomesprocessing
     return scorevar.getCurrentValue();
   }
 
+  
+  
   public void process()
   {
     if ( !supported )
       throw new IllegalArgumentException( "Unsupported outcomes processing." );
-    
+
+    // At present ONLY the SCORE outcome is processed here
+    // The other alternative is for items to declare their own
+    // outcomes and these are simply copied up to become exam outcomes
+    // without going through the outcomesprocessing element
+
+
     Vector<QTIElementItem> items = root.getItems();
     String name;
     // We only handle (weighted) sum of scores so
@@ -87,12 +95,20 @@ public class QTIElementOutcomesprocessing
     // run through all the condition elements
     for ( int j=0; j<conditions.size(); j++ )
     {
-      // put all the question outcomes through each condition element
+      // put all the relevant question outcomes through each condition element
       for ( int k=0; k<items.size(); k++ )
-        conditions.get( j ).process(scorevar, items.get(k) );
+      {
+        if ( items.get( k ).isReferencedByCandidate() )
+          conditions.get( j ).process(scorevar, items.get(k) );
+      }
     }
     //System.out.println( "Grand total score: " + scorevar.getCurrentValue() );
   }
+
+
+
+
+
 
   @Override
   public void initialize()

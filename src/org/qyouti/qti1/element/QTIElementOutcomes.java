@@ -35,11 +35,18 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementOutcomes
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
   boolean supported = false;
   Vector<QTIElementDecvar> decvar_vector;
   Hashtable<String,QTIElementDecvar> decvar_table = new Hashtable<String,QTIElementDecvar>();
+
+  // These are for outcome variables that aren't declared in the outcomes processing section
+  // but may pop up in items anyway.  So, when a candidate's repsonses are processed this
+  // table is emptied and may or may not fill with outcomes that were declared in the
+  // items' resprocessing sections
+  Hashtable<String,QTIElementDecvar> additional_decvar_table = new Hashtable<String,QTIElementDecvar>();
+
 
   public boolean isSupported()
   {

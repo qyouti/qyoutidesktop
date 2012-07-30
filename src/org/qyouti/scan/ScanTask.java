@@ -40,6 +40,7 @@ import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecoder;
@@ -56,26 +57,109 @@ public class ScanTask
   ExaminationData exam;
   File scanfolder;
   public boolean active=false;
-  Vector<String> errorpages= new Vector<String>();
+  //Vector<String> errorpages= new Vector<String>();
   boolean image_ready;
+  boolean preprocess=false;
 
-  public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder )
+  public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder, boolean preprocess )
   {
     this.view = view;
     this.exam = exam;
     this.scanfolder = scanfolder;
+    this.preprocess = preprocess;
+    if ( !preprocess && !exam.scanfolder.exists() )
+      exam.scanfolder.mkdir();
   }
 
   @Override
   public void run()
   {
+    if ( preprocess )
+    {
+      runPreProcess();
+    }
+    else
+    {
+      runImport();
+    }
+  }
+
+
+
+  public void runPreProcess()
+  {
+    int i, j, k, l;
+    active=true;
+
+    try
+    {
+      File[] scanfiles;
+
+      PageData page;
+      scanfiles = scanfolder.listFiles();
+      Arrays.sort(scanfiles);
+      FileInputStream fis;
+      FileChannel fc;
+      MappedByteBuffer bb;
+      PDFFile pdffile;
+      PDFPage pdfpage;
+      Image image;
+      String uri;
+      String newname;
+      File newfile;
+      String foldername;
+      File folder, destfile;
+      boolean success;
+
+      
+      int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
+      int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
+      PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
+      
+      for ( i=0; i<scanfiles.length; i++ )
+      {
+        if ( scanfiles[i].getName().endsWith( ".png" ) ||
+             scanfiles[i].getName().endsWith( ".jpg" ) )
+        {
+          System.out.println( "\n\nProcessing " + scanfiles[i].getName() );
+
+          // Read data from page.
+          page = pagedecoder.identifyPage( exam, scanfiles[i].getCanonicalPath(), exam.pages.size() );
+          exam.pages.add( page );
+
+          foldername = page.getPreferredFolderName();
+          folder = new File( scanfolder, foldername );
+          if ( !folder.exists() )
+            folder.mkdir();
+          destfile = new File( folder, scanfiles[i].getName() );
+          success = scanfiles[i].renameTo( destfile );
+          if ( success ) page.source = destfile.getCanonicalPath();
+          
+          exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+        }
+      }
+
+    } catch (Exception ex)
+    {
+      ex.printStackTrace();
+    }
+
+
+    active=false;
+  }
+
+
+
+  public void runImport()
+  {
+    int i, j, k, l;
     active=true;
 
     try
     {
       File[] filenames;
       
-      PageData page;
+      PageData page, rescanpage;
       filenames = scanfolder.listFiles();
       Arrays.sort(filenames);
       FileInputStream fis;
@@ -84,53 +168,160 @@ public class ScanTask
       PDFFile pdffile;
       PDFPage pdfpage;
       Image image;
+      String uri;
+      String newname;
+      File newfile;
 
-      for ( int i=0; i<filenames.length; i++ )
+      int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
+      int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
+      PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
+
+      for ( i=0; i<filenames.length; i++ )
       {
-        System.out.println( "\n\nProcessing " + filenames[i].getName() );
         if ( filenames[i].getName().endsWith( ".png" ) ||
              filenames[i].getName().endsWith( ".jpg" ) )
         {
-          // Read data from page.
-          page = PageDecoder.decode( exam, filenames[i].getCanonicalPath() );
-          postProcessPage( page, filenames[i].getCanonicalPath() );
-        }
-        if ( filenames[i].getName().endsWith( ".pdf" ) )
-        {
-          // Open the file and then get a channel from the stream
-          fis = new FileInputStream(filenames[i].getCanonicalPath());
-          fc = fis.getChannel();
-
-          // Get the file's size and then map it into memory
-          int sz = (int)fc.size();
-          bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, sz);
-          pdffile = new PDFFile( bb );
-          for ( int j=0; j<pdffile.getNumPages(); j++ )
+          rescanpage = null;
+          // file already scanned?
+          for ( j=0; j<exam.pages.size(); j++ )
           {
-            //  Pages start at 1 and asking for 0 also returns 1!!!
-            pdfpage = pdffile.getPage(j+1,true);
-            //System.out.println( "Scanning PDF file " + (pdfpage.getWidth()/72.0) + "\" by " + (pdfpage.getHeight()/72.0) + "\"" );
-            image_ready = false;
-            image = pdfpage.getImage(
-                (int)(300.0*pdfpage.getWidth()/72.0),
-                (int)(300.0*pdfpage.getHeight()/72.0), null, this );
-            //System.out.println( "Class " + image.getClass().getCanonicalName() );
-            while ( !image_ready )
-              Thread.sleep( 100 );
-            page = PageDecoder.decode( exam, (BufferedImage)image, filenames[i].getCanonicalPath() + " page " + (j+1) );
-            image.flush();
-            postProcessPage( page, filenames[i].getCanonicalPath() + " page " + (j+1) );
+            uri = filenames[i].toURI().toString();
+            if ( uri.equals( exam.pages.get( j ).source ) )
+            {
+              rescanpage = exam.pages.get( j );
+              break;
+            }
           }
-          fc.close();
+
+//          if ( rescanpage != null )
+//            System.out.println( "RESCAN--------------------");
+          // skip this file if name is already recorded and was processed ok
+          if ( rescanpage != null && rescanpage.processed )
+          {
+//            System.out.println( "SKIPPING--------------------");
+            continue;
+          }
+
+          System.out.println( "\n\nProcessing " + filenames[i].getName() );
+
+          // Read data from page.
+          page = pagedecoder.decode( exam, filenames[i].getCanonicalPath(), rescanpage != null?j:exam.pages.size() );
+          if ( rescanpage != null )
+            exam.pages.set( j, page );  // put it where the earlier one was
+          else
+            exam.pages.add( page );   // entirely new file - put it at the end
+          // change file name to match candidate!!
+          if ( !filenames[i].getName().startsWith( "imported_" ) )
+          {
+            newname = page.getPreferredFileName();
+            if ( newname != null )
+            {
+              System.out.println( "Proposed new name: " + newname );
+              newfile = new File( scanfolder, newname );
+              if ( !newfile.exists() )
+              {
+                if ( filenames[i].renameTo( newfile ) )
+                  page.source = newfile.toURI().toString();
+              }
+            }
+          }
+          exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+        }
+//        if ( filenames[i].getName().endsWith( ".pdf" ) )
+//        {
+//          // Open the file and then get a channel from the stream
+//          fis = new FileInputStream(filenames[i].getCanonicalPath());
+//          fc = fis.getChannel();
+//
+//          // Get the file's size and then map it into memory
+//          int sz = (int)fc.size();
+//          bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, sz);
+//          pdffile = new PDFFile( bb );
+//          for ( j=0; j<pdffile.getNumPages(); j++ )
+//          {
+//            //  Pages start at 1 and asking for 0 also returns 1!!!
+//            pdfpage = pdffile.getPage(j+1,true);
+//            //System.out.println( "Scanning PDF file " + (pdfpage.getWidth()/72.0) + "\" by " + (pdfpage.getHeight()/72.0) + "\"" );
+//            image_ready = false;
+//            image = pdfpage.getImage(
+//                (int)(300.0*pdfpage.getWidth()/72.0),
+//                (int)(300.0*pdfpage.getHeight()/72.0), null, this );
+//            //System.out.println( "Class " + image.getClass().getCanonicalName() );
+//            while ( !image_ready )
+//              Thread.sleep( 100 );
+//            page = PageDecoder.decode( exam, (BufferedImage)image, filenames[i].getCanonicalPath(), exam.pages.size() );
+//            exam.pages.add( page );
+//            exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+//            image.flush();
+//          }
+//          fc.close();
+//        }
+      }
+
+      PageData otherpage;
+      // check for duplicate scans
+      for ( i=1; i<exam.pages.size(); i++ )
+      {
+        page = exam.pages.get( i );
+        if ( page.error != null )
+          continue;
+        
+        for ( j=0; j<i; j++ )
+        {
+          otherpage = exam.pages.get( j );
+          if ( otherpage.error != null )
+            continue;
+
+          if ( page.code.equals( otherpage.code ) )
+          {
+            if ( !page.processed )
+              page.error = "This is a duplicate of a page previously scanned.";
+            if ( !otherpage.processed )
+              otherpage.error = "This is a duplicate of a page previously scanned.";
+            break;
+          }
+
+          if ( page.candidate_number == null           ||
+               otherpage.candidate_number == null      ||
+               page.candidate_number.length() == 0     ||
+               otherpage.candidate_number.length() == 0 )
+            break;
+
+          if ( !page.candidate_number.equals( otherpage.candidate_number ) )
+            break;
+          // if the pages are for the same candidate do they have
+          // duplicate questions?
+          for ( k=0; k<page.questions.size(); k++ )
+          {
+            for ( l=0; l<otherpage.questions.size(); l++ )
+            {
+              if ( page.questions.get( k ).ident.equals( otherpage.questions.get( l ) ) )
+              {
+                if ( !page.processed )
+                  page.error = "Page has duplicate question.";
+                if ( !otherpage.processed )
+                  otherpage.error = "Page has duplicate question.";
+                break;
+              }
+            }
+          }
         }
       }
 
-      for ( int n=0; n<errorpages.size(); n++ )
-        System.out.println( "ERROR with " + errorpages.get(n) );
+      // Images are now fully processed so now it's
+      // time to work out the outcomes
+      for ( i=0; i<exam.pages.size(); i++ )
+      {
+        page = exam.pages.get( i );
+        if ( page.error != null )
+          continue;
+        if ( page.processed )
+          continue;
+        processPageOutcomes( page );
+      }
 
-//      if ( errorpages.size() == 0 )
-//        exam.save();
-
+      exam.save();
+      exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
     } catch (Exception ex)
     {
       ex.printStackTrace();
@@ -140,14 +331,14 @@ public class ScanTask
     active=false;
   }
 
-  private void postProcessPage( PageData page, String sourcename )
+  private void processPageOutcomes( PageData page )
   {
     if ( page == null )
     {
-      errorpages.add( sourcename );
       return;
-      //break;
     }
+
+    page.candidate = page.exam.addPage( page );
     // Compute outcomes based on QTI def of question
     for ( int j=0; j<page.questions.size(); j++ )
     {
@@ -160,6 +351,7 @@ public class ScanTask
       // and updates presentation of data
       view.gotoQuestion( page.questions.lastElement() );
     }
+    page.processed = true;
   }
 
   @Override

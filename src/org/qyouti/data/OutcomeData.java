@@ -33,10 +33,10 @@ import javax.swing.table.AbstractTableModel;
  *
  * @author jon
  */
-public class ItemOutcomeData
+public class OutcomeData
           extends AbstractTableModel
 {
-  public Vector<ItemOutcomeDatum> data = new Vector<ItemOutcomeDatum>();
+  public Vector<OutcomeDatum> data = new Vector<OutcomeDatum>();
 
 
   public int getRowCount()
@@ -51,13 +51,13 @@ public class ItemOutcomeData
 
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    ItemOutcomeDatum datum = data.get( rowIndex );
+    OutcomeDatum datum = data.get( rowIndex );
     if ( columnIndex == 0 )
       return datum.name;
     return datum.value.toString();
   }
 
-  public ItemOutcomeDatum getDatum( String name )
+  public OutcomeDatum getDatum( String name )
   {
     for ( int i=0; i<data.size(); i++ )
       if ( data.get(i).name.equals( name ) )

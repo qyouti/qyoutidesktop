@@ -50,6 +50,8 @@ import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.MimeConstants;
+import org.apache.xml.serialize.BaseMarkupSerializer;
+import org.apache.xml.serialize.XMLSerializer;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -73,6 +75,7 @@ import org.xml.sax.SAXException;
 public class ExaminationData
         extends AbstractTableModel implements QTIRenderOptions
 {
+  public ExaminationCatalogue examcatalogue = null;
 
   public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
@@ -80,16 +83,27 @@ public class ExaminationData
   public Hashtable<String, QuestionAnalysis> analysistable = null;
   public Vector<QuestionAnalysis> analyses = null;
   public File examfile;
-
+  public File scanfolder;
+  
+  public Vector<PageData> pages = new Vector<PageData>();
+  public PageListModel pagelistmodel = new PageListModel( pages );
 
   public Properties options = new Properties();
   public Properties default_options = new Properties();
 
   public QuestionMetricsRecordSetCache qmrcache;
 
-  public ExaminationData(File xmlfile)
+  public ExaminationData( ExaminationCatalogue examcatalogue )
   {
+    this.examcatalogue = examcatalogue;
+  }
+
+  public ExaminationData(ExaminationCatalogue examcatalogue,File xmlfile)
+  {
+    this.examcatalogue = examcatalogue;
     examfile = xmlfile;
+    File examfolder = examfile.getParentFile();
+    scanfolder = new File( examfolder, "scans" );
     qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
@@ -338,7 +352,7 @@ public class ExaminationData
     Vector<QTIElementItem> items = qdefs.qti.getItems();
     QTIElementItem item;
     QuestionData qd;
-    ItemOutcomeDatum iod;
+    OutcomeDatum iod;
     String[] outcomenames;
 
     File htmlfile = File.createTempFile( "temp", ".html" );
@@ -536,7 +550,7 @@ public class ExaminationData
                 "scans/" +
                 item.getIdent() +
                 "_0_" +
-                candidate.id + ".gif"  ).toURI() );
+                candidate.id + ".jpg"  ).toURI() );
             line.append( "\"/>" );
             line.append( "</div>\n" );
             htmlwriter.write(line.toString());
@@ -606,7 +620,7 @@ public class ExaminationData
     String[] line= new String[0];
     QuestionData qd;
     QTIElementItem item;
-    ItemOutcomeDatum iod;
+    OutcomeDatum iod;
     Vector<String> lines = new Vector<String>();
     String[] outcomenames;
 
@@ -650,6 +664,77 @@ public class ExaminationData
       csvwriter.writeNext(line);
     }
     csvwriter.close();
+  }
+
+
+  public void exportXmlReplies(File xmlfile)
+          throws ParserConfigurationException, SAXException, IOException, TransformerConfigurationException, TransformerException
+  {
+    int i, j, k;
+    CandidateData candidate;
+    FileWriter filewriter = new FileWriter(xmlfile);
+
+
+    DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
+    Document doc = docBuilder.newDocument();
+
+    Element root = doc.createElement("outcometable");
+    root.setAttribute("file", examfile.getCanonicalPath() );
+    doc.appendChild(root);
+    Element ecandidate, eoutcome;
+
+
+
+    Vector<QTIElementItem> items = qdefs.qti.getItems();
+    QuestionData qd;
+    QTIElementItem item;
+    OutcomeDatum iod;
+    String[] outcomenames;
+
+    for (i = 0; i < candidates_sorted.size(); i++)
+    {
+      candidate = candidates_sorted.get(i);
+      if ( candidate.pages.isEmpty() )
+        continue;
+      ecandidate = doc.createElement("candidate");
+      ecandidate.setAttribute("id", candidate.id );
+      root.appendChild(ecandidate);
+
+      for ( j=0; j<items.size(); j++ )
+      {
+        item = items.get(j);
+        qd = candidate.getQuestionData( item.getIdent() );
+
+        outcomenames = item.getOutcomeNames();
+        for ( k=0; k<outcomenames.length; k++ )
+        {
+          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
+          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
+          {
+            eoutcome = doc.createElement("outcome");
+            eoutcome.setAttribute("item", item.getIdent() );
+            eoutcome.setAttribute("id", outcomenames[k] );
+            eoutcome.setAttribute("answered", (iod == null)?"false":"true");
+            ecandidate.appendChild(eoutcome);
+            if ( iod != null )
+              eoutcome.setTextContent( iod.value.toString() );
+          }
+        }
+      }
+    }
+
+    TransformerFactory transfac = TransformerFactory.newInstance();
+    //transfac.setAttribute("indent-number", 2);
+    Transformer trans = transfac.newTransformer();
+    trans.setOutputProperty(OutputKeys.INDENT, "yes");
+    trans.setOutputProperty(OutputKeys.METHOD, "xml");
+
+    StreamResult result = new StreamResult(filewriter);
+    DOMSource source = new DOMSource(doc);
+    trans.transform(source, result);
+
+    filewriter.close();
   }
 
 
@@ -1088,6 +1173,20 @@ public class ExaminationData
       }
     }
 
+
+    // write out ahead of candidates so that candidate data
+    // can reference the pages
+    writer.write( "<pages>\n" );
+    if (pages != null)
+    {
+      for (int i = 0; i < pages.size(); i++)
+      {
+        pages.get(i).emit(writer);
+      }
+    }
+    writer.write( "</pages>\n" );
+
+
     writer.write("<candidates>\n");
     Enumeration<CandidateData> e = candidates.elements();
     for (int i = 0; i < candidates_sorted.size(); i++)
@@ -1146,7 +1245,7 @@ public class ExaminationData
 
   public void sortCandidates()
   {
-    Collections.sort( (Vector)candidates_sorted, new CandidateComparator() );
+    //Collections.sort( (Vector)candidates_sorted, new CandidateComparator() );
   }
 
 
@@ -1199,7 +1298,24 @@ public class ExaminationData
         }
         sortCandidates();
       }
+
+      if ("pages".equals(e.getNodeName()))
+      {
+        cnl = e.getElementsByTagName("page");
+        PageData page;
+        for (int j = 0; j < cnl.getLength(); j++)
+        {
+          page = new PageData(this, (Element) cnl.item(j), false );
+          page.scanorder = new Integer( j );
+          pages.add( page );
+        }
+
+      }
     }
+
+    for ( int p=0; p<pages.size(); p++ )
+      pages.get( p ).postLoad();
+    
     fireTableDataChanged();
   }
 

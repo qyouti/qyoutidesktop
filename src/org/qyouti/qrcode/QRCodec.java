@@ -33,10 +33,11 @@ import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
-import com.google.zxing.common.ByteMatrix;
-import com.google.zxing.common.LocalBlockBinarizer;
+import com.google.zxing.common.GlobalHistogramBinarizer;
+
 import com.google.zxing.qrcode.QRCodeReader;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.google.zxing.qrcode.encoder.ByteMatrix;
 import com.google.zxing.qrcode.encoder.Encoder;
 import com.google.zxing.qrcode.encoder.QRCode;
 import java.awt.Graphics;
@@ -391,7 +392,8 @@ public class QRCodec
     Hashtable hints = new Hashtable();
     hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
 
-    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
+//    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
+    GlobalHistogramBinarizer binarizer = new GlobalHistogramBinarizer( source );
     BinaryBitmap bitmap = new BinaryBitmap( binarizer );
 
 
@@ -443,7 +445,8 @@ public class QRCodec
 
     Hashtable hints = new Hashtable();
     BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( image );
-    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
+//    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
+    GlobalHistogramBinarizer binarizer = new GlobalHistogramBinarizer( source );
     BinaryBitmap bitmap = new BinaryBitmap( binarizer );
     Result result;
 

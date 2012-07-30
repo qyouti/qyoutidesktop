@@ -42,9 +42,30 @@ public class QTIElementItem
   QTIElementPresentation presentation;
   QTIElementResprocessing resprocessing;
   Hashtable<String,QTIResponse> response_table = new Hashtable<String,QTIResponse>();
+  QTIResponse[] response_list = null;
 
   public boolean highest_possible_score_known=false;
   public double highest_possible_score=0.0;
+
+  // Indicates that current candidate (whose outcomes are being processed)
+  // was given this question so it ought to be included in processing.
+  boolean referenced_by_candidate = false;
+
+  @Override
+  public void reset()
+  {
+    referenced_by_candidate = false;
+    super.reset();
+  }
+
+  public boolean isReferencedByCandidate()
+  {
+    return referenced_by_candidate;
+  }
+  public void setReferencedByCandidate()
+  {
+    referenced_by_candidate = true;
+  }
 
   public String getTitle()
   {
@@ -56,43 +77,13 @@ public class QTIElementItem
       return presentation;
   }
 
+
   /**
-   * Sets response of first response_lid to value of
-   * 'Nth' option in that response.  Zero based index.
-   * @param offset
+   * Sets value of response specified by ident
+   * @param respident The ident of the response
+   * @param respvalue The new value to set
    */
-  public void setResponseByOffset( int offset )
-  {
-    Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() != 1 )
-      throw new IllegalArgumentException( "Item must have exactly one response_lid element." );
-    responselids.get(0).setCurrentValueByOffset( offset );
-  }
-
-  public void addResponseByOffset( int offset )
-  {
-    Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() != 1 )
-      throw new IllegalArgumentException( "Item must have exactly one response_lid element." );
-    responselids.get(0).addCurrentValueByOffset( offset );
-  }
-
-
-  public QTIElementResponselabel getResponselabelByOffset( int offset )
-  {
-    Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() == 1 )
-      return responselids.get(0).getResponselabelByOffset( offset );
-
-    Vector<QTIElementResponselabel> responselabels = findElements( QTIElementResponselabel.class, true );
-    if ( offset<0 || offset >= responselabels.size() )
-      return null;
-
-    return responselabels.get(offset);
-  }
-
-
-  public void setResponse( String respident, Object respvalue )
+  public void setResponseValue( String respident, Object respvalue )
   {
     QTIResponse response = response_table.get( respident );
     if ( response == null )
@@ -100,13 +91,57 @@ public class QTIElementItem
     response.setCurrentValue( respvalue );
   }
 
-  public Object getResponse( String respident )
+  public QTIResponse[] getResponses()
+  {
+    return response_list;
+  }
+
+
+  /**
+   * Gets value of response specified by ident
+   * @param respident The ident of the response
+   */
+  public Object getResponseValue( String respident )
   {
     QTIResponse response = response_table.get( respident );
     if ( response == null )
       throw new IllegalArgumentException( "Unknown response ident " + respident + " in assessment item " + getIdent() + "." );
     return response.getCurrentValue();
   }
+
+
+  /**
+   * Sets response of first response_lid to value of
+   * 'Nth' option in that response.  Zero based index.
+   * @param offset
+   */
+  public void setResponseValueByOffset( int offset )
+  {
+    presentation.responselid.setCurrentValueByOffset( offset );
+  }
+
+  /**
+   * Takes current value of first response_lid and appends
+   * the 'Nth' option in that value.  Zero based index.
+   * @param offset
+   */
+  public void addResponseValueByOffset( int offset )
+  {
+    presentation.responselid.addCurrentValueByOffset( offset );
+  }
+
+
+  public QTIElementResponselabel getResponselabelByOffset( int offset )
+  {
+    if ( presentation == null || presentation.responselid == null )
+      return null;
+    Vector<QTIElementResponselabel> responselabels = presentation.responselid.findElements( QTIElementResponselabel.class, true );
+    if ( offset<0 || offset >= responselabels.size() )
+      return null;
+
+    return responselabels.get(offset);
+  }
+
 
 
   public String[] getOutcomeNames()
@@ -125,7 +160,7 @@ public class QTIElementItem
     return "true".equalsIgnoreCase(decvar.getAttribute("qyoutilikert") );
   }
 
-  public Object getOutcome( String ident )
+  public Object getOutcomeValue( String ident )
   {
     if ( !supported )
     {
@@ -168,7 +203,7 @@ public class QTIElementItem
     {
       response = en.nextElement();
       // Mark as if no response was made if responses disallowed.
-      if ( !response.areResponsesAllowed() )
+      if ( !response.areCurrentResponseValuesAllowed() )
         response.reset();
     }
 
@@ -182,29 +217,24 @@ public class QTIElementItem
   public void initialize()
   {
     super.initialize();
-    int rlids=0, rstrs=0;
+    // Let presentation and respprocessing elements check what responses
+    // are supports.
+    //int rlids=0, rstrs=0;
 
     supported = false;
 
-    Vector<QTIItemAncestor> desc = findElements( QTIItemAncestor.class, true );
+    Vector<QTIItemDescendant> desc = findElements( QTIItemDescendant.class, true );
     for ( int i=0; i<desc.size(); i++ )
       desc.get(i).setItem( this );
 
     Vector<QTIResponse> responses = findElements( QTIResponse.class, true );
+    response_list = new QTIResponse[responses.size()];
     for ( int i=0; i<responses.size(); i++ )
     {
-      if ( responses.get(i) instanceof QTIResponseUnsupported )
-        return;
-      if ( responses.get(i) instanceof QTIElementResponselid )
-        rlids++;
-      if ( responses.get(i) instanceof QTIElementResponsestr )
-        rstrs++;
       response_table.put( responses.get(i).getIdent(), responses.get(i) );
+      response_list[i] = responses.get(i);
     }
 
-    // one multi choice or one text entry is supported
-    if ( (rlids+rstrs) != 1 )
-      return;
 
     Vector<QTIElementPresentation> presentations = findElements( QTIElementPresentation.class, true );
     if ( presentations.size() == 1 )
@@ -219,7 +249,6 @@ public class QTIElementItem
       resprocessing = null;
 
 
-
     if ( presentation != null && resprocessing != null )
     {
       supported = presentation.isSupported() && resprocessing.isSupported();
@@ -229,13 +258,12 @@ public class QTIElementItem
       return;
 
     // now determine correct statements in multi choice.
-    Vector<QTIElementResponselid> responselids = findElements( QTIElementResponselid.class, true );
-    if ( responselids.size() == 1 )
+    if ( presentation.responselid != null )
     {
       reset();
-      responselids.get(0).computeCorrectResponses();
+      presentation.responselid.computeCorrectResponses();
       highest_possible_score_known=true;
-      highest_possible_score=responselids.get(0).highest_possible_score;
+      highest_possible_score=presentation.responselid.highest_possible_score;
     }
     
     reset();
@@ -246,14 +274,23 @@ public class QTIElementItem
   {
     if ( !isSupported() ) return false;
     if ( presentation == null ) return false;
-    return presentation.isStandardMultipleChoice();
+    if ( presentation.responselid == null ) return false;
+    return presentation.responselid.isStandardMultipleChoice();
   }
 
   public boolean isMultipleChoice()
   {
     if ( !isSupported() ) return false;
     if ( presentation == null ) return false;
-    return presentation.isMultipleChoice();
+    if ( presentation.responselid == null ) return false;
+    return presentation.responselid.isMultipleChoice();
+  }
+
+  public int getMultipleChoiceOptionCount()
+  {
+    if ( !isMultipleChoice() )
+      return 0;
+    return presentation.responselid.getResponsePartCount();
   }
 
   public boolean isString()

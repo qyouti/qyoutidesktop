@@ -55,7 +55,7 @@ public class QTIElementObjectscondition
     if ( conditiontest.isConditionMet(item) )
     {
       //System.out.println( "Condition met, doing some processing here." );
-      Object itemoutcome = item.getOutcome( decvar.getVarname() );
+      Object itemoutcome = item.getOutcomeValue( decvar.getVarname() );
       if ( !(itemoutcome instanceof Number) )
         throw new IllegalArgumentException( "Score variable must have number value.");
       Object sectionoutcome = decvar.getCurrentValue();

@@ -33,7 +33,7 @@ import org.qyouti.qti1.*;
  * @author jon
  */
 public class QTIElementFlowlabel
-        extends QTIItemAncestor
+        extends QTIItemDescendant
 {
 
 }

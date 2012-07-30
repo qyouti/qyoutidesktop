@@ -40,6 +40,7 @@ import org.qyouti.print.SvgConversionResult;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qti1.*;
 import org.qyouti.qti1.element.*;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
 import org.qyouti.qti1.ext.webct.QTIExtensionWebctMaterialwebeq;
 import org.qyouti.svg.SVGUtils;
 import org.qyouti.util.QyoutiUtils;
@@ -150,11 +151,12 @@ public class QTIItemRenderer
     // Compose the HTML
     RenderState state = new RenderState();
     state.item = item;
+    state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
+    //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-    // Iterate child elements.
-    //System.out.println("===============================================");
-    //System.out.println(state.html);
-    //System.out.println("===============================================");
+    System.out.println("===============================================");
+    System.out.println(state.html);
+    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
     textPane = new TextPaneWrapper(state.html.toString());
@@ -195,7 +197,33 @@ public class QTIItemRenderer
     svgres = ComponentToSvg.convert(textPane,getMetrics().getPropertySvgUnitsInt("page-width"));
     Rectangle2D bounds = svgres.getBounds();
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
+    NodeList nl = svgroot.getElementsByTagName( "defs" );
+    if ( nl.getLength() > 0 )
+    {
+      // add stripy pattern to defs
+      org.w3c.dom.Element defs = (org.w3c.dom.Element)nl.item( 0 );
+      String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+      org.w3c.dom.Element p = svgres.getDocument().createElementNS( svgNS, "pattern" );
+      org.w3c.dom.Element l = svgres.getDocument().createElementNS( svgNS, "line" );
+      defs.appendChild( p );
+      p.appendChild( l );
 
+      p.setAttribute( "id", "stripes" );
+      p.setAttribute( "patternUnits", "userSpaceOnUse" );
+      p.setAttribute( "x",       "0" );
+      p.setAttribute( "y",       "0" );
+      p.setAttribute( "width",   "24" );
+      p.setAttribute( "height",  "24" );
+      p.setAttribute( "viewBox", "0 0 24 24" );
+
+      l.setAttribute( "x1", "15" );
+      l.setAttribute( "y1", "-1" );
+      l.setAttribute( "x2", "15" );
+      l.setAttribute( "y2", "25" );
+      l.setAttribute( "stroke", "#c0c0c0" );
+      l.setAttribute( "stroke-width", "6" );
+
+    }
     int qrheight;
     if ( options.getQTIRenderBooleanOption("question_metrics_qr") )
     {
@@ -228,20 +256,25 @@ public class QTIItemRenderer
     }
 
     // Find out where all the pink icons ended up and codify
-    Vector<Rectangle> boxes = new Vector<Rectangle>();
-    Rectangle box, pinkbox;
-    PinkIcon picon;
+    Vector<QuestionMetricBox> boxes = new Vector<QuestionMetricBox>();
+    Rectangle pinkbox;
+    QuestionMetricBox box;
+    UserInputIcon picon;
     for ( i = 0; i < state.inserts.size(); i++)
     {
       insert = state.inserts.get(i);
-      if (insert.icon != null && insert.icon instanceof PinkIcon )
+      if (insert.icon != null && insert.icon instanceof UserInputIcon )
       {
-        picon = (PinkIcon)insert.icon;
+        picon = (UserInputIcon)insert.icon;
         pinkbox = picon.getPinkRectangle();
-        box = new Rectangle(  (pinkbox.x - qricon.x - qricon.getPadding())/10,
+        box = new QuestionMetricBox(
+                              (pinkbox.x - qricon.x - qricon.getPadding())/10,
                               (pinkbox.y - qricon.y - qricon.getPadding())/10,
                               pinkbox.width/10,
-                              pinkbox.height/10 );
+                              pinkbox.height/10,
+                              picon.getType(),
+                              picon.getIdent()
+                              );
         boxes.add( box );
       }
     }
@@ -356,8 +389,7 @@ public class QTIItemRenderer
   {
     if ( e == null )
     {
-      UnrecognisedQTIElement unrec = (UnrecognisedQTIElement) e;
-      state.html.append("[[Unrec element type: " + unrec.debug() + "]]");
+      state.html.append("[[null element]]");
       return;
     }
     if (e instanceof UnrecognisedQTIElement)
@@ -423,7 +455,7 @@ public class QTIItemRenderer
 //        state.html.append("</div>\n");
 //        state.open_block = false;
 //      }
-      state.html.append("\n</td>\n<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-right") + "\"> </td>\n</tr>\n</table>\n</body>\n<html>");
+      state.html.append("\n</div>\n</td>\n<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-right") + "\"> </td>\n</tr>\n</table>\n</body>\n</html>");
 //      state.open_block = true;
       return;
     }
@@ -438,7 +470,7 @@ public class QTIItemRenderer
 
     if (e instanceof QTIElementFlowmat)
     {
-      state.html.append( "<div>" );
+      state.html.append( "<div class=\"Flowmat\">" );
       renderSubElements( e, state );
       state.html.append( "</div>" );
       return;
@@ -446,7 +478,7 @@ public class QTIItemRenderer
 
     if (e instanceof QTIElementFlowlabel)
     {
-      state.html.append( "<div>" );
+      state.html.append( "<div class=\"Flowlabel\">" );
       renderSubElements( e, state );
       state.html.append( "</div>" );
       return;
@@ -457,7 +489,7 @@ public class QTIItemRenderer
     {
 //      if (!state.open_block)
 //      {
-//        state.html.append("<div>");
+//        state.html.append("<div class=\"Matmedia\">");
 //        state.open_block = true;
 //      }
       QTIMatmedia matmedia = (QTIMatmedia) e;
@@ -533,7 +565,7 @@ public class QTIItemRenderer
 //            state.html.append("</div>\n");
 //            state.open_block = false;
 //          }
-          state.html.append("<div>\n");
+          state.html.append("<div class=\"WebctMaterialwebeq\">\n");
           for (int i = 0; i < fragments.length; i++)
           {
             if (fragments[i] instanceof QTIExtensionWebctMaterialwebeq.MatMLEq)
@@ -561,47 +593,51 @@ public class QTIItemRenderer
 
     if (e instanceof QTIElementRenderchoice)
     {
-//      if (state.open_block)
-//      {
-//        state.html.append("</div>\n");
-//        state.open_block = false;
-//      }
-
-//      state.html.append("\n<table style=\"margin: ");
-//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px 0px");
-//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
-//      state.html.append(" 0px;\">");
-
-      if ( state.flow_depth == 0 )
-        state.html.append( "<div>" );
+      state.label_index=0;
+      
+      if ( state.flow_depth == 0 || state.ignore_flow )
+        state.html.append( "<div class=\"Renderchoice\">" );
 
       state.in_choice = true;
       renderSubElements( e, state );
       state.in_choice = false;
 
-      if ( state.flow_depth == 0 )
+      if ( state.flow_depth == 0 || state.ignore_flow )
         state.html.append( "</div>" );
 
 //      state.html.append("</table>\n");
       return;
     }
 
-    if (e instanceof QTIElementRenderfib)
+    if (e instanceof QTIElementRenderfib || e instanceof QTIExtensionRendersketcharea )
     {
-      QTIElementRenderfib efib = (QTIElementRenderfib)e;
+      QTIExtensionRendersketcharea sketcharea = (QTIExtensionRendersketcharea)e;
 //      if (state.open_block)
 //      {
 //        state.html.append("</div>\n");
 //        state.open_block = false;
 //      }
- 
+
+      String type=null;
+      if ( e instanceof QTIElementRenderfib )
+        type="render_fib";
+      else
+        type="render_sketch_area";
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon(
-                            (int) QTIMetrics.inchesToSvg(0.15 * efib.getColumns() ),
-                            (int) QTIMetrics.inchesToSvg(0.2 * efib.getRows() ),
+                            (int) QTIMetrics.inchesToSvg(0.15 * sketcharea.getColumns() ),
+                            (int) QTIMetrics.inchesToSvg(0.2 * sketcharea.getRows() ),
                             (int) QTIMetrics.inchesToSvg(0.02),
-                            (int) QTIMetrics.inchesToSvg(0.05))));
-      state.html.append("<div style=\"padding: 50px 25px 50px 25px;\"><span id=\"qti_insert_" + (state.next_id++) + "\">*</span></div>\n");
+                            (int) QTIMetrics.inchesToSvg(0.05),
+                            false,
+                            type,
+                            e.getIdent()
+                            )));
+      if ( state.flow_depth == 0 || state.ignore_flow )
+        state.html.append( "<div class=\"Rendersketcharea\">" );
+      state.html.append("<span style=\"padding: 50px 25px 50px 25px;\" id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
+      if ( state.flow_depth == 0 || state.ignore_flow )
+        state.html.append( "</div>" );
 
       return;
     }
@@ -612,39 +648,62 @@ public class QTIItemRenderer
         return;
 
 
-      if ( state.flow_depth == 0 )
-        state.html.append( "<div>" );
 
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon(
               (int) QTIMetrics.inchesToSvg(0.27),
               (int) QTIMetrics.inchesToSvg(0.27),
               (int) QTIMetrics.inchesToSvg(0.02),
-              (int) QTIMetrics.inchesToSvg(0.025))));
+              (int) QTIMetrics.inchesToSvg(0.025),
+              true,
+              "response_label",
+              e.getIdent()
+              )));
 
-//      state.html.append("<tr>\n");
+//      state.inserts.add(new InteractionInsert(state.next_id, e, null,
+//              new TickBoxIcon(
+//              (int) QTIMetrics.inchesToSvg(0.27),
+//              (int) QTIMetrics.inchesToSvg(0.27),
+//              (int) QTIMetrics.inchesToSvg(0.02),
+//              (int) QTIMetrics.inchesToSvg(0.025)
+//              )));
+
+
+      if ( state.flow_depth == 0 || state.ignore_flow )
+      {
+        //state.html.append( "<div>" );
+        state.html.append("<table><tr>\n");
+        state.html.append("<td valign=\"top\"><div  class=\"Responselabel\" style=\"margin: 0px");
+        state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
+        state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
+        state.html.append(" 0px;\">");
+      }
+
       // The span will always have one character in it - which will be
       // deleted and replaced with a component.
-//      state.html.append("<td valign=\"top\"><div style=\"margin: 0px");
-//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.1) + "px ");
-//      state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
-//      state.html.append(" 0px;\">");
       state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span> ");
-//      state.html.append("</div></td>\n");
-//      state.html.append("<td valign=\"top\"><div>");
-//      state.open_block = true;
+
+      if ( state.flow_depth == 0 || state.ignore_flow )
+      {
+        state.html.append("</div></td>\n");
+        state.html.append("<td valign=\"top\"><div  class=\"Responselabel\" style=\"margin: 0px");
+        state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
+        state.html.append(" " + (int) QTIMetrics.inchesToSvg(0.05) + "px ");
+        state.html.append(" 0px;\">");
+        state.html.append( (char)('A' + state.label_index) );
+        state.html.append(".</div></td>");
+        state.html.append("<td valign=\"top\"><div>");
+      }
 
       renderSubElements( e, state );
 
-//      if (state.open_block)
-//      {
-//        state.html.append("</div>\n");
-//        state.open_block = false;
-//      }
-//      state.html.append("</td>\n</tr>\n");
-
-      if ( state.flow_depth == 0 )
-        state.html.append( "</div>" );
+      if ( state.flow_depth == 0 || state.ignore_flow )
+      {
+        state.html.append("</div>\n");
+        state.html.append("</td>\n</tr>\n");
+        state.html.append( "</table>" );
+      }
+      state.label_index++;
       return;
     }
 
@@ -656,23 +715,12 @@ public class QTIItemRenderer
 
 
 
-
-
-  public static SVGDocument decorateItemForPreview( SVGDocument itemdoc , boolean rulers, QTIRenderOptions options )
-  {
-    Vector<SVGDocument> list = new Vector<SVGDocument>();
-    list.add(itemdoc );
-    return decorateItemForPreview( list , false, null, null, options );
-  }
-
-  
   
 
 
   public static Vector<SVGDocument> paginateItems( 
       String printid,
       URI examfolderuri,
-      Vector<QTIElementItem> items,
       CandidateData candidate,
       QTIRenderOptions options,
       QuestionMetricsRecordSet metricrecordset,
@@ -683,6 +731,8 @@ public class QTIItemRenderer
       Vector<SVGDocument> page;
       SVGDocument svgdocs[]=null;
 
+      Vector<QTIElementItem> items = candidate.getItems();
+
       page = new Vector<SVGDocument>();
       pages.add( page );
 
@@ -691,6 +741,8 @@ public class QTIItemRenderer
               -1.1*getMetrics().getPropertySvgUnits("qrcode-page-width");
       double spaceleft = totalspace;
       double itemheight;
+      boolean has_cover = false;
+      boolean has_blank = false;
 
       // how much does the qr code stick up above bottom margin?
       double qrpokeup = 0.0; getMetrics().getPropertySvgUnits("qrcode-page-encroachment");
@@ -699,6 +751,7 @@ public class QTIItemRenderer
 
       if ( options.getQTIRenderBooleanOption("cover_sheet") )
       {
+        has_cover = true;
         SVGDocument coversvg = renderSpecialPage(
             "org/qyouti/qti1/gui/examcover.xhtml",
             options,
@@ -730,18 +783,25 @@ public class QTIItemRenderer
         metricrecordset.addItem( candidate.preferences, renderer.mrec );
       }
 
-      if ( (pages.size() & 1) == 1 && options.getQTIRenderBooleanOption("double_sided") )
+      boolean doublesided = options.getQTIRenderBooleanOption("double_sided");
+      boolean multipage = (doublesided && pages.size() > 2) || (!doublesided && pages.size() > 1);
+      if ( (pages.size() & 1) == 1 && doublesided )
       {
-        SVGDocument coversvg = renderSpecialPage( "org/qyouti/qti1/gui/blank.xhtml", options );
-        page.add( coversvg );
+        has_blank = true;
+        SVGDocument blanksvg = renderSpecialPage( "org/qyouti/qti1/gui/blank.xhtml", options );
         page = new Vector<SVGDocument>();
+        page.add( blanksvg );
         pages.add( page );
       }
 
       Vector<SVGDocument> paginated = new Vector<SVGDocument>();
       String qrout, footer;
+      int questioncount;
       for ( i=0; i<pages.size(); i++ )
       {
+        questioncount = pages.elementAt(i).size();
+        if ( i==0 && has_cover ) questioncount=0;
+        if ( i==(pages.size()-1) && has_blank ) questioncount=0;
         qrout =
             "v1/" +
             printid + "/" +
@@ -749,14 +809,14 @@ public class QTIItemRenderer
             candidate.name + "/" +
             candidate.id + "/" +
             i + "/" +
-            pages.elementAt(i).size();
+            questioncount;
         footer = "";
         if ( options.getQTIRenderBooleanOption( "name_in_footer" ) )
           footer += candidate.name + "   ";
         if ( options.getQTIRenderBooleanOption( "id_in_footer" ) )
           footer += candidate.id + "   ";
         footer += "Page " + (i+1) + " of " + pages.size();
-        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) , false,  qrout, footer, options ) );
+        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) , false,  (i==0 && multipage), qrout, footer, options ) );
         //System.out.println( "Paginated: " + qrout );
       }
 
@@ -764,7 +824,7 @@ public class QTIItemRenderer
       return paginated;
   }
 
-  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs , boolean rulers, String pageqr, String footer, QTIRenderOptions options )
+  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs , boolean rulers, boolean staplemarks, String pageqr, String footer, QTIRenderOptions options )
   {
     int i;
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -813,7 +873,7 @@ public class QTIItemRenderer
     r.setAttribute( "x", "" + QTIMetrics.inchesToSvg(  decoroffsetx ) );
     r.setAttribute( "y", "" + QTIMetrics.inchesToSvg(  decoroffsety ) );
     r.setAttribute( "stroke", "none" );
-    r.setAttribute( "fill", "rgb(190,190,220)" );
+    r.setAttribute( "fill", "rgb(230,230,255)" );
     r.setAttribute( "width",  "" + QTIMetrics.inchesToSvg( 1.5 ) );
     r.setAttribute( "height", "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( r );
@@ -828,7 +888,7 @@ public class QTIItemRenderer
         )
            );
     r.setAttribute( "stroke", "none" );
-    r.setAttribute( "fill", "rgb(190,190,220)" );
+    r.setAttribute( "fill", "rgb(230,230,255)" );
     r.setAttribute( "width",  "" + getMetrics().getPropertySvgUnitsInt("page-width") );
     r.setAttribute( "height", "" + QTIMetrics.inchesToSvg( 1.3 ) );
     decorationgroup.appendChild( r );
@@ -872,7 +932,7 @@ public class QTIItemRenderer
       theader.setAttribute("text-anchor", getMetrics().getProperty("header-anchor") );
       theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-x")) );
       theader.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-y")) );
-      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
+      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
       theader.setTextContent( options.getQTIRenderOption("header") );
       decorationgroup.appendChild(theader);
     }
@@ -887,6 +947,29 @@ public class QTIItemRenderer
       tfooter.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
       tfooter.setTextContent( footer );
       decorationgroup.appendChild(tfooter);
+    }
+
+    if ( staplemarks )
+    {
+      org.w3c.dom.Element line;
+      line = pdoc.createElementNS( svgNS, "line");
+      line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg(  decoroffsetx ) );
+      line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsety ) );
+      line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsetx ) );
+      line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg(  decoroffsety ) );
+      line.setAttribute( "stroke-width",  "" + QTIMetrics.inchesToSvg( 0.02 ) );
+      line.setAttribute( "stroke-dasharray",  "" + QTIMetrics.inchesToSvg( 0.1 ) + ", " + QTIMetrics.inchesToSvg( 0.1 ) );
+      line.setAttribute( "stroke", "rgb(0,0,0)" );
+      decorationgroup.appendChild( line );
+
+      org.w3c.dom.Element staple;
+      staple = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+      staple.setAttribute("text-anchor", "start" );
+      staple.setAttribute("x", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsetx ) );
+      staple.setAttribute("y", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsety ) );
+      staple.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
+      staple.setTextContent( "staple" );
+      decorationgroup.appendChild(staple);
     }
 
     if ( rulers )
@@ -994,7 +1077,9 @@ public class QTIItemRenderer
 
   public SVGDocument getPreviewSVGDocument( QTIRenderOptions options )
   {
-    return decorateItemForPreview( (SVGDocument) svgres.getDocument().cloneNode(true), true, options);
+    Vector<SVGDocument> v = new Vector<SVGDocument>();
+    v.add( (SVGDocument) svgres.getDocument().cloneNode(true) );
+    return decorateItemForPreview( v, true, false, null, null, options);
   }
 
   public SVGDocument getSVGDocument()
@@ -1037,7 +1122,11 @@ public class QTIItemRenderer
     boolean in_fib=false;
     boolean in_choice=false;
     int flow_depth = 0;
-    
+
+    int label_index=0;
+    boolean ignore_flow = false;
+//    boolean break_response_labels = false;
+
     // This is held separately from those in the inserts vector
     // because it needs to be rendered last. This is because it encodes
     // metrics from the pink squares.

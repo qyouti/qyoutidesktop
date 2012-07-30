@@ -31,8 +31,12 @@ import java.util.*;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
+import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
+import org.qyouti.qti1.element.QTIElementResponselid;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
+import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -45,8 +49,10 @@ public class QuestionData
 {
   public PageData page;
   public String ident="";
-  public Vector<ResponseData> responses = new Vector<ResponseData>();
-  public ItemOutcomeData outcomes = new ItemOutcomeData();
+  public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
+  public Hashtable<String,ResponseData> responsedatatable = new Hashtable<String,ResponseData>();
+
+  public OutcomeData outcomes = new OutcomeData();
 
   public QuestionData( PageData page )
   {
@@ -63,13 +69,18 @@ public class QuestionData
     ident = element.getAttribute("ident");
     NodeList nl = element.getElementsByTagName( "response" );
     ResponseData response;
+
     for ( int j=0; j<nl.getLength(); j++ )
-      response = new ResponseData( this, (Element)nl.item( j ) );
+      response = new ResponseData( this, (Element)nl.item( j ), j );
+    // then recreate enhanced images
+//    for ( int j=0; j<responses.size(); j++ )
+//      responses.get( j ).filterImage( page.blackness, page.lightestredmean );
+
     nl = element.getElementsByTagName( "outcome" );
-    ItemOutcomeDatum outcome;
+    OutcomeDatum outcome;
     for ( int j=0; j<nl.getLength(); j++ )
     {
-      outcome = new ItemOutcomeDatum( (Element)nl.item(j) );
+      outcome = new OutcomeDatum( (Element)nl.item(j) );
       outcomes.data.add( outcome );
     }
     
@@ -77,7 +88,10 @@ public class QuestionData
     page.exam.fireTableDataChanged();
   }
 
-
+  public ResponseData getResponseData( String ident )
+  {
+    return responsedatatable.get( ident );
+  }
 
 
   public void processResponses()
@@ -100,21 +114,57 @@ public class QuestionData
     //System.out.println( "Question title = " + qtiitem.getTitle() );
 
     qtiitem.reset();
-    for ( int i=0; i<responses.size(); i++ )
+    qtiitem.setReferencedByCandidate();
+    // Push user responses into the QTI elements for this item
+    // so outcomes can be computed
+
+    // find all the response elements
+    QTIResponse[] responses = qtiitem.getResponses();
+    QTIElementResponselabel[] rlabels;
+    ResponseData responsedata;
+    for ( int j=0; j<responses.length; j++ )
     {
-      if ( responses.get(i).examiner_selected )
-        qtiitem.addResponseByOffset( i );
+      if ( !responses[j].isSupported() )
+        continue;
+      if ( responses[j] instanceof QTIElementResponselid )
+      {
+        QTIElementResponselid responselid = (QTIElementResponselid)responses[j];
+        rlabels = responselid.getResponseLabels();
+        for ( int k=0; k<rlabels.length; k++ )
+        {
+          responsedata = getResponseData( rlabels[j].getIdent() );
+          if ( responsedata.examiner_selected )
+            responselid.addCurrentValue( responsedata.ident );
+            //qtiitem.addResponseValueByOffset( i );
+        }
+        continue;
+      }
+      if ( responses[j] instanceof QTIExtensionRespextension )
+      {
+        QTIExtensionRespextension responseext = (QTIExtensionRespextension)responses[j];
+        QTIExtensionRendersketcharea sketch = responseext.getRendersketcharea();
+        if ( sketch != null )
+        {
+          responsedata = getResponseData( sketch.getIdent() );
+          responseext.setCurrentValue( responsedata.getImageFileName() );
+        }
+      }
     }
+
+    // All candidate responses are pushed into the qti structure
+    // so it's time to get the qti library to computer the
+    // item outcomes.
     qtiitem.computeOutcomes();
 
+    // record item outcomes from qti elements into candidate data store
     String[] outcome_names = qtiitem.getOutcomeNames();
-    ItemOutcomeDatum outcomedata;
+    OutcomeDatum outcomedata;
     outcomes.data.clear();
     for ( int i=0; i<outcome_names.length; i++ )
     {
-      outcomedata = new ItemOutcomeDatum();
+      outcomedata = new OutcomeDatum();
       outcomedata.name = outcome_names[i];
-      outcomedata.value = qtiitem.getOutcome( outcome_names[i] );
+      outcomedata.value = qtiitem.getOutcomeValue( outcome_names[i] );
       //System.out.println( "Outcome " + outcomedata.name );
       //System.out.println( "Value " + outcomedata.value );
       outcomes.data.add( outcomedata );
@@ -137,7 +187,7 @@ public class QuestionData
 
   public String getOutcomeValueString( int n )
   {
-    ItemOutcomeDatum outcomedata = outcomes.data.get( n );
+    OutcomeDatum outcomedata = outcomes.data.get( n );
     if ( outcomedata == null || outcomedata.value == null )
       return "null";
     return outcomedata.value.toString();
@@ -149,8 +199,8 @@ public class QuestionData
           throws IOException
   {
     writer.write( "      <question ident=\"" + ident + "\">\n" );
-    for ( int i=0; i<responses.size(); i++ )
-      responses.get( i ).emit( writer );
+    for ( int i=0; i<responsedatas.size(); i++ )
+      responsedatas.get( i ).emit( writer );
 
     for ( int i=0; i<outcomes.data.size(); i++ )
       outcomes.data.get( i ).emit( writer );
@@ -176,7 +226,7 @@ public class QuestionData
 
   public int getRowCount()
   {
-    return responses.size();
+    return responsedatas.size();
   }
 
     @Override
@@ -236,7 +286,7 @@ public class QuestionData
     @Override
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    ResponseData response = responses.get( rowIndex );
+    ResponseData response = responsedatas.get( rowIndex );
     QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
     
     switch ( columnIndex )
@@ -246,18 +296,20 @@ public class QuestionData
       case 1:
         if ( qtiitem == null ) return "?";
         if ( !qtiitem.isSupported() ) return "?";
+        if ( !qtiitem.isMultipleChoice() ) return "n/a";
         QTIElementResponselabel rl = qtiitem.getResponselabelByOffset( rowIndex );
+        if ( rl == null ) return "n/a";
         if ( rl.isCorrect() ) return "yes";
         if ( rl.isIncorrect() ) return "no";
         return "?";
       case 2:
-        if ( response.box_image == null )
+        if ( response.getImage() == null )
             return "?";
-        return new ImageIcon( response.box_image );
+        return new ImageIcon( response.getImage() );
       case 3:
-        if ( response.filtered_image == null )
+        if ( response.getFilteredImage() == null )
             return "?";
-        return new ImageIcon( response.filtered_image );
+        return new ImageIcon( response.getFilteredImage() );
       case 4:
         //if ( qtiitem == null ) return "?";
         //if ( !qtiitem.isSupported() ) return "n/a";
@@ -276,7 +328,7 @@ public class QuestionData
     if ( !isCellEditable( rowIndex, columnIndex ) )
       return;
 
-    ResponseData response = responses.get( rowIndex );
+    ResponseData response = responsedatas.get( rowIndex );
 
     response.examiner_selected = ((Boolean)aValue).booleanValue();
 

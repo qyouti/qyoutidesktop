@@ -68,7 +68,7 @@ public class QTIElementResponsestr
   }
 
   @Override
-  public boolean areResponsesAllowed()
+  public boolean areCurrentResponseValuesAllowed()
   {
     // any response is an allowed response right now but in
     // the future this might check that numerical input is numerical etc.

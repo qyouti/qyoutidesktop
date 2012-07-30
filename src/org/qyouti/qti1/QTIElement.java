@@ -93,6 +93,22 @@ public abstract class QTIElement
     return domelement.getAttribute( "ident" );
   }
 
+  public <U> U findAncestorElement( Class<U> type )
+  {
+    if ( parent == null )
+      return null;
+    return parent.findAncestorOrThisElement( type );
+  }
+
+  public <U> U findAncestorOrThisElement( Class<U> type )
+  {
+    if ( type.isInstance( this ) )
+      return (U)this;
+    if ( parent == null )
+      return null;
+    return parent.findAncestorOrThisElement( type );
+  }
+
 
   public <U> Vector<U> findElements( Class<U> type )
   {

@@ -32,7 +32,7 @@ import org.qyouti.qti1.element.QTIElementItem;
  *
  * @author jon
  */
-public class QTIItemAncestor
+public class QTIItemDescendant
         extends QTIElement
 {
   QTIElementItem item=null;

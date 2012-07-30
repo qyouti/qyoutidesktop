@@ -167,16 +167,17 @@ public class QuestionDefinitions
 
   public int getColumnCount()
   {
-    return 2;
+    return 3;
   }
 
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    if ( rowIndex<0 || rowIndex >= getRowCount() || columnIndex<0 || columnIndex > 1 )
+    if ( rowIndex<0 || rowIndex >= getRowCount() || columnIndex<0 || columnIndex > 2 )
       return null;
 
     QTIElementItem item = qti.getItems().get( rowIndex );
     if ( columnIndex == 0 ) return item.getIdent();
+    if ( columnIndex == 2 ) return item.isSupported()?"yes":"no";
     return item.getTitle();
   }
 
@@ -190,6 +191,8 @@ public class QuestionDefinitions
         return "ID";
       case 1:
         return "Title";
+      case 2:
+        return "Supported";
     }
     return null;
   }
