@@ -175,6 +175,7 @@ public class ResponseData
     writer.write( "type=\"" + type + "\" " );
     writer.write( "selected=\"" + (selected?"true":"false") + "\" " );
     writer.write( "examiner=\"" + (examiner_selected?"true":"false") + "\" " );
+    writer.write( "imagefile=\"" + getImageFileName() + "\" ");
     writer.write( "/>\n" );
 
 //    writer.write( "            <box>\n" );

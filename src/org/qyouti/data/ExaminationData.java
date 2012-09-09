@@ -88,6 +88,8 @@ public class ExaminationData
   public Vector<PageData> pages = new Vector<PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
+  Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
+
   public Properties options = new Properties();
   public Properties default_options = new Properties();
 
@@ -1089,6 +1091,11 @@ public class ExaminationData
       writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
       emit(writer);
       writer.close();
+
+      for ( int i=0; i<datatransforminstructions.size(); i++ )
+      {
+        datatransforminstructions.get( i ).transform();
+      }
     } catch (Exception ex)
     {
       Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
@@ -1205,6 +1212,16 @@ public class ExaminationData
     }
     writer.write("</analysis>\n");
 
+    writer.write("<transforms>\n");
+    if (datatransforminstructions != null)
+    {
+      for (int i = 0; i < datatransforminstructions.size(); i++)
+      {
+        datatransforminstructions.get(i).emit(writer);
+      }
+    }
+    writer.write("</transforms>\n");
+
     writer.write("</examination>\n");
   }
 
@@ -1310,6 +1327,17 @@ public class ExaminationData
           pages.add( page );
         }
 
+      }
+
+      if ("transforms".equals(e.getNodeName()))
+      {
+        DataTransformInstruction datatransform;
+        cnl = e.getElementsByTagName("transform");
+        for (int j = 0; j < cnl.getLength(); j++)
+        {
+          datatransform = new DataTransformInstruction( this, (Element) cnl.item(j) );
+          datatransforminstructions.add( datatransform );
+        }
       }
     }
 
