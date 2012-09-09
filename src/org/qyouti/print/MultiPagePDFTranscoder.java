@@ -45,13 +45,13 @@ public class MultiPagePDFTranscoder
    * The key is used to specify the resolution for on-the-fly images generated
    * due to complex effects like gradients and filters. MultiPagePDFTranscoder
    */
-  public static final TranscodingHints.Key KEY_DEVICE_RESOLUTION = new FloatKey();
+  //public static final TranscodingHints.Key KEY_DEVICE_RESOLUTION = new FloatKey();
   /**
    * The key is used to specify whether the available fonts should be automatically
    * detected. The alternative is to configure the transcoder manually using a configuration
    * file.
    */
-  public static final TranscodingHints.Key KEY_AUTO_FONTS = new BooleanKey();
+  //public static final TranscodingHints.Key KEY_AUTO_FONTS = new BooleanKey();
   private Configuration cfg = null;
   /** Graphics2D instance that is used to paint to */
   protected QyoutiPDFDocumentGraphics2D graphics = null;
@@ -66,6 +66,10 @@ public class MultiPagePDFTranscoder
   public MultiPagePDFTranscoder()
   {
     super();
+    // ToDo - check out how to embed fonts in the PDF
+    //  http://wiki.apache.org/xmlgraphics-fop/SvgNotes/PdfTranscoderTrueTypeEmbedding
+    // DefaultConfigurationBuilder dcb = new DefaultConfigurationBuilder();
+    // dcb.buildFromFile( null );
   }
 
   /**
@@ -91,7 +95,7 @@ public class MultiPagePDFTranscoder
   @Override
   public void configure(Configuration cfg) throws ConfigurationException
   {
-    this.cfg = cfg;
+    super.configure( cfg );
   }
 
   /**
@@ -112,6 +116,7 @@ public class MultiPagePDFTranscoder
 
     if (pagecount == 1)
     {
+      System.out.println( "transcode configuration isTextStroked = " + isTextStroked() );
       graphics = new QyoutiPDFDocumentGraphics2D(isTextStroked());
       graphics.getPDFDocument().getInfo().setProducer("Apache FOP Version "
           + Version.getVersion()
@@ -128,12 +133,14 @@ public class MultiPagePDFTranscoder
         Configuration effCfg = this.cfg;
         if (effCfg == null)
         {
+          System.out.println( "No config." );
           //By default, enable font auto-detection if no cfg is given
           boolean autoFonts = true;
           if (hints.containsKey(KEY_AUTO_FONTS))
           {
             autoFonts = ((Boolean) hints.get(KEY_AUTO_FONTS)).booleanValue();
           }
+          System.out.println( "transcode configuration autoFonts = " + autoFonts );
           if (autoFonts)
           {
             DefaultConfiguration c = new DefaultConfiguration("pdf-transcoder");
@@ -147,10 +154,12 @@ public class MultiPagePDFTranscoder
 
         if (effCfg != null)
         {
+          System.out.println( "Now there is config." );
           PDFDocumentGraphics2DConfigurator configurator = new PDFDocumentGraphics2DConfigurator();
           configurator.configure(graphics, effCfg);
         } else
         {
+          System.out.println( "Still no config." );
           graphics.setupDefaultFontInfo();
         }
       } catch (Exception e)
