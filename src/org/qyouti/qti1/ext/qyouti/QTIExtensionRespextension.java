@@ -18,7 +18,7 @@ public class QTIExtensionRespextension
   QTIExtensionRendersketcharea rendersketcharea;
   boolean supported = false;
 
-  String[] current;
+  String current;
 
 
   public QTIExtensionRendersketcharea getRendersketcharea()
@@ -41,10 +41,10 @@ public class QTIExtensionRespextension
   @Override
   public void setCurrentValue(Object value)
   {
-    if ( !(value instanceof String[]) )
-      throw new IllegalArgumentException( "Attempt to set response string to non-String array value." );
+    if ( !(value instanceof String) )
+      throw new IllegalArgumentException( "Attempt to set response string to non-String value." );
 
-    String[] newcurrent = (String[])value;
+    String newcurrent = (String)value;
 
     // passed all checks so go ahead and set it!
     current = newcurrent;
@@ -81,7 +81,7 @@ public class QTIExtensionRespextension
   @Override
   public void reset()
   {
-    current = new String[0];
+    current = null;
   }
 
 }
