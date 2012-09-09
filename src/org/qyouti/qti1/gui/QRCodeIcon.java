@@ -21,7 +21,7 @@ public class QRCodeIcon
 
 
     int padding;
-    
+
     public QRCodeIcon( int w, int h, String str, double qrw )
     {
         width = w;
