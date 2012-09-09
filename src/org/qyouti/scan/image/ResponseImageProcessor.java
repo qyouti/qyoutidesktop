@@ -63,6 +63,13 @@ public class ResponseImageProcessor
 
   public void makeReady()
   {
+    // check for pages with no pink boxes
+    // if none, colourcomponents won't have been
+    // set and this processor won't be used for
+    // this page.
+    if ( colourcomponents == -1 )
+      return;
+    
     lookup = new ResponseBoxColourLookupTable(
             colourcomponents,
             monochrome?0.0:blackness,
