@@ -16,7 +16,7 @@ public abstract class UserInputIcon
 {
   String type;
   String ident;
-  
+
   abstract public Rectangle getPinkRectangle();
 
   public String getIdent()
@@ -38,5 +38,5 @@ public abstract class UserInputIcon
   {
     this.type = type;
   }
-  
+
 }
