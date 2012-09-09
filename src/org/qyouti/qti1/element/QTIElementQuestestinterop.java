@@ -81,22 +81,6 @@ public class QTIElementQuestestinterop
       }
     }
 
-    // also get those that are unique to single items and not declared up front
-    for ( int i=0; i<items.size(); i++ )
-    {
-      decvars = items.get( i ).findElements( QTIElementDecvar.class, true );
-      for ( int j=0; j<decvars.size(); j++ )
-      {
-        // only add item decvars if they haven't already appeared in
-        // outcomesprocessing.  Also skip "SCORE" which is implicit if not
-        // declared in an outcomesprocessing element
-        if ( "SCORE".equals( decvars.get( j ).getVarname() ) )
-          continue;
-        if ( !decvar_table.containsKey( decvars.get( j ).getVarname() ) )
-          decvar_table.put( decvars.get( j ).getVarname(), decvars.get( j ) );
-      }
-
-    }
 
   }
 
@@ -124,6 +108,39 @@ public class QTIElementQuestestinterop
   public void processOutcomes()
   {
     int i;
+
+    // remove item only decvars from previous processing runs
+    String names[] = getOutcomeNames();
+    QTIElementDecvar var;
+    for ( i=0; i<names.length; i++ )
+    {
+    var = decvar_table.get( names[i] );
+    if ( var != null && var.getItem() != null )
+      decvar_table.remove( names[i] );
+    }
+
+    // get decvars from the items that we will pull up into the assessment
+    // level outcomes
+    Vector<QTIElementDecvar> decvars;
+    QTIElementItem item;
+    for ( i=0; i<items.size(); i++ )
+    {
+      item = items.get( i );
+      // skip items that the candidate wasn't given
+      if ( !item.isReferencedByCandidate() )
+        continue;
+      decvars = item.findElements( QTIElementDecvar.class, true );
+      for ( int j=0; j<decvars.size(); j++ )
+      {
+        // only add item decvars if they haven't already appeared in
+        // outcomesprocessing.  Also skip "SCORE" which is implicit if not
+        // declared in an outcomesprocessing element
+        if ( "SCORE".equals( decvars.get( j ).getVarname() ) )
+          continue;
+        if ( !decvar_table.containsKey( decvars.get( j ).getVarname() ) )
+          decvar_table.put( decvars.get( j ).getVarname(), decvars.get( j ) );
+      }
+    }
 
     for ( i=0; i<outcomesprocessings.size(); i++ )
       outcomesprocessings.get( i ).reset();
