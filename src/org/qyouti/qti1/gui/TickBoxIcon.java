@@ -53,7 +53,7 @@ public class TickBoxIcon
 //        r1.setAttribute("height", Integer.toString(height-2*padding) );
 //        r1.setAttribute("fill",  "#000000" );
 //        r1.setAttribute("stroke", "none" );
-        
+
         r2.setAttribute("x", Integer.toString( padding ) );                 //Integer.toString(borderwidth+padding) );
         r2.setAttribute("y", Integer.toString( padding ) );                 //Integer.toString(borderwidth+padding) );
         r2.setAttribute("width",  Integer.toString( width-2*padding  ) );   //Integer.toString(width-2*(borderwidth+padding))  );
