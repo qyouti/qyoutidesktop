@@ -29,7 +29,8 @@ public class TestDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
 
-        jTextPane1 = new TextPaneWrapper( html );
+        jTextPane1 = new TextPaneWrapper();
+        jTextPane1.setText( html );
         jTextPane1.setName("jTextPane1"); // NOI18N
         jScrollPane1.setViewportView(jTextPane1);
         //jScrollPane1.setSize( 400, 400 );

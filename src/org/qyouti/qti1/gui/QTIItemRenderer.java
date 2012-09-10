@@ -59,7 +59,8 @@ public class QTIItemRenderer
 {
   URI examfolderuri;
   JPanel comp;
-  TextPaneWrapper textPane;
+  static final TextPaneWrapper textPane = new TextPaneWrapper();
+  SVGDocument document;
   SvgConversionResult svgres;
   int qnumber;
   UserRenderPreferences prefs;
@@ -67,34 +68,34 @@ public class QTIItemRenderer
   QuestionMetricsRecord mrec;
 
 
-
-  static Hashtable<UserRenderPreferences,Hashtable<String,CacheEntry>> cache =
-      new Hashtable<UserRenderPreferences,Hashtable<String,CacheEntry>>();
-  
-
   static QTIMetrics metrics = null;
 
 
-  private static CacheEntry getFromCache( String id, UserRenderPreferences prefs )
-  {
-    //System.out.println( "sets in cache " + cache.size() );
-    Hashtable<String,CacheEntry> table = cache.get(prefs);
-    if ( table == null )
-      return null;
-    //System.out.println( "items in table " + table.size() );
-    return table.get(id);
-  }
 
-  private static void putIntoCache( String id, UserRenderPreferences prefs, CacheEntry entry )
-  {
-    Hashtable<String,CacheEntry> table = cache.get(prefs);
-    if ( table == null )
-    {
-      table = new Hashtable<String,CacheEntry>();
-      cache.put(prefs, table);
-    }
-    table.put(id, entry);
-  }
+//  static Hashtable<UserRenderPreferences,Hashtable<String,CacheEntry>> cache =
+//      new Hashtable<UserRenderPreferences,Hashtable<String,CacheEntry>>();
+  
+
+//  private static CacheEntry getFromCache( String id, UserRenderPreferences prefs )
+//  {
+//    //System.out.println( "sets in cache " + cache.size() );
+//    Hashtable<String,CacheEntry> table = cache.get(prefs);
+//    if ( table == null )
+//      return null;
+//    //System.out.println( "items in table " + table.size() );
+//    return table.get(id);
+//  }
+//
+//  private static void putIntoCache( String id, UserRenderPreferences prefs, CacheEntry entry )
+//  {
+//    Hashtable<String,CacheEntry> table = cache.get(prefs);
+//    if ( table == null )
+//    {
+//      table = new Hashtable<String,CacheEntry>();
+//      cache.put(prefs, table);
+//    }
+//    table.put(id, entry);
+//  }
 
   /**
    * An HTML version of the item is built up from elements in the presentation
@@ -129,18 +130,18 @@ public class QTIItemRenderer
 
     this.options = options;
 
-    CacheEntry entry = getFromCache(item.getIdent(), this.prefs);
-
-    if ( entry == null )
-    {
+//    CacheEntry entry = getFromCache(item.getIdent(), this.prefs);
+//
+//    if ( entry == null )
+//    {
       renderItem( item );
-      putIntoCache( item.getIdent(), this.prefs, new CacheEntry( mrec, svgres ) );
-    }
-    else
-    {
-      this.svgres = entry.svgres;
-      this.mrec = entry.qmr;
-    }
+//      putIntoCache( item.getIdent(), this.prefs, new CacheEntry( mrec, svgres ) );
+//    }
+//    else
+//    {
+//      this.svgres = entry.svgres;
+//      this.mrec = entry.qmr;
+//    }
   }
 
   private void renderItem( QTIElementItem item )
@@ -154,12 +155,14 @@ public class QTIItemRenderer
     state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
     //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-    System.out.println("===============================================");
-    System.out.println(state.html);
-    System.out.println("===============================================");
+//    System.out.println("===============================================");
+//    System.out.println(state.html);
+//    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
-    textPane = new TextPaneWrapper(state.html.toString());
+    // textPane = new TextPaneWrapper(state.html.toString());
+    textPane.setSize( 0, 0 );
+    textPane.setText( state.html.toString() );
     HTMLDocument htmldoc = textPane.getHtmlDoc();
 
     Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
@@ -284,6 +287,7 @@ public class QTIItemRenderer
     if ( options.getQTIRenderBooleanOption("question_metrics_qr"))
       qricon.update( mrec );
     qricon.paintSVG(svgres.getDocument());
+    textPane.setText( "" );
   }
 
   private static SVGDocument renderSpecialPage( String name, QTIRenderOptions options )
@@ -332,7 +336,9 @@ public class QTIItemRenderer
 //    System.out.println( "-------------------" );
 
     // Put the HTML into the Text Pane
-    TextPaneWrapper textPane = new TextPaneWrapper(buffer.toString());
+    //TextPaneWrapper textPane = new TextPaneWrapper(buffer.toString());
+    textPane.setSize( 0, 0 );
+    textPane.setText( buffer.toString() );
     //TextPaneWrapper textPane = new TextPaneWrapper("<p style=\"font-size: 500px;\">Rhubarb</p>");
     HTMLDocument htmldoc = textPane.getHtmlDoc();
 
@@ -407,14 +413,14 @@ public class QTIItemRenderer
       state.html.append( getMetrics().getProperty( prefs.isSerif()?"fontfamily-serif":"fontfamily" ) );
       state.html.append( ";\">\n");
       state.html.append( "<table border=\"0\" style=\"margin-bottom: " );
-      state.html.append( getMetrics().inchesToSvg( 0.1 ) );
+      state.html.append( getMetrics().inchesToSvg( 0.05 ) );
       state.html.append( ";\">" );
       state.html.append( "<tr>" );
       state.html.append( "<td width=\"" + getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") + "\"></td>\n" );
       state.html.append( "<td width=\"" +
           ( getMetrics().getPropertySvgUnitsInt("item-margin-left")-
             getMetrics().getPropertySvgUnitsInt("calibration-topleft-x")      )
-          + "\" valign=\"top\" style=\"bgcolor; green;\" >" );
+          + "\" valign=\"top\">" );
 
       boolean m = options.getQTIRenderBooleanOption("question_metrics_qr");
       QRCodeIcon qricon = new QRCodeIcon(
@@ -429,7 +435,7 @@ public class QTIItemRenderer
       state.qriconinsert = new InteractionInsert(state.next_id, e, null, qricon);
       state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
 
-      state.html.append( "</td><td  width=\"" + getMetrics().getPropertySvgUnitsInt("item-width") + "\" style=\"bgcolor; green;\">" );
+      state.html.append( "</td><td  width=\"" + getMetrics().getPropertySvgUnitsInt("item-width") + "\">" );
 
       if ( options.getQTIRenderBooleanOption("question_titles") )
       {
@@ -532,7 +538,8 @@ public class QTIItemRenderer
                   h = w = 200;
               }
             }
-            imicon = new SVGImageIcon(uri,
+            imicon = new SVGImageIcon(
+                    uri,
                     (int) QTIMetrics.qtiToSvg(w),
                     (int) QTIMetrics.qtiToSvg(h));
             state.inserts.add(new InteractionInsert(state.next_id, e, null, imicon));
@@ -547,7 +554,7 @@ public class QTIItemRenderer
           }
           QTIElementMattext mattext = (QTIElementMattext) e;
           state.html.append(mattext.getContent());
-          state.html.append(" &nbsp; ");
+          //state.html.append(" &nbsp; ");
           if (e instanceof QTIElementMatemtext)
           {
             state.html.append("</em>");
@@ -628,14 +635,14 @@ public class QTIItemRenderer
                             (int) QTIMetrics.inchesToSvg(0.15 * sketcharea.getColumns() ),
                             (int) QTIMetrics.inchesToSvg(0.2 * sketcharea.getRows() ),
                             (int) QTIMetrics.inchesToSvg(0.02),
-                            (int) QTIMetrics.inchesToSvg(0.05),
+                            (int) QTIMetrics.inchesToSvg(0.0),
                             false,
                             type,
                             e.getIdent()
                             )));
       if ( state.flow_depth == 0 || state.ignore_flow )
         state.html.append( "<div class=\"Rendersketcharea\">" );
-      state.html.append("<span style=\"padding: 50px 25px 50px 25px;\" id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
+      state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
       if ( state.flow_depth == 0 || state.ignore_flow )
         state.html.append( "</div>" );
 
@@ -715,7 +722,7 @@ public class QTIItemRenderer
 
 
 
-  
+
 
 
   public static Vector<SVGDocument> paginateItems( 

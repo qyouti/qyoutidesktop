@@ -19,12 +19,12 @@ public class TextPaneWrapper
         extends JTextPane
 {
 
-    public TextPaneWrapper( String html )
+    public TextPaneWrapper( /*String html*/ )
     {
       super();
       setOpaque(false);
       setContentType("text/html");
-      setText(html);
+      //setText(html);
     }
 
     public HTMLDocument getHtmlDoc()
