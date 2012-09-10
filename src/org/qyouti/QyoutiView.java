@@ -1,5 +1,5 @@
-/*//GEN-FIRST:event_nextResponseButtonActionPerformed
- *//GEN-LAST:event_nextResponseButtonActionPerformed
+/*
+ *
  * Copyright 2010 Leeds Metropolitan University
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may 
@@ -1654,6 +1654,18 @@ public class QyoutiView extends FrameView
 
     }                                                 
 
+
+    void displayError( String str )
+    {
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if ( mainFrame == null )
+        JOptionPane.showMessageDialog( mainFrame, str );
+      else
+        System.out.println( str );
+    }
+
+
     private void examtopdfButtonActionPerformed(java.awt.event.ActionEvent evt)                                                
     {                                                    
       // TODO add your handling code here:
@@ -1664,19 +1676,19 @@ public class QyoutiView extends FrameView
 
       if (exam == null)
       {
-        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before printing.");
+        displayError( "You need to select or create an examination before printing.");
         return;
       }
 
 
       if (exam.qdefs == null || exam.qdefs.getRowCount() == 0)
       {
-        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no questions in the exam.");
+        displayError( "You can't print papers - there are no questions in the exam.");
         return;
       }
       if (exam.candidates_sorted.isEmpty())
       {
-        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no candidates in the exam.");
+        displayError( "You can't print papers - there are no candidates in the exam.");
         return;
       }
 
@@ -1698,6 +1710,8 @@ public class QyoutiView extends FrameView
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
+          System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
+          System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
           paginated = QTIItemRenderer.paginateItems(
               printid,
               examfolderuri,
