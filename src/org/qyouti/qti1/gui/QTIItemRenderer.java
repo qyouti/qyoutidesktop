@@ -754,8 +754,12 @@ public class QTIItemRenderer
       // how much does the qr code stick up above bottom margin?
       double qrpokeup = 0.0; getMetrics().getPropertySvgUnits("qrcode-page-encroachment");
       // how much space needed for question qr?
-      double qrheight = getMetrics().getPropertySvgUnits("qrcode-full-width");
-
+      double qrheight;
+      if ( options.getQTIRenderBooleanOption("question_metrics_qr") )
+        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width");
+      else
+        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width-small");
+      
       if ( options.getQTIRenderBooleanOption("cover_sheet") )
       {
         has_cover = true;
@@ -781,6 +785,10 @@ public class QTIItemRenderer
         itemheight = Integer.parseInt( svgdocs[i].getRootElement().getAttribute("height") );
         if ( itemheight > spaceleft || spaceleft < (qrpokeup + qrheight) )
         {
+//          if ( itemheight > spaceleft )
+//            System.out.println( "Out of space for item height" );
+//          else
+//            System.out.println( "Out of space for item's QR code height" );
           page = new Vector<SVGDocument>();
           pages.add( page );
           spaceleft = totalspace;
