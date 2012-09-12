@@ -132,7 +132,7 @@ public class QuestionData
         rlabels = responselid.getResponseLabels();
         for ( int k=0; k<rlabels.length; k++ )
         {
-          responsedata = getResponseData( rlabels[j].getIdent() );
+          responsedata = getResponseData( rlabels[k].getIdent() );
           if ( responsedata.examiner_selected )
             responselid.addCurrentValue( responsedata.ident );
             //qtiitem.addResponseValueByOffset( i );
