@@ -60,13 +60,16 @@ public class ScanTask
   //Vector<String> errorpages= new Vector<String>();
   boolean image_ready;
   boolean preprocess=false;
+  boolean commandline=false;
+  int exitCode=0;
 
-  public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder, boolean preprocess )
+  public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder, boolean preprocess, boolean commandline )
   {
     this.view = view;
     this.exam = exam;
     this.scanfolder = scanfolder;
     this.preprocess = preprocess;
+    this.commandline = commandline;
     if ( !preprocess && !exam.scanfolder.exists() )
       exam.scanfolder.mkdir();
   }
@@ -125,6 +128,8 @@ public class ScanTask
 
           // Read data from page.
           page = pagedecoder.identifyPage( exam, scanfiles[i].getCanonicalPath(), exam.pages.size() );
+          if ( page.error != null )
+            System.out.println( "ERROR:  " + page.error );
           exam.pages.add( page );
 
           foldername = page.getPreferredFolderName();
@@ -134,16 +139,20 @@ public class ScanTask
           destfile = new File( folder, scanfiles[i].getName() );
           success = scanfiles[i].renameTo( destfile );
           if ( success ) page.source = destfile.getCanonicalPath();
-          
-          exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+
+          if ( !commandline )
+            exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
         }
       }
+      if ( !commandline )
+        JOptionPane.showMessageDialog( null, "Finished processing images." );
 
     } catch (Exception ex)
     {
       ex.printStackTrace();
+      if ( !commandline )
+        JOptionPane.showMessageDialog( null, "An error interupted the processing." );
     }
-
 
     active=false;
   }
@@ -169,18 +178,29 @@ public class ScanTask
       PDFPage pdfpage;
       Image image;
       String uri;
-      String newname;
+      String newname, movedname;
       File newfile;
+      int processed_count=0;
+      int page_limit = this.commandline?50:2000;
+      
 
       int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
       int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
       PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
+
+      //System.out.println( "Started scanning image files for import." );
+
 
       for ( i=0; i<filenames.length; i++ )
       {
         if ( filenames[i].getName().endsWith( ".png" ) ||
              filenames[i].getName().endsWith( ".jpg" ) )
         {
+          // in command line mode skip any files that start with "imported_"
+          // because those have been processed already
+          if ( commandline && filenames[i].getName().startsWith( "imported_" ) )
+            continue;
+
           rescanpage = null;
           // file already scanned?
           for ( j=0; j<exam.pages.size(); j++ )
@@ -202,7 +222,10 @@ public class ScanTask
             continue;
           }
 
+          if ( processed_count >= page_limit )
+            break;
           System.out.println( "\n\nProcessing " + filenames[i].getName() );
+          processed_count++;
 
           // Read data from page.
           page = pagedecoder.decode( exam, filenames[i].getCanonicalPath(), rescanpage != null?j:exam.pages.size() );
@@ -210,21 +233,30 @@ public class ScanTask
             exam.pages.set( j, page );  // put it where the earlier one was
           else
             exam.pages.add( page );   // entirely new file - put it at the end
+
+
           // change file name to match candidate!!
-          if ( !filenames[i].getName().startsWith( "imported_" ) )
+          newname = page.getPreferredFileName();
+          if ( newname == null )
+            newname = "imported_unidentifiable_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+          if ( page.error != null )
+            newname = "imported_scan_error_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+
+          System.out.println( "Proposed new name: " + newname );
+          newfile = new File( scanfolder, newname );
+          if ( newfile.exists() )
           {
-            newname = page.getPreferredFileName();
-            if ( newname != null )
-            {
-              System.out.println( "Proposed new name: " + newname );
-              newfile = new File( scanfolder, newname );
-              if ( !newfile.exists() )
-              {
-                if ( filenames[i].renameTo( newfile ) )
-                  page.source = newfile.toURI().toString();
-              }
-            }
+            movedname = "imported_replaced_" +
+                        Long.toHexString( newfile.lastModified() ) +
+                        "_" +
+                        Long.toHexString( System.currentTimeMillis() ) +
+                        page.getPreferredFileExtension();
+            newfile.renameTo( new File( scanfolder, movedname ) );
           }
+
+          if ( filenames[i].renameTo( newfile ) )
+            page.source = newfile.toURI().toString();
+
           exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
         }
 //        if ( filenames[i].getName().endsWith( ".pdf" ) )
@@ -256,6 +288,12 @@ public class ScanTask
 //          }
 //          fc.close();
 //        }
+      }
+
+      if ( processed_count == 0 )
+      {
+        exitCode = 1;
+        return;
       }
 
       PageData otherpage;
@@ -320,11 +358,16 @@ public class ScanTask
         processPageOutcomes( page );
       }
 
+      if ( !this.commandline )
+        JOptionPane.showMessageDialog( null, "Data will now be saved. Please do not shut down the software until complete." );
       exam.save();
       exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+      if ( !this.commandline )
+        JOptionPane.showMessageDialog( null, "Page scans processed and data saved." );
     } catch (Exception ex)
     {
       ex.printStackTrace();
+      JOptionPane.showMessageDialog( null, "An error interupted the scan processing and no changes were saved." );
     }
     
 
@@ -362,6 +405,11 @@ public class ScanTask
 //    System.out.println( "=====================================" );
     image_ready = (infoflags & ImageObserver.ALLBITS ) != 0;
     return !image_ready;
+  }
+
+  public int getExitCode()
+  {
+    return exitCode;
   }
 
 }

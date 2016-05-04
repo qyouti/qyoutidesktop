@@ -41,6 +41,8 @@ public class QyoutiApp extends SingleFrameApplication {
 
   static String[] app_args;
 
+  int exitCode=0;
+
     /**
      * At startup create and show the main frame of the application.
      */
@@ -50,7 +52,7 @@ public class QyoutiApp extends SingleFrameApplication {
       String repliesfilename=null;
       String reportfilename=null;
       String scanfolder=null;
-      boolean pdf=false;
+      String command = null;
       boolean exit=false;
       int classsize=-1;
 
@@ -68,7 +70,11 @@ public class QyoutiApp extends SingleFrameApplication {
         if ( app_args[i].startsWith( "-report=") )
           reportfilename = app_args[i].substring( "-report=".length() );
         if ( app_args[i].equals( "-pdf") )
-          pdf = true;
+          command = "pdf";
+        if ( app_args[i].equals( "-preprocess") )
+          command = "preprocess";
+        if ( app_args[i].equals( "-process") )
+          command = "process";
         if ( app_args[i].equals( "-exit") )
           exit = true;
         if ( app_args[i].equals( "-classsize") )
@@ -86,7 +92,7 @@ public class QyoutiApp extends SingleFrameApplication {
           reportfilename,
           scanfolder,
           classsize,
-          pdf,
+          command,
           exit
           );
       show( view );
@@ -100,6 +106,26 @@ public class QyoutiApp extends SingleFrameApplication {
      */
     @Override protected void configureWindow(java.awt.Window root) {
     }
+
+  public int getExitCode()
+  {
+    return exitCode;
+  }
+
+  public void setExitCode( int exitCode )
+  {
+    this.exitCode = exitCode;
+  }
+
+
+  @Override
+  protected void end()
+  {
+    System.out.println( "Ending application using exit code " + this.exitCode );
+    Runtime.getRuntime().exit( this.exitCode );
+  }
+
+
 
     /**
      * A convenient static getter for the application instance.

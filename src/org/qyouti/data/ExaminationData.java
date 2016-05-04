@@ -25,6 +25,7 @@ package org.qyouti.data;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.*;
+import java.math.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -832,6 +833,150 @@ public class ExaminationData
     importQuestionsFromQTI(imsmanifest.getParentFile(),qtiexamfile);
   }
 
+  static String top = "<?xml version=\"1.0\"?>\n" +
+"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\">\n" +
+"  <assessment ident=\"ass{ident}\" title=\"imported\">\n" +
+"    <section ident=\"sec{ident}\" title=\"imported\">";
+  
+  static String tail = "    </section>\n" +
+"  </assessment>\n" +
+"</questestinterop>";
+  
+  static String itemtop = "    <item ident=\"{itemident}\" title=\"Question {seq}\">\n" +
+"    <presentation>\n" +
+"      <flow>\n" +
+"        <material>\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">" +
+"{stem}" +
+"          </mattext>\n" +
+"          <matbreak/>\n" +
+"        </material>\n" +
+"        <response_lid ident=\"resp_{itemident}\" rcardinality=\"Single\">\n" +
+"          <render_choice shuffle=\"No\">\n" +
+"            <flow_label class=\"Row\">\n";
+          
+static String itemtail = "            </flow_label>\n" +
+"          </render_choice>\n" +
+"        </response_lid>\n" +
+"      </flow>\n" +
+"    </presentation>\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\n" +
+"      <outcomes>\n" +
+"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\n" +
+"      </outcomes>\n" +
+"      <respcondition continue=\"Yes\">\n" +
+"        <conditionvar>\n" +
+"          <varequal case=\"Yes\" respident=\"resp_{itemident}\">{correctident}</varequal>\n" +
+"        </conditionvar>\n" +
+"        <setvar action=\"Add\" varname=\"SCORE\">100.0</setvar>\n" +
+"      </respcondition>\n" +
+"    </resprocessing>\n" +
+"    </item>\n";
+
+static String option = "              <response_label xmlns:qyouti=\"http://www.qyouti.org/qtiext\" ident=\"{labelident}\">\n" +
+"                <material>\n" +
+"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">" +
+"{option}" +
+"                  </mattext>\n" +
+"                  <matbreak/>\n" +
+"                </material>\n" +
+"              </response_label>\n";
+  
+
+  public void importQuestionsFromPlainText(File textexamfile, File importfolder)
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    BufferedReader reader = new BufferedReader( new FileReader( textexamfile ) );
+
+    if ( !importfolder.exists() )
+      importfolder.mkdir();
+    File tempxml = File.createTempFile( "plaintextimport", ".xml", importfolder );
+    PrintWriter writer = new PrintWriter( new FileWriter( tempxml ) );
+
+    int seq=1;
+    Random r = new Random();
+    byte[] rb = new byte[12];
+    BigInteger bi;
+    r.nextBytes( rb );
+    rb[0] &= 0x7f;
+    bi = new BigInteger( rb );
+    String ident = bi.toString( 16 );
+    
+    String s = top.replace( "{ident}", ident );
+    writer.append( s );
+    
+    String itemident=null, labelident=null, correctident=null;
+    String line = reader.readLine();
+    char ca, cb;
+    boolean inquestion = false;
+    while ( line != null )
+    {
+      line = line.trim();
+      if ( line.length() < 3 )
+      {
+        ca = 0;
+        cb = 0;
+      }
+      else
+      {
+        ca = line.charAt( 0 );
+        cb = line.charAt( 1 );
+      }
+      
+      if ( Character.isDigit( ca ) )
+      {
+        // new question.
+        if ( inquestion )
+        {
+          if ( correctident == null ) correctident = "placeholderident";
+          // Complete old question first
+          s = itemtail.replace( "{itemident}", itemident );
+          s = s.replace( "{correctident}", correctident );
+          writer.append( s );
+          correctident = null;
+        }
+        r.nextBytes( rb );
+        rb[0] &= 0x7f;
+        bi = new BigInteger( rb );
+        itemident = bi.toString( 16 );
+        s = itemtop.replace( "{itemident}", itemident );
+        s = s.replace( "{seq}", Integer.toString( seq++ ) );
+        s = s.replace( "{stem}", line.substring( line.indexOf( '.' )+1 ).trim() );
+        writer.append( s );
+        inquestion = true;
+      }
+      
+      if ( Character.isAlphabetic( ca ) && (cb == '.' || cb == ':' ) )
+      {
+        labelident = "" + ca;
+        if ( cb == ':' )
+          correctident = labelident;
+        s = option.replace( "{labelident}", labelident );
+        s = s.replace( "{option}", line.substring( 2 ).trim() );        
+        writer.append( s );
+      }
+      
+      line = reader.readLine();
+    }
+
+    if ( inquestion )
+    {
+      // Complete last question
+      if ( correctident == null ) correctident = "placeholderident";
+      s = itemtail.replace( "{itemident}", itemident );
+      s = s.replace( "{correctident}", correctident );
+      writer.append( s );
+    }
+    
+    writer.append( tail );
+    writer.flush();
+    writer.close();
+    
+    reader.close();
+    
+    importQuestionsFromQTI(tempxml.getParentFile(),tempxml);
+}  
+  
   public void importQuestionsFromQTI(File basefolder, File qtiexamfile)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1073,7 +1218,7 @@ public class ExaminationData
       candidates_sorted.add(candidate);
       sortCandidates();
     }
-    candidate.pages.add(page);
+    candidate.addPage(page);
     fireTableDataChanged();
     return candidate;
   }
@@ -1322,7 +1467,7 @@ public class ExaminationData
         PageData page;
         for (int j = 0; j < cnl.getLength(); j++)
         {
-          page = new PageData(this, (Element) cnl.item(j), false );
+          page = new PageData(this, (Element) cnl.item(j) );
           page.scanorder = new Integer( j );
           pages.add( page );
         }
@@ -1354,7 +1499,7 @@ public class ExaminationData
 
   public int getColumnCount()
   {
-    return 7;
+    return 8;
   }
 
   @Override
@@ -1371,10 +1516,12 @@ public class ExaminationData
       case 3:
         return "Score";
       case 4:
-        return "Pages";
+        return "Scanned Pages";
       case 5:
-        return "Questions";
+        return "Scanned Questions";
       case 6:
+        return "Questions";
+      case 7:
         return "Errors";
     }
     return null;
@@ -1398,6 +1545,8 @@ public class ExaminationData
       case 5:
         return Integer.class;
       case 6:
+        return Integer.class;
+      case 7:
         return String.class;
     }
     return null;
@@ -1412,6 +1561,8 @@ public class ExaminationData
   public Object getValueAt(int rowIndex, int columnIndex)
   {
     CandidateData candidate = candidates_sorted.get(rowIndex);
+    int scanned = candidate.questionsScanned();
+    int asked = candidate.questionsAsked();
     switch (columnIndex)
     {
       case 0:
@@ -1425,17 +1576,17 @@ public class ExaminationData
       case 4:
         return new Integer(candidate.pages.size());
       case 5:
-        return new Integer(candidate.questionsScanned());
+        return new Integer( scanned );
       case 6:
-        if (candidate.questionsScanned() < qdefs.qti.getItems().size())
-        {
-          return "Unscanned questions.";
-        }
-        if (candidate.questionsScanned() > qdefs.qti.getItems().size())
-        {
-          return "Too many scanned questions!";
-        }
-        return "";
+        return new Integer( asked );
+      case 7:
+        if ( scanned == 0 )
+          return "";
+        else if( scanned < asked )
+          return "Unscanned questions. ";
+        else if( scanned > asked )
+          return "Too many scanned questions. ";
+        return "O.K.";
     }
     return null;
   }

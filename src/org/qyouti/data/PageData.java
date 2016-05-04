@@ -26,6 +26,7 @@
 
 package org.qyouti.data;
 
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
@@ -52,6 +53,10 @@ public class PageData
   public String error=null;
   public boolean landscape=false;
   public int quadrant=0;
+  public Rectangle scanbounds;
+  public double declared_calibration_width;
+  public double declared_calibration_height;
+
   public boolean processed=false;
 
 
@@ -81,8 +86,7 @@ public class PageData
 
 
   public PageData( ExaminationData exam,
-                    Element element,
-                    boolean processed )
+                    Element element )
   {
     this.candidate_name = element.getAttribute( "name" );
     this.candidate_number = element.getAttribute( "id" );
@@ -128,15 +132,18 @@ public class PageData
     return "scans_for_" + examfolder.getName();
   }
 
+  public String getPreferredFileExtension()
+  {
+    int dot = source.lastIndexOf( '.' );
+    if ( dot < 0 )
+      return ".jpg";
+    return source.substring( dot );
+  }
+
   public String getPreferredFileName()
   {
     if ( source == null || candidate_name==null || candidate_number== null || page_number < 0 )
       return null;
-
-    int dot = source.lastIndexOf( '.' );
-    if ( dot < 0 )
-      return null;
-
     StringBuffer b = new StringBuffer();
     b.append( "imported_" );
     b.append( candidate_name.replace( " ", "_" ).replace( "/", "_" ).replace( "'", "_" ) );
@@ -144,7 +151,7 @@ public class PageData
     b.append( candidate_number );
     b.append(  "_page_" );
     b.append( pagenumberformat.format( page_number+1L ) );
-    b.append( source.substring( dot ) );
+    b.append( getPreferredFileExtension() );
     return b.toString();
   }
 

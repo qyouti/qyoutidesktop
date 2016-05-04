@@ -16,15 +16,21 @@ public class QuestionMetricBox
 {
   String type;
   String ident;
+  int index;
 
-  public QuestionMetricBox( int x, int y, int width, int height, String type, String ident )
+  public QuestionMetricBox( int x, int y, int width, int height, String type, String ident, int index )
   {
     super( x, y, width, height );
     this.type = type;
     this.ident = ident;
+    this.index = index;
   }
 
-  
+  public int getIndex()
+  {
+    return index;
+  }
+
 
   public String getIdent()
   {

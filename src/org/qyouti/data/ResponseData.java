@@ -31,6 +31,10 @@ import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import org.qyouti.qti1.QTIResponse;
+import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.element.QTIElementResponselabel;
+import org.qyouti.qti1.gui.QuestionMetricBox;
 import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -46,6 +50,7 @@ public class ResponseData
   public int position=-1;
   public String type;
   public String ident;
+  public int index;
   private BufferedImage box_image;
   private BufferedImage filtered_image;
   public double dark_pixels=-1;
@@ -53,12 +58,15 @@ public class ResponseData
   public boolean examiner_selected=false;
 
 
-  public ResponseData( QuestionData question, int position, String type, String ident )
+  public ResponseData( QuestionData question, int position, QuestionMetricBox box )
   {
     this.question = question;
     this.position = position;
-    this.type = type;
-    this.ident = ident;
+    this.type = box.getType();
+    this.ident = box.getIdent();
+    this.index = box.getIndex();
+    if ( ident == null || ident.length() == 0 )
+      setIdentFromIndex();
 
     question.responsedatas.add( this );
     question.responsedatatable.put( ident, this );
@@ -72,7 +80,11 @@ public class ResponseData
     examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner" ) );
     ident = element.getAttribute( "ident" );
     type = element.getAttribute( "type" );
+    if ( type == null || type.length() == 0 )
+      type = "response_label";
     if ( "null".equalsIgnoreCase(ident)) ident = null;
+    if ( ident == null || ident.length() == 0 )
+      setIdentFromIndex();
     NodeList nl; // = element.getElementsByTagName( "box" );
     NodeList lines;
     BufferedImage image;
@@ -103,6 +115,16 @@ public class ResponseData
     question.responsedatatable.put( ident, this );
   }
 
+
+  private void setIdentFromIndex()
+  {
+    QTIElementItem qtiitem = question.page.exam.getAssessmentItem( question.ident );
+    QTIElementResponselabel label = qtiitem.getResponselabelByOffset( index );
+    if ( label != null )
+      ident = label.getIdent();
+    else
+      this.ident = Integer.toString( position );
+  }
 
   private File getFile( String fname )
   {

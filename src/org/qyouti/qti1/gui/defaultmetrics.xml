@@ -45,11 +45,11 @@
 <!--  <entry key="item-padding-top">0.4</entry> -->
   <entry key="item-margin-left">1.6</entry>
   <entry key="item-title-height">0.25</entry>
-  <entry key="item-title-font-height">0.2</entry>
+  <entry key="item-title-font-height">0.15</entry>
 
 
 
-  <entry key="fontsize">0.1</entry>
+  <entry key="fontsize">0.09</entry>
   <entry key="fontfamily">Sans</entry>
   <entry key="fontfamily-serif">Serif</entry>
 

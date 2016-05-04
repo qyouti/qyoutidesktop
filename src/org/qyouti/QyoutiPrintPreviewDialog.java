@@ -92,7 +92,7 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
       paginated = QTIItemRenderer.paginateItems( 
           "dummyid", examfolderuri,
           new CandidateData( null, "A.Student", "00000000"),
-          options, qmrecset,
+          options, qmrecset, null,
               preamble );
       //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", paginated.get(0).getDocumentElement(), true );
 

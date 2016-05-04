@@ -104,7 +104,7 @@ public class CandidateData
         seq = Integer.parseInt( eseq.getAttribute( "seq" ) );
         if ( seq>=0 && seq < exam.pages.size() )
         {
-          pages.add( exam.pages.get( seq ) );
+          addPage( exam.pages.get( seq ) );
         }
       }
       catch ( NumberFormatException numberFormatException )
@@ -125,6 +125,12 @@ public class CandidateData
       preferences = null;
   }
 
+  public void addPage( PageData page )
+  {
+    if ( pages.contains( page ) )
+      return;
+    pages.add( page );
+  }
 
   public ResponseData getResponse( String qid, int resp_offset )
   {
@@ -176,6 +182,13 @@ public class CandidateData
     for ( int i=0; i<pages.size(); i++ )
       total += pages.get(i).questions.size();
     return total;
+  }
+
+  public int questionsAsked()
+  {
+    if ( itemidents != null )
+      return itemidents.size();
+    return exam.qdefs.getRowCount();
   }
 
   public void emit( Writer writer )
@@ -373,17 +386,18 @@ public class CandidateData
 
 
     score = null;
-    Object value = outcomes.getDatum("SCORE");
-    if ( value == null )
+    OutcomeDatum score_datum = outcomes.getDatum("SCORE");
+    if ( score_datum == null )
       return;
-    if ( value instanceof Double )
+    Object score_value = score_datum.value;
+    if ( score_value instanceof Double )
     {
-      score = (Double)value;
+      score = (Double)score_value;
       return;
     }
-    if ( value instanceof Integer )
+    if ( score_value instanceof Integer )
     {
-      score = new Double( ((Integer)value).doubleValue() );
+      score = new Double( ((Integer)score_value).doubleValue() );
       return;
     }
   }
