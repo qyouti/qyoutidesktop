@@ -54,7 +54,7 @@ public class ResponseBoxColourLookupTable
   public void setThreshold( double t )
   {
     threshold = (int) (blackness + (range*t));
-    System.out.println( "setThreshold, threshold = " + threshold );
+    //System.out.println( "setThreshold, threshold = " + threshold );
   }
 
   @Override

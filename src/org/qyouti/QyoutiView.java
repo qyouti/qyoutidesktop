@@ -38,7 +38,9 @@ import org.jdesktop.application.TaskMonitor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileWriter;
+import java.math.BigInteger;
 import java.net.URI;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -60,6 +62,7 @@ import org.qyouti.print.MultiPagePDFTranscoder;
 import org.qyouti.print.PrintTask;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qti1.element.QTIElementItem;
+import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QTIItemRenderer;
 import org.qyouti.qti1.gui.QuestionMetricsRecordSet;
 import org.qyouti.util.QyoutiUtils;
@@ -86,14 +89,14 @@ public class QyoutiView extends FrameView
   int classsize;
 
   public QyoutiView(
-      SingleFrameApplication app,
+      QyoutiApp app,
       String basefoldername,
       String examname,
       String repliesfilename,
       String reportfilename,
       String scanfolder,
       int classsize,
-      boolean pdf,
+      String command,
       boolean exit )
   {
     super(app);
@@ -232,13 +235,21 @@ public class QyoutiView extends FrameView
     {
       loadExamName( examname );
       examCombo.setEnabled( false );
-      if ( pdf )
+      if ( "pdf".equals( command ) )
         examtopdfButtonActionPerformed( null );
+      if ( "process".equals( command ) )
+         app.setExitCode( importscansCommandLine( null ) );
       if ( exit )
         app.exit();
     }
     else
+    {
+      if ( "preprocess".equals( command ) )
+         app.setExitCode( preprocessCommandLine( null ) );
+      if ( exit )
+        app.exit();
       showAboutBox();
+    }
   }
 
 
@@ -1117,13 +1128,13 @@ public class QyoutiView extends FrameView
         gotoQuestion( null );
         for (int i = 0; i < exam.candidates_sorted.size(); i++)
         {
-          System.out.println( "Checking candidate " + exam.candidates_sorted.get( i ).name );
+          //System.out.println( "Checking candidate " + exam.candidates_sorted.get( i ).name );
           for (int j = 0; j < exam.candidates_sorted.get(i).pages.size(); j++)
           {
-            System.out.println( "Checking page " + exam.candidates_sorted.get( i ).pages.get(j).source );
+            //System.out.println( "Checking page " + exam.candidates_sorted.get( i ).pages.get(j).source );
             if (exam.candidates_sorted.get(i).pages.get(j).questions.size() > 0)
             {
-              System.out.println( "Found first marked question " + exam.candidates_sorted.get(i).pages.get(j).questions.firstElement().ident );
+              //System.out.println( "Found first marked question " + exam.candidates_sorted.get(i).pages.get(j).questions.firstElement().ident );
               gotoQuestion(exam.candidates_sorted.get(i).pages.get(j).questions.firstElement());
               return;
             }
@@ -1230,6 +1241,7 @@ public class QyoutiView extends FrameView
       {
         exam.candidates.clear();
         exam.candidates_sorted.clear();
+        ex.printStackTrace();
         JOptionPane.showMessageDialog(mainFrame, "Technical error importing candidate list.");
       }
 
@@ -1303,9 +1315,13 @@ public class QyoutiView extends FrameView
         }
 
         File file = fc.getSelectedFile();
-        if ( file.getName().toLowerCase().endsWith( ".zip" ) )
+        File importfolder = new File(examfolder, "importedquestions");
+        if ( file.getName().toLowerCase().endsWith( ".txt" ) )
         {
-          File importfolder = new File(examfolder, "importedquestions");
+          exam.importQuestionsFromPlainText(file,importfolder);          
+        }
+        else if ( file.getName().toLowerCase().endsWith( ".zip" ) )
+        {
           try
           {
             QyoutiUtils.unpackZip(file, importfolder);
@@ -1383,6 +1399,7 @@ public class QyoutiView extends FrameView
               exam.candidates_sorted.elementAt(j),
               exam,
               qmrecset,
+              null,
               exam.getPreamble()
               );
           for ( i=0; i<paginated.size(); i++ )
@@ -1461,7 +1478,7 @@ public class QyoutiView extends FrameView
           QyoutiUtils.copyFile( images[i], target );
         }
          */
-        scantask = new ScanTask(this, exam, file, false );
+        scantask = new ScanTask(this, exam, file, false, false );
         scantask.start();
       }
       catch (Exception ex)
@@ -1470,10 +1487,81 @@ public class QyoutiView extends FrameView
         exam.candidates_sorted.clear();
         JOptionPane.showMessageDialog(mainFrame, "Technical error importing candidate list.");
       }
-      
-
-
     }                                                 
+
+
+    private int importscansCommandLine(java.awt.event.ActionEvent evt)
+    {
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam == null)
+      {
+        System.err.println( "You need to select or create an examination before importing scanned pages.");
+        return 100;
+      }
+      if ( scanfolder == null )
+      {
+        System.err.println( "No scan folder specified.");
+        return 101;
+      }
+
+      File file = new File(scanfolder);
+      if ( !file.exists() || !file.isDirectory() )
+        return 102;
+
+      try
+      {
+        scantask = new ScanTask(this, exam, file, false, true );
+        scantask.run();
+        if ( scantask.getExitCode() != 0 )
+          return 1;
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+        return 103;
+      }
+      
+      return 0;
+    }
+
+
+    private int preprocessCommandLine(java.awt.event.ActionEvent evt)
+    {
+      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
+
+      if (exam != null)
+      {
+        System.err.println( "You must not specify an examination before preprocessing scanned pages.");
+        return 100;
+      }
+      if ( scanfolder == null )
+      {
+        System.err.println( "No scan folder specified.");
+        return 101;
+      }
+
+      File file = new File(scanfolder);
+      if ( !file.exists() || !file.isDirectory() )
+        return 102;
+
+      try
+      {
+        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true, true );
+        scantask.run();
+        if ( scantask.getExitCode() != 0 )
+          return 1;
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+        return 103;
+      }
+
+      return 0;
+    }
+
+
 
     private void prefsMenuItemActionPerformed(java.awt.event.ActionEvent evt)                                              
     {                                                  
@@ -1703,10 +1791,26 @@ public class QyoutiView extends FrameView
         TranscoderOutput transout = new TranscoderOutput(
             new FileOutputStream(
                 new File( appfolder, examfolder.getName() + ".pdf" ) ) );
-        String printid = Long.toHexString( System.currentTimeMillis() );
+
+
+        // The print ID is a portion of an MD5 hash
+        // based on the name and current time
+        // Time only is not good enough because
+        // qyouti may be running in multiple
+        // processes building lots of surveys
+        long now = System.currentTimeMillis();
+        MessageDigest md = MessageDigest.getInstance( "MD5" );
+        md.update( examfolder.getName().getBytes() );
+        for ( j=0; j<4; j++ )
+          md.update( (byte)((now >> (j*8)) & 0xff) );
+        BigInteger digest = new BigInteger( 1, md.digest() );
+        String printid=digest.toString( Character.MAX_RADIX ).substring( 0, 10 );
+
+
         QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
         qmrset.setMonochromePrint( false );
        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
+        PaginationRecord paginationrecord = new PaginationRecord(printid);
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
@@ -1718,6 +1822,7 @@ public class QyoutiView extends FrameView
               exam.candidates_sorted.elementAt(j),
               exam,
               qmrset,
+              paginationrecord,
               exam.getPreamble() );
           for ( i=0; i<paginated.size(); i++ )
           {
@@ -1740,6 +1845,17 @@ public class QyoutiView extends FrameView
         FileWriter writer = new FileWriter( qmrrecfile );
         qmrset.emit(writer);
         writer.close();
+
+        File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
+        if ( pagrecfile.exists() )
+          throw new IllegalArgumentException( "Unable to save pagination record." );
+        // This helps with dodgy file systems
+        try { pagrecfile.createNewFile(); }
+        catch ( Exception ee ) {}
+        writer = new FileWriter( pagrecfile );
+        paginationrecord.emit(writer);
+        writer.close();
+
       } catch (Exception ex)
       {
         Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
@@ -2026,7 +2142,7 @@ public class QyoutiView extends FrameView
           return;
 
 
-        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true );
+        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true, false );
         scantask.start();
       }
       catch (Exception ex)
@@ -2042,7 +2158,7 @@ public class QyoutiView extends FrameView
   {
     int i;
 
-    System.out.println( "gotoQuestion " + question );
+    //System.out.println( "gotoQuestion " + question );
 
     if (question == null)
     {

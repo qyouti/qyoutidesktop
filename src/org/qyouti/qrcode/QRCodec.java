@@ -28,6 +28,8 @@ package org.qyouti.qrcode;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.EncodeHintType;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
@@ -388,27 +390,47 @@ public class QRCodec
   private static QRScanResult decode( BufferedImageLuminanceSource source, BufferedImage originalimage )
           throws ReaderException, UnsupportedEncodingException
   {
+    LuminanceSource lsource;
     Result result=null;
     Hashtable hints = new Hashtable();
     hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
 
 //    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
-    GlobalHistogramBinarizer binarizer = new GlobalHistogramBinarizer( source );
-    BinaryBitmap bitmap = new BinaryBitmap( binarizer );
+    GlobalHistogramBinarizer binarizer;
+    BinaryBitmap bitmap;
 
-
-    result = new QRCodeReader().decode( bitmap, hints );
-
-    if (result == null)
+    lsource = source;
+    int twist;
+    result = null;
+    for ( twist=0; twist<4; twist++ )
     {
-      System.out.println("No QR Code found.");
+      binarizer = new GlobalHistogramBinarizer( lsource );
+      bitmap = new BinaryBitmap( binarizer );
+      try
+      {
+        MultiFormatReader multiFormatReader;
+        result = new QRCodeReader().decode( bitmap, hints );
+      }
+      catch ( ReaderException re )
+      {
+      }
+      if ( result != null )
+        break;
+
+      //System.out.println( "QR not found - trying 90deg rotation." );
+      lsource = lsource.rotateCounterClockwise();
+    }
+
+    if ( result == null )
+    {
+      //System.out.println( "QR still not found." );
       return null;
     }
 
     double blackness = 0.0;
     if ( originalimage !=null )
       blackness = calibrateBlack( originalimage, result.getResultPoints() );
-    return new QRScanResult( result, blackness );
+    return new QRScanResult( source, result, blackness, twist );
   }
 
   public static double calibrateBlack( BufferedImage image, ResultPoint[] points )
@@ -454,7 +476,7 @@ public class QRCodec
 
     if (result == null)
     {
-      System.out.println("No QR Code found.");
+      //System.out.println("No QR Code found.");
       return null;
     }
 

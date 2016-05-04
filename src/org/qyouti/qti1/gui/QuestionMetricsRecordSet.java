@@ -50,6 +50,7 @@ public class QuestionMetricsRecordSet
     Element pref;
     Element eitem, box;
     int i, j, k;
+    String box_type, box_ident;
 
     loaded = true;
     try
@@ -86,13 +87,20 @@ public class QuestionMetricsRecordSet
           for ( k=0; k<nlb.getLength(); k++ )
           {
             box = (Element)nlb.item(k);
+            box_type = box.getAttribute( "type" );
+            if ( box_type == null || box_type.length() == 0 )
+              box_type = "response_label";
+            box_ident = box.getAttribute( "ident" );
+            if ( box_ident != null && box_ident.length() == 0 )
+              box_ident = null;
             r = new QuestionMetricBox(
                 Integer.parseInt(box.getAttribute("x")),
                 Integer.parseInt(box.getAttribute("y")),
                 Integer.parseInt(box.getAttribute("w")),
                 Integer.parseInt(box.getAttribute("h")),
-                box.getAttribute( "type" ),
-                box.getAttribute( "ident" )
+                box_type,
+                box_ident,
+                k
                 );
             boxes.add(r);
           }

@@ -26,6 +26,7 @@
 
 package org.qyouti.qrcode;
 
+import com.google.zxing.LuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
@@ -38,21 +39,50 @@ import java.util.Vector;
 public class QRScanResult
 {
   Result wrapped_result;
+  
   double blackness;
+  int twist;
+  int width, height;
   int image=0;               // if multiple images, index to one where qrcode was found
 
-  public QRScanResult( Result wr, double blackness )
+  ResultPoint[] points = null;
+
+
+  public QRScanResult( LuminanceSource source, Result wr, double blackness, int twist )
   {
     if  ( wr==null )
       throw new IllegalArgumentException( "Null qrcode result." );
     wrapped_result = wr;
+    this.width  = source.getWidth();
+    this.height = source.getHeight();
     this.blackness = blackness;
-
+    this.twist = twist;
   }
 
   public ResultPoint[] getResultPoints()
   {
-    return wrapped_result.getResultPoints();
+    if ( points != null ) return points;
+    ResultPoint[] original = wrapped_result.getResultPoints();
+    if ( original == null ) return null;
+    points = new ResultPoint[original.length];
+    for ( int i=0; i<points.length; i++ )
+    {
+      switch ( twist )
+      {
+        case 1:
+          points[i] = new ResultPoint( width-original[i].getY(),        original[i].getX() );
+          break;
+        case 2:
+          points[i] = new ResultPoint( width-original[i].getX(), height-original[i].getY() );
+          break;
+        case 3:
+          points[i] = new ResultPoint(       original[i].getY(), height-original[i].getX() );
+          break;
+        default:
+          points[i] = original[i];
+      }
+    }
+    return points;
   }
 
   public double getBlackness()

@@ -155,12 +155,12 @@ public class QTIItemRenderer
     state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
     //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-//    System.out.println("===============================================");
-//    System.out.println(state.html);
-//    System.out.println("===============================================");
+    System.out.println("===============================================");
+    System.out.println(state.html);
+    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
-    // textPane = new TextPaneWrapper(state.html.toString());
+    TextPaneWrapper textPane = new TextPaneWrapper();
     textPane.setSize( 0, 0 );
     textPane.setText( state.html.toString() );
     HTMLDocument htmldoc = textPane.getHtmlDoc();
@@ -276,7 +276,8 @@ public class QTIItemRenderer
                               pinkbox.width/10,
                               pinkbox.height/10,
                               picon.getType(),
-                              picon.getIdent()
+                              picon.getIdent(),
+                              0
                               );
         boxes.add( box );
       }
@@ -512,7 +513,11 @@ public class QTIItemRenderer
           } else
           {
             URI uri = null;
-            try{uri = new URI(attr_uri);} catch (URISyntaxException ex) {}
+            try{uri = new URI(attr_uri);}
+            catch (URISyntaxException ex)
+            {
+              ex.printStackTrace();
+            }
 
             if ( !uri.isAbsolute() )
               uri = examfolderuri.resolve(uri);
@@ -603,7 +608,7 @@ public class QTIItemRenderer
       state.label_index=0;
       
       if ( state.flow_depth == 0 || state.ignore_flow )
-        state.html.append( "<div class=\"Renderchoice\">" );
+        state.html.append( "<div class=\"Renderchoice\" style=\"padding-top: 80px;\">" );
 
       state.in_choice = true;
       renderSubElements( e, state );
@@ -731,10 +736,12 @@ public class QTIItemRenderer
       CandidateData candidate,
       QTIRenderOptions options,
       QuestionMetricsRecordSet metricrecordset,
+      PaginationRecord paginationrecord,
       String preamble )
   {
       int i;
       Vector<Vector<SVGDocument>> pages = new Vector<Vector<SVGDocument>>();
+      if ( paginationrecord != null ) paginationrecord.addCandidate( candidate.id );
       Vector<SVGDocument> page;
       SVGDocument svgdocs[]=null;
 
@@ -742,6 +749,7 @@ public class QTIItemRenderer
 
       page = new Vector<SVGDocument>();
       pages.add( page );
+      if ( paginationrecord != null ) paginationrecord.addPage();
 
       double totalspace = getMetrics().getPropertySvgUnits("calibration-bottomright-y")
               -getMetrics().getPropertySvgUnits("calibration-topleft-y")
@@ -772,6 +780,7 @@ public class QTIItemRenderer
         page.add( coversvg );
         page = new Vector<SVGDocument>();
         pages.add( page );
+        if ( paginationrecord != null ) paginationrecord.addPage();
         QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", coversvg.getDocumentElement(), true );
       }
 
@@ -791,9 +800,11 @@ public class QTIItemRenderer
 //            System.out.println( "Out of space for item's QR code height" );
           page = new Vector<SVGDocument>();
           pages.add( page );
+          if ( paginationrecord != null ) paginationrecord.addPage();
           spaceleft = totalspace;
         }
         page.add( svgdocs[i] );
+        if ( paginationrecord != null ) paginationrecord.addItem( items.elementAt( i ).getIdent() );
         spaceleft -= itemheight;
         metricrecordset.addItem( candidate.preferences, renderer.mrec );
       }
@@ -807,21 +818,25 @@ public class QTIItemRenderer
         page = new Vector<SVGDocument>();
         page.add( blanksvg );
         pages.add( page );
+        if ( paginationrecord != null ) paginationrecord.addPage();
       }
 
       Vector<SVGDocument> paginated = new Vector<SVGDocument>();
-      String qrout, footer;
+      String qrout, footer, name;
       int questioncount;
       for ( i=0; i<pages.size(); i++ )
       {
         questioncount = pages.elementAt(i).size();
         if ( i==0 && has_cover ) questioncount=0;
         if ( i==(pages.size()-1) && has_blank ) questioncount=0;
+        name = candidate.name;
+        if ( name.length() >15 )
+          name = name.substring(0, 15);
         qrout =
             "v1/" +
             printid + "/" +
             (1 + metricrecordset.getPreferencesIndex( candidate.preferences )) + "/" +
-            candidate.name + "/" +
+            name + "/" +
             candidate.id + "/" +
             i + "/" +
             questioncount;
