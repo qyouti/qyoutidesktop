@@ -542,7 +542,7 @@ public class QyoutiView extends FrameView
     printexamButton.setName("printexamButton"); // NOI18N
     printexamButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
-        printexamButtonActionPerformed(evt);
+        //printexamButtonActionPerformed(evt);
       }
     });
     jPanel17.add(printexamButton);
@@ -1349,6 +1349,7 @@ public class QyoutiView extends FrameView
 
 }                                                     
 
+    /*
     private void printexamButtonActionPerformed(java.awt.event.ActionEvent evt)                                                
     {                                                    
       int i, j;
@@ -1414,7 +1415,8 @@ public class QyoutiView extends FrameView
       {
         Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
       }
-
+*/
+    
       /*
       File renderfolder = new File(examfolder, "render");
       if (!renderfolder.exists())
@@ -1425,9 +1427,9 @@ public class QyoutiView extends FrameView
       ptask.start();
       */
 
-
+/*
 }                                               
-
+*/
     private void importscansButtonActionPerformed(java.awt.event.ActionEvent evt)                                                  
     {                                                      
       JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
@@ -1793,24 +1795,11 @@ public class QyoutiView extends FrameView
                 new File( appfolder, examfolder.getName() + ".pdf" ) ) );
 
 
-        // The print ID is a portion of an MD5 hash
-        // based on the name and current time
-        // Time only is not good enough because
-        // qyouti may be running in multiple
-        // processes building lots of surveys
-        long now = System.currentTimeMillis();
-        MessageDigest md = MessageDigest.getInstance( "MD5" );
-        md.update( examfolder.getName().getBytes() );
-        for ( j=0; j<4; j++ )
-          md.update( (byte)((now >> (j*8)) & 0xff) );
-        BigInteger digest = new BigInteger( 1, md.digest() );
-        String printid=digest.toString( Character.MAX_RADIX ).substring( 0, 10 );
-
-
+        PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
+        String printid = paginationrecord.getPrintId();
         QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
         qmrset.setMonochromePrint( false );
-       MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
-        PaginationRecord paginationrecord = new PaginationRecord(printid);
+        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
         {
@@ -1836,16 +1825,17 @@ public class QyoutiView extends FrameView
         transout.getOutputStream().close();
         exam.setOption("last_print_id", printid);
 
-        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
-        if ( qmrrecfile.exists() )
-          throw new IllegalArgumentException( "Unable to save print metrics." );
-        // This helps with dodgy file systems
-        try { qmrrecfile.createNewFile(); }
-        catch ( Exception ee ) {}
-        FileWriter writer = new FileWriter( qmrrecfile );
-        qmrset.emit(writer);
-        writer.close();
+//        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
+//        if ( qmrrecfile.exists() )
+//          throw new IllegalArgumentException( "Unable to save print metrics." );
+//        // This helps with dodgy file systems
+//        try { qmrrecfile.createNewFile(); }
+//        catch ( Exception ee ) {}
+//        FileWriter writer = new FileWriter( qmrrecfile );
+//        qmrset.emit(writer);
+//        writer.close();
 
+        FileWriter writer;
         File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
         if ( pagrecfile.exists() )
           throw new IllegalArgumentException( "Unable to save pagination record." );

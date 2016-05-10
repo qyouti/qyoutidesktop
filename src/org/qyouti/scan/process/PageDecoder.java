@@ -54,9 +54,7 @@ import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
 import org.qyouti.qti1.element.QTIElementResponselid;
 import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
-import org.qyouti.qti1.gui.QuestionMetricBox;
-import org.qyouti.qti1.gui.QuestionMetricsRecord;
-import org.qyouti.qti1.gui.QuestionMetricsRecordSet;
+import org.qyouti.qti1.gui.*;
 import org.qyouti.scan.image.CannyEdgeDetector;
 import org.qyouti.scan.image.PageRotator;
 import org.qyouti.scan.image.QRCodeColourLookupTable;
@@ -118,28 +116,31 @@ public class PageDecoder
 
 
 
-  private QRScanResult decodeQR( BufferedImage image, Rectangle r )
-          throws ReaderException
-  {
-    Rectangle[] rarray = new Rectangle[1];
-    rarray[0] = r;
-    return decodeQR( image, rarray );
-    //return decodeQR( image, r.x, r.y, r.x + r.width, r.y + r.height );
-  }
+//  private QRScanResult decodeQR( BufferedImage image, Rectangle r )
+//          throws ReaderException
+//  {
+//    Rectangle[] rarray = new Rectangle[1];
+//    rarray[0] = r;
+//    return decodeQR( image, rarray );
+//    //return decodeQR( image, r.x, r.y, r.x + r.width, r.y + r.height );
+//  }
 
-  private QRScanResult decodeQR( BufferedImage image, Rectangle[] r )
-  //private QRScanResult decodeQR( BufferedImage image, int x1, int y1, int x2, int y2 )
-          throws ReaderException
-  {
-    return decodeQR( image, r, false );
-  }
+//  private QRScanResult decodeQR( BufferedImage image, Rectangle[] r )
+//  //private QRScanResult decodeQR( BufferedImage image, int x1, int y1, int x2, int y2 )
+//          throws ReaderException
+//  {
+//    return decodeQR( image, r, false );
+//  }
 
   private int previous_threshold=120;
-  private QRScanResult decodeQR( BufferedImage image, Rectangle[] r, boolean qyoutiqrcheck )
+  private QRScanResult[] decodeQR( BufferedImage image, Rectangle[] r )
           throws ReaderException
   {
     int threshold=0;
-    QRScanResult result;
+    int found = 0;
+    QRScanResult currentresult;
+    QRScanResult[] result = new QRScanResult[3];
+    
     //MonochromeBitmapSource source = new BufferedImageMonochromeBitmapSource( image, x1, y1, x2, y2 );
     BufferedImage[] cropped = new BufferedImage[r.length];
     BufferedImage[] img_filt = new BufferedImage[r.length];
@@ -164,8 +165,8 @@ public class PageDecoder
         img_filt[i] = lop.filter( cropped[i], img_filt[i] );
         try
         {
-          result = QRCodec.decode( img_filt[i], cropped[i] );
-          if ( result != null )
+          currentresult = QRCodec.decode( img_filt[i], cropped[i] );
+          if ( currentresult != null )
           {
             //try {Thread.sleep(20);} catch (InterruptedException ex){}
             if ( n != 0 )
@@ -173,23 +174,18 @@ public class PageDecoder
               //System.out.println( "DECODED QRCode at threshold = " + threshold + " in rectangle " + i );
               previous_threshold = threshold;
             }
-            result.setImageIndex( i );
-            if ( !qyoutiqrcheck )
-              return result;
-            if ( result.getText() != null && result.getText().contains( "qyouti") )
-              return result;
+            if ( currentresult.getText() == null ) continue;
+            if ( !currentresult.getText().startsWith("qyouti/") ) continue;
+            result[found++] = currentresult;
           }
         } catch (Exception ex)
         {
-          //System.out.println( "No QRCode - exception thrown." );
           //Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
-        //try {Thread.sleep(20);} catch (InterruptedException ex){}
       }
+      if ( found == 3 )
+        return result;
     }
-
-    //System.out.println( "No QRCode - exception thrown." );
-
     return null;
   }
 
@@ -452,9 +448,9 @@ public class PageDecoder
   {
     int i;
     PageData page;
-    QRScanResult calibrationresult;
+    QRScanResult[] calibrationresult;
     QRScanResult pageresult;
-    Rectangle[] calqrsearchrect = new Rectangle[2];
+    Rectangle[] calqrsearchrect = new Rectangle[4];
 
     //System.out.println( "Decoding a page." );
 
@@ -464,132 +460,65 @@ public class PageDecoder
 
     try
     {
-      page.landscape = image.getWidth() > image.getHeight();
-
-      double rough_dpi = (double)image.getHeight() / 11.69;
-      if ( page.landscape )
-        rough_dpi = (double)image.getWidth() / 11.69;
-      //System.out.println( "Rough DPI of image = " + rough_dpi );
-
-      int big_inset, small_inset, width;
-      small_inset = (int)(rough_dpi*0.1);
-      width =       (int)(rough_dpi*1.5);
-      big_inset =   width+small_inset;
-      
-      //Bottom right corner but may be rotated in scan
-      if ( page.landscape )
-      {
-        // rotated 90deg anticlock
-        calqrsearchrect[0] = new Rectangle(
-            image.getWidth()-big_inset,
-            small_inset,
-            width,
-            width );
-        // rotated 90deg clock
-        calqrsearchrect[1] = new Rectangle(
-            small_inset,
-            image.getHeight()-big_inset,
-            width,
-            width );
-        //page.scanbounds.setSize( page.scanbounds.height, page.scanbounds.width );
-      }
-      else
-      {
-        // not rotated
-        calqrsearchrect[0] = new Rectangle(
-            image.getWidth()-big_inset,
-            image.getHeight()-big_inset,
-            width,
-            width );
-        // rotated 180
-        calqrsearchrect[1] = new Rectangle(
-            small_inset,
-            small_inset,
-            width,
-            width );
-      }
-
+      // try whole quarter pages
+      int ih = image.getHeight();
+      int iw = image.getWidth();
+      calqrsearchrect[0] = new Rectangle(       0,    0, iw/2, ih/2 );
+      calqrsearchrect[1] = new Rectangle(    iw/2,    0, iw/2, ih/2 );
+      calqrsearchrect[2] = new Rectangle(       0, ih/2, iw/2, ih/2 );
+      calqrsearchrect[3] = new Rectangle(    iw/2, ih/2, iw/2, ih/2 );
 
       //System.out.println( "Decoding calibration qr." );
-      calibrationresult = decodeQR( image, calqrsearchrect, true );
+      calibrationresult = decodeQR( image, calqrsearchrect );
       if ( calibrationresult == null )
       {
-        page.error = "No qyouti signiture QR code in bottom right corner.";
+        page.error = "Could not find the three qyouti QR codes.";
         return page;
       }
 
-      StringTokenizer ptok = new StringTokenizer( calibrationresult.getText(), "/" );
-      ptok.nextToken();
-      page.declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
-      page.declared_calibration_height = Double.parseDouble(ptok.nextToken()) / 10.0;
-//      System.out.println( "Calibration area " +
-//          declared_calibration_width + "\" by " +
-//          declared_calibration_height + "\""
-//          );
-
-
+      // rotation?
+      // To do...
+      
+      page.code = calibrationresult[1].getText();
+      StringTokenizer ptok = new StringTokenizer( page.code, "/" );
+      ptok.nextToken();  // skip 'qyouti'
+      ptok.nextToken();  // skip 'bl'
+      page.printid = ptok.nextToken();
+      page.pageid = ptok.nextToken();
+      
+//      page.declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
+//      page.declared_calibration_height = Double.parseDouble(ptok.nextToken()) / 10.0;
 
       // does the source image need to be rotated?
       page.quadrant = 0;
-      if ( page.landscape )
-      {
-        if ( calibrationresult.getImageIndex() == 0 )
-          page.quadrant = 1; //rotatedimage = rot.rotate90();
-        else
-          page.quadrant = 3; //rotatedimage = rot.rotate270();
-      }
-      else if ( calibrationresult.getImageIndex() == 1 )
-      {
-        page.quadrant = 2;  //rotatedimage = rot.rotate180();
-      }
+      // TO DO...
 
-
-      // Bottom left corner
-      Rectangle pageqrsearchrect = getBottomLeftSearchRectangle( page, calqrsearchrect[calibrationresult.getImageIndex()], calibrationresult );
-
-      //System.out.println( "Decoding page qr." );
-      pageresult = decodeQR( image, pageqrsearchrect );
-      if ( pageresult == null )
-      {
-        page.error = "Cannot find bottom left QRcode.";
-        return page;
-      }
-      //System.out.println( "Processing decoded QR.  [" + pageresult.getText() + "]" );
-      ptok = new StringTokenizer( pageresult.getText(), "/" );
-      String version = ptok.nextToken();
-      String printid = ptok.nextToken();
-      int userpref = 0;
-      try  { userpref = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
-      userpref--;
-      String candidate_name = ptok.nextToken();
-      String candidate_number = ptok.nextToken();
-      int page_number = 0;
-      int question_count = 0;
-      try  { page_number = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
-      try  { question_count = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
-
-
-//      System.out.println( "   version: " + version );
-//      System.out.println( " print run: " + printid );
-//      System.out.println( " pref. set: " + userpref );
-//      System.out.println( "      name: " + candidate_name );
-//      System.out.println( "    number: " + candidate_number );
-//      System.out.println( "      page: " + page_number );
-//      System.out.println( " questions: " + question_count );
-
-
-      page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( printid );
-      page.code = pageresult.getText();
-      page.printid = printid;
-      page.candidate_name = candidate_name;
-      page.candidate_number = candidate_number;
-      page.page_number = page_number;
+      page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
+      page.paginationfile = new File( page.examfolder, "pagination_" + page.printid + ".xml" );              
       page.source = sourcename;
 
+      if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
+      {
+        page.error = "Cannot find the pagination data file for this page.";
+        return page;
+      }
 
+      PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+      
+      if ( true )
+      {
+        //page.error = "Stopping processing. " + paginationrecord;
+        return page;
+      }
+
+      // Now we can optionally rotate the image, work out where the calibration QRCodes
+      // should be, process them and set up a coordinate system.
+
+      
+//      page.candidate_name = candidate_name;
+//      page.candidate_number = candidate_number;
+//      page.page_number = page_number;
+       
     }
     catch (ReaderException e)
     {
@@ -627,14 +556,14 @@ public class PageDecoder
     if ( page == null || page.error != null )
       return page;
 
+    if ( true )
+    {
+      page.error = "Stopped.";
+      return page;
+    }
+    
+    
     try {
-
-      double rough_dpi = (double)image.getHeight() / 11.69;
-      if ( page.landscape )
-        rough_dpi = (double)image.getWidth() / 11.69;
-      //System.out.println( "Rough DPI of image = " + rough_dpi );
-
-
       // does the source image need to be rotated?
       BufferedImage rotatedimage = image;
       PageRotator rot = new PageRotator( image );
@@ -652,6 +581,9 @@ public class PageDecoder
       }
       page.scanbounds = new Rectangle( 0, 0, rotatedimage.getWidth(), rotatedimage.getHeight() );
 
+      
+      double rough_dpi = (double)rotatedimage.getHeight() / 11.69;
+      //System.out.println( "Rough DPI of image = " + rough_dpi );
 
       int big_inset, small_inset, width;
       small_inset = (int)(rough_dpi*0.1);
@@ -666,7 +598,7 @@ public class PageDecoder
           width );
 
       // reread in the new rotated coordinates
-      calibrationresult = decodeQR( rotatedimage, calqrsearchrect );
+//      calibrationresult = decodeQR( rotatedimage, calqrsearchrect );
       if ( calibrationresult == null )
       {
         page.error = "No qyouti signiture QR code in bottom right corner.";
@@ -680,217 +612,174 @@ public class PageDecoder
 
       // Bottom left corner
       pageqrsearchrect = getBottomLeftSearchRectangle( page, calqrsearchrect, calibrationresult );
-//      pageqrsearchrect = new Rectangle(
-//          0,
-//          rotatedimage.getHeight()-(int)(rough_dpi*metrics_print_qr_search_size),
-//          (int)(rough_dpi*metrics_print_qr_search_size),
-//          (int)(rough_dpi*metrics_print_qr_search_size) );
-
-
-      // Top left corner
-//      itemqrsearchrect = new Rectangle(
-//          0,
-//          0,
-//          (int)(rough_dpi*1.5),
-//          (int)(rough_dpi*1.5) );
-
-
 
       pageblackness = calibrationresult.getBlackness();
 
 
 
       //System.out.println( "Decoding page qr." );
-      pageresult = decodeQR( rotatedimage, pageqrsearchrect );
+//      pageresult = decodeQR( rotatedimage, pageqrsearchrect );
       if ( pageresult == null )
       {
         page.error = "Cannot find bottom left QRcode.";
         return page;
       }
-      //System.out.println( "Processing decoded QR.  [" + pageresult.getText() + "]" );
-      ptok = new StringTokenizer( pageresult.getText(), "/" );
-      String version = ptok.nextToken();
-      String printid = ptok.nextToken();
-      int userpref = 0;
-      try  { userpref = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
-      userpref--;
-      String candidate_name = ptok.nextToken();
-      String candidate_number = ptok.nextToken();
-      int page_number = 0;
-      int question_count = 0;
-      try  { page_number = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
-      try  { question_count = Integer.parseInt(ptok.nextToken()); }
-      catch ( NumberFormatException nfe ) {}
 
-      // Silly bug work around
-      //if ( question_count > 4 ) question_count = 4;
-
-//      System.out.println( "   version: " + version );
-//      System.out.println( " print run: " + printid );
-//      System.out.println( " pref. set: " + userpref );
-//      System.out.println( "      name: " + candidate_name );
-//      System.out.println( "    number: " + candidate_number );
-//      System.out.println( "      page: " + page_number );
-//      System.out.println( " questions: " + question_count );
-
-
-      page.code = pageresult.getText();
-      page.candidate_name = candidate_name;
-      page.candidate_number = candidate_number;
-      page.page_number = page_number;
-      page.source = sourcename;
-
-      QuestionMetricsRecordSet qmrset = null;
-      if ( printid!=null && printid.length()>0 )
-      {
-        qmrset = exam.qmrcache.getSet(printid);
-        if ( qmrset == null )
-        {
-          page.error = "Doesn't belong to this exam/survey.";
-          return page;
-        }
-      }
-      QuestionMetricsRecord qmr;
-
-      //System.out.println( "Done decoding page qr." );
-      if ( question_count == 0 )
-        return page;
-
-      itemqrsearchrect = getTopLeftSearchRectangle( page, pageqrsearchrect, pageresult );
-      //System.out.println( "Decoding first item qr." );
-      itemresult = decodeQR( rotatedimage, itemqrsearchrect );
-      if ( itemresult == null )
-      {
-        // another silly work around - covers and blank pages
-        // were reporting 1 question present
-        if ( question_count == 1 )
-          return page;
-        
-        page.error = "Cannot find top left QRcode.";
-        return page;
-      }
-      //System.out.println( "Processing first item QR.  [" + itemresult.getText() + "]" );
-
-      pagetransform = pageTransform( 
-          itemqrsearchrect, itemresult,
-          pageqrsearchrect, pageresult,
-          calqrsearchrect, calibrationresult,
-          page.declared_calibration_width , page.declared_calibration_height );
-      
-      try
-      {
-        revpagetransform = pagetransform.createInverse();
-      } catch (NoninvertibleTransformException ex)
-      {
-        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        page.error = "Technical error.";
-        return page;
-      }
-
-
-      double last_height=0.0;
-      int w, h;
-      QuestionMetricsRecord questionmetrics=null;
-      Point2D measureditempos =new Point2D.Double();
-      Point2D measureditempos_inches = new Point2D.Double();
-      measureditempos_inches.setLocation(0.0, 0.0);
-      for ( int q=0; q<question_count; q++ )
-      {
-//        System.out.println( "==================================" );
-        subimage_topleft = qrinchtopixels( pagetransform,  
-            measureditempos_inches.getX()            -metrics_top_qr_margin/100.0,
-            measureditempos_inches.getY()+last_height-metrics_top_qr_margin/100.0 );
-        subimage_bottomright = qrinchtopixels( pagetransform, 
-            measureditempos_inches.getX()             + (metrics_top_qr_width+metrics_top_qr_margin)/100.0,
-            measureditempos_inches.getY()+last_height + (metrics_top_qr_width+metrics_top_qr_margin)/100.0 );
-        if ( subimage_topleft.x < 0 ) subimage_topleft.x = 0;
-        if ( subimage_topleft.y < 0 ) subimage_topleft.y = 0;
-//        System.out.println( "Look for question code here: " +
-//                subimage_topleft.x     + ":" + subimage_topleft.y     + ":" +
-//                subimage_bottomright.x + ":" + subimage_bottomright.y + ":"       );
-        subimage_rect = new Rectangle( 
-                 subimage_topleft,
-                 new Dimension(subimage_bottomright.x-subimage_topleft.x,subimage_bottomright.y-subimage_topleft.y) );
-        itemresult = decodeQR( rotatedimage, subimage_rect );
-        if ( itemresult == null )
-          break;
-
-        measureditempos.setLocation(
-            itemresult.getResultPoints()[1].getX()+subimage_topleft.x,
-            itemresult.getResultPoints()[1].getY()+subimage_topleft.y );
-//        questiontransform = qrtransform( subimage_topleft, itemresult, metrics_top_qr_width/100.0, metrics_top_qr_width/100.0 );
-        question = new QuestionData( page );
-        questionmetrics = decodeQuestion( qmrset, userpref, itemresult );
-        if ( questionmetrics == null || questionmetrics.id == null )
-        {
-          page.error = "Unrecognised question ID " + itemresult.getText();
-          return page;
-        }
-        //System.out.println( "Question ID " + question_code.id   );
-        //System.out.println( "       Next " + question_code.next );
-        last_height = ((double)questionmetrics.height)/100.0;
-        question.ident = questionmetrics.id;
-
-        revpagetransform.transform( measureditempos, measureditempos_inches );
-        //System.out.println( "Location: " + measureditempos_inches.getX() + "   " +measureditempos_inches.getY() );
-
-        QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
-        for ( int r=0; r<boxes.length; r++ )
-        {
-          //System.out.println( "-----------------------------------" );
-          //System.out.println( "Response " + r + " at " + question_code.box_xoffset[r] + ", " + question_code.box_yoffset[r] );
-          //System.out.println( "                 W, H " + question_code.box_width[r]   + ", " + question_code.box_height[r] );
-          subimage_topleft     = qrinchtopixels(
-              pagetransform,
-              measureditempos_inches.getX() + boxes[r].x/100.0,
-              measureditempos_inches.getY() + boxes[r].y/100.0 );
-          subimage_bottomright = qrinchtopixels(
-              pagetransform,
-              measureditempos_inches.getX() + (boxes[r].x + boxes[r].width)/100.0,
-              measureditempos_inches.getY() + (boxes[r].y + boxes[r].height)/100.0
-              );
-          response = new ResponseData( question, r, boxes[r] );
-          w = subimage_bottomright.x - subimage_topleft.x;
-          h = subimage_bottomright.y - subimage_topleft.y;
-          //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
-          if ( response.getImageFile().exists() )
-          {
-            page.error = "Scanned same page twice?";
-            return page;
-          }
-          try
-          {
-            ImageIO.write(
-                          rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
-                          "jpg",
-                          response.getImageFile()
-                    );
-          } catch (IOException ex)
-          {
-            Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-            page.error = "Technical error saving box image.";
-            return page;
-          }
-        }
-      }
-
-
-      page.prepareImageProcessor( qmrset.isMonochromePrint(), pageblackness, boxthreshold );
-      try
-      {
-        processBoxImages( page );
-      } catch (IOException ex)
-      {
-        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        page.error = "Technical error saving filtered box image.";
-        return page;
-      }
+//      page.code = pageresult.getText();
+//      page.candidate_name = candidate_name;
+//      page.candidate_number = candidate_number;
+//      page.page_number = page_number;
+//      page.source = sourcename;
+//
+//      QuestionMetricsRecordSet qmrset = null;
+//      if ( printid!=null && printid.length()>0 )
+//      {
+//        qmrset = exam.qmrcache.getSet(printid);
+//        if ( qmrset == null )
+//        {
+//          page.error = "Doesn't belong to this exam/survey.";
+//          return page;
+//        }
+//      }
+//      QuestionMetricsRecord qmr;
+//
+//      //System.out.println( "Done decoding page qr." );
+//      if ( question_count == 0 )
+//        return page;
+//
+//      itemqrsearchrect = getTopLeftSearchRectangle( page, pageqrsearchrect, pageresult );
+//      //System.out.println( "Decoding first item qr." );
+//      itemresult = decodeQR( rotatedimage, itemqrsearchrect );
+//      if ( itemresult == null )
+//      {
+//        // another silly work around - covers and blank pages
+//        // were reporting 1 question present
+//        if ( question_count == 1 )
+//          return page;
+//        
+//        page.error = "Cannot find top left QRcode.";
+//        return page;
+//      }
+//      //System.out.println( "Processing first item QR.  [" + itemresult.getText() + "]" );
+//
+//      pagetransform = pageTransform( 
+//          itemqrsearchrect, itemresult,
+//          pageqrsearchrect, pageresult,
+//          calqrsearchrect, calibrationresult,
+//          page.declared_calibration_width , page.declared_calibration_height );
+//      
+//      try
+//      {
+//        revpagetransform = pagetransform.createInverse();
+//      } catch (NoninvertibleTransformException ex)
+//      {
+//        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+//        page.error = "Technical error.";
+//        return page;
+//      }
+//
+//
+//      double last_height=0.0;
+//      int w, h;
+//      QuestionMetricsRecord questionmetrics=null;
+//      Point2D measureditempos =new Point2D.Double();
+//      Point2D measureditempos_inches = new Point2D.Double();
+//      measureditempos_inches.setLocation(0.0, 0.0);
+//      for ( int q=0; q<question_count; q++ )
+//      {
+////        System.out.println( "==================================" );
+//        subimage_topleft = qrinchtopixels( pagetransform,  
+//            measureditempos_inches.getX()            -metrics_top_qr_margin/100.0,
+//            measureditempos_inches.getY()+last_height-metrics_top_qr_margin/100.0 );
+//        subimage_bottomright = qrinchtopixels( pagetransform, 
+//            measureditempos_inches.getX()             + (metrics_top_qr_width+metrics_top_qr_margin)/100.0,
+//            measureditempos_inches.getY()+last_height + (metrics_top_qr_width+metrics_top_qr_margin)/100.0 );
+//        if ( subimage_topleft.x < 0 ) subimage_topleft.x = 0;
+//        if ( subimage_topleft.y < 0 ) subimage_topleft.y = 0;
+////        System.out.println( "Look for question code here: " +
+////                subimage_topleft.x     + ":" + subimage_topleft.y     + ":" +
+////                subimage_bottomright.x + ":" + subimage_bottomright.y + ":"       );
+//        subimage_rect = new Rectangle( 
+//                 subimage_topleft,
+//                 new Dimension(subimage_bottomright.x-subimage_topleft.x,subimage_bottomright.y-subimage_topleft.y) );
+//        itemresult = decodeQR( rotatedimage, subimage_rect );
+//        if ( itemresult == null )
+//          break;
+//
+//        measureditempos.setLocation(
+//            itemresult.getResultPoints()[1].getX()+subimage_topleft.x,
+//            itemresult.getResultPoints()[1].getY()+subimage_topleft.y );
+////        questiontransform = qrtransform( subimage_topleft, itemresult, metrics_top_qr_width/100.0, metrics_top_qr_width/100.0 );
+//        question = new QuestionData( page );
+//        questionmetrics = decodeQuestion( qmrset, userpref, itemresult );
+//        if ( questionmetrics == null )
+//        {
+//          page.error = "Unrecognised question ID " + itemresult.getText();
+//          return page;
+//        }
+//        //System.out.println( "Question ID " + question_code.id   );
+//        //System.out.println( "       Next " + question_code.next );
+////        last_height = ((double)questionmetrics.height)/100.0;
+////        question.ident = questionmetrics.id;
+//
+//        revpagetransform.transform( measureditempos, measureditempos_inches );
+//        //System.out.println( "Location: " + measureditempos_inches.getX() + "   " +measureditempos_inches.getY() );
+//
+//        QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
+//        for ( int r=0; r<boxes.length; r++ )
+//        {
+//          //System.out.println( "-----------------------------------" );
+//          //System.out.println( "Response " + r + " at " + question_code.box_xoffset[r] + ", " + question_code.box_yoffset[r] );
+//          //System.out.println( "                 W, H " + question_code.box_width[r]   + ", " + question_code.box_height[r] );
+//          subimage_topleft     = qrinchtopixels(
+//              pagetransform,
+//              measureditempos_inches.getX() + boxes[r].x/100.0,
+//              measureditempos_inches.getY() + boxes[r].y/100.0 );
+//          subimage_bottomright = qrinchtopixels(
+//              pagetransform,
+//              measureditempos_inches.getX() + (boxes[r].x + boxes[r].width)/100.0,
+//              measureditempos_inches.getY() + (boxes[r].y + boxes[r].height)/100.0
+//              );
+//          response = new ResponseData( question, r, boxes[r] );
+//          w = subimage_bottomright.x - subimage_topleft.x;
+//          h = subimage_bottomright.y - subimage_topleft.y;
+//          //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
+//          if ( response.getImageFile().exists() )
+//          {
+//            page.error = "Scanned same page twice?";
+//            return page;
+//          }
+//          try
+//          {
+//            ImageIO.write(
+//                          rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
+//                          "jpg",
+//                          response.getImageFile()
+//                    );
+//          } catch (IOException ex)
+//          {
+//            Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+//            page.error = "Technical error saving box image.";
+//            return page;
+//          }
+//        }
+//      }
+//
+//
+//      page.prepareImageProcessor( qmrset.isMonochromePrint(), pageblackness, boxthreshold );
+//      try
+//      {
+//        processBoxImages( page );
+//      } catch (IOException ex)
+//      {
+//        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+//        page.error = "Technical error saving filtered box image.";
+//        return page;
+//      }
 
 
       return page;
-    } catch (ReaderException e) {
+    } catch (Exception e ) { //ReaderException e) {
       e.printStackTrace();
       System.err.println(sourcename + ": No barcode found");
       page.error = "Can't read question QRCode.";

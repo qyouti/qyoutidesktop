@@ -197,7 +197,15 @@ public class QTIItemRenderer
 
     // Get the textPane to paint itself into an SVG document.
     // This will have blank rectangles whereever SVGIcon objects are.
-    svgres = ComponentToSvg.convert(textPane,getMetrics().getPropertySvgUnitsInt("page-width"));
+    double width = getMetrics().getPropertyInches( "page-width" );
+    width -= getMetrics().getPropertyInches( "item-area-inset-left" );
+    width -= getMetrics().getPropertyInches( "item-area-inset-right" );
+    int columns = options.getQTIRenderIntegerOption( "columns" );
+    
+    width -= (double)(columns-1) * getMetrics().getPropertyInches( "item-area-column-spacing" );
+    width = width / (double)columns;
+    
+    svgres = ComponentToSvg.convert(textPane,(int)getMetrics().inchesToSvg(width));
     Rectangle2D bounds = svgres.getBounds();
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
     NodeList nl = svgroot.getElementsByTagName( "defs" );
@@ -227,35 +235,19 @@ public class QTIItemRenderer
       l.setAttribute( "stroke-width", "6" );
 
     }
-    int qrheight;
-    if ( options.getQTIRenderBooleanOption("question_metrics_qr") )
-    {
-        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width");
-        qrheight *= 1.5;
-    }
-    else
-    {
-        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width-small");
-        qrheight *= 2.4;
-    }
+    
 
     int effective_height = textPane.getSize().height;
-    if ( effective_height < qrheight )
-      effective_height = qrheight;
+
     svgroot.setAttribute(  "height", "" + effective_height );
     svgroot.removeAttribute("viewBox");
 
-    // Where did the QRCode go?
-    QRCodeIcon qricon = (QRCodeIcon)state.qriconinsert.icon;
 
-    // 'Paint' all the icons except the qr code
+    // 'Paint' all the icons
     for ( i = 0; i < state.inserts.size(); i++)
     {
       insert = state.inserts.get(i);
-      if (insert.icon != null && insert.icon != qricon )
-      {
-        insert.icon.paintSVG(svgres.getDocument());
-      }
+      insert.icon.paintSVG(svgres.getDocument());
     }
 
     // Find out where all the pink icons ended up and codify
@@ -271,8 +263,8 @@ public class QTIItemRenderer
         picon = (UserInputIcon)insert.icon;
         pinkbox = picon.getPinkRectangle();
         box = new QuestionMetricBox(
-                              (pinkbox.x - qricon.x - qricon.getPadding())/10,
-                              (pinkbox.y - qricon.y - qricon.getPadding())/10,
+                              (pinkbox.x)/10,
+                              (pinkbox.y)/10,
                               pinkbox.width/10,
                               pinkbox.height/10,
                               picon.getType(),
@@ -282,12 +274,9 @@ public class QTIItemRenderer
         boxes.add( box );
       }
     }
-    mrec = new QuestionMetricsRecord( item.getIdent(), effective_height / 10.0, boxes );
-    
-    // do the qr code again last so the pink icon coordinates can be passed in.
-    if ( options.getQTIRenderBooleanOption("question_metrics_qr"))
-      qricon.update( mrec );
-    qricon.paintSVG(svgres.getDocument());
+    mrec = new QuestionMetricsRecord( boxes );
+        
+    // Clear the text pane for reuse
     textPane.setText( "" );
   }
 
@@ -413,37 +402,15 @@ public class QTIItemRenderer
       state.html.append("px; font-family: " );
       state.html.append( getMetrics().getProperty( prefs.isSerif()?"fontfamily-serif":"fontfamily" ) );
       state.html.append( ";\">\n");
-      state.html.append( "<table border=\"0\" style=\"margin-bottom: " );
-      state.html.append( getMetrics().inchesToSvg( 0.05 ) );
-      state.html.append( ";\">" );
-      state.html.append( "<tr>" );
-      state.html.append( "<td width=\"" + getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") + "\"></td>\n" );
-      state.html.append( "<td width=\"" +
-          ( getMetrics().getPropertySvgUnitsInt("item-margin-left")-
-            getMetrics().getPropertySvgUnitsInt("calibration-topleft-x")      )
-          + "\" valign=\"top\">" );
-
-      boolean m = options.getQTIRenderBooleanOption("question_metrics_qr");
-      QRCodeIcon qricon = new QRCodeIcon(
-              0,
-              getMetrics().getPropertySvgUnitsInt(m?"qrcode-item-width":"qrcode-item-width-small"),
-              state.item.getIdent(),
-              getMetrics().getPropertySvgUnitsInt(m?"qrcode-item-width":"qrcode-item-width-small")
-              );
-
-      state.inserts.add(new InteractionInsert(state.next_id, e, null, qricon));
-      // this is also recorded separately because it needs to be (re)processed last
-      state.qriconinsert = new InteractionInsert(state.next_id, e, null, qricon);
-      state.html.append("<span id=\"qti_insert_" + (state.next_id++) + "\">*</span>\n");
-
-      state.html.append( "</td><td  width=\"" + getMetrics().getPropertySvgUnitsInt("item-width") + "\">" );
+      state.html.append( "<table width=\"200\"><tr><td>" );
 
       if ( options.getQTIRenderBooleanOption("question_titles") )
       {
         state.html.append("<div>");
         TitleIcon titicon = new TitleIcon(
                 qnumber,
-                getMetrics().getPropertySvgUnitsInt("item-width"),
+                state.item.getTitle(),
+                getMetrics().getPropertySvgUnitsInt("item-width")/5*2,  // BODGE BODGE TODO - get rid of bodge
                 getMetrics().getPropertySvgUnitsInt("item-title-height"),
                 getMetrics().getPropertySvgUnitsInt("item-title-font-height")
                 );
@@ -453,17 +420,9 @@ public class QTIItemRenderer
       }
 
       state.html.append("<div>");
-//      state.open_block = true;
-
       renderSubElements( e, state );
 
-//      if (state.open_block)
-//      {
-//        state.html.append("</div>\n");
-//        state.open_block = false;
-//      }
-      state.html.append("\n</div>\n</td>\n<td width=\"" + getMetrics().getPropertySvgUnitsInt("page-margin-right") + "\"> </td>\n</tr>\n</table>\n</body>\n</html>");
-//      state.open_block = true;
+      state.html.append("\n</td></tr></table>\n</body>\n</html>");
       return;
     }
 
@@ -637,8 +596,8 @@ public class QTIItemRenderer
         type="render_sketch_area";
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon(
-                            (int) QTIMetrics.inchesToSvg(0.15 * sketcharea.getColumns() ),
-                            (int) QTIMetrics.inchesToSvg(0.2 * sketcharea.getRows() ),
+                            (int) QTIMetrics.inchesToSvg(0.2 * sketcharea.getColumns() ),
+                            (int) QTIMetrics.inchesToSvg(0.25 * sketcharea.getRows() ),
                             (int) QTIMetrics.inchesToSvg(0.02),
                             (int) QTIMetrics.inchesToSvg(0.0),
                             false,
@@ -740,34 +699,41 @@ public class QTIItemRenderer
       String preamble )
   {
       int i;
-      Vector<Vector<SVGDocument>> pages = new Vector<Vector<SVGDocument>>();
+      Vector<Vector<SVGDocumentPlacement>> pages = new Vector<Vector<SVGDocumentPlacement>>();
       if ( paginationrecord != null ) paginationrecord.addCandidate( candidate.id );
-      Vector<SVGDocument> page;
+      Vector<SVGDocumentPlacement> page;
       SVGDocument svgdocs[]=null;
 
       Vector<QTIElementItem> items = candidate.getItems();
 
-      page = new Vector<SVGDocument>();
+      page = new Vector<SVGDocumentPlacement>();
       pages.add( page );
       if ( paginationrecord != null ) paginationrecord.addPage();
 
-      double totalspace = getMetrics().getPropertySvgUnits("calibration-bottomright-y")
-              -getMetrics().getPropertySvgUnits("calibration-topleft-y")
-              -1.1*getMetrics().getPropertySvgUnits("qrcode-page-width");
+      double itemareinsetleft = getMetrics().getPropertySvgUnits("item-area-inset-left");
+      double itemareinsettop = getMetrics().getPropertySvgUnits("item-area-inset-top");
+      
+      int columns = options.getQTIRenderIntegerOption( "columns" );
+      int column = 0;
+      double columnoffset = getMetrics().getPropertyInches( "page-width" );
+      columnoffset -= getMetrics().getPropertyInches( "item-area-inset-left" );
+      columnoffset -= getMetrics().getPropertyInches( "item-area-inset-right" );
+      columnoffset -= (double)(columns-1) * getMetrics().getPropertyInches( "item-area-column-spacing" );
+      columnoffset = columnoffset / (double)columns;
+      columnoffset += getMetrics().getPropertyInches( "item-area-column-spacing" );
+      
+      double totalspace = 
+               getMetrics().getPropertySvgUnits("page-height")
+              -getMetrics().getPropertySvgUnits("item-area-inset-top")
+              -getMetrics().getPropertySvgUnits("item-area-inset-bottom");
       double spaceleft = totalspace;
+      double xoffset = 0.0;
+      double yoffset = 0.0;
+      
       double itemheight;
       boolean has_cover = false;
       boolean has_blank = false;
 
-      // how much does the qr code stick up above bottom margin?
-      double qrpokeup = 0.0; getMetrics().getPropertySvgUnits("qrcode-page-encroachment");
-      // how much space needed for question qr?
-      double qrheight;
-      if ( options.getQTIRenderBooleanOption("question_metrics_qr") )
-        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width");
-      else
-        qrheight = getMetrics().getPropertySvgUnitsInt("qrcode-item-width-small");
-      
       if ( options.getQTIRenderBooleanOption("cover_sheet") )
       {
         has_cover = true;
@@ -777,35 +743,58 @@ public class QTIItemRenderer
             candidate.name,
             candidate.id,
             (preamble!=null)?preamble:"" );
-        page.add( coversvg );
-        page = new Vector<SVGDocument>();
+        page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
+        
+        page = new Vector<SVGDocumentPlacement>();
         pages.add( page );
+        column=0;
         if ( paginationrecord != null ) paginationrecord.addPage();
-        QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", coversvg.getDocumentElement(), true );
+        //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", coversvg.getDocumentElement(), true );
       }
 
       svgdocs = new SVGDocument[items.size()];
       QTIItemRenderer renderer;
       for ( i=0; i<items.size(); i++ )
       {
+        if ( i==29 ) 
+          System.out.println( "Item 29" );
         renderer = new QTIItemRenderer( examfolderuri, items.elementAt(i), i+1, 
             options, candidate.preferences );
         svgdocs[i] = renderer.getSVGDocument();
+        if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getRootElement().getAttribute("height") );
-        if ( itemheight > spaceleft || spaceleft < (qrpokeup + qrheight) )
+        if ( itemheight > spaceleft )
         {
-//          if ( itemheight > spaceleft )
-//            System.out.println( "Out of space for item height" );
-//          else
-//            System.out.println( "Out of space for item's QR code height" );
-          page = new Vector<SVGDocument>();
-          pages.add( page );
-          if ( paginationrecord != null ) paginationrecord.addPage();
-          spaceleft = totalspace;
+//        System.out.println( "Out of space for item height" );
+          // Is there another column on this page?
+          if ( column < (columns-1) )
+          {
+            // yes - move to next column for this question
+            spaceleft = totalspace;
+            yoffset = 0.0;
+            column++;
+          }
+          else
+          {
+            // no - start a new page for this question
+            page = new Vector<SVGDocumentPlacement>();
+            pages.add( page );
+            if ( paginationrecord != null ) paginationrecord.addPage();
+            spaceleft = totalspace;
+            yoffset = 0.0;
+            column=0;
+          }
         }
-        page.add( svgdocs[i] );
-        if ( paginationrecord != null ) paginationrecord.addItem( items.elementAt( i ).getIdent() );
+        xoffset = getMetrics().inchesToSvg( columnoffset * column );
+        page.add( new SVGDocumentPlacement( svgdocs[i], xoffset + itemareinsetleft, yoffset + itemareinsettop ) );
+        if ( paginationrecord != null )
+          paginationrecord.addItem( 
+                  items.elementAt( i ).getIdent(), 
+                  (int)((xoffset+itemareinsetleft)/10.0), 
+                  (int)((yoffset+itemareinsettop)/10.0), 
+                  renderer.mrec );
         spaceleft -= itemheight;
+        yoffset += itemheight;
         metricrecordset.addItem( candidate.preferences, renderer.mrec );
       }
 
@@ -815,14 +804,15 @@ public class QTIItemRenderer
       {
         has_blank = true;
         SVGDocument blanksvg = renderSpecialPage( "org/qyouti/qti1/gui/blank.xhtml", options );
-        page = new Vector<SVGDocument>();
-        page.add( blanksvg );
+        page = new Vector<SVGDocumentPlacement>();
+        page.add( new SVGDocumentPlacement( blanksvg, 0.0, 0.0 ) );
         pages.add( page );
         if ( paginationrecord != null ) paginationrecord.addPage();
+        column=0;
       }
 
       Vector<SVGDocument> paginated = new Vector<SVGDocument>();
-      String qrout, footer, name;
+      String footer, name;
       int questioncount;
       for ( i=0; i<pages.size(); i++ )
       {
@@ -832,21 +822,14 @@ public class QTIItemRenderer
         name = candidate.name;
         if ( name.length() >15 )
           name = name.substring(0, 15);
-        qrout =
-            "v1/" +
-            printid + "/" +
-            (1 + metricrecordset.getPreferencesIndex( candidate.preferences )) + "/" +
-            name + "/" +
-            candidate.id + "/" +
-            i + "/" +
-            questioncount;
+        //qrout = "v2/" + printid + "/" + candidate.id;
         footer = "";
         if ( options.getQTIRenderBooleanOption( "name_in_footer" ) )
           footer += candidate.name + "   ";
         if ( options.getQTIRenderBooleanOption( "id_in_footer" ) )
-          footer += candidate.id + "   ";
+          footer += candidate.id + "\u00a0\u00a0\u00a0\u00a0";
         footer += "Page " + (i+1) + " of " + pages.size();
-        paginated.add( QTIItemRenderer.decorateItemForPreview( pages.elementAt(i) , false,  (i==0 && multipage), qrout, footer, options ) );
+        paginated.add( QTIItemRenderer.placeSVGOnPage( pages.elementAt(i) , false,  (i==0 && multipage), /*qrout,*/ footer, options, paginationrecord ) );
         //System.out.println( "Paginated: " + qrout );
       }
 
@@ -854,7 +837,15 @@ public class QTIItemRenderer
       return paginated;
   }
 
-  public static SVGDocument decorateItemForPreview( Vector<SVGDocument> itemdocs , boolean rulers, boolean staplemarks, String pageqr, String footer, QTIRenderOptions options )
+  public static SVGDocument placeSVGOnPage( 
+          Vector<SVGDocumentPlacement> itemdocs , 
+          boolean rulers, 
+          boolean staplemarks, 
+          //String pageqr, 
+          String footer, 
+          QTIRenderOptions options,
+          PaginationRecord paginationrecord
+)
   {
     int i;
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -923,37 +914,67 @@ public class QTIItemRenderer
     r.setAttribute( "height", "" + QTIMetrics.inchesToSvg( 1.3 ) );
     decorationgroup.appendChild( r );
 
-    if ( pageqr != null )
-    {
+    // panel for debugging item area
+//    r = pdoc.createElementNS( svgNS, "rect");
+//    r.setAttribute( "x", "" + (QTIMetrics.inchesToSvg(  decoroffsetx ) + getMetrics().getPropertySvgUnitsInt("item-area-inset-left")) );
+//    r.setAttribute( "y", "" + (QTIMetrics.inchesToSvg(  decoroffsety ) + getMetrics().getPropertySvgUnitsInt("item-area-inset-top")) );
+//    r.setAttribute( "stroke", "rgb(255,220,220)" );
+//    r.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.005 ) );
+//    r.setAttribute( "fill", "rgb(255,255,255)" );
+//    r.setAttribute( "width",  "" + (getMetrics().getPropertySvgUnitsInt("page-width") - getMetrics().getPropertySvgUnitsInt("item-area-inset-left") - getMetrics().getPropertySvgUnitsInt("item-area-inset-right")) );
+//    r.setAttribute( "height", "" + (getMetrics().getPropertySvgUnitsInt("page-height") - getMetrics().getPropertySvgUnitsInt("item-area-inset-top") - getMetrics().getPropertySvgUnitsInt("item-area-inset-bottom")) );
+//    decorationgroup.appendChild( r );
+
+    
+    //if ( pageqr != null )
+    //{
+      // If some text for the page qrcode was provided add that qrcode in
+      // the bottom left and also add qrcodes for calibration at bottom right
+      // and top left.
+      
       int cw     = (int)(10.0*(getMetrics().getPropertyInches("calibration-bottomright-x") -
                                getMetrics().getPropertyInches("calibration-topleft-x")));
       int ch     = (int)(10.0*(getMetrics().getPropertyInches("calibration-bottomright-y") -
                                getMetrics().getPropertyInches("calibration-topleft-y")));
+      int qrwidth;
+      
+      String pageqr = "qyouti/bl";
+      if ( paginationrecord != null )
+        pageqr = pageqr + "/" + paginationrecord.getPageId();
+      
+      QRCodeIcon qricon;
       // bottom left corner onto calibration point
-      QRCodeIcon qricon = new QRCodeIcon(
-              0,
-              0,
-              pageqr,
-              getMetrics().getPropertySvgUnitsInt("qrcode-page-width")
-              );
+      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-page-width");
+      qricon = new QRCodeIcon( 0, 0, pageqr, qrwidth );
       qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
       qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y") );
       qricon.y -= new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-page-width") );
       qricon.paintSVG(pdoc);
-
-      // bottom left corner onto calibration point
-      qricon = new QRCodeIcon(
-              0,
-              0,
-              "qyouti/" + cw + "/" + ch,
-              getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width")
-              );
+      if ( paginationrecord != null )      
+        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );
+              
+      // bottom right corner onto calibration point
+      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
+      qricon = new QRCodeIcon( 0, 0, "qyouti/br", qrwidth );
       qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x") );
       qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y") );
       qricon.y -= new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
       qricon.paintSVG(pdoc);
+      if ( paginationrecord != null )      
+        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_RIGHT, qricon.x/10, qricon.y/10, qrwidth/10 );
 
-    }
+      // top left corner onto calibration point
+      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
+      qricon = new QRCodeIcon( 0, 0, "qyouti/tl", qrwidth );
+      qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
+      qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-y") );
+      qricon.y += new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
+      qricon.paintSVG(pdoc);
+      if ( paginationrecord != null )      
+        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_TOP_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );
+
+
+    //}
 
     if ( options.getQTIRenderOption("header") != null )
     {
@@ -973,7 +994,7 @@ public class QTIItemRenderer
       tfooter = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
       tfooter.setAttribute("text-anchor", "middle" );
       tfooter.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("page-width")/2) );
-      tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(getMetrics().getPropertySvgUnitsInt("page-margin-bottom")/2)) );
+      tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(getMetrics().inchesToSvg(0.6))) );
       tfooter.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
       tfooter.setTextContent( footer );
       decorationgroup.appendChild(tfooter);
@@ -1078,11 +1099,7 @@ public class QTIItemRenderer
 
     // plonk given svg onto decorations
     org.w3c.dom.Element itemg;
-    SVGDocument itemdoc;
-    SVGSVGElement itemsvg;
-    double vertical_offset = QTIMetrics.inchesToSvg( decoroffsety );
-    vertical_offset += getMetrics().getPropertySvgUnits( "calibration-topleft-y" );
-    double itemheight;
+    SVGDocumentPlacement itemdoc;
     for ( i=0; i<itemdocs.size(); i++ )
     {
       itemdoc = itemdocs.elementAt(i);
@@ -1090,14 +1107,10 @@ public class QTIItemRenderer
       itemg = pdoc.createElementNS( svgNS, "g" );
       itemg.setAttribute("transform",
           "translate( " +
-          (int)QTIMetrics.inchesToSvg( decoroffsetx ) + ", "+
-          (int)vertical_offset + ")");
+          (int)(QTIMetrics.inchesToSvg( decoroffsetx ) + itemdoc.getX() ) + ", "+
+          (int)(QTIMetrics.inchesToSvg( decoroffsety ) + itemdoc.getY() ) + ")");
       svg.appendChild(itemg);
-      SVGUtils.insertDocumentContents(pdoc, itemg, itemdoc);
-
-      itemsvg = itemdoc.getRootElement();
-      itemheight = Double.parseDouble( itemsvg.getAttribute("height") );
-      vertical_offset+=itemheight;
+      SVGUtils.insertDocumentContents(pdoc, itemg, itemdoc.getDoc() );
     }
     //pdoc.normalizeDocument();
     return pdoc;
@@ -1107,9 +1120,10 @@ public class QTIItemRenderer
 
   public SVGDocument getPreviewSVGDocument( QTIRenderOptions options )
   {
-    Vector<SVGDocument> v = new Vector<SVGDocument>();
-    v.add( (SVGDocument) svgres.getDocument().cloneNode(true) );
-    return decorateItemForPreview( v, true, false, null, null, options);
+    Vector<SVGDocumentPlacement> v = new Vector<SVGDocumentPlacement>();
+    SVGDocumentPlacement dp = new SVGDocumentPlacement((SVGDocument) svgres.getDocument().cloneNode(true), 0.0, 0.0 );
+    v.add( dp );
+    return placeSVGOnPage( v, true, false, null, options, null );
   }
 
   public SVGDocument getSVGDocument()
@@ -1174,4 +1188,32 @@ public class QTIItemRenderer
       this.svgres = svgres;
     }
   }
+  
+  
 }
+
+class SVGDocumentPlacement
+{
+  SVGDocument doc;
+  double x; // inches from left
+  double y; // inches from top
+  public SVGDocumentPlacement( SVGDocument doc, double x, double y)
+  {
+    this.doc = doc;
+    this.x = x;
+    this.y = y;
+  }
+  public SVGDocument getDoc()
+  {
+    return doc;
+  }
+  public double getX()
+  {
+    return x;
+  }
+  public double getY()
+  {
+    return y;
+  }
+}
+

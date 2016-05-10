@@ -8,6 +8,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.*;
 import java.util.Vector;
+import org.w3c.dom.*;
 
 /**
  *
@@ -15,18 +16,45 @@ import java.util.Vector;
  */
 public class QuestionMetricsRecord
 {
-
-    public String id;
-    public double height;
     public Vector<QuestionMetricBox> boxes;
 
-    QuestionMetricsRecord(String id, double height, Vector<QuestionMetricBox> boxes)
+    QuestionMetricsRecord( Vector<QuestionMetricBox> boxes)
     {
-      this.id = id;
-      this.height = height;
       this.boxes = boxes;
     }
 
+    QuestionMetricsRecord( NodeList nl )
+    {
+      int i, x, y, w, h, idx;
+      Node node;
+      boxes = new Vector<QuestionMetricBox>();
+      Element e_box;
+      QuestionMetricBox box;
+      
+      idx=0;
+      for ( i=0; i<nl.getLength(); i++ )
+      {
+        node = nl.item( i );
+        if ( node.getNodeType() != Node.ELEMENT_NODE )
+          continue;
+
+        if ( "box".equals( node.getNodeName() ) )
+        {
+          e_box = (Element)node;
+          x = Integer.parseInt( e_box.getAttribute( "x" ) );
+          y = Integer.parseInt( e_box.getAttribute( "y" ) );
+          w = Integer.parseInt( e_box.getAttribute( "w" ) );
+          h = Integer.parseInt( e_box.getAttribute( "h" ) );
+          box = new QuestionMetricBox( 
+                  x, y, w, h,
+                  e_box.getAttribute( "type" ),
+                  e_box.getAttribute( "ident" ),
+                  idx++                              );
+          boxes.add( box );
+        }  
+      }
+    }
+    
     public QuestionMetricBox[] getBoxesAsArray()
     {
       QuestionMetricBox[] b = new QuestionMetricBox[boxes.size()];
@@ -34,50 +62,11 @@ public class QuestionMetricsRecord
     }
 
 
-//    byte[] toByteArray()
-//    {
-//      try
-//      {
-//        ByteArrayOutputStream baout = new ByteArrayOutputStream();
-//        DataOutputStream out = new DataOutputStream(baout);
-//
-//
-//        out.writeUTF(id);
-//        short h = (short) Math.floor(height / 10); //tenths of an inch
-//        out.writeShort(h);
-//
-//        short coord;
-//        Rectangle r;
-//        for (int i = 0; i<boxes.size(); i++)
-//        {
-//          r = boxes.get(i);
-//          out.writeShort( (short)r.x );
-//          out.writeShort( (short)r.y );
-//          out.writeShort( (short)r.width );
-//          out.writeShort( (short)r.height );
-//        }
-//
-//
-//        byte[] buffer = baout.toByteArray();
-//        return buffer;
-//      } catch (IOException ex)
-//      {
-//      }
-//
-//      return null;
-//    }
-
     public void emit(Writer writer) throws IOException
     {
-      writer.write("    <item item-id=\"");
-      writer.write( id );
-      writer.write("\" height=\"" );
-      writer.write( Double.toString( height ) );
-      writer.write( "\">\n");
-
       for ( int i=0; i<boxes.size(); i++ )
       {
-        writer.write("      <box type=\"" + boxes.get(i).getType()  );
+        writer.write("        <box type=\"" + boxes.get(i).getType()  );
         writer.write("\" ident=\"" +        boxes.get(i).getIdent() );
         writer.write("\" x=\"" +            boxes.get(i).x          );
         writer.write("\" y=\"" +            boxes.get(i).y          );
@@ -85,7 +74,5 @@ public class QuestionMetricsRecord
         writer.write("\" h=\"" +            boxes.get(i).height     );
         writer.write( "\" />\n");
       }
-
-      writer.write("    </item>\n");
     }
 }

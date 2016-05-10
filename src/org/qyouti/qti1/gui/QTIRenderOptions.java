@@ -13,4 +13,5 @@ public interface QTIRenderOptions
 {
   public String getQTIRenderOption( String name );
   public boolean getQTIRenderBooleanOption( String name );
+  public int getQTIRenderIntegerOption( String name );
 }

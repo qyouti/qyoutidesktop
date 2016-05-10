@@ -107,8 +107,8 @@ public class QuestionMetricsRecordSet
           records.put(
             eitem.getAttribute("item-id"),
             new QuestionMetricsRecord(
-                eitem.getAttribute("item-id"),
-                Double.parseDouble(eitem.getAttribute("height")),
+//                eitem.getAttribute("item-id"),
+//                Double.parseDouble(eitem.getAttribute("height")),
                 boxes ) );
         }
       }
@@ -166,7 +166,7 @@ public class QuestionMetricsRecordSet
       items.put(packed, list);
       prefseq.add(packed);
     }
-    list.put(item.id, item);
+    //list.put(item.id, item);
   }
 
   public QuestionMetricsRecord getQuestionMetricsRecord( int pref, String qid )
