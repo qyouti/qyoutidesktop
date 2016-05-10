@@ -65,8 +65,10 @@ public class PageData
 
   public String printid;
   public File examfolder;
+  public File paginationfile;
   public CandidateData candidate;
   public double height;
+  public String pageid;
   public int page_number;
   public String candidate_name;
   public String candidate_number;

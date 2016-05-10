@@ -16,13 +16,21 @@
 
   <entry key="page-width">8.3</entry>
   <entry key="page-height">11.7</entry>
+  
+  <entry key="item-area-inset-left">1.6</entry>
+  <entry key="item-area-inset-top">0.8</entry>
+  <entry key="item-area-inset-right">0.3</entry>
+  <entry key="item-area-inset-bottom">1.4</entry>
+  <entry key="item-area-column-spacing">0.3</entry>
+  
+  
   <entry key="page-margin-left">0.3</entry>
   <entry key="page-margin-right">0.3</entry>
   <entry key="page-margin-top">0.75</entry>   <!-- also redundent?  -->
   <entry key="page-margin-bottom">0.75</entry>
 
   <entry key="calibration-topleft-x">0.5</entry>
-  <entry key="calibration-topleft-y">0.6</entry>
+  <entry key="calibration-topleft-y">1.2</entry>
   <entry key="calibration-bottomright-x">7.5</entry>
   <entry key="calibration-bottomright-y">11.0</entry>
   <entry key="calibration-width">7.1</entry>
@@ -30,8 +38,9 @@
 
   <entry key="qrcode-item-width">0.6</entry>
   <entry key="qrcode-item-width-small">0.3</entry>
+  
   <entry key="qrcode-page-width">0.6</entry>
-  <entry key="qrcode-calibration-width">0.3</entry>
+  <entry key="qrcode-calibration-width">0.4</entry>
 
 
 
@@ -55,7 +64,7 @@
 
   <entry key="header-anchor">end</entry>
   <entry key="header-anchor-x">7.5</entry>
-  <entry key="header-anchor-y">0.4</entry>
+  <entry key="header-anchor-y">0.6</entry>
 
 </properties>
 

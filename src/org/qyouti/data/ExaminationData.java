@@ -110,6 +110,7 @@ public class ExaminationData
     qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
+    default_options.setProperty( "columns", "2" );
   }
 
 
@@ -127,6 +128,20 @@ public class ExaminationData
   {
     String value = getQTIRenderOption( name );
     return "true".equalsIgnoreCase( value ) || "yes".equalsIgnoreCase( value ) || "y".equalsIgnoreCase( value );
+  }
+
+  @Override
+  public int getQTIRenderIntegerOption( String name )
+  {
+    String value = getQTIRenderOption( name );
+    try
+    {
+      return Integer.parseInt( getQTIRenderOption( name ) );
+    }
+    catch ( NumberFormatException nfe )
+    {
+      return -1;
+    }
   }
 
   public void setOption( String name, String value )
