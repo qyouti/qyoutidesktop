@@ -699,21 +699,19 @@ public class QTIItemRenderer
       String preamble )
   {
       int i;
-      Vector<Vector<SVGDocumentPlacement>> pages = new Vector<Vector<SVGDocumentPlacement>>();
+      //Vector<Vector<SVGDocumentPlacement>> pages = new Vector<Vector<SVGDocumentPlacement>>();
       if ( paginationrecord != null ) paginationrecord.addCandidate( candidate.id );
       Vector<SVGDocumentPlacement> page;
       SVGDocument svgdocs[]=null;
-
+      Vector<SVGDocument> paginated = new Vector<SVGDocument>();
+      Vector<SVGHooks> svghooks = new Vector<SVGHooks>();
       Vector<QTIElementItem> items = candidate.getItems();
 
-      page = new Vector<SVGDocumentPlacement>();
-      pages.add( page );
       int pwidth = (int)(getMetrics().getPropertyInches( "page-width" )*100);
       int pheight = (int)(getMetrics().getPropertyInches( "page-height" )*100);
       int pinsetl = (int)(getMetrics().getPropertyInches( "item-area-inset-left" )*100);
       int pinsett = (int)(getMetrics().getPropertyInches( "item-area-inset-top" )*100);
 
-      if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
 
       double itemareinsetleft = getMetrics().getPropertySvgUnits("item-area-inset-left");
       double itemareinsettop = getMetrics().getPropertySvgUnits("item-area-inset-top");
@@ -736,12 +734,15 @@ public class QTIItemRenderer
       double yoffset = 0.0;
       
       double itemheight;
-      boolean has_cover = false;
+      boolean has_cover = options.getQTIRenderBooleanOption("cover_sheet");
       boolean has_blank = false;
 
-      if ( options.getQTIRenderBooleanOption("cover_sheet") )
+      // get a blank page ready for questions...
+      page = new Vector<SVGDocumentPlacement>();
+      if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+            
+      if ( has_cover )
       {
-        has_cover = true;
         SVGDocument coversvg = renderSpecialPage(
             "org/qyouti/qti1/gui/examcover.xhtml",
             options,
@@ -749,12 +750,12 @@ public class QTIItemRenderer
             candidate.id,
             (preamble!=null)?preamble:"" );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
+        svghooks.add( new SVGHooks() );
+        paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
         
+        // get a blank page ready for questions...
         page = new Vector<SVGDocumentPlacement>();
-        pages.add( page );
-        column=0;
         if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
-        //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", coversvg.getDocumentElement(), true );
       }
 
       svgdocs = new SVGDocument[items.size()];
@@ -780,15 +781,20 @@ public class QTIItemRenderer
           }
           else
           {
-            // no - start a new page for this question
-            page = new Vector<SVGDocumentPlacement>();
-            pages.add( page );
+            // finish off the page
+            svghooks.add( new SVGHooks() );
+            paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+            
+            // start a new page for this question
             if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+            page = new Vector<SVGDocumentPlacement>();
+            
             spaceleft = totalspace;
             yoffset = 0.0;
             column=0;
           }
         }
+        
         xoffset = getMetrics().inchesToSvg( columnoffset * column );
         page.add( new SVGDocumentPlacement( svgdocs[i], xoffset + itemareinsetleft, yoffset + itemareinsettop ) );
         if ( paginationrecord != null )
@@ -802,38 +808,42 @@ public class QTIItemRenderer
         metricrecordset.addItem( candidate.preferences, renderer.mrec );
       }
 
+      // complete the last page of questions
+      svghooks.add( new SVGHooks() );
+      paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+
       boolean doublesided = options.getQTIRenderBooleanOption("double_sided");
-      boolean multipage = (doublesided && pages.size() > 2) || (!doublesided && pages.size() > 1);
-      if ( (pages.size() & 1) == 1 && doublesided )
+      boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
+      
+      
+      if ( (svghooks.size() & 1) == 1 && doublesided )
       {
         has_blank = true;
         SVGDocument blanksvg = renderSpecialPage( "org/qyouti/qti1/gui/blank.xhtml", options );
-        page = new Vector<SVGDocumentPlacement>();
-        page.add( new SVGDocumentPlacement( blanksvg, 0.0, 0.0 ) );
-        pages.add( page );
+        // start a page
         if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
-        column=0;
+        page = new Vector<SVGDocumentPlacement>();
+        
+        // create some SVG
+        page.add( new SVGDocumentPlacement( blanksvg, 0.0, 0.0 ) );
+
+        // complete page
+        svghooks.add( new SVGHooks() );
+        paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
       }
 
-      Vector<SVGDocument> paginated = new Vector<SVGDocument>();
-      String footer, name;
-      int questioncount;
-      for ( i=0; i<pages.size(); i++ )
+      String footer;
+      for ( i=0; i<svghooks.size(); i++ )
       {
-        questioncount = pages.elementAt(i).size();
-        if ( i==0 && has_cover ) questioncount=0;
-        if ( i==(pages.size()-1) && has_blank ) questioncount=0;
-        name = candidate.name;
-        if ( name.length() >15 )
-          name = name.substring(0, 15);
-        //qrout = "v2/" + printid + "/" + candidate.id;
+        if ( i==0 && multipage && svghooks.get( i ).staplegroupelement != null )
+          addStaple( svghooks.get( i ).staplegroupelement );
         footer = "";
         if ( options.getQTIRenderBooleanOption( "name_in_footer" ) )
           footer += candidate.name + "   ";
         if ( options.getQTIRenderBooleanOption( "id_in_footer" ) )
           footer += candidate.id + "\u00a0\u00a0\u00a0\u00a0";
-        footer += "Page " + (i+1) + " of " + pages.size();
-        paginated.add( QTIItemRenderer.placeSVGOnPage( pages.elementAt(i) , false,  (i==0 && multipage), /*qrout,*/ footer, options, paginationrecord ) );
+        footer += "Page " + (i+1) + " of " + svghooks.size();
+        svghooks.get(i).footertextelement.setTextContent( footer );
         //System.out.println( "Paginated: " + qrout );
       }
 
@@ -844,12 +854,10 @@ public class QTIItemRenderer
   public static SVGDocument placeSVGOnPage( 
           Vector<SVGDocumentPlacement> itemdocs , 
           boolean rulers, 
-          boolean staplemarks, 
-          //String pageqr, 
-          String footer, 
           QTIRenderOptions options,
-          PaginationRecord paginationrecord
-)
+          PaginationRecord paginationrecord,
+          SVGHooks hooks
+        )
   {
     int i;
     String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
@@ -992,40 +1000,46 @@ public class QTIItemRenderer
       decorationgroup.appendChild(theader);
     }
 
-    if ( footer != null )
-    {
-      org.w3c.dom.Element tfooter;
-      tfooter = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
-      tfooter.setAttribute("text-anchor", "middle" );
-      tfooter.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("page-width")/2) );
-      tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(getMetrics().inchesToSvg(0.6))) );
-      tfooter.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
-      tfooter.setTextContent( footer );
-      decorationgroup.appendChild(tfooter);
-    }
+    org.w3c.dom.Element tfooter;
+    tfooter = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+    tfooter.setAttribute("text-anchor", "middle" );
+    tfooter.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("page-width")/2) );
+    tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(getMetrics().inchesToSvg(0.6))) );
+    tfooter.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
+    decorationgroup.appendChild(tfooter);
 
-    if ( staplemarks )
+    if ( hooks != null )
     {
-      org.w3c.dom.Element line;
-      line = pdoc.createElementNS( svgNS, "line");
-      line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg(  decoroffsetx ) );
-      line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsety ) );
-      line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsetx ) );
-      line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg(  decoroffsety ) );
-      line.setAttribute( "stroke-width",  "" + QTIMetrics.inchesToSvg( 0.02 ) );
-      line.setAttribute( "stroke-dasharray",  "" + QTIMetrics.inchesToSvg( 0.1 ) + ", " + QTIMetrics.inchesToSvg( 0.1 ) );
-      line.setAttribute( "stroke", "rgb(0,0,0)" );
-      decorationgroup.appendChild( line );
-
-      org.w3c.dom.Element staple;
-      staple = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
-      staple.setAttribute("text-anchor", "start" );
-      staple.setAttribute("x", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsetx ) );
-      staple.setAttribute("y", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsety ) );
-      staple.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
-      staple.setTextContent( "staple" );
-      decorationgroup.appendChild(staple);
+      hooks.footertextelement = tfooter;
+      
+      hooks.staplegroupelement = pdoc.createElementNS( svgNS, "g");
+      decorationgroup.appendChild( hooks.staplegroupelement );
+      hooks.staplegroupelement.setAttribute("x", "" + QTIMetrics.inchesToSvg(  decoroffsetx ) );
+      hooks.staplegroupelement.setAttribute("y", "" + QTIMetrics.inchesToSvg(  decoroffsety ) );
     }
+    
+//    if ( staplemarks )
+//    {
+//      org.w3c.dom.Element line;
+//      line = pdoc.createElementNS( svgNS, "line");
+//      line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg(  decoroffsetx ) );
+//      line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsety ) );
+//      line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg(  0.8 + decoroffsetx ) );
+//      line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg(  decoroffsety ) );
+//      line.setAttribute( "stroke-width",  "" + QTIMetrics.inchesToSvg( 0.02 ) );
+//      line.setAttribute( "stroke-dasharray",  "" + QTIMetrics.inchesToSvg( 0.1 ) + ", " + QTIMetrics.inchesToSvg( 0.1 ) );
+//      line.setAttribute( "stroke", "rgb(0,0,0)" );
+//      decorationgroup.appendChild( line );
+//
+//      org.w3c.dom.Element staple;
+//      staple = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+//      staple.setAttribute("text-anchor", "start" );
+//      staple.setAttribute("x", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsetx ) );
+//      staple.setAttribute("y", "" + QTIMetrics.inchesToSvg(  0.20 + decoroffsety ) );
+//      staple.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
+//      staple.setTextContent( "staple" );
+//      decorationgroup.appendChild(staple);
+//    }
 
     if ( rulers )
     {
@@ -1120,14 +1134,35 @@ public class QTIItemRenderer
     return pdoc;
   }
 
+  public static void addStaple( org.w3c.dom.Element staplegroup )
+  {
+    org.w3c.dom.Element line;
+    line =  staplegroup.getOwnerDocument().createElementNS( SVGDOMImplementation.SVG_NAMESPACE_URI, "line");
+    line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg( 0.0 ) );
+    line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 0.8 ) );
+    line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( 0.8 ) );
+    line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg( 0.0 ) );
+    line.setAttribute( "stroke-width",  "" + QTIMetrics.inchesToSvg( 0.02 ) );
+    line.setAttribute( "stroke-dasharray",  "" + QTIMetrics.inchesToSvg( 0.1 ) + ", " + QTIMetrics.inchesToSvg( 0.1 ) );
+    line.setAttribute( "stroke", "rgb(0,0,0)" );
+    staplegroup.appendChild( line );
 
+    org.w3c.dom.Element staple;
+    staple = (org.w3c.dom.Element) staplegroup.getOwnerDocument().createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, "text");
+    staple.setAttribute("text-anchor", "start" );
+    staple.setAttribute("x", "" + QTIMetrics.inchesToSvg(  0.20 ) );
+    staple.setAttribute("y", "" + QTIMetrics.inchesToSvg(  0.20 ) );
+    staple.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
+    staple.setTextContent( "staple" );
+    staplegroup.appendChild(staple);
+  }
 
   public SVGDocument getPreviewSVGDocument( QTIRenderOptions options )
   {
     Vector<SVGDocumentPlacement> v = new Vector<SVGDocumentPlacement>();
     SVGDocumentPlacement dp = new SVGDocumentPlacement((SVGDocument) svgres.getDocument().cloneNode(true), 0.0, 0.0 );
     v.add( dp );
-    return placeSVGOnPage( v, true, false, null, options, null );
+    return placeSVGOnPage( v, true, options, null, null );
   }
 
   public SVGDocument getSVGDocument()
@@ -1220,4 +1255,11 @@ class SVGDocumentPlacement
     return y;
   }
 }
+
+  
+  class SVGHooks
+  {
+    public org.w3c.dom.Element staplegroupelement;    
+    public org.w3c.dom.Element footertextelement;    
+  }
 
