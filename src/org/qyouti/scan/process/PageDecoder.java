@@ -43,9 +43,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
 import java.net.*;
-import java.util.Hashtable;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 import javax.imageio.ImageIO;
 import org.qyouti.qrcode.QRCodec;
 import org.qyouti.qrcode.QRScanResult;
@@ -139,7 +137,7 @@ public class PageDecoder
     int threshold=0;
     int found = 0;
     QRScanResult currentresult;
-    QRScanResult[] result = new QRScanResult[3];
+    QRScanResult[] result = new QRScanResult[4];
     
     //MonochromeBitmapSource source = new BufferedImageMonochromeBitmapSource( image, x1, y1, x2, y2 );
     BufferedImage[] cropped = new BufferedImage[r.length];
@@ -162,6 +160,7 @@ public class PageDecoder
       lookup.setThreshold( threshold );
       for ( int i=0; i<r.length; i++ )
       {
+        if ( result[i] != null ) continue;
         img_filt[i] = lop.filter( cropped[i], img_filt[i] );
         try
         {
@@ -176,7 +175,8 @@ public class PageDecoder
             }
             if ( currentresult.getText() == null ) continue;
             if ( !currentresult.getText().startsWith("qyouti/") ) continue;
-            result[found++] = currentresult;
+            result[i] = currentresult;
+            found++;
           }
         } catch (Exception ex)
         {
@@ -446,27 +446,24 @@ public class PageDecoder
   private PageData identifyPage(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
           throws IOException
   {
-    int i;
     PageData page;
     QRScanResult[] calibrationresult;
-    QRScanResult pageresult;
     Rectangle[] calqrsearchrect = new Rectangle[4];
+    int ih = image.getHeight();
+    int iw = image.getWidth();
 
     //System.out.println( "Decoding a page." );
 
     page = new PageData( exam, sourcename, scanorder );
     page.source = sourcename;
-    page.scanbounds = new Rectangle( 0, 0, image.getWidth(), image.getHeight() );
 
     try
     {
-      // try whole quarter pages
-      int ih = image.getHeight();
-      int iw = image.getWidth();
-      calqrsearchrect[0] = new Rectangle(       0,    0, iw/2, ih/2 );
-      calqrsearchrect[1] = new Rectangle(    iw/2,    0, iw/2, ih/2 );
-      calqrsearchrect[2] = new Rectangle(       0, ih/2, iw/2, ih/2 );
-      calqrsearchrect[3] = new Rectangle(    iw/2, ih/2, iw/2, ih/2 );
+      // scan the corners
+      calqrsearchrect[0] = new Rectangle(       0,      0, iw/4, ih/4 );
+      calqrsearchrect[1] = new Rectangle(  3*iw/4,      0, iw/4, ih/4 );
+      calqrsearchrect[2] = new Rectangle(       0, 3*ih/4, iw/4, ih/4 );
+      calqrsearchrect[3] = new Rectangle(  3*iw/4, 3*ih/4, iw/4, ih/4 );
 
       //System.out.println( "Decoding calibration qr." );
       calibrationresult = decodeQR( image, calqrsearchrect );
@@ -476,26 +473,86 @@ public class PageDecoder
         return page;
       }
 
-      // rotation?
-      // To do...
+      // which quadrants are the qrcodes in?
+      int qrlocation[] = new int[3];
+      for ( int n=0; n<calibrationresult.length; n++ )
+      {
+        if ( calibrationresult[n] != null )
+        {
+          System.out.println( calibrationresult[n].getText() );
+          if ( calibrationresult[n].getText().startsWith( "qyouti/tl" ) )
+            qrlocation[0] = n;
+          else if ( calibrationresult[n].getText().startsWith( "qyouti/bl" ) )
+            qrlocation[1] = n;
+          else if ( calibrationresult[n].getText().startsWith( "qyouti/br" ) )
+            qrlocation[2] = n;
+        }
+      }
+
       
-      page.code = calibrationresult[1].getText();
+      // does the source image need to be rotated?
+      if ( qrlocation[0] == 0 && qrlocation[1] == 2 && qrlocation[2] == 3 )
+      {
+        page.rotatedimage = image;
+        page.quarterturns = 0;
+      }
+      else
+      {
+        PageRotator rot = new PageRotator( image );
+        if ( qrlocation[0] == 2 && qrlocation[1] == 3 && qrlocation[2] == 1 )
+        {
+          page.rotatedimage = rot.rotate90();
+          page.quarterturns = 1;        
+        }
+        else if ( qrlocation[0] == 3 && qrlocation[1] == 1 && qrlocation[2] == 0 )
+        {
+          page.rotatedimage = rot.rotate180();
+          page.quarterturns = 2;        
+        }
+        else if ( qrlocation[0] == 1 && qrlocation[1] == 0 && qrlocation[2] == 2 )
+        {
+          page.rotatedimage = rot.rotate270();
+          page.quarterturns = 3;        
+        }
+        else
+        {
+          page.error = "Mirrored image.";
+          return page;          
+        }
+      }
+
+      page.scanbounds = new Rectangle( 0, 0, page.rotatedimage.getWidth(), page.rotatedimage.getHeight() );
+      
+      // change the qr point coordinates to be relative to the top left
+      // of the rotated image.
+      for ( int n=0; n<calibrationresult.length; n++ )
+      {
+        if ( calibrationresult[n] != null )
+          calibrationresult[n].toPageCoordinates( page.quarterturns, iw, ih, calqrsearchrect[n] );
+      }
+      
+      page.code = calibrationresult[qrlocation[1]].getText();
       StringTokenizer ptok = new StringTokenizer( page.code, "/" );
-      ptok.nextToken();  // skip 'qyouti'
-      ptok.nextToken();  // skip 'bl'
-      page.printid = ptok.nextToken();
-      page.pageid = ptok.nextToken();
+      try
+      {
+        ptok.nextToken();  // skip 'qyouti'
+        ptok.nextToken();  // skip 'bl'
+        page.printid = ptok.nextToken();
+        page.pageid = ptok.nextToken();
+      }
+      catch ( NoSuchElementException nsee )
+      {
+        page.error = "Unable to parse text in bottom left qr code '" + page.code + "'.";
+        return page;        
+      }
       
-//      page.declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
+//      page.declared_calibration_width  = DQouble.parseDouble(ptok.nextToken()) / 10.0;
 //      page.declared_calibration_height = Double.parseDouble(ptok.nextToken()) / 10.0;
 
-      // does the source image need to be rotated?
-      page.quadrant = 0;
-      // TO DO...
 
       page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
       page.paginationfile = new File( page.examfolder, "pagination_" + page.printid + ".xml" );              
-      page.source = sourcename;
+      //page.source = sourcename;
 
       if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
       {
@@ -504,21 +561,31 @@ public class PageDecoder
       }
 
       PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+      PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
+      PaginationRecord.Page prpage = paginationrecord.getPage( page.pageid );
       
-      if ( true )
+      page.candidate = exam.candidates.get( prcandidate.getId() );
+      page.candidate_number = page.candidate.id;        
+      page.candidate_name = page.candidate.name;      
+      page.declared_calibration_width=8.00;
+      page.declared_calibration_height=11.00;
+
+      page.pagetransform = pageTransform( 
+          calqrsearchrect[qrlocation[0]], calibrationresult[qrlocation[0]],
+          calqrsearchrect[qrlocation[1]], calibrationresult[qrlocation[1]],
+          calqrsearchrect[qrlocation[2]], calibrationresult[qrlocation[2]],
+          page.declared_calibration_width , page.declared_calibration_height );
+      try
       {
-        //page.error = "Stopping processing. " + paginationrecord;
+        page.revpagetransform = page.pagetransform.createInverse();
+      } catch (NoninvertibleTransformException ex)
+      {
+        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        page.error = "Technical error.";
         return page;
       }
 
-      // Now we can optionally rotate the image, work out where the calibration QRCodes
-      // should be, process them and set up a coordinate system.
 
-      
-//      page.candidate_name = candidate_name;
-//      page.candidate_number = candidate_number;
-//      page.page_number = page_number;
-       
     }
     catch (ReaderException e)
     {
@@ -539,144 +606,81 @@ public class PageDecoder
     PageData page;
     QuestionData question;
     ResponseData response;
-    QRScanResult itemresult, pageresult, calibrationresult;
 
     Point subimage_topleft;
     Point subimage_bottomright;
     Rectangle subimage_rect;
     double[] triangle = new double[6];
-    Rectangle pageqrsearchrect, itemqrsearchrect;
-    Rectangle calqrsearchrect;
-    AffineTransform questiontransform, pagetransform, revpagetransform;
+    AffineTransform questiontransform;
     double pageblackness;
+    int w, h;
     
     //System.out.println( "Decoding a page." );
 
     page = identifyPage( exam, image, sourcename, scanorder );
     if ( page == null || page.error != null )
-      return page;
+      return page;    
 
-    if ( true )
+    PaginationRecord pr = exam.examcatalogue.getPrintMetric( page.printid );
+    PaginationRecord.Page prpage = pr.getPage( page.pageid );
+    PaginationRecord.Item[] items = prpage.getItems();
+
+    QuestionMetricsRecord questionmetrics=null;
+//    Point2D measureditempos =new Point2D.Double();
+//    Point2D measureditempos_inches = new Point2D.Double();
+    
+    for ( int q=0; q<items.length; q++ )
     {
-      page.error = "Stopped.";
-      return page;
+      question = new QuestionData( page );
+      question.ident = items[q].getIdent();
+      questionmetrics = items[q].getQuestionMetricsRecord();
+      //measureditempos_inches.setLocation( (double)items[q].getX()/100.0, (double)items[q].getY()/100.0 );
+
+      //page.revpagetransform.transform( measureditempos, measureditempos_inches );
+      //System.out.println( "Location: " + measureditempos_inches.getX() + "   " +measureditempos_inches.getY() );
+
+      // pull out images of the pink boxes that were printed on this page
+      QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
+      for ( int r=0; r<boxes.length; r++ )
+      {
+        subimage_topleft     = qrinchtopixels(
+            page.pagetransform,
+            (items[q].getX() + boxes[r].x)/100.0,
+            (items[q].getY() + boxes[r].y)/100.0 );
+        subimage_bottomright = qrinchtopixels(
+            page.pagetransform,
+            (items[q].getX() + boxes[r].x + boxes[r].width)/100.0,
+            (items[q].getY() + boxes[r].y + boxes[r].height)/100.0
+            );
+        response = new ResponseData( question, r, boxes[r] );
+        w = subimage_bottomright.x - subimage_topleft.x;
+        h = subimage_bottomright.y - subimage_topleft.y;
+        System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
+        if ( response.getImageFile().exists() )
+        {
+          page.error = "Scanned same page twice?";
+          return page;
+        }
+        try
+        {
+          ImageIO.write(
+                        page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
+                        "jpg",
+                        response.getImageFile()
+                  );
+        } catch (IOException ex)
+        {
+          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+          page.error = "Technical error saving box image.";
+          return page;
+        }
+      }
     }
+      
+    // now ready to try and interpret the images of the pink boxes
     
     
-    try {
-      // does the source image need to be rotated?
-      BufferedImage rotatedimage = image;
-      PageRotator rot = new PageRotator( image );
-      switch ( page.quadrant )
-      {
-        case 1:
-          rotatedimage = rot.rotate90();
-          break;
-        case 2:
-          rotatedimage = rot.rotate180();
-          break;
-        case 3:
-          rotatedimage = rot.rotate270();
-          break;
-      }
-      page.scanbounds = new Rectangle( 0, 0, rotatedimage.getWidth(), rotatedimage.getHeight() );
-
-      
-      double rough_dpi = (double)rotatedimage.getHeight() / 11.69;
-      //System.out.println( "Rough DPI of image = " + rough_dpi );
-
-      int big_inset, small_inset, width;
-      small_inset = (int)(rough_dpi*0.1);
-      width =       (int)(rough_dpi*1.5);
-      big_inset =   width+small_inset;
-      
-      // recalculated based on rotated image
-      calqrsearchrect = new Rectangle(
-          rotatedimage.getWidth()-big_inset,
-          rotatedimage.getHeight()-big_inset,
-          width,
-          width );
-
-      // reread in the new rotated coordinates
-//      calibrationresult = decodeQR( rotatedimage, calqrsearchrect );
-      if ( calibrationresult == null )
-      {
-        page.error = "No qyouti signiture QR code in bottom right corner.";
-        return page;
-      }
-
-      StringTokenizer ptok = new StringTokenizer( calibrationresult.getText(), "/" );
-      ptok.nextToken();
-      page.declared_calibration_width  = Double.parseDouble(ptok.nextToken()) / 10.0;
-      page.declared_calibration_height = Double.parseDouble(ptok.nextToken()) / 10.0;
-
-      // Bottom left corner
-      pageqrsearchrect = getBottomLeftSearchRectangle( page, calqrsearchrect, calibrationresult );
-
-      pageblackness = calibrationresult.getBlackness();
-
-
-
-      //System.out.println( "Decoding page qr." );
-//      pageresult = decodeQR( rotatedimage, pageqrsearchrect );
-      if ( pageresult == null )
-      {
-        page.error = "Cannot find bottom left QRcode.";
-        return page;
-      }
-
-//      page.code = pageresult.getText();
-//      page.candidate_name = candidate_name;
-//      page.candidate_number = candidate_number;
-//      page.page_number = page_number;
-//      page.source = sourcename;
-//
-//      QuestionMetricsRecordSet qmrset = null;
-//      if ( printid!=null && printid.length()>0 )
-//      {
-//        qmrset = exam.qmrcache.getSet(printid);
-//        if ( qmrset == null )
-//        {
-//          page.error = "Doesn't belong to this exam/survey.";
-//          return page;
-//        }
-//      }
-//      QuestionMetricsRecord qmr;
-//
-//      //System.out.println( "Done decoding page qr." );
-//      if ( question_count == 0 )
-//        return page;
-//
-//      itemqrsearchrect = getTopLeftSearchRectangle( page, pageqrsearchrect, pageresult );
-//      //System.out.println( "Decoding first item qr." );
-//      itemresult = decodeQR( rotatedimage, itemqrsearchrect );
-//      if ( itemresult == null )
-//      {
-//        // another silly work around - covers and blank pages
-//        // were reporting 1 question present
-//        if ( question_count == 1 )
-//          return page;
-//        
-//        page.error = "Cannot find top left QRcode.";
-//        return page;
-//      }
-//      //System.out.println( "Processing first item QR.  [" + itemresult.getText() + "]" );
-//
-//      pagetransform = pageTransform( 
-//          itemqrsearchrect, itemresult,
-//          pageqrsearchrect, pageresult,
-//          calqrsearchrect, calibrationresult,
-//          page.declared_calibration_width , page.declared_calibration_height );
-//      
-//      try
-//      {
-//        revpagetransform = pagetransform.createInverse();
-//      } catch (NoninvertibleTransformException ex)
-//      {
-//        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-//        page.error = "Technical error.";
-//        return page;
-//      }
+//    try {
 //
 //
 //      double last_height=0.0;
@@ -776,15 +780,16 @@ public class PageDecoder
 //        page.error = "Technical error saving filtered box image.";
 //        return page;
 //      }
-
-
-      return page;
-    } catch (Exception e ) { //ReaderException e) {
-      e.printStackTrace();
-      System.err.println(sourcename + ": No barcode found");
-      page.error = "Can't read question QRCode.";
-      return page;
-    }
+//
+//
+//      return page;
+//    } catch (Exception e ) { //ReaderException e) {
+//      e.printStackTrace();
+//      System.err.println(sourcename + ": No barcode found");
+//      page.error = "Can't read question QRCode.";
+//      return page;
+//    }
+    return page;
   }
 
   private void processBoxImages( PageData page ) throws IOException
@@ -921,82 +926,99 @@ public class PageDecoder
     return blength / alength;
   }
 
-  private double[] calibrate( double[] triangle, double width, double height )
-  {
-    double horizontal_dx, horizontal_dy;
-    double vertical_dx,   vertical_dy;
+//  private double[] calibrate( double[] triangle, double width, double height )
+//  {
+//    double horizontal_dx, horizontal_dy;
+//    double vertical_dx,   vertical_dy;
+//
+//    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
+//
+//    // measure input vectors
+//    horizontal_dx = triangle[2] - triangle[0];
+//    horizontal_dy = triangle[3] - triangle[1];
+//    vertical_dx =   triangle[4] - triangle[0];
+//    vertical_dy =   triangle[5] - triangle[1];
+//
+//    //System.out.println( "input v " + horizontal_dx );
+//    //System.out.println( "input v " + horizontal_dy );
+//    //System.out.println( "input v " + vertical_dx );
+//    //System.out.println( "input v " + vertical_dy );
+//
+//    scale[0] = horizontal_dx / width;  // in dots per hundredth inch
+//    scale[1] = horizontal_dy / width;
+//    scale[2] = vertical_dx / height;
+//    scale[3] = vertical_dy / height;
+//
+//    //for ( int i=0; i<scale.length; i++ )
+//    //  System.out.println( "scale = " + scale[i] );
+//
+//    return scale;
+//  }
+//
+//
+//
+//  private AffineTransform qrtransform( Point2D subimagepos, QRScanResult result, double width, double height )
+//  {
+//    double horizontal_dx, horizontal_dy;
+//    double vertical_dx,   vertical_dy;
+//
+//    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
+//
+//    ResultPoint[] points = result.getResultPoints();
+//    // point[0] = bottom left  point[1] = top left    point[2] = top right
+//
+//    // measure input vectors - pixel units
+//    horizontal_dx = points[2].getX() - points[1].getX();
+//    horizontal_dy = points[2].getY() - points[1].getY();
+//    vertical_dx   = points[0].getX() - points[1].getX();
+//    vertical_dy   = points[0].getY() - points[1].getY();
+//
+//    //System.out.println( "input v " + horizontal_dx );
+//    //System.out.println( "input v " + horizontal_dy );
+//    //System.out.println( "input v " + vertical_dx );
+//    //System.out.println( "input v " + vertical_dy );
+//
+//    // convert to hundreths of inch
+//    horizontal_dx = horizontal_dx / width;  
+//    horizontal_dy = horizontal_dy / width;
+//    vertical_dx   = vertical_dx   / height;
+//    vertical_dy   = vertical_dy   / height;
+//
+//    //for ( int i=0; i<scale.length; i++ )
+//    //  System.out.println( "scale = " + scale[i] );
+//
+//    return new AffineTransform(
+//        horizontal_dx,
+//        vertical_dx,
+//        horizontal_dy,
+//        vertical_dy,
+//        subimagepos.getX() + points[1].getX(),
+//        subimagepos.getY() + points[1].getY()
+//        );
+//  }
 
-    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
-
-    // measure input vectors
-    horizontal_dx = triangle[2] - triangle[0];
-    horizontal_dy = triangle[3] - triangle[1];
-    vertical_dx =   triangle[4] - triangle[0];
-    vertical_dy =   triangle[5] - triangle[1];
-
-    //System.out.println( "input v " + horizontal_dx );
-    //System.out.println( "input v " + horizontal_dy );
-    //System.out.println( "input v " + vertical_dx );
-    //System.out.println( "input v " + vertical_dy );
-
-    scale[0] = horizontal_dx / width;  // in dots per hundredth inch
-    scale[1] = horizontal_dy / width;
-    scale[2] = vertical_dx / height;
-    scale[3] = vertical_dy / height;
-
-    //for ( int i=0; i<scale.length; i++ )
-    //  System.out.println( "scale = " + scale[i] );
-
-    return scale;
-  }
-
-
-
-  private AffineTransform qrtransform( Point2D subimagepos, QRScanResult result, double width, double height )
-  {
-    double horizontal_dx, horizontal_dy;
-    double vertical_dx,   vertical_dy;
-
-    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
-
-    ResultPoint[] points = result.getResultPoints();
-    // point[0] = bottom left  point[1] = top left    point[2] = top right
-
-    // measure input vectors - pixel units
-    horizontal_dx = points[2].getX() - points[1].getX();
-    horizontal_dy = points[2].getY() - points[1].getY();
-    vertical_dx   = points[0].getX() - points[1].getX();
-    vertical_dy   = points[0].getY() - points[1].getY();
-
-    //System.out.println( "input v " + horizontal_dx );
-    //System.out.println( "input v " + horizontal_dy );
-    //System.out.println( "input v " + vertical_dx );
-    //System.out.println( "input v " + vertical_dy );
-
-    // convert to hundreths of inch
-    horizontal_dx = horizontal_dx / width;  
-    horizontal_dy = horizontal_dy / width;
-    vertical_dx   = vertical_dx   / height;
-    vertical_dy   = vertical_dy   / height;
-
-    //for ( int i=0; i<scale.length; i++ )
-    //  System.out.println( "scale = " + scale[i] );
-
-    return new AffineTransform(
-        horizontal_dx,
-        vertical_dx,
-        horizontal_dy,
-        vertical_dy,
-        subimagepos.getX() + points[1].getX(),
-        subimagepos.getY() + points[1].getY()
-        );
-  }
-
+  /**
+   * Generates a transform that can take coordinates on a scanned page
+   * measured in pixels relative to top left ref point of top left qr
+   * and converts to coordinates in inches on the original page design.
+   * 
+   * @param ra
+   * @param resulta
+   * @param rb
+   * @param resultb
+   * @param rc
+   * @param resultc
+   * @param width
+   * @param height
+   * @return 
+   */
   private AffineTransform pageTransform(
       Rectangle ra, QRScanResult resulta,        // top left
       Rectangle rb, QRScanResult resultb,        // bottom left
       Rectangle rc, QRScanResult resultc,        // bottom right
-      double width, double height )
+      double width,                              // distance in inches from br to bl
+      double height                              // distance in inches from bl to tl
+      )
   {
     double horizontal_dx, horizontal_dy;
     double vertical_dx,   vertical_dy;
@@ -1011,9 +1033,13 @@ public class PageDecoder
     pagepoints[0] = pointsa[1];
     pagepoints[1] = pointsb[0];
     pagepoints[2] = pointsc[0];
+    // Each QR has three locator points.  We use the top left point of the
+    // top left QR and the bottom left point of the other two QRs
     // pointsa[0] = bottom left  pointsa[1] = top left    pointsa[2] = top right
 
     // measure input vectors - pixel units
+    // correct the point coord using the search rect - i.e. change to page coord
+    // Calc vectors br to bl and bl to tl
     horizontal_dx = (rc.x + pagepoints[2].getX()) - (rb.x + pagepoints[1].getX());
     horizontal_dy = (rc.y + pagepoints[2].getY()) - (rb.y + pagepoints[1].getY());
     vertical_dx   = (rb.x + pagepoints[1].getX()) - (ra.x + pagepoints[0].getX());

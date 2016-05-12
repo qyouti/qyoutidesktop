@@ -30,6 +30,7 @@ import com.google.zxing.LuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
+import java.awt.*;
 import java.util.Vector;
 
 /**
@@ -85,6 +86,17 @@ public class QRScanResult
     return points;
   }
 
+  /**
+   * ResultPoints start in the coordinates of the search area
+   * 
+   */
+  public void toPageCoordinates( int quarterturns, int pwidth, int pheight, Rectangle searcharea )
+  {
+    if ( quarterturns == 0 )
+      return;
+    throw new IllegalArgumentException( "Cannot handle rotations yet." );
+  }
+  
   public double getBlackness()
   {
     return blackness;

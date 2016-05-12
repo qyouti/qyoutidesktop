@@ -1225,17 +1225,17 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public CandidateData addPage(PageData page)
   {
-    CandidateData candidate = candidates.get(page.candidate_number);
-    if (candidate == null)
-    {
-      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
-      candidates.put(page.candidate_number, candidate);
-      candidates_sorted.add(candidate);
-      sortCandidates();
-    }
-    candidate.addPage(page);
+//    CandidateData candidate = candidates.get(page.candidate_number);
+//    if (candidate == null)
+//    {
+//      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
+//      candidates.put(page.candidate_number, candidate);
+//      candidates_sorted.add(candidate);
+//      sortCandidates();
+//    }
+    page.candidate.addPage(page);
     fireTableDataChanged();
-    return candidate;
+    return page.candidate;
   }
 
   public QTIElementItem getAssessmentItem(String id)
