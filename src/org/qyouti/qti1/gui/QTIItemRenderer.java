@@ -155,9 +155,9 @@ public class QTIItemRenderer
     state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
     //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-    System.out.println("===============================================");
-    System.out.println(state.html);
-    System.out.println("===============================================");
+//    System.out.println("===============================================");
+//    System.out.println(state.html);
+//    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
     TextPaneWrapper textPane = new TextPaneWrapper();
@@ -708,7 +708,12 @@ public class QTIItemRenderer
 
       page = new Vector<SVGDocumentPlacement>();
       pages.add( page );
-      if ( paginationrecord != null ) paginationrecord.addPage();
+      int pwidth = (int)(getMetrics().getPropertyInches( "page-width" )*100);
+      int pheight = (int)(getMetrics().getPropertyInches( "page-height" )*100);
+      int pinsetl = (int)(getMetrics().getPropertyInches( "item-area-inset-left" )*100);
+      int pinsett = (int)(getMetrics().getPropertyInches( "item-area-inset-top" )*100);
+
+      if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
 
       double itemareinsetleft = getMetrics().getPropertySvgUnits("item-area-inset-left");
       double itemareinsettop = getMetrics().getPropertySvgUnits("item-area-inset-top");
@@ -748,7 +753,7 @@ public class QTIItemRenderer
         page = new Vector<SVGDocumentPlacement>();
         pages.add( page );
         column=0;
-        if ( paginationrecord != null ) paginationrecord.addPage();
+        if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", coversvg.getDocumentElement(), true );
       }
 
@@ -756,12 +761,11 @@ public class QTIItemRenderer
       QTIItemRenderer renderer;
       for ( i=0; i<items.size(); i++ )
       {
-        if ( i==29 ) 
-          System.out.println( "Item 29" );
+        // if ( i==29 ) System.out.println( "Item 29" );
         renderer = new QTIItemRenderer( examfolderuri, items.elementAt(i), i+1, 
             options, candidate.preferences );
         svgdocs[i] = renderer.getSVGDocument();
-        if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
+        // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getRootElement().getAttribute("height") );
         if ( itemheight > spaceleft )
         {
@@ -779,7 +783,7 @@ public class QTIItemRenderer
             // no - start a new page for this question
             page = new Vector<SVGDocumentPlacement>();
             pages.add( page );
-            if ( paginationrecord != null ) paginationrecord.addPage();
+            if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
             spaceleft = totalspace;
             yoffset = 0.0;
             column=0;
@@ -807,7 +811,7 @@ public class QTIItemRenderer
         page = new Vector<SVGDocumentPlacement>();
         page.add( new SVGDocumentPlacement( blanksvg, 0.0, 0.0 ) );
         pages.add( page );
-        if ( paginationrecord != null ) paginationrecord.addPage();
+        if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         column=0;
       }
 

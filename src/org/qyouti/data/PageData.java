@@ -27,6 +27,7 @@
 package org.qyouti.data;
 
 import java.awt.Rectangle;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
@@ -48,18 +49,19 @@ public class PageData
   public ExaminationData exam;
 
   public String source;
+  public BufferedImage rotatedimage;
+  public int quarterturns;
   public Integer scanorder;
   public String code;
   public String error=null;
-  public boolean landscape=false;
-  public int quadrant=0;
+    
+//  public boolean landscape=false;
+//  public int quadrant=0;
   public Rectangle scanbounds;
   public double declared_calibration_width;
   public double declared_calibration_height;
 
   public boolean processed=false;
-
-
 
   public ResponseImageProcessor responseimageprocessor = null;
 
@@ -67,11 +69,17 @@ public class PageData
   public File examfolder;
   public File paginationfile;
   public CandidateData candidate;
+  public String candidate_number;
+  public String candidate_name;
   public double height;
   public String pageid;
   public int page_number;
-  public String candidate_name;
-  public String candidate_number;
+  
+  public AffineTransform pagetransform, revpagetransform;
+
+  
+//  public String candidate_name;
+//  public String candidate_number;
   public Vector<QuestionData> questions = new Vector<QuestionData>();
 
   public static final DecimalFormat pagenumberformat = new DecimalFormat("000");

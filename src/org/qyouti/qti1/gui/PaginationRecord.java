@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.*;
 import java.security.*;
-import java.util.Vector;
+import java.util.*;
 import java.util.logging.*;
 import org.w3c.dom.*;
 
@@ -22,7 +22,7 @@ public class PaginationRecord
   String printid;
   Vector<Candidate> candidates = new Vector<Candidate>();
   int nextid = 1;
-  
+  HashMap<String,Page> pagesbyid = new HashMap<String,Page>();
   
   public PaginationRecord( String name )
   {
@@ -58,7 +58,7 @@ public class PaginationRecord
     NodeList nl;
     
     e_pagination = doc.getDocumentElement();
-    printid = e_pagination.getAttribute( "printid" );
+    printid = e_pagination.getAttribute( "print-id" );
 
     nl = e_pagination.getChildNodes();
     for ( int i = 0; i< nl.getLength(); i++ )
@@ -97,7 +97,13 @@ public class PaginationRecord
   
   public void loadPage( Element e_page )
   {
-    addPage( e_page.getAttribute( "id" ) );
+    addPage( 
+            e_page.getAttribute( "id" ),
+            Integer.parseInt( e_page.getAttribute( "width" ) ),
+            Integer.parseInt( e_page.getAttribute( "height" ) ),
+            Integer.parseInt( e_page.getAttribute( "originx" ) ),
+            Integer.parseInt( e_page.getAttribute( "originy" ) )
+            );
 
     Node node;
     NodeList nl;
@@ -111,7 +117,7 @@ public class PaginationRecord
 
       if ( "qrcode".equals( node.getNodeName() ) )
         loadQRCode( (Element)node );
-      if ( "qrcode".equals( node.getNodeName() ) )
+      if ( "item".equals( node.getNodeName() ) )
         loadItem( (Element)node );
     }
   }
@@ -138,7 +144,7 @@ public class PaginationRecord
     int y = Integer.parseInt( e_item.getAttribute( "y" ) );
     
     QuestionMetricsRecord qmr = new QuestionMetricsRecord( e_item.getChildNodes() );
-    addItem( e_item.getAttribute( "ident" ), x, y, qmr );
+    addItem( e_item.getAttribute( "id" ), x, y, qmr );
   }
 
   
@@ -152,14 +158,26 @@ public class PaginationRecord
     candidates.add( new Candidate( id ) );
   }
 
-  public void addPage()
+  public void addPage( int width, int height, int originx, int originy )
   {
-    candidates.lastElement().pages.add( new Page( Integer.toString( nextid++ ) ) );
+    Page page = new Page( 
+            candidates.lastElement(), 
+            Integer.toString( nextid++ ), 
+            candidates.lastElement().pages.size() + 1,
+            width, height, originx, originy );
+    candidates.lastElement().pages.add( page );
+    pagesbyid.put( page.id, page );
   }
 
-  public void addPage( String id )
+  public void addPage( String id, int width, int height, int originx, int originy )
   {
-    candidates.lastElement().pages.add( new Page( id ) );
+    Page page = new Page( 
+            candidates.lastElement(), 
+            id, 
+            candidates.lastElement().pages.size() + 1,
+            width, height, originx, originy );
+    candidates.lastElement().pages.add( page );
+    pagesbyid.put( page.id, page );
   }
 
   public String getPageId()
@@ -169,12 +187,14 @@ public class PaginationRecord
   
   public void addItem( String ident, int x, int y, QuestionMetricsRecord qmr )
   {
-    candidates.lastElement().pages.lastElement().items.add( new Item( ident, x, y, qmr ) );
+    Page lastpage = candidates.lastElement().pages.lastElement();
+    lastpage.items.add( new Item( lastpage, ident, x, y, qmr ) );
   }
 
   public void addQRCode( int type, int x, int y, int w )
   {
-    candidates.lastElement().pages.lastElement().qrcodes.add( new QRCode( type, x, y, w ) );
+    Page lastpage = candidates.lastElement().pages.lastElement();
+    lastpage.qrcodes.add( new QRCode( lastpage, type, x, y, w ) );
   }
 
   public void emit(Writer writer) throws IOException
@@ -191,6 +211,19 @@ public class PaginationRecord
   }
 
 
+  
+  public Page getPage( String pageid )
+  {
+    return pagesbyid.get( pageid );
+  }
+  
+  public Candidate getCandidate( String pageid )
+  {
+    Page page = pagesbyid.get( pageid );
+    if ( page == null ) return null;
+    return page.parent;
+  }
+  
 
 
   public class Candidate
@@ -213,28 +246,61 @@ public class PaginationRecord
 
       writer.write("  </candidate>\n");
     }
+
+    public String getId()
+    {
+      return id;
+    }
   }
 
   public class Page
   {
+    Candidate parent;
     String id;
+    int pagenumber;
+    int width;
+    int height;
+    int originx;
+    int originy;
+    
     Vector<Item> items = new Vector<Item>();
     Vector<QRCode> qrcodes = new Vector<QRCode>();
     
-    public Page( String id )
+    public Page( Candidate parent, String id, int pagenumber, int width, int height, int originx, int originy )
     {
-      this.id = id;
+      this.parent  = parent;
+      this.id      = id;
+      this.pagenumber = pagenumber;
+      this.width   = width;
+      this.height  = height;
+      this.originx = originx;
+      this.originy = originy;
     }
     
     public void emit(Writer writer) throws IOException
     {
       int i;
-      writer.write("    <page id=\""+ id + "\">\n");
+      writer.write( "    <page id=\""+ id + "\"" );
+      writer.write( " width=\""+ width + "\"" );
+      writer.write( " height=\""+ height + "\"" );
+      writer.write( " originx=\""+ originx + "\"" );
+      writer.write( " originy=\""+ originy + "\"" );
+      writer.write( ">\n");
       for ( i=0; i<qrcodes.size(); i++ )
         qrcodes.get( i ).emit( writer );
       for ( i=0; i<items.size(); i++ )
         items.get( i ).emit( writer );
       writer.write("    </page>\n");
+    }
+
+    public int getPagenumber()
+    {
+      return pagenumber;
+    }
+    
+    public Item[] getItems()
+    {
+      return items.toArray( new Item[items.size()] );
     }
   }
 
@@ -245,13 +311,15 @@ public class PaginationRecord
     static final int QRCODE_BOTTOM_RIGHT = 2;
     static final int QRCODE_UNKNOWN      = -1;
     
+    Page parent;
     int type;
     int x;
     int y;
     int w;
     
-    public QRCode( int type, int x, int y, int w )
+    public QRCode( Page parent, int type, int x, int y, int w )
     {
+      this.parent = parent;
       this.type = type;
       this.x = x;
       this.y = y;
@@ -288,12 +356,14 @@ public class PaginationRecord
   
   public class Item
   {
+    Page parent;
     String ident;
     int x;
     int y;
     QuestionMetricsRecord qmr;
-    public Item( String ident, int x, int y, QuestionMetricsRecord qmr )
+    public Item( Page parent, String ident, int x, int y, QuestionMetricsRecord qmr )
     {
+      this.parent = parent;
       this.ident = ident;
       this.x = x;
       this.y = y;
@@ -310,6 +380,26 @@ public class PaginationRecord
       writer.write( "\">\n");
       qmr.emit( writer );
       writer.write("      </item>\n" );
+    }
+
+    public String getIdent()
+    {
+      return ident;
+    }
+
+    public int getX()
+    {
+      return x;
+    }
+
+    public int getY()
+    {
+      return y;
+    }
+    
+    public QuestionMetricsRecord getQuestionMetricsRecord()
+    {
+      return qmr;
     }
   }
 }
