@@ -236,26 +236,26 @@ public class ScanTask
 
 
           // change file name to match candidate!!
-//          newname = page.getPreferredFileName();
-//          if ( newname == null )
-//            newname = "imported_unidentifiable_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
-//          if ( page.error != null )
-//            newname = "imported_scan_error_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
-//
-//          System.out.println( "Proposed new name: " + newname );
-//          newfile = new File( scanfolder, newname );
-//          if ( newfile.exists() )
-//          {
-//            movedname = "imported_replaced_" +
-//                        Long.toHexString( newfile.lastModified() ) +
-//                        "_" +
-//                        Long.toHexString( System.currentTimeMillis() ) +
-//                        page.getPreferredFileExtension();
-//            newfile.renameTo( new File( scanfolder, movedname ) );
-//          }
-//
-//          if ( filenames[i].renameTo( newfile ) )
-//            page.source = newfile.toURI().toString();
+          newname = page.getPreferredFileName();
+          if ( newname == null )
+            newname = "imported_unidentifiable_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+          if ( page.error != null )
+            newname = "imported_scan_error_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+
+          System.out.println( "Proposed new name: " + newname );
+          newfile = new File( scanfolder, newname );
+          if ( newfile.exists() )
+          {
+            movedname = "imported_replaced_" +
+                        Long.toHexString( newfile.lastModified() ) +
+                        "_" +
+                        Long.toHexString( System.currentTimeMillis() ) +
+                        page.getPreferredFileExtension();
+            newfile.renameTo( new File( scanfolder, movedname ) );
+          }
+
+          if ( filenames[i].renameTo( newfile ) )
+            page.source = newfile.toURI().toString();
 
           exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
         }
@@ -381,21 +381,19 @@ public class ScanTask
       return;
     }
 
-    // temp disable response processing
-    
-//    page.candidate = page.exam.addPage( page );
-//    // Compute outcomes based on QTI def of question
-//    for ( int j=0; j<page.questions.size(); j++ )
-//    {
-//      page.questions.get( j ).processResponses();
-//    }
-//    if ( page.questions.size() > 0 )
-//    {
-//      // recalculates total score after every page
-//      page.candidate.processAllResponses();
-//      // and updates presentation of data
-//      view.gotoQuestion( page.questions.lastElement() );
-//    }
+    page.candidate = page.exam.linkPageToCandidate(page);
+    // Compute outcomes based on QTI def of question
+    for ( int j=0; j<page.questions.size(); j++ )
+    {
+      page.questions.get( j ).processResponses();
+    }
+    if ( page.questions.size() > 0 )
+    {
+      // recalculates total score after every page
+      page.candidate.processAllResponses();
+      // and updates presentation of data
+      view.gotoQuestion( page.questions.lastElement() );
+    }
     page.processed = true;
   }
 
