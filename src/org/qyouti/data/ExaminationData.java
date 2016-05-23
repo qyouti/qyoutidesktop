@@ -51,8 +51,6 @@ import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.MimeConstants;
-import org.apache.xml.serialize.BaseMarkupSerializer;
-import org.apache.xml.serialize.XMLSerializer;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -1223,16 +1221,19 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
   }
 
-  public CandidateData addPage(PageData page)
+  public CandidateData linkPageToCandidate(PageData page)
   {
-//    CandidateData candidate = candidates.get(page.candidate_number);
-//    if (candidate == null)
-//    {
-//      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
-//      candidates.put(page.candidate_number, candidate);
-//      candidates_sorted.add(candidate);
-//      sortCandidates();
-//    }
+    CandidateData candidate = candidates.get(page.candidate_number);
+    if (candidate == null)
+    {
+      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
+      candidates.put(page.candidate_number, candidate);
+      candidates_sorted.add(candidate);
+      sortCandidates();
+    }
+    // forward link
+    page.candidate = candidate;
+    // back link
     page.candidate.addPage(page);
     fireTableDataChanged();
     return page.candidate;
@@ -1478,7 +1479,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
       if ("pages".equals(e.getNodeName()))
       {
-        cnl = e.getElementsByTagName("page");
+         cnl = e.getElementsByTagName("page");
         PageData page;
         for (int j = 0; j < cnl.getLength(); j++)
         {
@@ -1501,7 +1502,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
     }
 
-    for ( int p=0; p<pages.size(); p++ )
+      for ( int p=0; p<pages.size(); p++ )
       pages.get( p ).postLoad();
     
     fireTableDataChanged();

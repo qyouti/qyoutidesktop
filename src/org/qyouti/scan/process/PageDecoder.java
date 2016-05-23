@@ -1,4 +1,4 @@
-/*
+ /*
  *
  * Copyright 2010 Leeds Metropolitan University
  * 
@@ -472,7 +472,7 @@ public class PageDecoder
         page.error = "Could not find the three qyouti QR codes.";
         return page;
       }
-
+      
       // which quadrants are the qrcodes in?
       int qrlocation[] = new int[3];
       for ( int n=0; n<calibrationresult.length; n++ )
@@ -531,6 +531,7 @@ public class PageDecoder
           calibrationresult[n].toPageCoordinates( page.quarterturns, iw, ih, calqrsearchrect[n] );
       }
       
+      page.blackness = calibrationresult[qrlocation[1]].getBlackness();
       page.code = calibrationresult[qrlocation[1]].getText();
       StringTokenizer ptok = new StringTokenizer( page.code, "/" );
       try
@@ -563,12 +564,19 @@ public class PageDecoder
       PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
       PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
       PaginationRecord.Page prpage = paginationrecord.getPage( page.pageid );
+      double[] caldim = prpage.getCalibrationDimension();
+
+      if ( caldim == null )
+      {
+        page.error = "Cannot calibrate page.";
+        return page;
+      }
       
       page.candidate = exam.candidates.get( prcandidate.getId() );
       page.candidate_number = page.candidate.id;        
       page.candidate_name = page.candidate.name;      
-      page.declared_calibration_width=8.00;
-      page.declared_calibration_height=11.00;
+      page.declared_calibration_width  = caldim[0];
+      page.declared_calibration_height = caldim[1];
 
       page.pagetransform = pageTransform( 
           calqrsearchrect[qrlocation[0]], calibrationresult[qrlocation[0]],
@@ -623,6 +631,12 @@ public class PageDecoder
 
     PaginationRecord pr = exam.examcatalogue.getPrintMetric( page.printid );
     PaginationRecord.Page prpage = pr.getPage( page.pageid );
+    double[] offset = prpage.getItemOffset();
+    if ( offset == null )
+    {
+        page.error = "Calibration failed.";
+        return page;
+    }
     PaginationRecord.Item[] items = prpage.getItems();
 
     QuestionMetricsRecord questionmetrics=null;
@@ -645,16 +659,21 @@ public class PageDecoder
       {
         subimage_topleft     = qrinchtopixels(
             page.pagetransform,
-            (items[q].getX() + boxes[r].x)/100.0,
-            (items[q].getY() + boxes[r].y)/100.0 );
+            (offset[0] + items[q].getX() + boxes[r].x)/100.0,
+            (offset[1] + items[q].getY() + boxes[r].y)/100.0 );
         subimage_bottomright = qrinchtopixels(
             page.pagetransform,
-            (items[q].getX() + boxes[r].x + boxes[r].width)/100.0,
-            (items[q].getY() + boxes[r].y + boxes[r].height)/100.0
+            (offset[0] + items[q].getX() + boxes[r].x + boxes[r].width)/100.0,
+            (offset[1] + items[q].getY() + boxes[r].y + boxes[r].height)/100.0
             );
         response = new ResponseData( question, r, boxes[r] );
         w = subimage_bottomright.x - subimage_topleft.x;
         h = subimage_bottomright.y - subimage_topleft.y;
+        
+        // to debug
+//        w = 150;
+//        h = 150;
+        
         System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
         if ( response.getImageFile().exists() )
         {
@@ -678,7 +697,16 @@ public class PageDecoder
     }
       
     // now ready to try and interpret the images of the pink boxes
-    
+    page.prepareImageProcessor( false /*qmrset.isMonochromePrint(),*/, page.blackness, boxthreshold );
+    try
+    {
+      processBoxImages( page );
+    } catch (IOException ex)
+    {
+      Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+      page.error = "Technical error processing filtered box images.";
+      return page;
+    }          
     
 //    try {
 //

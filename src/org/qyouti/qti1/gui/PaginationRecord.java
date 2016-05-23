@@ -126,9 +126,9 @@ public class PaginationRecord
   {
     String strtype = e_qrcode.getAttribute( "type" );
     int type;
-    if ( "bottomleft".equals( strtype ) ) type = QRCode.QRCODE_BOTTOM_LEFT;
-    else if ( "bottomright".equals( strtype ) ) type = QRCode.QRCODE_BOTTOM_LEFT;
-    else if ( "topleft".equals( strtype ) ) type = QRCode.QRCODE_BOTTOM_LEFT;
+    if ( "bottomleft".equals( strtype ) )       type = QRCode.QRCODE_BOTTOM_LEFT;
+    else if ( "bottomright".equals( strtype ) ) type = QRCode.QRCODE_BOTTOM_RIGHT;
+    else if ( "topleft".equals( strtype ) )     type = QRCode.QRCODE_TOP_LEFT;
     else type = QRCode.QRCODE_UNKNOWN;
     
     int x = Integer.parseInt( e_qrcode.getAttribute( "x" ) );
@@ -195,6 +195,12 @@ public class PaginationRecord
   {
     Page lastpage = candidates.lastElement().pages.lastElement();
     lastpage.qrcodes.add( new QRCode( lastpage, type, x, y, w ) );
+    if ( type == PaginationRecord.QRCode.QRCODE_BOTTOM_LEFT )
+        lastpage.bl = lastpage.qrcodes.lastElement();
+    if ( type == PaginationRecord.QRCode.QRCODE_BOTTOM_RIGHT )
+        lastpage.br = lastpage.qrcodes.lastElement();
+    if ( type == PaginationRecord.QRCode.QRCODE_TOP_LEFT )
+        lastpage.tl = lastpage.qrcodes.lastElement();
   }
 
   public void emit(Writer writer) throws IOException
@@ -265,6 +271,9 @@ public class PaginationRecord
     
     Vector<Item> items = new Vector<Item>();
     Vector<QRCode> qrcodes = new Vector<QRCode>();
+    QRCode bl;
+    QRCode br;
+    QRCode tl;
     
     public Page( Candidate parent, String id, int pagenumber, int width, int height, int originx, int originy )
     {
@@ -301,6 +310,38 @@ public class PaginationRecord
     public Item[] getItems()
     {
       return items.toArray( new Item[items.size()] );
+    }
+
+
+    public double[] getItemOffset()
+    {
+      if ( tl == null )
+        return null;
+      double[] off = new double[2];
+      off[0] = -tl.x;
+      off[1] = -tl.y;
+      return off;
+    }
+    
+    /**
+     * Gets horizontal and vertical spacing of qr codes.
+     * Horizontal is from bottom left ref point of bottom left QR to
+     * the bottom left ref point of bottom right QR.
+     * Vertical is from top left ref point of top left QR to
+     * bottom left ref point of bottom left QR.
+     * 
+     * @return Array of two doubles units are in inches
+     */
+    public double[] getCalibrationDimension()
+    {
+      if ( bl == null || br == null || tl == null )
+        return null;
+      double[] dim = new double[2];
+      dim[0] = br.x - bl.x;
+      dim[1] = bl.y - tl.y + bl.w;
+      dim[0] = dim[0]/100.0;
+      dim[1] = dim[1]/100.0;
+      return dim;
     }
   }
 

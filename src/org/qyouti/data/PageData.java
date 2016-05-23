@@ -52,6 +52,7 @@ public class PageData
   public BufferedImage rotatedimage;
   public int quarterturns;
   public Integer scanorder;
+  public double blackness;
   public String code;
   public String error=null;
     
@@ -128,7 +129,7 @@ public class PageData
   public void postLoad()
   {
     if ( processed )
-      this.candidate = exam.addPage( this );
+      this.candidate = exam.linkPageToCandidate( this );
   }
 
   public String getPreferredFolderName()
@@ -160,7 +161,9 @@ public class PageData
     b.append( "_" );
     b.append( candidate_number );
     b.append(  "_page_" );
-    b.append( pagenumberformat.format( page_number+1L ) );
+//    b.append( pagenumberformat.format( page_number+1L ) );
+   // temp bodge because page numbers not in pagination file
+    b.append( this.pageid );
     b.append( getPreferredFileExtension() );
     return b.toString();
   }
