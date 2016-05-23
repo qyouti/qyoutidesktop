@@ -73,7 +73,6 @@ import org.w3c.dom.svg.SVGDocument;
  */
 public class QyoutiView extends FrameView
 {
-
   File appfolder = null;
   File examfolder = null;
   int selected_exam_index = 0;
