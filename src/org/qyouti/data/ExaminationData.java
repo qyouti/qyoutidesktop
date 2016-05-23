@@ -84,7 +84,8 @@ public class ExaminationData
   public File examfile;
   public File scanfolder;
   
-  public Vector<PageData> pages = new Vector<PageData>();
+  private Vector<PageData> pages = new Vector<PageData>();
+  public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
   Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
@@ -112,6 +113,39 @@ public class ExaminationData
   }
 
 
+  public void clearPages()
+  {
+    pages.clear();
+    pagemap.clear();
+  }
+  
+  public int getPageCount()
+  {
+    return pages.size();
+  }
+  
+  public void addPage( PageData page )
+  {
+    pages.add( page );
+    pagemap.put( page.pageid, page );
+  }
+  
+  public void replacePage( int p, PageData page )
+  {
+    pages.set( p, page );
+    pagemap.put( page.pageid, page );
+  }
+  
+  public PageData getPage( int n )
+  {
+    return pages.get( n );
+  }
+  
+  public PageData lookUpPage( String id )
+  {
+    return pagemap.get( id );
+  }
+  
   @Override
   public String getQTIRenderOption( String name )
   {
@@ -1485,7 +1519,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         {
           page = new PageData(this, (Element) cnl.item(j) );
           page.scanorder = new Integer( j );
-          pages.add( page );
+          addPage( page );
         }
 
       }
@@ -1502,8 +1536,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
     }
 
-      for ( int p=0; p<pages.size(); p++ )
-      pages.get( p ).postLoad();
+      for ( int p=0; p<getPageCount(); p++ )
+        getPage( p ).postLoad();
     
     fireTableDataChanged();
   }

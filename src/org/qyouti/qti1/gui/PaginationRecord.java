@@ -80,6 +80,7 @@ public class PaginationRecord
 
     Node node;
     NodeList nl;
+    int p=1;
 
     nl = e_candidate.getChildNodes();
     for ( int i = 0; i< nl.getLength(); i++ )
@@ -91,14 +92,15 @@ public class PaginationRecord
       if ( !"page".equals( node.getNodeName() ) )
         continue;
       
-      loadPage( (Element)node );
+      loadPage( (Element)node, p++ );
     }
   }
   
-  public void loadPage( Element e_page )
+  public void loadPage( Element e_page, int p )
   {
     addPage( 
             e_page.getAttribute( "id" ),
+            p,
             Integer.parseInt( e_page.getAttribute( "width" ) ),
             Integer.parseInt( e_page.getAttribute( "height" ) ),
             Integer.parseInt( e_page.getAttribute( "originx" ) ),
@@ -169,12 +171,12 @@ public class PaginationRecord
     pagesbyid.put( page.id, page );
   }
 
-  public void addPage( String id, int width, int height, int originx, int originy )
+  public void addPage( String id, int p, int width, int height, int originx, int originy )
   {
     Page page = new Page( 
             candidates.lastElement(), 
             id, 
-            candidates.lastElement().pages.size() + 1,
+            p,
             width, height, originx, originy );
     candidates.lastElement().pages.add( page );
     pagesbyid.put( page.id, page );

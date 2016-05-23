@@ -40,7 +40,7 @@ import org.w3c.dom.NodeList;
 public class CandidateData
 {
   public ExaminationData exam;
-  public Vector<PageData> pages = new Vector<PageData>();
+  public ArrayList<PageData> pages = new ArrayList<PageData>();
   public String name;
   public String id;
 
@@ -94,21 +94,16 @@ public class CandidateData
 
     nl = element.getElementsByTagName( "page" );
     PageData page;
-    int seq;
+    String pageid;
     Element eseq;
     for ( int j=0; j<nl.getLength(); j++ )
     {
       eseq = (Element)nl.item( j );
-      try
+      pageid = eseq.getAttribute( "pageid" );
+      if ( pageid != null && pageid.length() >=0 )
       {
-        seq = Integer.parseInt( eseq.getAttribute( "seq" ) );
-        if ( seq>=0 && seq < exam.pages.size() )
-        {
-          addPage( exam.pages.get( seq ) );
-        }
-      }
-      catch ( NumberFormatException numberFormatException )
-      {
+        page = exam.lookUpPage( pageid );
+        addPage( page );
       }
     }
     nl = element.getElementsByTagName( "outcome" );
@@ -127,9 +122,12 @@ public class CandidateData
 
   public void addPage( PageData page )
   {
+    // make a local reference to the page
     if ( pages.contains( page ) )
       return;
     pages.add( page );
+    // sort list of pages by page number
+    Collections.sort( pages );
   }
 
   public ResponseData getResponse( String qid, int resp_offset )
@@ -209,8 +207,8 @@ public class CandidateData
       preferences.emit(writer);
     for ( int i=0; i<pages.size(); i++ )
     {
-      writer.write( "    <page seq=\"" );
-      writer.write( pages.get( i ).scanorder.toString() );
+      writer.write( "    <page pageid=\"" );
+      writer.write( pages.get( i ).pageid );
       writer.write( "\"/>\n" );
     }
     for ( int i=0; i<outcomes.data.size(); i++ )
