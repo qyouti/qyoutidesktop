@@ -577,6 +577,7 @@ public class PageDecoder
       page.candidate_name = page.candidate.name;      
       page.declared_calibration_width  = caldim[0];
       page.declared_calibration_height = caldim[1];
+      page.page_number = prpage.getPagenumber();
 
       page.pagetransform = pageTransform( 
           calqrsearchrect[qrlocation[0]], calibrationresult[qrlocation[0]],
@@ -670,11 +671,8 @@ public class PageDecoder
         w = subimage_bottomright.x - subimage_topleft.x;
         h = subimage_bottomright.y - subimage_topleft.y;
         
-        // to debug
-//        w = 150;
-//        h = 150;
         
-        System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
+        //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
         if ( response.getImageFile().exists() )
         {
           page.error = "Scanned same page twice?";

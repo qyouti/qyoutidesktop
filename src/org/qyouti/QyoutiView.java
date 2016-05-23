@@ -2093,7 +2093,7 @@ public class QyoutiView extends FrameView
         }
         candidate.pages.clear();
       }
-      exam.pages.clear();
+      exam.clearPages();
       exam.save();
       gotoQuestion( null );
       exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );

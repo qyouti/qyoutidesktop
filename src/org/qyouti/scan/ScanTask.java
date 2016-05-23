@@ -127,10 +127,10 @@ public class ScanTask
           System.out.println( "\n\nProcessing " + scanfiles[i].getName() );
 
           // Read data from page.
-          page = pagedecoder.identifyPage( exam, scanfiles[i].getCanonicalPath(), exam.pages.size() );
+          page = pagedecoder.identifyPage( exam, scanfiles[i].getCanonicalPath(), exam.getPageCount() );
           if ( page.error != null )
             System.out.println( "ERROR:  " + page.error );
-          exam.pages.add( page );
+          exam.addPage( page );
 
           foldername = page.getPreferredFolderName();
           folder = new File( scanfolder, foldername );
@@ -203,12 +203,12 @@ public class ScanTask
 
           rescanpage = null;
           // file already scanned?
-          for ( j=0; j<exam.pages.size(); j++ )
+          for ( j=0; j<exam.getPageCount(); j++ )
           {
             uri = filenames[i].toURI().toString();
-            if ( uri.equals( exam.pages.get( j ).source ) )
+            if ( uri.equals( exam.getPage( j ).source ) )
             {
-              rescanpage = exam.pages.get( j );
+              rescanpage = exam.getPage( j );
               break;
             }
           }
@@ -228,11 +228,11 @@ public class ScanTask
           processed_count++;
 
           // Read data from page.
-          page = pagedecoder.decode( exam, filenames[i].getCanonicalPath(), rescanpage != null?j:exam.pages.size() );
+          page = pagedecoder.decode( exam, filenames[i].getCanonicalPath(), rescanpage != null?j:exam.getPageCount() );
           if ( rescanpage != null )
-            exam.pages.set( j, page );  // put it where the earlier one was
+            exam.replacePage( j, page );  // put it where the earlier one was
           else
-            exam.pages.add( page );   // entirely new file - put it at the end
+            exam.addPage( page );   // entirely new file - put it at the end
 
 
           // change file name to match candidate!!
@@ -298,15 +298,15 @@ public class ScanTask
 
       PageData otherpage;
       // check for duplicate scans
-      for ( i=1; i<exam.pages.size(); i++ )
+      for ( i=1; i<exam.getPageCount(); i++ )
       {
-        page = exam.pages.get( i );
+        page = exam.getPage(i );
         if ( page.error != null )
           continue;
         
         for ( j=0; j<i; j++ )
         {
-          otherpage = exam.pages.get( j );
+          otherpage = exam.getPage( j );
           if ( otherpage.error != null )
             continue;
 
@@ -348,9 +348,9 @@ public class ScanTask
 
       // Images are now fully processed so now it's
       // time to work out the outcomes
-      for ( i=0; i<exam.pages.size(); i++ )
+      for ( i=0; i<exam.getPageCount(); i++ )
       {
-        page = exam.pages.get( i );
+        page = exam.getPage( i );
         if ( page.error != null )
           continue;
         if ( page.processed )

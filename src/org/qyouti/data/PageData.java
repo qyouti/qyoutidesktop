@@ -44,7 +44,7 @@ import org.w3c.dom.NodeList;
  *
  * @author jon
  */
-public class PageData
+public class PageData implements Comparable
 {
   public ExaminationData exam;
 
@@ -104,6 +104,7 @@ public class PageData
     this.source = element.getAttribute( "source" );
     this.code = element.getAttribute( "code" );
     this.processed = "true".equalsIgnoreCase( element.getAttribute( "processed" ) );
+    this.pageid = element.getAttribute( "pageid" );
     try
     {
       this.page_number = Integer.parseInt( element.getAttribute( "page" ) );
@@ -243,6 +244,7 @@ public class PageData
       writer.write( "id=\""     + candidate_number + "\" " );
     if ( page_number > 0 )
       writer.write( "page=\""   + page_number      + "\" " );
+    writer.write( "pageid=\"" + pageid           + "\" " );
     writer.write( "source=\"" + source           + "\" " );
     if ( code != null )
       writer.write( "code=\""   + code             + "\" " );
@@ -265,5 +267,15 @@ public class PageData
       questions.get( i ).emit( writer );
 
     writer.write( "    </page>\n" );
+  }
+
+  @Override
+  public int compareTo( Object o )
+  {
+    if ( !(o instanceof PageData) ) return -1;
+    PageData other = (PageData)o;
+    if ( this.page_number > other.page_number ) return 1;
+    if ( this.page_number < other.page_number ) return -1;
+    return 0;
   }
 }
