@@ -37,6 +37,7 @@ public class QuestionAnalysis
 {
   int offset;
   String ident;
+  String title;
   double mean_score;
   Vector<ResponseAnalysis> response_analyses = new Vector<ResponseAnalysis>();
 
