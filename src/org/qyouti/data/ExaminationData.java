@@ -226,7 +226,7 @@ public class ExaminationData
 
         if (j == 0)
         {
-          System.out.print("\"Question " + analyses.get(i).offset + "\"");
+          System.out.print("\"" + analyses.get(i).title + "\"");
         } else
         {
           System.out.print("\"\"");
@@ -1257,6 +1257,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public CandidateData linkPageToCandidate(PageData page)
   {
+    if ( page.candidate_number == null )
+        return null;
+    
     CandidateData candidate = candidates.get(page.candidate_number);
     if (candidate == null)
     {

@@ -573,6 +573,12 @@ public class PageDecoder
       }
       
       page.candidate = exam.candidates.get( prcandidate.getId() );
+      if ( page.candidate == null )
+      {
+        page.error = "Page does not match any candidate.";
+        return page;
+      }
+
       page.candidate_number = page.candidate.id;        
       page.candidate_name = page.candidate.name;      
       page.declared_calibration_width  = caldim[0];

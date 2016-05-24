@@ -96,10 +96,11 @@ public class QuestionDefinitions
     for ( i=0; i<items.size(); i++ )
     {
       item = items.get(i);
-      System.out.println( "analysis of item" + item.getIdent() );
+      System.out.println( "analysis of item " + item.getIdent() );
       qanal = new QuestionAnalysis();
       qanal.offset = i+1;
       qanal.ident = item.getIdent();
+      qanal.title = item.getTitle();
       analyses.add( qanal );
       for ( j=0; 1 == 1; j++ )
       {

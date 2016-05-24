@@ -183,6 +183,8 @@ public class ScanTask
       int processed_count=0;
       int page_limit = this.commandline?50:2000;
       
+      long errorname = System.currentTimeMillis();
+      
 
       int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
       int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
@@ -238,19 +240,17 @@ public class ScanTask
           // change file name to match candidate!!
           newname = page.getPreferredFileName();
           if ( newname == null )
-            newname = "imported_unidentifiable_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+            newname = "imported_unidentifiable_" + Long.toHexString( errorname++ ) + page.getPreferredFileExtension();
           if ( page.error != null )
-            newname = "imported_scan_error_" + Long.toHexString( filenames[i].lastModified() ) + page.getPreferredFileExtension();
+            newname = "imported_scan_error_" + Long.toHexString( errorname++ ) + page.getPreferredFileExtension();
 
           System.out.println( "Proposed new name: " + newname );
           newfile = new File( scanfolder, newname );
           if ( newfile.exists() )
           {
             movedname = "imported_replaced_" +
-                        Long.toHexString( newfile.lastModified() ) +
-                        "_" +
-                        Long.toHexString( System.currentTimeMillis() ) +
-                        page.getPreferredFileExtension();
+                        Long.toHexString( errorname++ ) +
+                        "_" + newfile.getName();
             newfile.renameTo( new File( scanfolder, movedname ) );
           }
 
@@ -382,6 +382,9 @@ public class ScanTask
     }
 
     page.candidate = page.exam.linkPageToCandidate(page);
+    if ( page.candidate ==null )
+        return;
+    
     // Compute outcomes based on QTI def of question
     for ( int j=0; j<page.questions.size(); j++ )
     {
