@@ -955,7 +955,7 @@ public class QTIItemRenderer
         pageqr = pageqr + "/" + paginationrecord.getPageId();
       
       QRCodeIcon qricon;
-      // bottom left corner onto calibration point
+      // bottom left corner of bottom left QR onto calibration point
       qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-page-width");
       qricon = new QRCodeIcon( 0, 0, pageqr, qrwidth );
       qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
@@ -965,7 +965,7 @@ public class QTIItemRenderer
       if ( paginationrecord != null )      
         paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );
               
-      // bottom right corner onto calibration point
+      // bottom left corner of bottom right QR onto calibration point
       qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
       qricon = new QRCodeIcon( 0, 0, "qyouti/br", qrwidth );
       qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x") );
@@ -975,12 +975,15 @@ public class QTIItemRenderer
       if ( paginationrecord != null )      
         paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_RIGHT, qricon.x/10, qricon.y/10, qrwidth/10 );
 
-      // top left corner onto calibration point
+      // Oops - should be top left corner of top left QR on calibration point
+      // But accidentally put it some way below that point.  Will need a manual
+      // edit to pagination file to correct
+      
       qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
       qricon = new QRCodeIcon( 0, 0, "qyouti/tl", qrwidth );
       qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
       qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-y") );
-      qricon.y += new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
+      //qricon.y += new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
       qricon.paintSVG(pdoc);
       if ( paginationrecord != null )      
         paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_TOP_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );

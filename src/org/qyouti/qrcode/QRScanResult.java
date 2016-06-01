@@ -58,14 +58,12 @@ public class QRScanResult
     this.height = source.getHeight();
     this.blackness = blackness;
     this.twist = twist;
-  }
-
-  public ResultPoint[] getResultPoints()
-  {
-    if ( points != null ) return points;
+    
     ResultPoint[] original = wrapped_result.getResultPoints();
-    if ( original == null ) return null;
-    points = new ResultPoint[original.length];
+    if ( original == null )
+      points = new ResultPoint[0];
+    else
+      points = new ResultPoint[original.length];
     for ( int i=0; i<points.length; i++ )
     {
       switch ( twist )
@@ -83,18 +81,44 @@ public class QRScanResult
           points[i] = original[i];
       }
     }
+  }
+
+  public ResultPoint[] getResultPoints()
+  {
     return points;
   }
 
-  /**
-   * ResultPoints start in the coordinates of the search area
-   * 
-   */
+/**
+ * The page image may have been rotated after the QR codes were decoded and
+ * processsed.  If so, change the coordinates to where the QR codes would be
+ * after the rotation.
+ * 
+ * @param quarterturns
+ * @param pwidth
+ * @param pheight
+ * @param searcharea 
+ */
   public void toPageCoordinates( int quarterturns, int pwidth, int pheight, Rectangle searcharea )
-  {
+  {      
     if ( quarterturns == 0 )
       return;
-    throw new IllegalArgumentException( "Cannot handle rotations yet." );
+    
+    for ( int n=0; n<points.length; n++ )
+    {
+        switch ( quarterturns )
+        {
+            case 0:
+                points[n] = new ResultPoint( points[n].getX() + searcharea.x, points[n].getY() + searcharea.y );
+                break;
+            case 2:
+                points[n] = new ResultPoint( pwidth-(points[n].getX() + searcharea.x), pheight-(points[n].getY() + searcharea.y) );
+                break;
+            case 1:
+                throw new IllegalArgumentException( "Cannot handle rotations yet." );
+            case 3:
+                throw new IllegalArgumentException( "Cannot handle rotations yet." );
+        }
+    }
   }
   
   public double getBlackness()
