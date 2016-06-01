@@ -223,13 +223,6 @@ public class QRCodec
 
 
 
-  public static Element encodeSVG( byte[] content, double width )
-  {
-    byte[][] matrix = encodeByteArray( content );
-    if ( matrix == null ) return null;
-    return makeSVG( matrix, width );
-  }
-
   public static Element encodeSVG( String content, double width )
   {
     byte[][] matrix = encodeByteArray( content );
@@ -239,7 +232,7 @@ public class QRCodec
 
 
 
-  public static Element makeSVG( byte[][] matrix, double width )
+  private static Element makeSVG( byte[][] matrix, double width )
   {
     init();
 
@@ -296,44 +289,6 @@ public class QRCodec
 
 
 
-
-  /*
-   *
-   */
-  public static Element svgQuestionQRCode( String qid, double qheight, String qcoords, double width )
-  {
-    try
-    {
-      ByteArrayOutputStream baout = new ByteArrayOutputStream();
-      DataOutputStream out = new DataOutputStream( baout );
-
-
-      out.writeUTF(qid);
-      short h = (short)Math.floor( qheight/10 ); //tenths of an inch
-      out.writeShort( h );
-
-      StringTokenizer tok = new StringTokenizer( qcoords, " " );
-      short coord;
-      for ( int i=0; tok.hasMoreTokens(); i++ )
-      {
-        coord = Short.parseShort( tok.nextToken() );
-        out.writeShort(coord);
-      }
-
-
-      byte[] buffer = baout.toByteArray();
-      return encodeSVG(buffer, width);
-    }
-    catch (IOException ex)
-    {
-    }
-
-    return null;
-  }
-
-
-
-
   public static void setErrorCorrection( ErrorCorrectionLevel ec )
   {
     error_correction = ec;
@@ -341,11 +296,17 @@ public class QRCodec
 
 
 
-
+  /** 
+   * Only used in development and debugging
+   * @param image
+   * @return
+   * @throws ReaderException
+   * @throws UnsupportedEncodingException 
+   */
   public static String decodeToString( BufferedImage image )
           throws ReaderException, UnsupportedEncodingException
   {
-    QRScanResult result = decode( image );
+    QRScanResult result = decode( image, null );
     if ( result == null ) return null;
     return result.getText();
   }
@@ -357,13 +318,6 @@ public class QRCodec
 //    if ( result == null ) return null;
 //    return result.getBytes();
 //  }
-
-
-  public static QRScanResult decode( BufferedImage image )
-          throws ReaderException, UnsupportedEncodingException
-  {
-    return decode( image, null );
-  }
 
   public static QRScanResult decode( BufferedImage image, BufferedImage originalimage )
           throws ReaderException, UnsupportedEncodingException
@@ -387,6 +341,16 @@ public class QRCodec
 //    return decode( source, cropped );
 //  }
 
+  /** Finds a QR Code in the given image which has been preprocessed suitably.  The
+   * original unfiltered image is also passed as a parameter so that the
+   * black level can be measured.
+   * 
+   * @param source
+   * @param originalimage
+   * @return
+   * @throws ReaderException
+   * @throws UnsupportedEncodingException 
+   */
   private static QRScanResult decode( BufferedImageLuminanceSource source, BufferedImage originalimage )
           throws ReaderException, UnsupportedEncodingException
   {

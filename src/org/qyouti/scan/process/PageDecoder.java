@@ -131,6 +131,15 @@ public class PageDecoder
 //  }
 
   private int previous_threshold=120;
+  
+  /**
+   * Looks in multiple rectangular areas of an image for QRCodes.
+   * 
+   * @param image
+   * @param r
+   * @return
+   * @throws ReaderException 
+   */
   private QRScanResult[] decodeQR( BufferedImage image, Rectangle[] r )
           throws ReaderException
   {
@@ -353,94 +362,94 @@ public class PageDecoder
   }
 
 
-  private Rectangle getBottomLeftSearchRectangle( PageData page, Rectangle searchrect, QRScanResult calibrationresult )
-  {
-    // estimate centre of bottom left qr by devising two vectors from calibration points
-    // and page dimensions and transforming coords of bottom left corner of qrcode.
-    ResultPoint[] points = calibrationresult.getResultPoints();
-    // measure bottom right qr..
-    double qrh = Math.sqrt(   (double)(points[2].getX()-points[1].getX())*(points[2].getX()-points[1].getX())
-                             +(double)(points[2].getY()-points[1].getY())*(points[2].getY()-points[1].getY())    );
-    double qrv = Math.sqrt(   (double)(points[1].getX()-points[0].getX())*(points[1].getX()-points[0].getX())
-                             +(double)(points[1].getY()-points[0].getY())*(points[1].getY()-points[0].getY())    );
-
-    // one pixel horizontal move
-    double unitvector_h_x = (double)(points[2].getX()-points[1].getX()) / qrh;
-    double unitvector_h_y = (double)(points[2].getY()-points[1].getY()) / qrh;
-
-    // one pixel vertical move
-    double unitvector_v_x = (double)(points[0].getX()-points[1].getX()) / qrv;
-    double unitvector_v_y = (double)(points[0].getY()-points[1].getY()) / qrv;
-
-    // vector in inches on page
-    double inchesx = (-page.declared_calibration_width + 0.3);
-    double inchesy = -0.3;
-
-    // vector in pixels on image
-    double pixelsx = qrh * inchesx/0.3;
-    double pixelsy = qrv * inchesy/0.3;
-
-    double x = (double)searchrect.x;
-    double y = (double)searchrect.y;
-
-    x += (double)points[0].getX();
-    y += (double)points[0].getY();
-
-    x += unitvector_h_x * pixelsx;
-    y += unitvector_h_y * pixelsx;
-
-    x += unitvector_v_x * pixelsy;
-    y += unitvector_v_y * pixelsy;
-
-    Rectangle r = new Rectangle( (int)x, (int)y, 1, 1 );
-    r.grow( (int)(qrh * 2.2), (int)(qrv * 2.2) );
-    Rectangle safe_r =  r.intersection( page.scanbounds );
-    return safe_r;
-  }
-
-  private Rectangle getTopLeftSearchRectangle( PageData page, Rectangle searchrect, QRScanResult calibrationresult )
-  {
-    // estimate centre of bottom left qr by devising two vectors from calibration points
-    // and page dimensions and transforming coords of bottom left corner of qrcode.
-    ResultPoint[] points = calibrationresult.getResultPoints();
-    // measure bottom right qr..
-    double qrh = Math.sqrt(   (double)(points[2].getX()-points[1].getX())*(points[2].getX()-points[1].getX())
-                             +(double)(points[2].getY()-points[1].getY())*(points[2].getY()-points[1].getY())    );
-    double qrv = Math.sqrt(   (double)(points[1].getX()-points[0].getX())*(points[1].getX()-points[0].getX())
-                             +(double)(points[1].getY()-points[0].getY())*(points[1].getY()-points[0].getY())    );
-
-    // one pixel horizontal move
-    double unitvector_h_x = (double)(points[2].getX()-points[1].getX()) / qrh;
-    double unitvector_h_y = (double)(points[2].getY()-points[1].getY()) / qrh;
-
-    // one pixel vertical move
-    double unitvector_v_x = (double)(points[0].getX()-points[1].getX()) / qrv;
-    double unitvector_v_y = (double)(points[0].getY()-points[1].getY()) / qrv;
-
-    // vector in inches on page
-    double inchesx = 0.15;
-    double inchesy = -page.declared_calibration_height + 0.15;
-
-    // vector in pixels on image
-    double pixelsx = qrh * inchesx/0.6;
-    double pixelsy = qrv * inchesy/0.6;
-
-    double x = (double)searchrect.x;
-    double y = (double)searchrect.y;
-
-    x += (double)points[0].getX();
-    y += (double)points[0].getY();
-
-    x += unitvector_h_x * pixelsx;
-    y += unitvector_h_y * pixelsx;
-
-    x += unitvector_v_x * pixelsy;
-    y += unitvector_v_y * pixelsy;
-
-    Rectangle r = new Rectangle( (int)x, (int)y, 1, 1 );
-    r.grow( (int)(qrh * 1.1), (int)(qrv * 1.1) );
-    return r.intersection( page.scanbounds );
-  }
+//  private Rectangle getBottomLeftSearchRectangle( PageData page, Rectangle searchrect, QRScanResult calibrationresult )
+//  {
+//    // estimate centre of bottom left qr by devising two vectors from calibration points
+//    // and page dimensions and transforming coords of bottom left corner of qrcode.
+//    ResultPoint[] points = calibrationresult.getResultPoints();
+//    // measure bottom right qr..
+//    double qrh = Math.sqrt(   (double)(points[2].getX()-points[1].getX())*(points[2].getX()-points[1].getX())
+//                             +(double)(points[2].getY()-points[1].getY())*(points[2].getY()-points[1].getY())    );
+//    double qrv = Math.sqrt(   (double)(points[1].getX()-points[0].getX())*(points[1].getX()-points[0].getX())
+//                             +(double)(points[1].getY()-points[0].getY())*(points[1].getY()-points[0].getY())    );
+//
+//    // one pixel horizontal move
+//    double unitvector_h_x = (double)(points[2].getX()-points[1].getX()) / qrh;
+//    double unitvector_h_y = (double)(points[2].getY()-points[1].getY()) / qrh;
+//
+//    // one pixel vertical move
+//    double unitvector_v_x = (double)(points[0].getX()-points[1].getX()) / qrv;
+//    double unitvector_v_y = (double)(points[0].getY()-points[1].getY()) / qrv;
+//
+//    // vector in inches on page
+//    double inchesx = (-page.declared_calibration_width + 0.3);
+//    double inchesy = -0.3;
+//
+//    // vector in pixels on image
+//    double pixelsx = qrh * inchesx/0.3;
+//    double pixelsy = qrv * inchesy/0.3;
+//
+//    double x = (double)searchrect.x;
+//    double y = (double)searchrect.y;
+//
+//    x += (double)points[0].getX();
+//    y += (double)points[0].getY();
+//
+//    x += unitvector_h_x * pixelsx;
+//    y += unitvector_h_y * pixelsx;
+//
+//    x += unitvector_v_x * pixelsy;
+//    y += unitvector_v_y * pixelsy;
+//
+//    Rectangle r = new Rectangle( (int)x, (int)y, 1, 1 );
+//    r.grow( (int)(qrh * 2.2), (int)(qrv * 2.2) );
+//    Rectangle safe_r =  r.intersection( page.scanbounds );
+//    return safe_r;
+//  }
+//
+//  private Rectangle getTopLeftSearchRectangle( PageData page, Rectangle searchrect, QRScanResult calibrationresult )
+//  {
+//    // estimate centre of bottom left qr by devising two vectors from calibration points
+//    // and page dimensions and transforming coords of bottom left corner of qrcode.
+//    ResultPoint[] points = calibrationresult.getResultPoints();
+//    // measure bottom right qr..
+//    double qrh = Math.sqrt(   (double)(points[2].getX()-points[1].getX())*(points[2].getX()-points[1].getX())
+//                             +(double)(points[2].getY()-points[1].getY())*(points[2].getY()-points[1].getY())    );
+//    double qrv = Math.sqrt(   (double)(points[1].getX()-points[0].getX())*(points[1].getX()-points[0].getX())
+//                             +(double)(points[1].getY()-points[0].getY())*(points[1].getY()-points[0].getY())    );
+//
+//    // one pixel horizontal move
+//    double unitvector_h_x = (double)(points[2].getX()-points[1].getX()) / qrh;
+//    double unitvector_h_y = (double)(points[2].getY()-points[1].getY()) / qrh;
+//
+//    // one pixel vertical move
+//    double unitvector_v_x = (double)(points[0].getX()-points[1].getX()) / qrv;
+//    double unitvector_v_y = (double)(points[0].getY()-points[1].getY()) / qrv;
+//
+//    // vector in inches on page
+//    double inchesx = 0.15;
+//    double inchesy = -page.declared_calibration_height + 0.15;
+//
+//    // vector in pixels on image
+//    double pixelsx = qrh * inchesx/0.6;
+//    double pixelsy = qrv * inchesy/0.6;
+//
+//    double x = (double)searchrect.x;
+//    double y = (double)searchrect.y;
+//
+//    x += (double)points[0].getX();
+//    y += (double)points[0].getY();
+//
+//    x += unitvector_h_x * pixelsx;
+//    y += unitvector_h_y * pixelsx;
+//
+//    x += unitvector_v_x * pixelsy;
+//    y += unitvector_v_y * pixelsy;
+//
+//    Rectangle r = new Rectangle( (int)x, (int)y, 1, 1 );
+//    r.grow( (int)(qrh * 1.1), (int)(qrv * 1.1) );
+//    return r.intersection( page.scanbounds );
+//  }
 
 
   private PageData identifyPage(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
@@ -654,6 +663,7 @@ public class PageDecoder
     {
       question = new QuestionData( page );
       question.ident = items[q].getIdent();
+      System.out.println( question.ident );
       questionmetrics = items[q].getQuestionMetricsRecord();
       //measureditempos_inches.setLocation( (double)items[q].getX()/100.0, (double)items[q].getY()/100.0 );
 
@@ -678,7 +688,7 @@ public class PageDecoder
         h = subimage_bottomright.y - subimage_topleft.y;
         
         
-        //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
+        System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
         if ( response.getImageFile().exists() )
         {
           page.error = "Scanned same page twice?";
@@ -1034,14 +1044,14 @@ public class PageDecoder
    * measured in pixels relative to top left ref point of top left qr
    * and converts to coordinates in inches on the original page design.
    * 
-   * @param ra
-   * @param resulta
-   * @param rb
-   * @param resultb
-   * @param rc
-   * @param resultc
-   * @param width
-   * @param height
+   * @param ra  Part of page where top left QR was looked for
+   * @param resulta Top left QR code
+   * @param rb Ditto bottom left
+   * @param resultb Ditto bottom left
+   * @param rc Ditto bottom right
+   * @param resultc Ditto bottom right
+   * @param calwidth
+   * @param calheight
    * @return 
    */
   private AffineTransform pageTransform(
@@ -1055,16 +1065,15 @@ public class PageDecoder
     double horizontal_dx, horizontal_dy;
     double vertical_dx,   vertical_dy;
 
-    double[] scale = new double[4];  // hor dx,dy  vert dx,dy
-
     ResultPoint[] pointsa = resulta.getResultPoints();
     ResultPoint[] pointsb = resultb.getResultPoints();
     ResultPoint[] pointsc = resultc.getResultPoints();
 
-    ResultPoint[] pagepoints = new ResultPoint[3];
-    pagepoints[0] = pointsa[1];
-    pagepoints[1] = pointsb[0];
-    pagepoints[2] = pointsc[0];
+    Point.Double[] pxpagepoints = new Point.Double[3];
+    pxpagepoints[0] = new Point.Double( ra.x + pointsa[1].getX(), ra.y + pointsa[1].getY() );
+    pxpagepoints[1] = new Point.Double( rb.x + pointsb[0].getX(), rb.y + pointsb[0].getY() );
+    pxpagepoints[2] = new Point.Double( rc.x + pointsc[0].getX(), rc.y + pointsc[0].getY() );
+    
     // Each QR has three locator points.  We use the top left point of the
     // top left QR and the bottom left point of the other two QRs
     // pointsa[0] = bottom left  pointsa[1] = top left    pointsa[2] = top right
@@ -1072,32 +1081,29 @@ public class PageDecoder
     // measure input vectors - pixel units
     // correct the point coord using the search rect - i.e. change to page coord
     // Calc vectors br to bl and bl to tl
-    horizontal_dx = (rc.x + pagepoints[2].getX()) - (rb.x + pagepoints[1].getX());
-    horizontal_dy = (rc.y + pagepoints[2].getY()) - (rb.y + pagepoints[1].getY());
-    vertical_dx   = (rb.x + pagepoints[1].getX()) - (ra.x + pagepoints[0].getX());
-    vertical_dy   = (rb.y + pagepoints[1].getY()) - (ra.y + pagepoints[0].getY());
+    horizontal_dx = pxpagepoints[2].getX() - pxpagepoints[1].getX();
+    horizontal_dy = pxpagepoints[2].getY() - pxpagepoints[1].getY();
+    vertical_dx   = pxpagepoints[1].getX() - pxpagepoints[0].getX();
+    vertical_dy   = pxpagepoints[1].getY() - pxpagepoints[0].getY();
 
     //System.out.println( "input v " + horizontal_dx );
     //System.out.println( "input v " + horizontal_dy );
     //System.out.println( "input v " + vertical_dx );
     //System.out.println( "input v " + vertical_dy );
 
-    // convert to pixels per inches
+    // convert to pixels per inch
     horizontal_dx = horizontal_dx / width;
     horizontal_dy = horizontal_dy / width;
     vertical_dx   = vertical_dx   / height;
     vertical_dy   = vertical_dy   / height;
 
-    //for ( int i=0; i<scale.length; i++ )
-    //  System.out.println( "scale = " + scale[i] );
-
     return new AffineTransform(
         horizontal_dx,
-        -0.5*vertical_dx,
-        -2*horizontal_dy,
+        -vertical_dx,
+        -horizontal_dy,
         vertical_dy,
-        ra.x + pagepoints[0].getX(),
-        ra.y + pagepoints[0].getY()
+        ra.x + pxpagepoints[0].getX(),
+        ra.y + pxpagepoints[0].getY()
         );
   }
 
