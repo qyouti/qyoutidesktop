@@ -7,7 +7,8 @@ package org.qyouti.ai;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.util.*;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -45,7 +46,7 @@ public class TrainingVectorImage
   Element svgroot;
   Element maingroup, backgroundgroup, foregroundgroup;
 
-  String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+  String svgNS = SVGConstants.SVG_NAMESPACE_URI;
 
 
   public TrainingVectorImage( TrainingSetGenerator gen, int type )
@@ -57,7 +58,7 @@ public class TrainingVectorImage
     this.gen = gen;
     this.type = type;
 
-    DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+    DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
     svgdoc_foreground = impl.createDocument( svgNS, "svg", null );
     svgroot = svgdoc_foreground.getDocumentElement();
     svgroot.setAttribute( "viewBox", "-0.5 -0.5 1.0 1.0");

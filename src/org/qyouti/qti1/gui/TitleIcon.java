@@ -8,7 +8,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import javax.swing.Icon;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.util.*;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -27,8 +28,8 @@ public class TitleIcon
     width = w;
     height = h;
 
-    DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-    String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+    DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
+    String svgNS = SVGConstants.SVG_NAMESPACE_URI;
     Document doc = impl.createDocument(svgNS, "svg", null);
     org.w3c.dom.Element g = (org.w3c.dom.Element) doc.createElementNS(svgNS, "g");
     org.w3c.dom.Element t = (org.w3c.dom.Element) doc.createElementNS(svgNS, "text");

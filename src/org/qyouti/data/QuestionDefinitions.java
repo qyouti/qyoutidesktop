@@ -206,7 +206,6 @@ public class QuestionDefinitions
     Transformer trans = transfac.newTransformer();
     trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
     trans.setOutputProperty(OutputKeys.INDENT, "yes");
-
     StreamResult result = new StreamResult( writer );
     DOMSource source = new DOMSource( questestinterop );
     trans.transform(source, result);

@@ -50,6 +50,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.print.PrintTranscoder;
@@ -59,8 +60,7 @@ import org.qyouti.dialog.ExamOptionsDialog;
 import org.qyouti.dialog.NewExamination;
 import org.qyouti.dialog.PreferencesDialog;
 import org.qyouti.print.MultiPagePDFTranscoder;
-import org.qyouti.print.PrintTask;
-import org.qyouti.qrcode.QRCodec;
+import org.qyouti.barcode.ZXingCodec;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QTIItemRenderer;
@@ -107,7 +107,7 @@ public class QyoutiView extends FrameView
 
     initComponents();
 
-    QRCodec.setDebugImageLabel( this.debugImageLabel );
+    ZXingCodec.setDebugImageLabel( this.debugImageLabel );
 
     if ( basefoldername == null )
     {
@@ -342,8 +342,7 @@ public class QyoutiView extends FrameView
     optionsButton = new javax.swing.JToggleButton();
     printexamButton = new javax.swing.JButton();
     examtopdfButton = new javax.swing.JButton();
-    previewexamButton = new javax.swing.JButton();
-    jPanel18 = new javax.swing.JPanel();
+                                                                                                                                                                                                                                    jPanel18 = new javax.swing.JPanel();
     debugImageLabel = new javax.swing.JLabel();
     questionTabPanel = new javax.swing.JPanel();
     jPanel15 = new javax.swing.JPanel();
@@ -554,15 +553,6 @@ public class QyoutiView extends FrameView
       }
     });
     jPanel17.add(examtopdfButton);
-
-    previewexamButton.setText(resourceMap.getString("previewexamButton.text")); // NOI18N
-    previewexamButton.setName("previewexamButton"); // NOI18N
-    previewexamButton.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        previewexamButtonActionPerformed(evt);
-      }
-    });
-    jPanel17.add(previewexamButton);
 
     examTabPanel.add(jPanel17, java.awt.BorderLayout.CENTER);
 
@@ -1385,7 +1375,7 @@ public class QyoutiView extends FrameView
       try
       {
         URI examfolderuri;
-        Vector<SVGDocument> paginated;
+        Vector<GenericDocument> paginated;
         TranscoderInput tinput;
         String printid = Long.toHexString( System.currentTimeMillis() );
         QuestionMetricsRecordSet qmrecset = new QuestionMetricsRecordSet(printid);
@@ -1781,13 +1771,12 @@ public class QyoutiView extends FrameView
         return;
       }
 
-      StreamCacheFactory.setDefaultCacheToFile(true);
-
+      //StreamCacheFactory.setDefaultCacheToFile(true);
       try
       {
         URI examfolderuri;
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-        Vector<SVGDocument> paginated;
+        Vector<GenericDocument> paginated;
         TranscoderInput tinput;
         TranscoderOutput transout = new TranscoderOutput(
             new FileOutputStream(
@@ -1796,8 +1785,8 @@ public class QyoutiView extends FrameView
 
         PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
         String printid = paginationrecord.getPrintId();
-        QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
-        qmrset.setMonochromePrint( false );
+        // QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
+        // qmrset.setMonochromePrint( false );
         MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
 
         for ( j=0; j<exam.candidates_sorted.size(); j++ )
@@ -1809,7 +1798,7 @@ public class QyoutiView extends FrameView
               examfolderuri,
               exam.candidates_sorted.elementAt(j),
               exam,
-              qmrset,
+              //qmrset,
               paginationrecord,
               exam.getPreamble() );
           for ( i=0; i<paginated.size(); i++ )
@@ -2254,7 +2243,6 @@ public class QyoutiView extends FrameView
   private javax.swing.JTable outcometable;
   private javax.swing.JMenuItem prefsMenuItem;
   private javax.swing.JButton preprocessscansButton;
-  private javax.swing.JButton previewexamButton;
   private javax.swing.JButton previousCandidateButton;
   private javax.swing.JButton previousResponseButton;
   private javax.swing.JButton printexamButton;

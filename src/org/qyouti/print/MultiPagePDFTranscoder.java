@@ -27,13 +27,17 @@ import org.apache.fop.Version;
 import org.apache.fop.fonts.FontInfo;
 import org.apache.fop.pdf.StreamCacheFactory;
 import org.apache.fop.svg.*;
+import org.apache.fop.svg.font.*;
 import org.apache.xmlgraphics.image.loader.ImageContext;
 import org.apache.xmlgraphics.image.loader.ImageManager;
 import org.apache.xmlgraphics.image.loader.ImageSessionContext;
 import org.apache.xmlgraphics.image.loader.impl.AbstractImageSessionContext;
 
 /**
- *
+ * This source code was copied from PDFTranscoder and then altered so it
+ * handles multiple inputs of SVG and starts a new page for each one.
+ * Was not able to do this by subclassing PDFTranscoder.
+ * 
  * @author jon
  */
 public class MultiPagePDFTranscoder
@@ -76,7 +80,7 @@ public class MultiPagePDFTranscoder
    * {@inheritDoc}
    */
   @Override
-  protected UserAgent createUserAgent()
+  protected FOPTranscoderUserAgent createUserAgent()
   {
     return new AbstractFOPTranscoder.FOPTranscoderUserAgent()
     {
@@ -130,38 +134,18 @@ public class MultiPagePDFTranscoder
 
       try
       {
-        Configuration effCfg = this.cfg;
-        if (effCfg == null)
-        {
-          System.out.println( "No config." );
-          //By default, enable font auto-detection if no cfg is given
-          boolean autoFonts = true;
-          if (hints.containsKey(KEY_AUTO_FONTS))
-          {
-            autoFonts = ((Boolean) hints.get(KEY_AUTO_FONTS)).booleanValue();
-          }
-          System.out.println( "transcode configuration autoFonts = " + autoFonts );
-          if (autoFonts)
-          {
-            DefaultConfiguration c = new DefaultConfiguration("pdf-transcoder");
-            DefaultConfiguration fonts = new DefaultConfiguration("fonts");
-            c.addChild(fonts);
-            DefaultConfiguration autodetect = new DefaultConfiguration("auto-detect");
-            fonts.addChild(autodetect);
-            effCfg = c;
-          }
-        }
+            Configuration effCfg = getEffectiveConfiguration();
 
-        if (effCfg != null)
-        {
-          System.out.println( "Now there is config." );
-          PDFDocumentGraphics2DConfigurator configurator = new PDFDocumentGraphics2DConfigurator();
-          configurator.configure(graphics, effCfg);
-        } else
-        {
-          System.out.println( "Still no config." );
-          graphics.setupDefaultFontInfo();
-        }
+            if (effCfg != null) {
+                PDFDocumentGraphics2DConfigurator configurator
+                        = new PDFDocumentGraphics2DConfigurator();
+                boolean useComplexScriptFeatures = false; //TODO - FIX ME
+                configurator.configure(graphics, effCfg, useComplexScriptFeatures);
+            } else {
+                graphics.setupDefaultFontInfo();
+            }
+            ((FOPTranscoderUserAgent) userAgent).setFontFamilyResolver(
+                    new FOPFontFamilyResolverImpl(graphics.getFontInfo()));
       } catch (Exception e)
       {
         throw new TranscoderException(

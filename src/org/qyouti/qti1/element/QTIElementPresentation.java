@@ -26,7 +26,7 @@
 
 package org.qyouti.qti1.element;
 
-import java.util.Vector;
+import java.util.*;
 import org.qyouti.qti1.*;
 
 /**
@@ -38,12 +38,25 @@ public class QTIElementPresentation
 {
   boolean supported=false;
   QTIElementMaterial material;
-  QTIElementResponselid responselid;
+  ArrayList<QTIElementResponselid> responselids;
   QTIElementResponsestr responsestr;
 
   QTIElementItem item=null;
 
+  // how many columns does this question prefer when
+  // layed out on the page?
+  int columns = 1;
+  
+  public QTIElementPresentation()
+  {
+    responselids = new ArrayList<>();
+  }
 
+  public int getColumns()
+  {
+    return columns;
+  }
+  
 //  public boolean isStandardMultipleChoice()
 //  {
 //    if ( !isSupported() ) return false;
@@ -69,11 +82,35 @@ public class QTIElementPresentation
     return supported;
   }
 
-
+  public boolean isMultipleChoice()
+  {
+    if ( !isSupported() ) return false;
+    if ( responselids.size() == 0 ) return false;
+    for ( int i=0; i<responselids.size(); i++ )
+      if ( !responselids.get( i ).isMultipleChoice() )
+        return false;
+    return true;
+  }
+  
+  public int getMultipleChoiceOptionCount()
+  {
+    // a deep search so this works with multiple responselids
+    Vector<QTIElementResponselabel> responselabels = findElements( QTIElementResponselabel.class, true );
+    return responselabels.size();
+  }
+    
   @Override
   public void initialize()
   {
     super.initialize();
+    
+    String columnsattribute = domelement.getAttribute( "qyouti:columns" );
+    columns = 1;
+    if ( columnsattribute!= null && columnsattribute.length() > 0 )
+    {
+      try { columns = Integer.parseInt( columnsattribute ); }
+      catch ( NumberFormatException nfe ) { columns = 1; }
+    }
     
     supported = false;
     Vector<QTIResponse> responses = findElements( QTIResponse.class, true );
@@ -83,10 +120,10 @@ public class QTIElementPresentation
         return;
       if ( responses.get(i) instanceof QTIElementResponselid )
       {
-        // responselid must come before responsestr
-        if ( responselid != null || responsestr != null)
+        // no support for items with responselids and a responsestr mixed
+        if ( responsestr != null)
           return;
-        responselid = (QTIElementResponselid)responses.get(i);
+        responselids.add( (QTIElementResponselid)responses.get(i) );
       }
       if ( responses.get(i) instanceof QTIElementResponsestr )
       {
@@ -95,9 +132,9 @@ public class QTIElementPresentation
       }
     }
 
-    if ( responselid != null )
+    for ( int i=0; i<responselids.size(); i++ )
     {
-      if ( ! responselid.isSupported() )
+      if ( ! responselids.get( i ).isSupported() )
         return;
     }
 

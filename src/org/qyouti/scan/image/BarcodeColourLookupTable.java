@@ -32,13 +32,13 @@ import java.awt.image.LookupTable;
  *
  * @author jon
  */
-public class QRCodeColourLookupTable 
+public class BarcodeColourLookupTable 
         extends LookupTable
 {
   int n_black, n_white;
   int threshold = 128;
 
-  public QRCodeColourLookupTable( int components )
+  public BarcodeColourLookupTable( int components )
   {
     super( 0, components );
     n_black = n_white = 0;

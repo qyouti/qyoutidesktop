@@ -36,6 +36,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JScrollPane;
+import org.apache.batik.dom.*;
 import org.apache.batik.dom.util.DOMUtilities;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.transcoder.TranscoderInput;
@@ -56,7 +57,7 @@ import org.w3c.dom.svg.SVGDocument;
 public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
 {
     Vector<QTIElementItem> items = null;
-    Vector<SVGDocument> paginated=null;
+    Vector<GenericDocument> paginated=null;
 
     QTIItemRenderer renderer = null;
     URI examfolderuri;
@@ -92,11 +93,13 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
       paginated = QTIItemRenderer.paginateItems( 
           "dummyid", examfolderuri,
           new CandidateData( null, "A.Student", "00000000"),
-          options, qmrecset, null,
+          options, 
+          //qmrecset, 
+          null,
               preamble );
       //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", paginated.get(0).getDocumentElement(), true );
 
-      previewcanvas.setSVGDocument( paginated.firstElement() );
+      previewcanvas.setDocument( paginated.firstElement() );
       page = 0;
       upbutton.setEnabled(false);
       downbutton.setEnabled( paginated.size() > 1 );
@@ -232,7 +235,7 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     {//GEN-HEADEREND:event_upbuttonActionPerformed
       // TODO add your handling code here:
       page--;
-      previewcanvas.setSVGDocument( paginated.elementAt(page) );
+      previewcanvas.setDocument( paginated.elementAt(page) );
       upbutton.setEnabled( page > 0 );
       downbutton.setEnabled( page < (paginated.size()-1) );
 
@@ -242,7 +245,7 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
     {//GEN-HEADEREND:event_downbuttonActionPerformed
       // TODO add your handling code here:
       page++;
-      previewcanvas.setSVGDocument( paginated.elementAt(page) );
+      previewcanvas.setDocument( paginated.elementAt(page) );
       upbutton.setEnabled( page > 0 );
       downbutton.setEnabled( page < (paginated.size()-1) );;
 

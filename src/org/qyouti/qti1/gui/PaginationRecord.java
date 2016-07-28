@@ -117,27 +117,27 @@ public class PaginationRecord
       if ( node.getNodeType() != Node.ELEMENT_NODE )
         continue;
 
-      if ( "qrcode".equals( node.getNodeName() ) )
-        loadQRCode( (Element)node );
+      if ( "bullseye".equals( node.getNodeName() ) )
+        loadBullseye( (Element)node );
       if ( "item".equals( node.getNodeName() ) )
         loadItem( (Element)node );
     }
   }
 
-  public void loadQRCode( Element e_qrcode )
+  public void loadBullseye( Element e_be )
   {
-    String strtype = e_qrcode.getAttribute( "type" );
+    String strtype = e_be.getAttribute( "type" );
     int type;
-    if ( "bottomleft".equals( strtype ) )       type = QRCode.QRCODE_BOTTOM_LEFT;
-    else if ( "bottomright".equals( strtype ) ) type = QRCode.QRCODE_BOTTOM_RIGHT;
-    else if ( "topleft".equals( strtype ) )     type = QRCode.QRCODE_TOP_LEFT;
-    else type = QRCode.QRCODE_UNKNOWN;
+    if ( "bottomleft".equals( strtype ) )       type = Bullseye.BULLSEYE_BOTTOM_LEFT;
+    else if ( "bottomright".equals( strtype ) ) type = Bullseye.BULLSEYE_BOTTOM_RIGHT;
+    else if ( "topleft".equals( strtype ) )     type = Bullseye.BULLSEYE_TOP_LEFT;
+    else type = Bullseye.BULLSEYE_UNKNOWN;
     
-    int x = Integer.parseInt( e_qrcode.getAttribute( "x" ) );
-    int y = Integer.parseInt( e_qrcode.getAttribute( "y" ) );
-    int w = Integer.parseInt( e_qrcode.getAttribute( "width" ) );
+    int x = Integer.parseInt( e_be.getAttribute( "x" ) );
+    int y = Integer.parseInt( e_be.getAttribute( "y" ) );
+    int r = Integer.parseInt( e_be.getAttribute( "radius" ) );
     
-    addQRCode( type, x, y, w );
+    addBullseye( type, x, y, r );
   }
   
   public void loadItem( Element e_item )
@@ -193,16 +193,16 @@ public class PaginationRecord
     lastpage.items.add( new Item( lastpage, ident, x, y, qmr ) );
   }
 
-  public void addQRCode( int type, int x, int y, int w )
+  public void addBullseye( int type, int x, int y, int w )
   {
     Page lastpage = candidates.lastElement().pages.lastElement();
-    lastpage.qrcodes.add( new QRCode( lastpage, type, x, y, w ) );
-    if ( type == PaginationRecord.QRCode.QRCODE_BOTTOM_LEFT )
-        lastpage.bl = lastpage.qrcodes.lastElement();
-    if ( type == PaginationRecord.QRCode.QRCODE_BOTTOM_RIGHT )
-        lastpage.br = lastpage.qrcodes.lastElement();
-    if ( type == PaginationRecord.QRCode.QRCODE_TOP_LEFT )
-        lastpage.tl = lastpage.qrcodes.lastElement();
+    lastpage.bullseyes.add( new Bullseye( lastpage, type, x, y, w ) );
+    if ( type == PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT )
+        lastpage.bl = lastpage.bullseyes.lastElement();
+    if ( type == PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT )
+        lastpage.br = lastpage.bullseyes.lastElement();
+    if ( type == PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT )
+        lastpage.tl = lastpage.bullseyes.lastElement();
   }
 
   public void emit(Writer writer) throws IOException
@@ -272,10 +272,10 @@ public class PaginationRecord
     int originy;
     
     Vector<Item> items = new Vector<Item>();
-    Vector<QRCode> qrcodes = new Vector<QRCode>();
-    QRCode bl;
-    QRCode br;
-    QRCode tl;
+    Vector<Bullseye> bullseyes = new Vector<Bullseye>();
+    Bullseye bl;
+    Bullseye br;
+    Bullseye tl;
     
     public Page( Candidate parent, String id, int pagenumber, int width, int height, int originx, int originy )
     {
@@ -287,6 +287,30 @@ public class PaginationRecord
       this.originx = originx;
       this.originy = originy;
     }
+
+    public int getWidth()
+    {
+      return width;
+    }
+
+    public int getHeight()
+    {
+      return height;
+    }
+  
+    public Bullseye getBullseye( int type )
+    {
+      switch ( type )
+      {
+        case Bullseye.BULLSEYE_TOP_LEFT:
+          return tl;
+        case Bullseye.BULLSEYE_BOTTOM_LEFT:
+          return bl;
+        case Bullseye.BULLSEYE_BOTTOM_RIGHT:
+          return br;
+      }
+      return null;
+    }
     
     public void emit(Writer writer) throws IOException
     {
@@ -297,8 +321,8 @@ public class PaginationRecord
       writer.write( " originx=\""+ originx + "\"" );
       writer.write( " originy=\""+ originy + "\"" );
       writer.write( ">\n");
-      for ( i=0; i<qrcodes.size(); i++ )
-        qrcodes.get( i ).emit( writer );
+      for ( i=0; i<bullseyes.size(); i++ )
+        bullseyes.get( i ).emit( writer );
       for ( i=0; i<items.size(); i++ )
         items.get( i ).emit( writer );
       writer.write("    </page>\n");
@@ -326,11 +350,7 @@ public class PaginationRecord
     }
     
     /**
-     * Gets horizontal and vertical spacing of qr codes.
-     * Horizontal is from bottom left ref point of bottom left QR to
-     * the bottom left ref point of bottom right QR.
-     * Vertical is from top left ref point of top left QR to
-     * bottom left ref point of bottom left QR.
+     * Gets horizontal and vertical spacing of bullseyes.
      * 
      * @return Array of two doubles units are in inches
      */
@@ -340,47 +360,64 @@ public class PaginationRecord
         return null;
       double[] dim = new double[2];
       dim[0] = br.x - bl.x;
-      dim[1] = bl.y - tl.y + bl.w;
+      dim[1] = bl.y - tl.y;
       dim[0] = dim[0]/100.0;
       dim[1] = dim[1]/100.0;
       return dim;
     }
   }
 
-  public class QRCode
+  public class Bullseye
   {
-    static final int QRCODE_BOTTOM_LEFT  = 0;
-    static final int QRCODE_TOP_LEFT     = 1;
-    static final int QRCODE_BOTTOM_RIGHT = 2;
-    static final int QRCODE_UNKNOWN      = -1;
+    public static final int BULLSEYE_BOTTOM_LEFT  = 0;
+    public static final int BULLSEYE_TOP_LEFT     = 1;
+    public static final int BULLSEYE_BOTTOM_RIGHT = 2;
+    public static final int BULLSEYE_UNKNOWN      = -1;
     
     Page parent;
     int type;
     int x;
     int y;
-    int w;
+    int r;
     
-    public QRCode( Page parent, int type, int x, int y, int w )
+    public Bullseye( Page parent, int type, int x, int y, int r )
     {
       this.parent = parent;
       this.type = type;
       this.x = x;
       this.y = y;
-      this.w = w;
+      this.r = r;
     }
+
+    public int getX()
+    {
+      return x;
+    }
+
+    public int getY()
+    {
+      return y;
+    }
+
+    public int getR()
+    {
+      return r;
+    }
+    
+    
     
     public void emit(Writer writer) throws IOException
     {
-      writer.write("      <qrcode type=\"");
+      writer.write("      <bullseye type=\"");
       switch ( type )
       {
-        case QRCODE_BOTTOM_LEFT:
+        case BULLSEYE_BOTTOM_LEFT:
           writer.write( "bottomleft" );
           break;
-        case QRCODE_TOP_LEFT:
+        case BULLSEYE_TOP_LEFT:
           writer.write( "topleft" );
           break;
-        case QRCODE_BOTTOM_RIGHT:
+        case BULLSEYE_BOTTOM_RIGHT:
           writer.write( "bottomright" );
           break;
         default:
@@ -391,8 +428,8 @@ public class PaginationRecord
       writer.write( Integer.toString( x ) );
       writer.write("\" y=\"");
       writer.write( Integer.toString( y ) );
-      writer.write("\" width=\"");
-      writer.write( Integer.toString( w ) );
+      writer.write("\" radius=\"");
+      writer.write(Integer.toString(r ) );
       writer.write( "\"/>\n");
     }
   }

@@ -47,10 +47,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import org.apache.fop.apps.FOUserAgent;
-import org.apache.fop.apps.Fop;
-import org.apache.fop.apps.FopFactory;
-import org.apache.fop.apps.MimeConstants;
+import org.apache.fop.apps.*;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -109,7 +106,7 @@ public class ExaminationData
     qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
-    default_options.setProperty( "columns", "2" );
+    default_options.setProperty( "columns", "1" );
   }
 
 
@@ -361,21 +358,58 @@ public class ExaminationData
   public void exportCsvScores(File csvfile)
           throws ParserConfigurationException, SAXException, IOException
   {
-    int i;
+    int i, j;
     CandidateData candidate;
+    OutcomeDatum datum;
     CSVWriter csvwriter = new CSVWriter(new FileWriter(csvfile));
+    ArrayList<String> list = new ArrayList<String>();
     String[] line = new String[3];
 
+    // Find all possible top level outcome names (other than SCORE which
+    // is always included
+    ArrayList<String> outcomenames = new ArrayList<String>();
     for (i = 0; i < candidates_sorted.size(); i++)
     {
       candidate = candidates_sorted.get(i);
-      line[0] = candidate.id;
-      line[1] = candidate.name;
-      line[2] = "";
-      if (candidate.score != null)
+      for ( j=0; j<candidate.outcomes.data.size(); j++ )
       {
-        line[2] = candidate.score.toString();
+        datum = candidate.outcomes.data.get( j );
+        if ( "SCORE".equals( datum.name ) )
+          continue;
+        if ( !outcomenames.contains( datum.name ) )
+          outcomenames.add( datum.name );
       }
+    }
+    
+    list.add( "ID" );
+    list.add( "Name" );
+    list.add( "Score" );
+    for (i = 0; i < outcomenames.size(); i++)
+      list.add( outcomenames.get( i) );
+    line = list.toArray( line );
+    csvwriter.writeNext(line);
+    
+    
+    for (i = 0; i < candidates_sorted.size(); i++)
+    {
+      list.clear();
+      candidate = candidates_sorted.get(i);
+      list.add( candidate.id );
+      list.add( candidate.name );
+      if (candidate.score != null)
+        list.add( candidate.score.toString() );
+      else
+        list.add( "" );
+      for ( j=0; j<outcomenames.size(); j++ )
+      {
+        datum = candidate.outcomes.getDatum( outcomenames.get( j ) );
+        if ( datum.value != null)
+          list.add( datum.value.toString() );
+        else
+          list.add( "" );
+      }
+      
+      line = list.toArray( line );
       csvwriter.writeNext(line);
     }
     csvwriter.close();
@@ -616,7 +650,7 @@ public class ExaminationData
 
 
     //File xsltfile = new File( "qyouti/xhtml2fo.xsl" );
-    FopFactory fopFactory = FopFactory.newInstance();
+    FopFactory fopFactory = FopFactory.newInstance( new File(".").toURI() );
     FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
     // configure foUserAgent as desired
 

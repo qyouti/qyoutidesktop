@@ -42,16 +42,18 @@ public class MultiPagePDFTranscoderSaved extends AbstractFOPTranscoder
   /**
    * {@inheritDoc}
    */
-  @Override
-    protected UserAgent createUserAgent() {
-        return new AbstractFOPTranscoder.FOPTranscoderUserAgent() {
-            // The PDF stuff wants everything at 72dpi
-            public float getPixelUnitToMillimeter() {
-                return super.getPixelUnitToMillimeter();
-                //return 25.4f / 72; //72dpi = 0.352778f;
-            }
-        };
-    }
+    
+    // commented out to prevent compile error on UserAgent which no longer used by super class
+//  @Override
+//    protected UserAgent createUserAgent() {
+//        return new AbstractFOPTranscoder.FOPTranscoderUserAgent() {
+//            // The PDF stuff wants everything at 72dpi
+//            public float getPixelUnitToMillimeter() {
+//                return super.getPixelUnitToMillimeter();
+//                //return 25.4f / 72; //72dpi = 0.352778f;
+//            }
+//        };
+//    }
 
   /**
    * Transcodes the specified Document as an image in the specified output.

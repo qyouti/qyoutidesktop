@@ -61,6 +61,7 @@ public class QTIElementResprocessing
 
   public void computeOutcomes()
   {
+    int i;
     QTIElementRespcondition respcondition;
     QTIElementConditionvar conditionvar;
     QTIElementSetvar setvar;
@@ -71,7 +72,7 @@ public class QTIElementResprocessing
     // if all correct and no incorrect statements are selected.
     boolean allornothing = getItem().highest_possible_score_known && isAllOrNothing();
 
-    for ( int i=0; i<conditions.size(); i++ )
+    for ( i=0; i<conditions.size(); i++ )
     {
       respcondition = conditions.get(i);
       conditionvar = respcondition.conditionvar;
@@ -94,17 +95,24 @@ public class QTIElementResprocessing
     {
       System.out.println( "Implementing WebCT all or nothing algorithm." );
       Vector<QTIElementResponselid> responselids = getItem().findElements( QTIElementResponselid.class, true );
-      if ( responselids.size() != 1 )
-        throw new IllegalArgumentException( "Item must have exactly one response_lid element." );
+      if ( responselids.size() == 0 )
+        throw new IllegalArgumentException( "All or nothing item must have one or more response_lid elements." );
+      boolean perfect = true;
+      for ( i=0; i<responselids.size(); i++ )
+        if ( !responselids.get( i ).isResponsePerfect() )
+        {
+          perfect = false;
+          break;
+        }
       Object score_outcome = getItem().getOutcomeValue( "SCORE" );
-      if ( responselids.get(0).isResponsePerfect() )
+      if ( perfect )
       {
         System.out.println( "Perfect response." );
         getItem().setOutcome(
                 "SCORE",
                 (score_outcome instanceof Double)?
-                  (new Double(responselids.get(0).highest_possible_score)):
-                  (new Integer( (int)Math.ceil(responselids.get(0).highest_possible_score))));
+                  (new Double(getItem().highest_possible_score)):
+                  (new Integer( (int)Math.ceil(getItem().highest_possible_score))));
       }
       else
       {
@@ -116,10 +124,7 @@ public class QTIElementResprocessing
                   (new Integer(0))
                   );
       }
-
     }
-
-
   }
 
 

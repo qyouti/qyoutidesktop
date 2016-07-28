@@ -37,6 +37,7 @@ import java.util.Vector;
 import org.qyouti.scan.image.IdentityLookupTable;
 import org.qyouti.scan.image.ResponseBoxColourLookupTable;
 import org.qyouti.scan.image.ResponseImageProcessor;
+import org.qyouti.scan.process.*;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -76,8 +77,7 @@ public class PageData implements Comparable
   public String pageid;
   public int page_number;
   
-  public AffineTransform pagetransform, revpagetransform;
-
+  public PageDecoder.TransformData pagetransform;
   
 //  public String candidate_name;
 //  public String candidate_number;

@@ -26,7 +26,7 @@
 
 package org.qyouti.qti1.element;
 
-import java.util.Vector;
+import java.util.*;
 import org.qyouti.qti1.QTIResponse;
 
 
@@ -42,7 +42,6 @@ public class QTIElementResponselid
 
   QTIElementRenderchoice renderchoice;
 
-  public double highest_possible_score=0.0;
 
   public boolean isSupported()
   {
@@ -84,7 +83,14 @@ public class QTIElementResponselid
     return cardinality.toLowerCase();
   }
 
-
+  public QTIElementResponselabel getResponseLabel( String ident )
+  {
+    for ( int i=0; i<renderchoice.responselabels.size(); i++ )
+      if ( ident == renderchoice.responselabels.get( i ).getIdent() )
+        return renderchoice.responselabels.get( i );
+    return null;
+  }
+  
   public QTIElementResponselabel[] getResponseLabels()
   {
     QTIElementResponselabel[] a = new QTIElementResponselabel[renderchoice.responselabels.size()];
@@ -120,15 +126,15 @@ public class QTIElementResponselid
   }
 
 
-  public void setCurrentValueByOffset( int offset )
-  {
-    QTIElementResponselabel responselabel = renderchoice.responselabels.get( offset );
-    if ( responselabel == null )
-      throw new IllegalArgumentException( "Attempting to set response to unavailable option." );
-    setCurrentValue( new String[] {responselabel.getIdent()} );
-  }
+//  public void setCurrentValueByOffset( int offset )
+//  {
+//    QTIElementResponselabel responselabel = renderchoice.responselabels.get( offset );
+//    if ( responselabel == null )
+//      throw new IllegalArgumentException( "Attempting to set response to unavailable option." );
+//    setCurrentValue( new String[] {responselabel.getIdent()} );
+//  }
 
-  public void addCurrentValueByOffset( int offset )
+  private void addCurrentValueByOffset( int offset )
   {
     QTIElementResponselabel responselabel = renderchoice.responselabels.get( offset );
     if ( responselabel == null )
@@ -185,134 +191,65 @@ public class QTIElementResponselid
     return true;
   }
 
-
-  public int getResponsePermutations( String ident )
+  public boolean containsResponselabel( QTIElementResponselabel label )
   {
-    String card = getCardinality();
-    if ( "single".equals( card ) )
-      return 1;
-    return 1 << (renderchoice.responselabels.size() - 1);
+    return renderchoice.responselabels.contains( label );
   }
-
-  public void setResponsePermutation( String ident, int perm )
-  {
-    String card = getCardinality();
-    int n = renderchoice.responselabels.size();
-    getItem().reset();
-
-    if ( "single".equals( card ) )
-      return;
-
-    // where is the chosen response label?
-    int offset;
-    for ( offset=0; offset<renderchoice.responselabels.size(); offset++ )
-      if ( ident.equals( renderchoice.responselabels.get( offset ).getIdent() ) )
-        break;
-    if ( offset == renderchoice.responselabels.size() )
-      throw new UnsupportedOperationException( "Unknown response label ident.");
-
-    // bit twiddle the perm to make gap for selected ident
-    int twiddledperm = perm;
-    int maskhi, masklo;
-    if ( offset < (renderchoice.responselabels.size()-1) )
-    {
-      masklo = (1 << offset)-1;
-      maskhi = ~masklo;
-      twiddledperm = (perm & masklo) | ((perm & maskhi) << 1);
-    }
-
-    for ( offset=0; offset<renderchoice.responselabels.size(); offset++ )
-      if ( ((1 << offset) & twiddledperm) != 0 )
-        addCurrentValueByOffset( offset );
-  }
-
-
-
+  
   /**
-   *  Long winded way to work out which (if any) are unambiguously
-   * the correct and incorrect answers.  Also works out the highest
-   * possible score.
+   * How many permutations does this LID have, perhaps with
+   * one option fixed.
+   * 
+   * @param minusone Is one option in this LID fixed?
+   * @return 
    */
-  public void computeCorrectResponses()
+  public int getResponsePermutations( QTIElementResponselabel label )
   {
-    int i, j, permcount, perm;
-    Object outcome = getItem().getOutcomeValue( "SCORE" );
-    if ( outcome == null || !(outcome instanceof Number) )
+    String card = getCardinality();
+    // if the stated fixed label is in this LID then there are no
+    // permutations.
+    if ( "single".equals( card ) )
+      return (label.lid == this)?1:renderchoice.responselabels.size();
+    return 1 << (renderchoice.responselabels.size() - (label.lid == this?1:0));
+  }
+
+  public void setResponsePermutation( QTIElementResponselabel label, int perm )
+  {
+    String card = getCardinality();
+    int i;
+    int n = renderchoice.responselabels.size();
+    ArrayList<Boolean> pattern = new ArrayList<Boolean>();
+    reset();
+
+    // if the stated fixed label is in this LID then there aren't multiple 
+    // permutations
+    if ( "single".equals( card ) && label.lid == this )
       return;
 
-    Number[] outcomes_selected;
-    Number[] outcomes_unselected;
-    boolean up, down, failed=false;
-    boolean maxonly = false;
-    String ident;
-    highest_possible_score = 0.0;
-    for ( i=0; i<renderchoice.responselabels.size(); i++ )
-    {
-      // Only calculate max possible mark if correct/incorrect already
-      // calculated or if attributes loaded from file.
-      if ( renderchoice.responselabels.get(i).isCorrect() ||
-           renderchoice.responselabels.get(i).isIncorrect() )
-        maxonly=true;
-
-      up = false;
-      down = false;
-      ident = renderchoice.responselabels.get( i ).getIdent();
-      permcount = getResponsePermutations( ident );
-      //System.out.println( "permcount = " + permcount );
-      outcomes_selected   = new Number[permcount];
-      outcomes_unselected = new Number[permcount];
-      for ( j=0; j<permcount; j++ )
-      {
-        //System.out.println( "permutation = " + j );
-        getItem().reset();
-        setResponsePermutation( ident, j );
-        //for ( int k=0; k<current.length; k++ )
-        //{
-        //  System.out.println( current[k] );
-        //}
-        getItem().computeOutcomes();
-        outcomes_unselected[j] = (Number)getItem().getOutcomeValue( "SCORE" );
-        //System.out.println( "score = " + outcomes_unselected[j] );
-        setCurrentValueByOffset( i );
-        getItem().computeOutcomes();
-        outcomes_selected[j] = (Number)getItem().getOutcomeValue( "SCORE" );
-        //System.out.println( "score = " + outcomes_selected[j] );
-        if ( outcomes_selected[j].doubleValue() > outcomes_unselected[j].doubleValue() )
-          up = true;
-        if ( outcomes_selected[j].doubleValue() < outcomes_unselected[j].doubleValue() )
-          down = true;
-        if ( outcomes_selected[j].doubleValue() > highest_possible_score )
-          highest_possible_score = outcomes_selected[j].doubleValue();
-        if ( outcomes_unselected[j].doubleValue() > highest_possible_score )
-          highest_possible_score = outcomes_unselected[j].doubleValue();
-      }
-      if ( maxonly )
-        continue;
-      if ( up && down )
-      {
-        failed = true;
-        break;
-      }
-      if ( up )
-        renderchoice.responselabels.get( i ).setCorrect( true );
-    }
-
-    if ( maxonly )
-      return;
+    for ( i=0; i<n; i++ )
+      pattern.add( false );
     
-    for ( i=0; i<renderchoice.responselabels.size(); i++ )
+    if ( "single".equals( card ) )
     {
-      if ( failed )
-      {
-        renderchoice.responselabels.get( i ).setCorrect( false );
-        renderchoice.responselabels.get( i ).setIncorrect( false );
-      }
-      else
-      {
-        if ( !renderchoice.responselabels.get( i ).isCorrect() )
-          renderchoice.responselabels.get( i ).setIncorrect( true );
-      }
+      if ( perm != 0 )
+        pattern.set( 1 << (perm-1), true );
     }
+    else
+    {
+      for ( i=0; i<n; i++ )
+        if ( ((perm >> i) & 1) == 1 )
+          pattern.set( i, true );
+    }
+    
+    // where is the chosen response label?
+    if ( label != null )
+      for ( i=0; i<n; i++ )
+        if ( label == renderchoice.responselabels.get( i ) )
+          pattern.add( n, false );
+
+    for ( i=0; i<n; i++ )
+      if ( pattern.get( i ) )
+        addCurrentValueByOffset( i );
   }
 
 

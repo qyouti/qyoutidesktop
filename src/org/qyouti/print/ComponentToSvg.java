@@ -33,7 +33,7 @@ import org.apache.batik.gvt.GraphicsNode;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.svggen.SVGIDGenerator;
-import org.apache.batik.util.XMLResourceDescriptor;
+import org.apache.batik.util.*;
 import org.w3c.dom.*;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -45,9 +45,6 @@ public class ComponentToSvg
 {
   private static SVGIDGenerator idgen = new SVGIDGenerator();
 
-    public ComponentToSvg()
-    {
-    }
 
     public static SvgConversionResult convert(Component component, int width)
     {
@@ -61,30 +58,29 @@ public class ComponentToSvg
       return convert( component );
     }
 
-    public static SvgConversionResult convert(Component component)
+    static SvgConversionResult convert(Component component)
     {
         String svg = null;
         try
         {
             // Get component to render into SVG
-            DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-            SVGDocument document = (SVGDocument) impl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null);
+            DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
+            GenericDocument document = (GenericDocument) impl.createDocument(SVGConstants.SVG_NAMESPACE_URI, "svg", null);
             SVGGeneratorContext genctx = SVGGeneratorContext.createDefault(document);
-            genctx.setEmbeddedFontsOn(true);
+            genctx.setEmbeddedFontsOn(false);
             genctx.setIDGenerator(idgen);
-            SVGGraphics2D svgGenerator = new SVGGraphics2D(genctx, true);
+            SVGGraphics2D svgGenerator = new SVGGraphics2D(genctx, false);
             component.paint(svgGenerator);
             Element root = document.getDocumentElement();
             svgGenerator.getRoot(root);
 
-            BridgeContext ctx = new BridgeContext(new UserAgentAdapter());
-            GVTBuilder builder = new GVTBuilder();
-
-            GraphicsNode gvtRoot = builder.build(ctx, document);
-            Rectangle2D rect = gvtRoot.getSensitiveBounds();
+//            BridgeContext ctx = new BridgeContext(new UserAgentAdapter());
+//            GVTBuilder builder = new GVTBuilder();
+//            GraphicsNode gvtRoot = builder.build(ctx, document);
+//            Rectangle2D rect = gvtRoot.getSensitiveBounds();
             //System.out.println("SVG bounds : " + rect );
 
-            SvgConversionResult svgresult = new SvgConversionResult(document, gvtRoot);
+            SvgConversionResult svgresult = new SvgConversionResult(document, null ); // gvtRoot);
 
             return svgresult;
         } catch (Exception e)

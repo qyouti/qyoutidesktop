@@ -190,7 +190,7 @@ public class ScanTask
       int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
       PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
 
-      //System.out.println( "Started scanning image files for import." );
+      System.out.println( "Started scanning image files for import." );
 
 
       for ( i=0; i<filenames.length; i++ )

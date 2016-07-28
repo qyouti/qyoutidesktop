@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
@@ -88,9 +89,9 @@ public class TrainingSetGenerator
     }
   }
 
-  public SVGDocument getCurrentSVG()
+  public GenericDocument getCurrentSVG()
   {
-    return (SVGDocument) image.getSVGDocument();
+    return (GenericDocument) image.getSVGDocument();
   }
 
   public BufferedImage getCurrentBufferedImage()
