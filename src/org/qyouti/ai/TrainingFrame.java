@@ -358,7 +358,7 @@ public class TrainingFrame
 
   private void updatedisplay()
   {
-    previewcanvas.setSVGDocument( gen.getCurrentSVG() );
+    previewcanvas.setDocument( gen.getCurrentSVG() );
     foregroundrasterlabel.setIcon( new ImageIcon( QyoutiUtils.resizeImage( gen.getCurrentForegroundBufferedImage(), imagedisplaywidth, imagedisplaywidth ) ) );
     rasterlabel.setIcon( new ImageIcon( QyoutiUtils.resizeImage( gen.getCurrentBufferedImage(), imagedisplaywidth, imagedisplaywidth ) ) );
     forefftlabel.setIcon( new ImageIcon( QyoutiUtils.resizeImage( gen.getCurrentForegroundFFTImage(), imagedisplaywidth, imagedisplaywidth ) ) );

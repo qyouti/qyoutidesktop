@@ -9,7 +9,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import javax.swing.Icon;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.qyouti.svg.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.svg.SVGSVGElement;
@@ -47,14 +48,7 @@ public class SVGIcon
     {
         if ( x == null || y == null )
             throw new IllegalArgumentException( "SVGIcon not ready to paint into SVG doc" );
-
-        String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
-        Element svgroot = doc.getDocumentElement();
-        org.w3c.dom.Element g = (org.w3c.dom.Element) doc.createElementNS(svgNS,"g");
-        g.setAttribute("transform", "translate("+x+","+y+")" );
-        doc.adoptNode(fragment);
-        g.appendChild(fragment);
-        svgroot.appendChild( g );
+        SVGUtils.appendFragmentToDocument( doc, fragment, 0.0, x.intValue(), y.intValue() );
     }
 
 

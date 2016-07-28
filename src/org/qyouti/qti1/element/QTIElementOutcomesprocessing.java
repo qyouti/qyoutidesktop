@@ -76,33 +76,78 @@ public class QTIElementOutcomesprocessing
   
   public void process()
   {
+    int i, j, k;
+    boolean weightedsum = "WeightedSumOfScores".equals( getScoremodel() );
     if ( !supported )
       throw new IllegalArgumentException( "Unsupported outcomes processing." );
 
-    // At present ONLY the SCORE outcome is processed here
-    // The other alternative is for items to declare their own
-    // outcomes and these are simply copied up to become exam outcomes
-    // without going through the outcomesprocessing element
-
+    // ONLY the SCORE outcome is processed here
+    // Other processing occurs in QTIElementQuestestinterop.processOutcomes()
 
     Vector<QTIElementItem> items = root.getItems();
-    String name;
-    // We only handle (weighted) sum of scores so
-    // fetch the right decvar object
-    QTIElementDecvar scorevar = outcomes.decvar_table.get( "SCORE" );
-    // reset variable to default value
-    scorevar.reset();
-    // run through all the condition elements
-    for ( int j=0; j<conditions.size(); j++ )
+    for ( i=0; i<outcomes.decvar_vector.size(); i++ )
     {
-      // put all the relevant question outcomes through each condition element
-      for ( int k=0; k<items.size(); k++ )
+      QTIElementDecvar var = outcomes.decvar_vector.get( i );
+      // reset variable to default value
+      var.reset();
+      // SCORE is handled very differently to other outcomes
+      if ( "SCORE".equals( var.getVarname() ) )
       {
-        if ( items.get( k ).isReferencedByCandidate() )
-          conditions.get( j ).process(scorevar, items.get(k) );
+        if ( weightedsum )
+        {
+          // run through all the condition elements
+          for ( j=0; j<conditions.size(); j++ )
+          {
+            // put all the relevant question outcomes through each condition element
+            for ( k=0; k<items.size(); k++ )
+            {
+              if ( items.get( k ).isReferencedByCandidate() )
+                conditions.get( j ).process(var, items.get(k) );
+            }
+          }
+        }
+        else
+        {
+          Object itemoutcome;
+          Number nitem;
+          double sum = 0.0;
+          for ( k=0; k<items.size(); k++ )
+          {
+            if ( items.get( k ).isReferencedByCandidate() )
+            {
+              if ( items.get( k ).containsOutcomeName( var.getVarname() ) )
+              {
+                itemoutcome = items.get( k ).getOutcomeValue( var.getVarname() );
+                if ( !(itemoutcome instanceof Number) )
+                  throw new IllegalArgumentException( "Item score variable must have number value.");
+                nitem = (Number)itemoutcome;
+                sum += nitem.doubleValue();
+              }
+            }
+          }        
+          var.setCurrentValue( sum );
+        }
+        //System.out.println( "Grand total score: " + scorevar.getCurrentValue() );
       }
+      
+      // THIS IS DONE IN QUESTTESTINTEROP class
+//      else
+//      {
+//        for ( k=0; k<items.size(); k++ )
+//        {
+//          // Does this item have an outcome with the same name as this
+//          // top level outcomes?
+//          if ( items.get( k ).containsOutcomeName( var.getVarname() ) )
+//          {
+//            // Copy the outcome over
+//            var.setCurrentValue( items.get( k ).getOutcomeValue( var.getVarname() ) );
+//            // Stop looking if not null
+//            if ( var.getCurrentValue() != null )
+//              break;
+//          }
+//        }        
+//      }
     }
-    //System.out.println( "Grand total score: " + scorevar.getCurrentValue() );
   }
 
 

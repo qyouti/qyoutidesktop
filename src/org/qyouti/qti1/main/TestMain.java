@@ -102,7 +102,7 @@ public class TestMain
 
       System.out.println( "        SUPPORTED ITEM" );
       //current_item.setResponse( "RESP_MC", new String[] {"MC0"} );
-      current_item.setResponseValueByOffset( i % 4 );
+      //current_item.setResponseValueByOffset( i % 4 );
       String[] x = (String[])current_item.getResponseValue( "RESP_MC" );
       System.out.println( x[0] );
       current_item.computeOutcomes();

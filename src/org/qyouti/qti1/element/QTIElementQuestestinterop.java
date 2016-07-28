@@ -142,6 +142,7 @@ public class QTIElementQuestestinterop
       }
     }
 
+    // Now SCORE can be processed
     for ( i=0; i<outcomesprocessings.size(); i++ )
       outcomesprocessings.get( i ).reset();
     

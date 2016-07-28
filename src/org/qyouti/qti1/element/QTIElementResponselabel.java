@@ -43,10 +43,11 @@ public class QTIElementResponselabel
   boolean correct = false;
   boolean incorrect = false;
 
+  QTIElementResponselid lid;
 
-  public QTIElementResponselid findResponselid()
+  public QTIElementResponselid getResponselid()
   {
-    return findAncestorElement( QTIElementResponselid.class );
+    return lid;
   }
 
   public void setCorrectAttribute()
@@ -125,6 +126,8 @@ public class QTIElementResponselabel
   public void initialize()
   {
     super.initialize();
+    
+    lid = findAncestorElement( QTIElementResponselid.class );
 
     supported = false;
 

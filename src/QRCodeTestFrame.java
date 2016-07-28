@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import org.qyouti.qrcode.QRCodec;
+import org.qyouti.barcode.ZXingCodec;
 
 /**
  *
@@ -257,12 +257,12 @@ public class QRCodeTestFrame
       result = null;
       try
       {
-        image = QRCodec.encodeImage(input);
+        image = ZXingCodec.encode2DImage(input);
         //image = QRCodec.dirtyUpImage( image );
         //image = QRCodec.encodeImage(binput);
         imageLabel.setIcon(new ImageIcon(image));
 
-        output = QRCodec.decodeToString( image );
+        output = ZXingCodec.decodeToString( BarcodeFormat.QR_CODE, image );
         //boutput = QRCodec.decodeToByteArray( image );
         //outputLabel.setText(output);
       } catch (Exception ex)
@@ -274,11 +274,11 @@ public class QRCodeTestFrame
       for ( attempts=1; output == null && attempts<100; attempts++ )
       {
         //System.out.println( "Trying dirty image. Attempt " + attempts );
-        dirtyimage = QRCodec.dirtyUpImage( image );
+        dirtyimage = ZXingCodec.dirtyUpImage( image );
         imageLabel.setIcon( new ImageIcon(dirtyimage) );
         try
         {
-          output = QRCodec.decodeToString( dirtyimage );
+          output = ZXingCodec.decodeToString( BarcodeFormat.QR_CODE, dirtyimage );
         }
         catch ( Exception ex2 )
         {

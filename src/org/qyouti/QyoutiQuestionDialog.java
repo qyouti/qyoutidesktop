@@ -34,6 +34,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JScrollPane;
+import org.apache.batik.dom.*;
 import org.apache.batik.dom.util.DOMUtilities;
 import org.apache.batik.swing.JSVGCanvas;
 import org.qyouti.qti1.element.QTIElementItem;
@@ -79,10 +80,10 @@ public class QyoutiQuestionDialog extends javax.swing.JDialog
             return;
         }
 
-        SVGDocument svg = (SVGDocument) renderer.getPreviewSVGDocument( options );
+        GenericDocument svg = (GenericDocument) renderer.getPreviewSVGDocument( options );
         QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svg.getDocumentElement(), true );
 
-        previewcanvas.setSVGDocument( svg );
+        previewcanvas.setDocument( svg );
     }
 
 

@@ -7,7 +7,8 @@ package org.qyouti.qti1.gui;
 
 
 import java.awt.Rectangle;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.util.*;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -37,8 +38,8 @@ public class PinkIcon
         setType( type );
         setIdent( ident );
 
-        DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-        String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+        DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
+        String svgNS = SVGConstants.SVG_NAMESPACE_URI;
         Document doc = impl.createDocument(svgNS, "svg", null);
         org.w3c.dom.Element g  = (org.w3c.dom.Element) doc.createElementNS(svgNS,"g");
         org.w3c.dom.Element rw = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");

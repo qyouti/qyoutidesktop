@@ -292,7 +292,8 @@ public class QuestionData
     switch ( columnIndex )
     {
       case 0:
-        return String.valueOf((char)('a'+rowIndex));
+        return response.ident;
+        //return String.valueOf((char)('a'+rowIndex));
       case 1:
         if ( qtiitem == null ) return "?";
         if ( !qtiitem.isSupported() ) return "?";

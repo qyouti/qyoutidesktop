@@ -27,6 +27,7 @@
 package org.qyouti.print;
 
 import java.awt.geom.Rectangle2D;
+import org.apache.batik.dom.*;
 import org.apache.batik.gvt.GraphicsNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.svg.SVGDocument;
@@ -38,11 +39,11 @@ import org.w3c.dom.svg.SVGDocument;
 public class SvgConversionResult
 {
   //String svg;
-  SVGDocument document;
+  GenericDocument document;
   GraphicsNode gvtRoot;
-  public SvgConversionResult( SVGDocument d, /*String s,*/ GraphicsNode g ) { document = d; /*svg = s;*/ gvtRoot = g; }
-  public SVGDocument getDocument() { return document; }
+  public SvgConversionResult( GenericDocument d, /*String s,*/ GraphicsNode g ) { document = d; /*svg = s;*/ gvtRoot = g; }
+  public GenericDocument getDocument() { return document; }
   //public String getSvg() { return svg; }
-  public int getHeight() { return (int) Math.ceil(gvtRoot.getGeometryBounds().getMaxY()); }
-  public Rectangle2D getBounds() { return gvtRoot.getGeometryBounds(); }
+  //  public int getHeight() { return (int) Math.ceil(gvtRoot.getGeometryBounds().getMaxY()); }
+  //  public Rectangle2D getBounds() { return gvtRoot.getGeometryBounds(); }
 }

@@ -26,10 +26,9 @@
 
 package org.qyouti.qti1.element;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 import org.qyouti.qti1.*;
+import org.qyouti.util.*;
 
 /**
  *
@@ -110,38 +109,61 @@ public class QTIElementItem
   }
 
 
-  /**
-   * Sets response of first response_lid to value of
-   * 'Nth' option in that response.  Zero based index.
-   * @param offset
-   */
-  public void setResponseValueByOffset( int offset )
-  {
-    presentation.responselid.setCurrentValueByOffset( offset );
-  }
+//  /**
+//   * Sets response of first response_lid to value of
+//   * 'Nth' option in that response.  Zero based index.
+//   * @param offset
+//   */
+//  public void setResponseValueByOffset( int offset )
+//  {
+//    presentation.responselid.setCurrentValueByOffset( offset );
+//  }
 
-  /**
-   * Takes current value of first response_lid and appends
-   * the 'Nth' option in that value.  Zero based index.
-   * @param offset
-   */
-  public void addResponseValueByOffset( int offset )
-  {
-    presentation.responselid.addCurrentValueByOffset( offset );
-  }
+//  /**
+//   * Takes current value of first response_lid and appends
+//   * the 'Nth' option in that value.  Zero based index.
+//   * @param offset
+//   */
+//  public void addResponseValueByOffset( int offset )
+//  {
+//    presentation.responselid.addCurrentValueByOffset( offset );
+//  }
 
+  public List<QTIElementResponselabel> getResponselabels()
+  {
+    if ( presentation == null )
+      return null;
+    // a deep search so this works with multiple responselids
+    Vector<QTIElementResponselabel> responselabels = presentation.findElements( QTIElementResponselabel.class, true );
+    return responselabels;
+  }
 
   public QTIElementResponselabel getResponselabelByOffset( int offset )
   {
-    if ( presentation == null || presentation.responselid == null )
+    if ( presentation == null )
       return null;
-    Vector<QTIElementResponselabel> responselabels = presentation.responselid.findElements( QTIElementResponselabel.class, true );
+    // a deep search so this works with multiple responselids
+    Vector<QTIElementResponselabel> responselabels = presentation.findElements( QTIElementResponselabel.class, true );
     if ( offset<0 || offset >= responselabels.size() )
       return null;
 
     return responselabels.get(offset);
   }
 
+  public List<QTIElementResponselid> getResponselids()
+  {
+    if ( presentation == null )
+      return null;
+    // a deep search so this works with multiple responselids
+    Vector<QTIElementResponselid> lids = presentation.findElements( QTIElementResponselid.class, true );
+    return lids;
+  }
+
+
+  public boolean containsOutcomeName( String name )
+  {
+    return resprocessing.outcomes.decvar_table.containsKey( name );
+  }
 
 
   public String[] getOutcomeNames()
@@ -212,6 +234,115 @@ public class QTIElementItem
     resprocessing.computeOutcomes();
   }
 
+  
+  /**
+   *  Long winded way to work out which (if any) are unambiguously
+   * the correct and incorrect answers.  Also works out the highest
+   * possible score.
+   */
+  public void computeCorrectResponses()
+  {
+    int i, j, k;
+    MultiBaseInteger permutations;
+    int permcount;
+    if ( !containsOutcomeName( "SCORE" ) )
+      return;
+    
+    Object outcome = getOutcomeValue( "SCORE" );
+    if ( outcome == null || !(outcome instanceof Number) )
+      return;
+
+    Number[] outcomes_selected;
+    Number[] outcomes_unselected;
+    boolean up, down, failed=false;
+    boolean maxonly = false;
+    String lidident, ident;
+    QTIElementResponselabel label;
+    QTIElementResponselid lid;
+    highest_possible_score = 0.0;
+    
+    List<QTIElementResponselabel> responselabels = getResponselabels();
+    List<QTIElementResponselid> alllids = getResponselids();
+    permutations = new MultiBaseInteger(alllids.size());
+    
+    for ( i=0; i<responselabels.size(); i++ )
+    {
+      label = responselabels.get(i);
+      lid = label.getResponselid();
+      permutations.reset();
+      // Only calculate max possible mark if correct/incorrect already
+      // calculated or if attributes loaded from file.
+      if ( label.isCorrect() || label.isIncorrect() )
+        maxonly=true;
+
+      up = false;
+      down = false;
+      lidident = lid.getIdent();
+      ident = label.getIdent();
+      for ( k=0; k<alllids.size(); k++ )
+        permutations.setBase( k, alllids.get( k ).getResponsePermutations( label ) );
+      permcount = permutations.intValueMaximum() + 1;
+      
+      //System.out.println( "permcount = " + permcount );
+      outcomes_selected   = new Number[permcount];
+      outcomes_unselected = new Number[permcount];
+      for ( j=0; j<permcount; j++, permutations.increment() )
+      {
+        //System.out.println( "permutation = " + j );
+        reset();
+        for ( k=0; k<alllids.size(); k++ )
+          alllids.get( k ).setResponsePermutation( label, permutations.getDigit( k ) );
+        computeOutcomes();
+        // What is the score with our label unselected and with the current
+        // permutation of other selections in the item?
+        outcomes_unselected[j] = (Number)getOutcomeValue( "SCORE" );
+        // Select our label
+        lid.addCurrentValue( label.getIdent() );
+        // What is the score now?
+        computeOutcomes();
+        outcomes_selected[j] = (Number)getOutcomeValue( "SCORE" );
+        //System.out.println( "score = " + outcomes_selected[j] );
+        // did the score go up, go down or stay the same?
+        if ( outcomes_selected[j].doubleValue() > outcomes_unselected[j].doubleValue() )
+          up = true;
+        if ( outcomes_selected[j].doubleValue() < outcomes_unselected[j].doubleValue() )
+          down = true;
+        if ( outcomes_selected[j].doubleValue() > highest_possible_score )
+          highest_possible_score = outcomes_selected[j].doubleValue();
+        if ( outcomes_unselected[j].doubleValue() > highest_possible_score )
+          highest_possible_score = outcomes_unselected[j].doubleValue();
+      }
+      if ( maxonly )
+        continue;
+      if ( up && down )
+      {
+        failed = true;
+        break;
+      }
+      if ( up )
+        label.setCorrect( true );
+    }
+
+    if ( maxonly )
+      return;
+    
+    for ( i=0; i<responselabels.size(); i++ )
+    {
+      label = responselabels.get(i);
+      if ( failed )
+      {
+        label.setCorrect( false );
+        label.setIncorrect( false );
+      }
+      else
+      {
+        if ( !label.isCorrect() )
+          label.setIncorrect( true );
+      }
+    }
+  }
+  
+  
 
   @Override
   public void initialize()
@@ -258,12 +389,11 @@ public class QTIElementItem
       return;
 
     // now determine correct statements in multi choice.
-    if ( presentation.responselid != null )
+    if ( presentation.responselids.size() > 0 )
     {
       reset();
-      presentation.responselid.computeCorrectResponses();
+      computeCorrectResponses();
       highest_possible_score_known=true;
-      highest_possible_score=presentation.responselid.highest_possible_score;
     }
     
     reset();
@@ -274,23 +404,22 @@ public class QTIElementItem
   {
     if ( !isSupported() ) return false;
     if ( presentation == null ) return false;
-    if ( presentation.responselid == null ) return false;
-    return presentation.responselid.isStandardMultipleChoice();
+    if ( presentation.responselids.size() != 1) return false;
+    return presentation.responselids.get( 0 ).isStandardMultipleChoice();
   }
 
   public boolean isMultipleChoice()
   {
     if ( !isSupported() ) return false;
     if ( presentation == null ) return false;
-    if ( presentation.responselid == null ) return false;
-    return presentation.responselid.isMultipleChoice();
+    return presentation.isMultipleChoice();
   }
 
   public int getMultipleChoiceOptionCount()
   {
     if ( !isMultipleChoice() )
       return 0;
-    return presentation.responselid.getResponsePartCount();
+    return presentation.getMultipleChoiceOptionCount();
   }
 
   public boolean isString()
