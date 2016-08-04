@@ -6,6 +6,7 @@
 package org.qyouti;
 
 import java.io.*;
+import java.util.*;
 import javax.swing.*;
 
 /**
@@ -78,12 +79,19 @@ public class ExamSelectDialog
     this.frame = frame;
   }
   
-  void updateList()
+  public void updateList()
   {
     ListModel<String> model = examlist.getModel();
     listmodel.clear();
     File folder = new File( getBaseFolder() );
     File[] children = folder.listFiles();
+    Arrays.sort( children, new Comparator<File>(){
+      @Override
+      public int compare( File o1, File o2 )
+      {
+        return o1.getName().compareTo( o2.getName() );
+      }
+    } );
     File qyoutifile;
     for ( int i=0; i<children.length; i++ )
     {

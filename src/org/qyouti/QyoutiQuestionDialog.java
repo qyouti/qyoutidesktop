@@ -22,7 +22,7 @@
  */
 
 /*
- * QyoutiQuestionDialog.java
+- * QyoutiQuestionDialog.java
  *
  * Created on 08-Apr-2010, 22:03:11
  */

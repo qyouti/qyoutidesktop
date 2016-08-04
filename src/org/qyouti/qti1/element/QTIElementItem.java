@@ -27,7 +27,9 @@
 package org.qyouti.qti1.element;
 
 import java.util.*;
+import java.util.logging.*;
 import org.qyouti.qti1.*;
+import org.qyouti.templates.*;
 import org.qyouti.util.*;
 
 /**
@@ -70,12 +72,44 @@ public class QTIElementItem
   {
     return domelement.getAttribute( "title" );
   }
+  
+  public void setTitle( String title )
+  {
+    domelement.setAttribute( "title", title );
+  }
 
   public QTIElementPresentation getPresentation()
   {
       return presentation;
   }
 
+  public String getTemplateClassName()
+  {
+    return domelement.getAttribute( "qyouti:template" );
+  }
+
+  public ItemTemplate getTemplate()
+  {
+    String cn = getTemplateClassName();
+    if ( cn == null || cn.length() == 0 )
+      cn = "org.qyouti.templates.NoTemplate";
+    
+    try
+    {
+      Class c = Class.forName( cn );
+      if ( !ItemTemplate.class.isAssignableFrom( c ) )
+        return null;
+      ItemTemplate it = (ItemTemplate)c.newInstance();
+      it.setItem( this );
+      return it;
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( QTIElementItem.class.getName() ).log( Level.SEVERE, null, ex );
+    }
+    return null;
+  }
+  
 
   /**
    * Sets value of response specified by ident
