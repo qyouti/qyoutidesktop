@@ -2048,10 +2048,6 @@ public class QyoutiView extends FrameView
 
     private void clearresponsesbuttonActionPerformed(java.awt.event.ActionEvent evt)                                                     
     {                                                         
-      CandidateData candidate;
-      PageData page;
-      QuestionData question;
-      ResponseData response;
 
       JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
       if ( JOptionPane.showConfirmDialog( mainFrame, 
@@ -2060,28 +2056,6 @@ public class QyoutiView extends FrameView
               JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
         return;
 
-      for ( int i=0; i<exam.candidates_sorted.size(); i++ )
-      {
-        candidate = exam.candidates_sorted.get( i );
-        candidate.score = 0.0;
-        for ( int j=0; j<candidate.pages.size(); j++ )
-        {
-          page = candidate.pages.get( j );
-          for ( int k=0; k<page.questions.size(); k++ )
-          {
-            question = page.questions.get( k );
-            for ( int l=0; l<question.responsedatas.size(); l++ )
-            {
-              response = question.responsedatas.get( l );
-              if ( response.getFilteredImageFile().exists() )
-                response.getFilteredImageFile().delete();
-              if ( response.getImageFile().exists() )
-                response.getImageFile().delete();
-            }
-          }
-        }
-        candidate.pages.clear();
-      }
       exam.clearPages();
       exam.save();
       gotoQuestion( null );

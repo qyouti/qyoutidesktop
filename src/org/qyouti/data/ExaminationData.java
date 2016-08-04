@@ -61,7 +61,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.xml.sax.*;
 
 
 /**
@@ -92,6 +92,8 @@ public class ExaminationData
 
   public QuestionMetricsRecordSetCache qmrcache;
 
+  public boolean unsaved_changes=false;
+  
   public ExaminationData( ExaminationCatalogue examcatalogue )
   {
     this.examcatalogue = examcatalogue;
@@ -112,6 +114,34 @@ public class ExaminationData
 
   public void clearPages()
   {
+    CandidateData candidate;
+    PageData page;
+    QuestionData question;
+    ResponseData response;
+
+    for ( int i = 0; i < candidates_sorted.size(); i++ )
+    {
+      candidate = candidates_sorted.get( i );
+      candidate.score = 0.0;
+      for ( int j = 0; j < candidate.pages.size(); j++ )
+      {
+        page = candidate.pages.get( j );
+        for ( int k = 0; k < page.questions.size(); k++ )
+        {
+          question = page.questions.get( k );
+          for ( int l = 0; l < question.responsedatas.size(); l++ )
+          {
+            response = question.responsedatas.get( l );
+            if ( response.getFilteredImageFile().exists() )
+              response.getFilteredImageFile().delete();
+            if ( response.getImageFile().exists() )
+              response.getImageFile().delete();
+          }
+        }
+      }
+      candidate.pages.clear();
+    }
+    
     pages.clear();
     pagemap.clear();
   }
@@ -1310,6 +1340,67 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     return page.candidate;
   }
 
+  public void invalidateOutcomes()
+  {
+    invalidateOutcomes( null );
+  }
+  
+  public void invalidateOutcomes( String itemident )
+  {
+    PageData page;
+    for ( int i=0; i<getPageCount(); i++ )
+    {
+      page = getPage( i );
+      if ( page.error != null )
+        continue;
+      
+      if ( itemident == null )
+      {
+        page.processed = false;
+      }
+      else
+      {
+        for ( int j=0; j<page.questions.size(); j++ )
+        {
+          if ( itemident.equals( page.questions.get( j ).getItem().getIdent() ) )
+            page.processed = false;
+        }
+      }
+    
+    }    
+  }
+  
+  public void updateOutcomes()
+  {
+    PageData page;
+    for ( int i=0; i<getPageCount(); i++ )
+    {
+      page = getPage( i );
+      if ( page.error != null )
+        continue;
+      if ( page.processed )
+        continue;
+      updateOutcomes( page );
+    }    
+  }
+
+  public void updateOutcomes( PageData page )
+  {
+    if ( page.candidate ==null )
+        return;
+    // Compute outcomes based on QTI def of question
+    for ( int j=0; j<page.questions.size(); j++ )
+    {
+      page.questions.get( j ).processResponses();
+    }
+    if ( page.questions.size() > 0 )
+    {
+      // recalculates total score after every page
+      page.candidate.processAllResponses();
+    }
+    page.processed = true;    
+  }
+  
   public QTIElementItem getAssessmentItem(String id)
   {
     return qdefs.qti.getItem(id);
@@ -1342,6 +1433,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
+    unsaved_changes = false;
     return true;
   }
 
@@ -1498,17 +1590,23 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   }
 
 
-
   public void load()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    if ( !examfile.exists() || !examfile.isFile() )
+      return;
+    load( new InputSource( examfile.toURI().toString() ) );
+  }
+  
+  public void load( InputSource source )
           throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
-    if ( !examfile.exists() || !examfile.isFile() )
-      return;
+  
     
-    Document document = builder.parse(examfile);
+    Document document = builder.parse( source );
 
     Element roote = document.getDocumentElement();
     //System.out.println(roote.getNodeName());

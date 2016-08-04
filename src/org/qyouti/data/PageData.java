@@ -129,8 +129,7 @@ public class PageData implements Comparable
 
   public void postLoad()
   {
-    if ( processed )
-      this.candidate = exam.linkPageToCandidate( this );
+    this.candidate = exam.linkPageToCandidate( this );
   }
 
   public String getPreferredFolderName()

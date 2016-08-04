@@ -64,7 +64,7 @@ public class QuestionDefinitions
     if ( qtielement instanceof QTIElementQuestestinterop )
     {
       qti = (QTIElementQuestestinterop)qtielement;
-      Vector<QTIElementItem> items = qti.getItems();
+//      Vector<QTIElementItem> items = qti.getItems();
       //System.out.println( "Item count: " + items.size() );
 //      for ( int i=0; i<items.size(); i++ )
 //      {

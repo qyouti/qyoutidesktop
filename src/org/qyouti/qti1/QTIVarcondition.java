@@ -61,7 +61,18 @@ public abstract class QTIVarcondition
     return item.getResponseValue( getRespident() );
   }
 
+  public String getTextContent()
+  {
+    return textcontent;
+  }
 
+  public void setTextContent( String t )
+  {
+    domelement.setTextContent( t );
+    textcontent =  t;
+    if ( textcontent == null )
+      textcontent = "";
+  }
 
   @Override
   public void initialize()

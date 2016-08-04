@@ -93,7 +93,12 @@ public class QuestionData
     return responsedatatable.get( ident );
   }
 
-
+  public QTIElementItem getItem()
+  {
+    if ( ident == null ) return null;
+    return page.exam.getAssessmentItem( ident );
+  }
+  
   public void processResponses()
   {
     QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
