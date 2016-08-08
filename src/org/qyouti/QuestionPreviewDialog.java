@@ -41,7 +41,7 @@ public class QuestionPreviewDialog
         this.item = item;
 
         renderer = new QTIItemRenderer( 
-            examfolderuri, item, qnumber, options, null );
+            null, examfolderuri, item, qnumber, options, null );
         if ( renderer == null )
         {
             previewcanvas.setSVGDocument(null);

@@ -20,6 +20,7 @@ import org.qyouti.data.*;
 import org.qyouti.print.*;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.gui.*;
+import org.qyouti.scan.*;
 import org.qyouti.templates.*;
 import org.w3c.dom.*;
 
@@ -29,45 +30,65 @@ import org.w3c.dom.*;
  */
 public class QyoutiFrame
         extends javax.swing.JFrame
-        implements WindowListener
+        implements WindowListener, ExaminationDataStatusListener, ScanTaskListener
 {
-
+  QyoutiPreferences preferences;
   File examfolder = null;
   ExaminationData exam;
-  String baseFolder;
+  ExaminationCatalogue examcatalogue;
+  File basefolder;
   String examname = null;
 
   ExamSelectDialog selectdialog;
   QuestionPreviewDialog questiondialog;
+  BusyDialog busydialog;
 
   String editquestionident;
   QuestionData currentquestiondata;
+  String scanfolder=null;
 
   /**
    * Creates new form QyoutiFrame
    */
   public QyoutiFrame()
   {
-    this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
+    //File preferences_file = new File( appfolder, "preferences.xml" );
+    preferences = new QyoutiPreferences(null);//preferences_file);
+    //if ( preferences_file.exists() )
+    //  preferences.load();
+    //else
+      preferences.setDefaults();
+    
+    busydialog = new BusyDialog( this, false );
     selectdialog = new ExamSelectDialog( this, true );
     selectdialog.setFrame( this );
     initComponents();
+    gotoQuestion( null );
+    this.addWindowListener( this );
+    this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
   }
 
-  void possibleExit()
+  boolean confirmDataLoss( String message )
   {
-    if ( exam != null && exam.unsaved_changes )
+    if ( exam != null && exam.areUnsavedChanges() )
     {
       if ( JOptionPane.
-              showConfirmDialog( this, "There is unsaved data.\nAre you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
+              showConfirmDialog( this, "There is unsaved data.\n" + message, "Confirmation", JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
       {
-        return;
+        return false;
       }
     }
+    return true;
+  }
 
-    this.setVisible( false );
-    this.dispose();
-    System.exit( 0 );
+  void confirmExit()
+  {
+    if ( confirmDataLoss( "Are you sure you want to exit?" ) )
+    {
+      this.setVisible( false );
+      this.dispose();
+      System.exit( 0 );
+    }
   }
 
   /**
@@ -112,6 +133,10 @@ public class QyoutiFrame
     heightlabel = new javax.swing.JLabel();
     l6 = new javax.swing.JLabel();
     questionlabel = new javax.swing.JLabel();
+    l7 = new javax.swing.JLabel();
+    needsreviewlabel = new javax.swing.JLabel();
+    l8 = new javax.swing.JLabel();
+    reviewcombobox = new javax.swing.JComboBox<>();
     resprightpanel = new javax.swing.JPanel();
     resptoprightpanel = new javax.swing.JPanel();
     nextcandidatebutton = new javax.swing.JButton();
@@ -125,6 +150,7 @@ public class QyoutiFrame
     savestatuslabel = new javax.swing.JLabel();
     printstatuslabel = new javax.swing.JLabel();
     errorlabel = new javax.swing.JLabel();
+    progressbar = new javax.swing.JProgressBar();
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
     newmenuitem = new javax.swing.JMenuItem();
@@ -192,6 +218,7 @@ public class QyoutiFrame
         return canEdit [columnIndex];
       }
     });
+    questiontable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp1.setViewportView(questiontable);
 
     qtab.add(sp1, java.awt.BorderLayout.CENTER);
@@ -230,6 +257,7 @@ public class QyoutiFrame
         return canEdit [columnIndex];
       }
     });
+    candidatetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp2.setViewportView(candidatetable);
 
     ctab.add(sp2, java.awt.BorderLayout.CENTER);
@@ -268,6 +296,7 @@ public class QyoutiFrame
         return canEdit [columnIndex];
       }
     });
+    scanstable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp3.setViewportView(scanstable);
 
     stab.add(sp3, java.awt.BorderLayout.CENTER);
@@ -314,7 +343,8 @@ public class QyoutiFrame
 
     respheadpanel.add(respleftpanel, java.awt.BorderLayout.WEST);
 
-    resppropertypanel.setLayout(new java.awt.GridLayout(6, 2, 15, 2));
+    resppropertypanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 10));
+    resppropertypanel.setLayout(new java.awt.GridLayout(8, 2, 15, 2));
 
     l1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
     l1.setText("Candidate:");
@@ -357,6 +387,29 @@ public class QyoutiFrame
 
     questionlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     resppropertypanel.add(questionlabel);
+
+    l7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    l7.setText("Needs Review:");
+    resppropertypanel.add(l7);
+
+    needsreviewlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    needsreviewlabel.setText("No");
+    resppropertypanel.add(needsreviewlabel);
+
+    l8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    l8.setText("Examiner Decision:");
+    resppropertypanel.add(l8);
+
+    reviewcombobox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewcombobox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Not Reviewed", "Confirm", "Override" }));
+    reviewcombobox.addItemListener(new java.awt.event.ItemListener()
+    {
+      public void itemStateChanged(java.awt.event.ItemEvent evt)
+      {
+        reviewcomboboxItemStateChanged(evt);
+      }
+    });
+    resppropertypanel.add(reviewcombobox);
 
     respheadpanel.add(resppropertypanel, java.awt.BorderLayout.CENTER);
 
@@ -456,6 +509,7 @@ public class QyoutiFrame
         return canEdit [columnIndex];
       }
     });
+    responsetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     responsetable.setRowHeight(32);
     sp4.setViewportView(responsetable);
 
@@ -479,6 +533,7 @@ public class QyoutiFrame
     errorlabel.setText(" ");
     errorlabel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
     statuspanel.add(errorlabel);
+    statuspanel.add(progressbar);
 
     getContentPane().add(statuspanel, java.awt.BorderLayout.SOUTH);
 
@@ -515,11 +570,18 @@ public class QyoutiFrame
     filemenu.add(savemenuitem);
 
     propsmenuitem.setText("Exam/Survey Properties...");
-    propsmenuitem.setEnabled(false);
+    propsmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        propsmenuitemActionPerformed(evt);
+      }
+    });
     filemenu.add(propsmenuitem);
     filemenu.add(sep1);
 
     configmenuitem.setText("Configure...");
+    configmenuitem.setEnabled(false);
     filemenu.add(configmenuitem);
 
     exitmenuitem.setText("Exit");
@@ -615,7 +677,13 @@ public class QyoutiFrame
     actionmenu.add(preprocmenuitem);
 
     importimagesmenuitem.setText("Import Scanned Images...");
-    importimagesmenuitem.setEnabled(false);
+    importimagesmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        importimagesmenuitemActionPerformed(evt);
+      }
+    });
     actionmenu.add(importimagesmenuitem);
 
     clearscanneddatamenuitem.setText("Clear Scanned Data");
@@ -678,32 +746,58 @@ public class QyoutiFrame
 
   private void importqmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importqmenuitemActionPerformed
   {//GEN-HEADEREND:event_importqmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
     // TODO add your handling code here:
   }//GEN-LAST:event_importqmenuitemActionPerformed
 
   private void itemanalysismenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_itemanalysismenuitemActionPerformed
   {//GEN-HEADEREND:event_itemanalysismenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
     // TODO add your handling code here:
   }//GEN-LAST:event_itemanalysismenuitemActionPerformed
 
   private void expscoresmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_expscoresmenuitemActionPerformed
   {//GEN-HEADEREND:event_expscoresmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
     // TODO add your handling code here:
   }//GEN-LAST:event_expscoresmenuitemActionPerformed
 
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
   {//GEN-HEADEREND:event_openmenuitemActionPerformed
-    if ( selectdialog.getBaseFolder() == null || "".equals( selectdialog.
-            getBaseFolder() ) )
+
+    if ( !confirmDataLoss( "Are you sure you want to open a different exam/survey?" ) )
+    {
+      return;
+    }
+
+    if ( basefolder == null )
     {
       File homefolder = new File( System.getProperty( "user.home" ) );
-      File qfolder = new File( homefolder, "qyouti" );
-      if ( !qfolder.exists() )
+      basefolder = new File( homefolder, "qyouti" );
+      if ( !basefolder.exists() )
       {
-        qfolder.mkdir();
+        basefolder.mkdir();
       }
-      selectdialog.setBaseFolder( qfolder.getAbsolutePath() );
     }
+    selectdialog.setBaseFolder( basefolder );
     selectdialog.updateList();
     selectdialog.setExamName( "" );
 
@@ -714,22 +808,32 @@ public class QyoutiFrame
 
   private void importcanmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importcanmenuitemActionPerformed
   {//GEN-HEADEREND:event_importcanmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
     // TODO add your handling code here:
   }//GEN-LAST:event_importcanmenuitemActionPerformed
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
   {//GEN-HEADEREND:event_newmenuitemActionPerformed
+    if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
+    {
+      return;
+    }
 
-    if ( selectdialog.getBaseFolder() == null || "".equals( selectdialog.
-            getBaseFolder() ) )
+    if ( basefolder == null )
     {
       File homefolder = new File( System.getProperty( "user.home" ) );
-      File qfolder = new File( homefolder, "qyouti" );
-      if ( !qfolder.exists() )
+      basefolder = new File( homefolder, "qyouti" );
+      if ( !basefolder.exists() )
       {
-        qfolder.mkdir();
+        basefolder.mkdir();
       }
-      selectdialog.setBaseFolder( qfolder.getAbsolutePath() );
+      selectdialog.setBaseFolder( basefolder );
     }
 
     selectdialog.setExamName( "" );
@@ -799,6 +903,14 @@ public class QyoutiFrame
 
   private void previewqmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previewqmenuitemActionPerformed
   {//GEN-HEADEREND:event_previewqmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
     QTIElementItem item = null;
     int itemnumber = 0;
     if ( tabs.getSelectedComponent() == qtab )
@@ -860,6 +972,14 @@ public class QyoutiFrame
 
   private void editquestionmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editquestionmenuitemActionPerformed
   {//GEN-HEADEREND:event_editquestionmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
     QTIElementItem item = null;
     if ( tabs.getSelectedComponent() == qtab )
     {
@@ -899,7 +1019,7 @@ public class QyoutiFrame
       return;
     }
 
-    String lastprintid = exam.getQTIRenderOption( "last_print_id" );
+    String lastprintid = exam.getLastPrintID();
     template.setPresentationeditenabled( lastprintid == null || lastprintid.
             length() == 0 );
     template.setProcessingeditenabled( true );
@@ -911,6 +1031,14 @@ public class QyoutiFrame
 
   private void viewscanmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewscanmenuitemActionPerformed
   {//GEN-HEADEREND:event_viewscanmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
     String filename = null;
     if ( tabs.getSelectedComponent() == stab )
     {
@@ -948,20 +1076,32 @@ public class QyoutiFrame
 
   private void exitmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_exitmenuitemActionPerformed
   {//GEN-HEADEREND:event_exitmenuitemActionPerformed
-
-    possibleExit();
-
+    confirmExit();
   }//GEN-LAST:event_exitmenuitemActionPerformed
 
   private void savemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_savemenuitemActionPerformed
   {//GEN-HEADEREND:event_savemenuitemActionPerformed
 
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
     exam.save();
 
   }//GEN-LAST:event_savemenuitemActionPerformed
 
   private void editallquestionsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editallquestionsmenuitemActionPerformed
   {//GEN-HEADEREND:event_editallquestionsmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
     QTIElementItem item = null;
 
     int n = exam.qdefs.getRowCount();
@@ -985,7 +1125,7 @@ public class QyoutiFrame
         //return;      
       }
 
-      String lastprintid = exam.getQTIRenderOption( "last_print_id" );
+      String lastprintid = exam.getLastPrintID();
       template.setPresentationeditenabled( lastprintid == null || lastprintid.
               length() == 0 );
       template.setProcessingeditenabled( true );
@@ -998,52 +1138,64 @@ public class QyoutiFrame
 
   private void clearscanneddatamenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_clearscanneddatamenuitemActionPerformed
   {//GEN-HEADEREND:event_clearscanneddatamenuitemActionPerformed
-    if ( JOptionPane.showConfirmDialog( 
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( JOptionPane.showConfirmDialog(
             this,
             "<html><p>Clearing Responses removes all response data, images of pages and candidates' outcomes.</p>"
             + "<p>Press ahead anyway?</p></html>", "Confirm",
             JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
+    {
       return;
+    }
 
     exam.clearPages();
     exam.save();
     gotoQuestion( null );
-    exam.pagelistmodel.fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+    exam.pagelistmodel.
+            fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
   }//GEN-LAST:event_clearscanneddatamenuitemActionPerformed
 
   private void forgetprintmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_forgetprintmenuitemActionPerformed
   {//GEN-HEADEREND:event_forgetprintmenuitemActionPerformed
-    
+
     if ( exam == null )
     {
       JOptionPane.
-                showMessageDialog( this, "No exam/survey open." );
-      return;
-    }
-    
-    String lpid = exam.options.getProperty( "last_print_id" );
-    if ( lpid ==null || lpid.length() == 0 )
-    {
-      JOptionPane.
-                showMessageDialog( this, "There is no recorded print run to forget." );
-      return;
-    }
-    
-    if ( exam.getPageCount() > 0 )
-    {
-      JOptionPane.
-                showMessageDialog( this, "Before you can forget a print run you must clear all scan data." );
+              showMessageDialog( this, "No exam/survey open." );
       return;
     }
 
-    if ( JOptionPane.showConfirmDialog( 
+    String lpid = exam.getLastPrintID();
+    if ( lpid == null || lpid.length() == 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "There is no recorded print run to forget." );
+      return;
+    }
+
+    if ( exam.getPageCount() > 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "Before you can forget a print run you must clear all scan data." );
+      return;
+    }
+
+    if ( JOptionPane.showConfirmDialog(
             this,
             "<html><p>Forgetting a print run means that you will not be able to process scans of the printed pages.\nAre you sure you want to proceed?", "Confirm",
             JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
+    {
       return;
-    exam.setOption( "last_print_id", "" );
+    }
+    exam.setLastPrintID( null );
     exam.save();
-    updatePrintStatus();
   }//GEN-LAST:event_forgetprintmenuitemActionPerformed
 
   private void pdfprintmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_pdfprintmenuitemActionPerformed
@@ -1051,101 +1203,144 @@ public class QyoutiFrame
     if ( exam == null )
     {
       JOptionPane.
-                showMessageDialog( this, "No exam/survey open." );
+              showMessageDialog( this, "No exam/survey open." );
       return;
     }
-    
-    String lpid = exam.options.getProperty( "last_print_id" );
-    if ( lpid!=null && lpid.length() > 0 )
+
+    String lpid = exam.getLastPrintID();
+    if ( lpid != null && lpid.length() > 0 )
     {
       JOptionPane.
-                showMessageDialog( this, "The exam/survey has already been printed. \nYou need to clear scan data and 'forget' the previous print run before you can reprint." );
+              showMessageDialog( this, "The exam/survey has already been printed. \nYou need to clear scan data and 'forget' the previous print run before you can reprint." );
       return;
     }
 
-      if (exam.qdefs == null || exam.qdefs.getRowCount() == 0)
-      {
-        JOptionPane.
-                showMessageDialog( this, "You can't print papers - there are no questions in the exam.");
-        return;
-      }
-      if (exam.candidates_sorted.isEmpty())
-      {
-        JOptionPane.
-                showMessageDialog( this, "You can't print papers - there are no candidates in the exam.");
-        return;
-      }
+    if ( exam.qdefs == null || exam.qdefs.getRowCount() == 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "You can't print papers - there are no questions in the exam." );
+      return;
+    }
+    if ( exam.candidates_sorted.isEmpty() )
+    {
+      JOptionPane.
+              showMessageDialog( this, "You can't print papers - there are no candidates in the exam." );
+      return;
+    }
 
-      //StreamCacheFactory.setDefaultCacheToFile(true);
-      try
-      {
-        
-        URI examfolderuri;
-          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-        Vector<GenericDocument> paginated;
-        TranscoderInput tinput;
-        TranscoderOutput transout = new TranscoderOutput(
-            new FileOutputStream(
-                new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" ) ) );
+    tabs.setSelectedIndex( 0 );
+    tabs.setEnabled( false );
+    filemenu.setEnabled( false );
+    actionmenu.setEnabled( false );
+    exam.setUnsavedChanges( true );
+    printstatuslabel.setText( "Printing..." );
+    progressbar.setIndeterminate( true );
 
-
-        PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
-        String printid = paginationrecord.getPrintId();
-        // QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
-        // qmrset.setMonochromePrint( false );
-        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
-
-        for ( int j=0; j<exam.candidates_sorted.size(); j++ )
-        {
-          System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
-          System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
-          paginated = QTIItemRenderer.paginateItems(
-              printid,
-              examfolderuri,
-              exam.candidates_sorted.elementAt(j),
-              exam,
-              //qmrset,
-              paginationrecord,
-              exam.getPreamble() );
-          for ( int i=0; i<paginated.size(); i++ )
-          {
-            tinput = new TranscoderInput( paginated.elementAt(i) );
-            pdftranscoder.transcode( tinput, transout );
-            paginated.set(i, null);
-          }
-          paginated.clear();
-        }
-        pdftranscoder.complete();
-        transout.getOutputStream().close();
-        exam.setOption("last_print_id", printid);
-        updatePrintStatus();
-
-//        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
-//        if ( qmrrecfile.exists() )
-//          throw new IllegalArgumentException( "Unable to save print metrics." );
-//        // This helps with dodgy file systems
-//        try { qmrrecfile.createNewFile(); }
-//        catch ( Exception ee ) {}
-//        FileWriter writer = new FileWriter( qmrrecfile );
-//        qmrset.emit(writer);
-//        writer.close();
-
-        FileWriter writer;
-        File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
-        if ( pagrecfile.exists() )
-          throw new IllegalArgumentException( "Unable to save pagination record." );
-        // This helps with dodgy file systems
-        try { pagrecfile.createNewFile(); }
-        catch ( Exception ee ) {}
-        writer = new FileWriter( pagrecfile );
-        paginationrecord.emit(writer);
-        writer.close();
-
-      } catch (Exception ex)
-      {
-        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
-      }    
+    //busydialog.setVisible( true );
+    PrintThread thread = new PrintThread( exam, examfolder );
+    thread.setQyoutiFrame( this );
+    thread.start();
   }//GEN-LAST:event_pdfprintmenuitemActionPerformed
+
+  public void pdfPrintComplete()
+  {
+    tabs.setEnabled( true );
+    filemenu.setEnabled( true );
+    actionmenu.setEnabled( true );
+    progressbar.setIndeterminate( false );
+    //busydialog.setVisible( false );
+  }
+
+  private void propsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_propsmenuitemActionPerformed
+  {//GEN-HEADEREND:event_propsmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    ExamPropertiesDialog dialog = new ExamPropertiesDialog( this, true );
+    dialog.setExaminationData( exam );
+    dialog.setVisible( true );
+  }//GEN-LAST:event_propsmenuitemActionPerformed
+
+  private void importimagesmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importimagesmenuitemActionPerformed
+  {//GEN-HEADEREND:event_importimagesmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "You need to open an examination before importing scanned pages." );
+      return;
+    }
+
+    String lpid = exam.getLastPrintID();
+    if ( lpid == null || lpid.length() == 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "There is no print record for the exam/survey so scanning is not possible." );
+      return;
+    }
+
+    try
+    {
+      final JFileChooser fc = new JFileChooser();
+      fc.setDialogTitle( "Select directory that contains the scanned images." );
+      fc.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+      if ( scanfolder != null )
+      {
+        fc.setCurrentDirectory( new File( scanfolder ) );
+      }
+      int returnVal = fc.showOpenDialog( this );
+
+      if ( returnVal != JFileChooser.APPROVE_OPTION )
+      {
+        return;
+      }
+      File file = fc.getSelectedFile();
+      if ( !file.exists() || !file.isDirectory() )
+      {
+        return;
+      }
+
+      tabs.setSelectedIndex( 2 );
+      tabs.setEnabled( false );
+      filemenu.setEnabled( false );
+      actionmenu.setEnabled( false );
+      exam.setUnsavedChanges( true );
+      progressbar.setIndeterminate( true );
+      ScanTask scantask = new ScanTask( preferences, exam, file, false, false );
+      scantask.setScanTaskListener( this );
+      scantask.start();
+    }
+    catch ( Exception ex )
+    {
+      exam.candidates.clear();
+      exam.candidates_sorted.clear();
+      JOptionPane.
+              showMessageDialog( this, "Technical error importing scanned images list." );
+    }
+
+
+  }//GEN-LAST:event_importimagesmenuitemActionPerformed
+
+  private void reviewcomboboxItemStateChanged(java.awt.event.ItemEvent evt)//GEN-FIRST:event_reviewcomboboxItemStateChanged
+  {//GEN-HEADEREND:event_reviewcomboboxItemStateChanged
+    
+    if ( evt.getStateChange() == ItemEvent.SELECTED )
+    {
+      int n = reviewcombobox.getSelectedIndex();
+      if ( n != currentquestiondata.getExaminerDecision() )
+      {
+        System.out.println( "examiner decision combo box change." );
+        currentquestiondata.setExaminerDecision( n );
+        exam.setUnsavedChanges( true );
+      }
+    }
+    
+  }//GEN-LAST:event_reviewcomboboxItemStateChanged
 
   /**
    * Indicates that the question edit dialog stored some changes into its item
@@ -1158,7 +1353,7 @@ public class QyoutiFrame
       exam.invalidateOutcomes( editquestionident );
       exam.updateOutcomes();
     }
-    exam.unsaved_changes = true;
+    exam.setUnsavedChanges( true );
     gotoQuestion( currentquestiondata );
     exam.qdefs.fireTableDataChanged();
   }
@@ -1178,25 +1373,33 @@ public class QyoutiFrame
     }
     catch ( IOException ex )
     {
-      Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
+      Logger.getLogger( QyoutiFrame.class.getName() ).
+              log( Level.SEVERE, null, ex );
     }
     finally
     {
-      if ( writer !=null ) try {
-        writer.close();
-      }
-      catch ( IOException ex ) {
-        Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
+      if ( writer != null )
+      {
+        try
+        {
+          writer.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( QyoutiFrame.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
       }
     }
     loadExam( folder );
   }
 
-
   boolean examSelectDialogDone()
   {
-    File base = new File( selectdialog.getBaseFolder() );
-    File fold = new File( base, selectdialog.getExamName() );
+    basefolder = selectdialog.getBaseFolder();
+    examcatalogue = selectdialog.getExaminationCatalogue();
+    
+    File fold = new File( basefolder, selectdialog.getExamName() );
 
     if ( selectdialog.getDialogType() == ExamSelectDialog.TYPE_NEW )
     {
@@ -1212,10 +1415,10 @@ public class QyoutiFrame
       {
         JOptionPane.
                 showMessageDialog( this, "Unable to create a folder with that name - perhaps you lack access rights." );
-        return false;        
+        return false;
       }
       ExamCreateDialog dialog = new ExamCreateDialog( this, true );
-      dialog.setFolder( fold );      
+      dialog.setFolder( fold );
       dialog.setVisible( true );
     }
 
@@ -1228,47 +1431,33 @@ public class QyoutiFrame
     return true;
   }
 
-  private void updatePrintStatus()
+  void examOptionsSaved()
   {
-    String lpid = exam.options.getProperty( "last_print_id" );
-    if ( lpid == null || lpid.length() == 0 )
-      printstatuslabel.setText( "Not printed" );
-    else
-      printstatuslabel.setText( "Print ID = " + lpid );    
+    exam.setUnsavedChanges( true );
   }
-  
+
   private void loadExam( File examfolder )
   {
     this.examfolder = examfolder;
 
     try
     {
-      exam = new ExaminationData( null, new File( examfolder, "qyouti.xml" ) );
+      exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
+      exam.addExaminationDataStatusListener( this );
       scanstable.setModel( exam.pagelistmodel );
       candidatetable.setModel( exam );
       exam.load();
       setTitle( "Qyouti - " + examfolder.getName() );
-      updatePrintStatus();
       if ( exam.qdefs != null )
       {
         questiontable.setModel( exam.qdefs );
       }
-      gotoQuestion( null );
-      for ( int i = 0; i < exam.candidates_sorted.size(); i++ )
-      {
-        //System.out.println( "Checking candidate " + exam.candidates_sorted.get( i ).name );
-        for ( int j = 0; j < exam.candidates_sorted.get( i ).pages.size(); j++ )
-        {
-          //System.out.println( "Checking page " + exam.candidates_sorted.get( i ).pages.get(j).source );
-          if ( exam.candidates_sorted.get( i ).pages.get( j ).questions.size() > 0 )
-          {
-            //System.out.println( "Found first marked question " + exam.candidates_sorted.get(i).pages.get(j).questions.firstElement().ident );
-            gotoQuestion( exam.candidates_sorted.get( i ).pages.get( j ).questions.
-                    firstElement() );
-            return;
-          }
-        }
-      }
+
+      CandidateData c = exam.getFirstCandidate( true );
+      if ( c == null )
+        gotoQuestion( null );
+      else
+        gotoQuestion( c.firstQuestionData() );
     }
     catch ( Exception ex )
     {
@@ -1321,7 +1510,7 @@ public class QyoutiFrame
 
     //System.out.println( "gotoQuestion " + question );
     currentquestiondata = question;
-
+    needsreviewlabel.setOpaque( false );
     if ( question == null )
     {
       clearResponseTable();
@@ -1331,6 +1520,9 @@ public class QyoutiFrame
       sourcelabel.setText( "" );
       heightlabel.setText( "" );
       questionlabel.setText( "" );
+      needsreviewlabel.setText( "" );
+      reviewcombobox.setSelectedIndex( 0 );
+      reviewcombobox.setEnabled( false );
       outcometable.setModel( new OutcomeData() );
       nextquestionbutton.setEnabled( false );
       previousquestionbutton.setEnabled( false );
@@ -1348,6 +1540,13 @@ public class QyoutiFrame
       heightlabel.setText( Double.toString( question.page.height ) );
     }
     questionlabel.setText( question.ident );
+    needsreviewlabel.setText( question.needsreview?"Yes":"No");
+    if ( question.needsreview && question.getExaminerDecision() == QuestionData.EXAMINER_DECISION_NONE )
+      needsreviewlabel.setOpaque( true );
+    reviewcombobox.setEnabled( true );
+    reviewcombobox.setSelectedIndex( question.getExaminerDecision() );
+
+
     responsetable.setModel( question );
 
     outcometable.setModel( question.outcomes );
@@ -1450,7 +1649,10 @@ public class QyoutiFrame
   private javax.swing.JLabel l4;
   private javax.swing.JLabel l5;
   private javax.swing.JLabel l6;
+  private javax.swing.JLabel l7;
+  private javax.swing.JLabel l8;
   private javax.swing.JMenuBar menubar;
+  private javax.swing.JLabel needsreviewlabel;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JButton nextcandidatebutton;
   private javax.swing.JButton nextquestionbutton;
@@ -1464,6 +1666,7 @@ public class QyoutiFrame
   private javax.swing.JButton previouscandidatebutton;
   private javax.swing.JButton previousquestionbutton;
   private javax.swing.JLabel printstatuslabel;
+  private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
   private javax.swing.JPanel qtab;
   private javax.swing.JLabel questionlabel;
@@ -1478,6 +1681,7 @@ public class QyoutiFrame
   private javax.swing.JPanel resptopleftpanel;
   private javax.swing.JPanel resptoppanel;
   private javax.swing.JPanel resptoprightpanel;
+  private javax.swing.JComboBox<String> reviewcombobox;
   private javax.swing.JPanel rtab;
   private javax.swing.JMenuItem savemenuitem;
   private javax.swing.JLabel savestatuslabel;
@@ -1500,18 +1704,20 @@ public class QyoutiFrame
   @Override
   public void windowOpened( WindowEvent e )
   {
-    throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+
   }
 
   @Override
   public void windowClosing( WindowEvent e )
   {
-    possibleExit();
+    System.out.println( e );
+    confirmExit();
   }
 
   @Override
   public void windowClosed( WindowEvent e )
   {
+    System.out.println( e );
   }
 
   @Override
@@ -1532,5 +1738,34 @@ public class QyoutiFrame
   @Override
   public void windowDeactivated( WindowEvent e )
   {
+  }
+
+  @Override
+  public void examinationDataStatusChanged( ExaminationData exam )
+  {
+    savestatuslabel.setText( exam.areUnsavedChanges() ? "Unsaved Data" : " " );
+    String lpid = exam.getLastPrintID();
+    if ( lpid == null || lpid.length() == 0 )
+    {
+      printstatuslabel.setText( "Not printed" );
+    }
+    else
+    {
+      printstatuslabel.setText( "Print ID = " + lpid );
+    }
+  }
+
+  @Override
+  public void scanCompleted()
+  {
+    tabs.setEnabled( true );
+    filemenu.setEnabled( true );
+    actionmenu.setEnabled( true );
+    progressbar.setIndeterminate( false );
+    CandidateData c = exam.getFirstCandidate( true );
+    if ( c == null )
+      gotoQuestion( null );
+    else
+      gotoQuestion( c.firstQuestionData() );
   }
 }

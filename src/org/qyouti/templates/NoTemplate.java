@@ -28,7 +28,7 @@ public class NoTemplate
   int itemoption;    // Option as it was...
   
   /**
-   * Creates new form FourOptionMCQNoText
+   * Creates new instance
    */
   public NoTemplate()
   {

@@ -15,28 +15,25 @@ import org.qyouti.qti1.element.*;
  *
  * @author jon
  */
-public class FourOptionMCQNoText
+public class PureMCQNoText
         extends javax.swing.JPanel
         implements ItemTemplate
 {
   boolean presentationeditenabled=false;
   boolean processingeditenabled=false;
   QTIElementItem item = null;
+  int optioncount;
   boolean changed=false;
 
   String itemtitle;  // Title as it was when dialog was opened
   int itemoption;    // Option as it was...
-  
+  JRadioButton[] buttons;  // variable number of buttons - depends on no. opts
   /**
-   * Creates new form FourOptionMCQNoText
+   * Creates new instance
    */
-  public FourOptionMCQNoText()
+  public PureMCQNoText()
   {
     initComponents();
-    buttongroup.add( buttona );
-    buttongroup.add( buttonb );
-    buttongroup.add( buttonc );
-    buttongroup.add( buttond );
   }
 
   @Override
@@ -48,22 +45,18 @@ public class FourOptionMCQNoText
   @Override
   public void store()
   {
+    int i;
     String correctident=null;
     
     item.setTitle( titlefield.getText() );
     
     int currentoption = -1;
-    if ( buttona.isSelected() )
-      currentoption = 0;
-    if ( buttonb.isSelected() )
-      currentoption = 1;
-    if ( buttonc.isSelected() )
-      currentoption = 2;
-    if ( buttond.isSelected() )
-      currentoption = 3;
+    for ( i=0; i<optioncount; i++ )
+        if ( buttons[i].isSelected() )
+          currentoption = i;
     
     List<QTIElementResponselabel> l = item.getResponselabels();
-    for ( int i=0; i<l.size(); i++ )
+    for ( i=0; i<l.size(); i++ )
     {
       if ( i==currentoption )
       {
@@ -102,13 +95,16 @@ public class FourOptionMCQNoText
     return processingeditenabled;
   }
 
+  void updateProcessingeditenabled()
+  {
+    for ( int i=0; i<optioncount; i++ )
+      buttons[i].setEnabled( processingeditenabled );    
+  }
+  
   public void setProcessingeditenabled( boolean processingeditenabled )
   {
     this.processingeditenabled = processingeditenabled;
-    buttona.setEnabled( processingeditenabled );
-    buttonb.setEnabled( processingeditenabled );
-    buttonc.setEnabled( processingeditenabled );
-    buttond.setEnabled( processingeditenabled );
+    updateProcessingeditenabled();
   }
 
   public QTIElementItem getItem()
@@ -118,23 +114,29 @@ public class FourOptionMCQNoText
 
   public void setItem( QTIElementItem item )
   {
+    int i;
     this.item = item;
     this.changed = false;
     itemtitle = item.getTitle();
     List<QTIElementResponselabel> l = item.getResponselabels();
+    optioncount = l.size();
+    buttons = new JRadioButton[optioncount];
     itemoption = -1;
-    for ( int i=0; i<l.size(); i++ )
+    radiobuttonpanel.removeAll();
+    for ( i=0; i<optioncount; i++ )
     {
+      buttons[i] = new JRadioButton();
+      buttons[i].setText( l.get( i ).getIdent().toUpperCase() );
+      radiobuttonpanel.add( buttons[i] );
+      buttongroup.add( buttons[i] );
       if ( l.get( i ).isCorrect() )
       {
         itemoption = i;
-        break;
+        buttons[i].setSelected( true );
       }
     }
-    titlefield.setText( itemtitle );
-    JRadioButton[] buttons = {buttona, buttonb, buttonc, buttond};
-    if ( itemoption >=0 && itemoption < 4 )
-      buttons[itemoption].setSelected( true );
+    titlefield.setText( itemtitle );    
+    updateProcessingeditenabled();
   }  
 
   @Override
@@ -147,14 +149,9 @@ public class FourOptionMCQNoText
   void evaluateChange()
   {
     int currentoption = -1;
-    if ( buttona.isSelected() )
-      currentoption = 0;
-    if ( buttonb.isSelected() )
-      currentoption = 1;
-    if ( buttonc.isSelected() )
-      currentoption = 2;
-    if ( buttond.isSelected() )
-      currentoption = 3;
+    for ( int i=0; i<optioncount; i++ )
+      if ( buttons[i].isSelected() )
+          currentoption = i;
     String currenttitle = titlefield.getText();
     changed =  currentoption != itemoption || !currenttitle.equals( itemtitle );
   }
@@ -175,10 +172,7 @@ public class FourOptionMCQNoText
     titlefield = new javax.swing.JTextField();
     jPanel2 = new javax.swing.JPanel();
     correctlabel = new javax.swing.JLabel();
-    buttona = new javax.swing.JRadioButton();
-    buttonb = new javax.swing.JRadioButton();
-    buttonc = new javax.swing.JRadioButton();
-    buttond = new javax.swing.JRadioButton();
+    radiobuttonpanel = new javax.swing.JPanel();
 
     jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Presentation"));
 
@@ -201,54 +195,10 @@ public class FourOptionMCQNoText
 
     correctlabel.setText("Correct Answer:");
     jPanel2.add(correctlabel);
-
-    buttona.setText("A");
-    buttona.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        buttonaActionPerformed(evt);
-      }
-    });
-    jPanel2.add(buttona);
-
-    buttonb.setText("B");
-    buttonb.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        buttonbActionPerformed(evt);
-      }
-    });
-    jPanel2.add(buttonb);
-
-    buttonc.setText("C");
-    buttonc.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        buttoncActionPerformed(evt);
-      }
-    });
-    jPanel2.add(buttonc);
-
-    buttond.setText("D");
-    buttond.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        buttondActionPerformed(evt);
-      }
-    });
-    jPanel2.add(buttond);
+    jPanel2.add(radiobuttonpanel);
 
     add(jPanel2);
   }// </editor-fold>//GEN-END:initComponents
-
-  private void buttonbActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_buttonbActionPerformed
-  {//GEN-HEADEREND:event_buttonbActionPerformed
-    
-  }//GEN-LAST:event_buttonbActionPerformed
 
   private void titlefieldActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_titlefieldActionPerformed
   {//GEN-HEADEREND:event_titlefieldActionPerformed
@@ -256,34 +206,13 @@ public class FourOptionMCQNoText
     // TODO add your handling code here:
   }//GEN-LAST:event_titlefieldActionPerformed
 
-  private void buttonaActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_buttonaActionPerformed
-  {//GEN-HEADEREND:event_buttonaActionPerformed
-
-    // TODO add your handling code here:
-  }//GEN-LAST:event_buttonaActionPerformed
-
-  private void buttoncActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_buttoncActionPerformed
-  {//GEN-HEADEREND:event_buttoncActionPerformed
-
-    // TODO add your handling code here:
-  }//GEN-LAST:event_buttoncActionPerformed
-
-  private void buttondActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_buttondActionPerformed
-  {//GEN-HEADEREND:event_buttondActionPerformed
-
-    // TODO add your handling code here:
-  }//GEN-LAST:event_buttondActionPerformed
-
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  private javax.swing.JRadioButton buttona;
-  private javax.swing.JRadioButton buttonb;
-  private javax.swing.JRadioButton buttonc;
-  private javax.swing.JRadioButton buttond;
   private javax.swing.ButtonGroup buttongroup;
   private javax.swing.JLabel correctlabel;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel radiobuttonpanel;
   private javax.swing.JTextField titlefield;
   private javax.swing.JLabel titlelabel;
   // End of variables declaration//GEN-END:variables

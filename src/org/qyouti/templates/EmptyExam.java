@@ -22,7 +22,6 @@ public class EmptyExam
 "\n" +
 "<options>\n" +
 "<option name=\"ignore_flow\">false</option>\n" +
-"<option name=\"last_print_id\"/>\n" +
 "<option name=\"question_titles\">false</option>\n" +
 "<option name=\"double_sided\">false</option>\n" +
 "<option name=\"name_in_footer\">true</option>\n" +

@@ -42,6 +42,7 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
+import org.qyouti.*;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecoder;
 
@@ -53,7 +54,8 @@ public class ScanTask
         extends Thread
         implements ImageObserver
 {
-  QyoutiView view;
+  QyoutiPreferences preferences;
+  ScanTaskListener listener;
   ExaminationData exam;
   File scanfolder;
   public boolean active=false;
@@ -63,9 +65,9 @@ public class ScanTask
   boolean commandline=false;
   int exitCode=0;
 
-  public ScanTask( QyoutiView view, ExaminationData exam, File scanfolder, boolean preprocess, boolean commandline )
+  public ScanTask( QyoutiPreferences preferences, ExaminationData exam, File scanfolder, boolean preprocess, boolean commandline )
   {
-    this.view = view;
+    this.preferences = preferences;
     this.exam = exam;
     this.scanfolder = scanfolder;
     this.preprocess = preprocess;
@@ -74,6 +76,11 @@ public class ScanTask
       exam.scanfolder.mkdir();
   }
 
+  public void setScanTaskListener( ScanTaskListener listener )
+  {
+    this.listener = listener;
+  }
+  
   @Override
   public void run()
   {
@@ -85,6 +92,7 @@ public class ScanTask
     {
       runImport();
     }
+    if ( listener != null ) listener.scanCompleted();
   }
 
 
@@ -115,8 +123,8 @@ public class ScanTask
       boolean success;
 
       
-      int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
-      int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
+      int th    = preferences.getPropertyInt( "qyouti.scan.threshold" );
+      int inset = preferences.getPropertyInt( "qyouti.scan.inset" );
       PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
       
       for ( i=0; i<scanfiles.length; i++ )
@@ -186,8 +194,8 @@ public class ScanTask
       long errorname = System.currentTimeMillis();
       
 
-      int th    = view.preferences.getPropertyInt( "qyouti.scan.threshold" );
-      int inset = view.preferences.getPropertyInt( "qyouti.scan.inset" );
+      int th    = preferences.getPropertyInt( "qyouti.scan.threshold" );
+      int inset = preferences.getPropertyInt( "qyouti.scan.inset" );
       PageDecoder pagedecoder = new PageDecoder( (double)th / 100.0, inset );
 
       System.out.println( "Started scanning image files for import." );
@@ -395,7 +403,7 @@ public class ScanTask
       // recalculates total score after every page
       page.candidate.processAllResponses();
       // and updates presentation of data
-      view.gotoQuestion( page.questions.lastElement() );
+      //view.gotoQuestion( page.questions.lastElement() );
     }
     page.processed = true;
   }

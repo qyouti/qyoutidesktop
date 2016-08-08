@@ -1338,87 +1338,6 @@ public class QyoutiView extends FrameView
 
 }                                                     
 
-    /*
-    private void printexamButtonActionPerformed(java.awt.event.ActionEvent evt)                                                
-    {                                                    
-      int i, j;
-      JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
-
-      if (exam == null)
-      {
-        JOptionPane.showMessageDialog(mainFrame, "You need to select or create an examination before printing.");
-        return;
-      }
-
-
-      if (exam.qdefs == null || exam.qdefs.getRowCount() == 0)
-      {
-        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no questions in the exam.");
-        return;
-      }
-      if (exam.candidates_sorted.isEmpty())
-      {
-        JOptionPane.showMessageDialog(mainFrame, "You can't print papers - there are no candidates in the exam.");
-        return;
-      }
-
-      PrintTranscoder printtranscoder = new PrintTranscoder();
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SHOW_PRINTER_DIALOG, Boolean.TRUE );
-      //printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SHOW_PAGE_DIALOG,    Boolean.TRUE );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_SCALE_TO_PAGE,       Boolean.TRUE );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_BOTTOM, new Float(0.01) );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_LEFT,   new Float(0.01) );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_RIGHT,  new Float(0.01) );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
-      printtranscoder.addTranscodingHint(  PrintTranscoder.KEY_MARGIN_TOP,    new Float(0.01) );
-
-      try
-      {
-        URI examfolderuri;
-        Vector<GenericDocument> paginated;
-        TranscoderInput tinput;
-        String printid = Long.toHexString( System.currentTimeMillis() );
-        QuestionMetricsRecordSet qmrecset = new QuestionMetricsRecordSet(printid);
-        qmrecset.setMonochromePrint( false );
-        for ( j=0; j<exam.candidates_sorted.size(); j++ )
-        {
-          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-          paginated = QTIItemRenderer.paginateItems(
-              printid,
-              examfolderuri,
-              exam.candidates_sorted.elementAt(j),
-              exam,
-              qmrecset,
-              null,
-              exam.getPreamble()
-              );
-          for ( i=0; i<paginated.size(); i++ )
-          {
-            tinput = new TranscoderInput( paginated.elementAt(i) );
-            printtranscoder.transcode( tinput, new TranscoderOutput() );
-          }
-        }
-        printtranscoder.print();
-        exam.setOption("last_print_id", printid);
-      } catch (Exception ex)
-      {
-        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
-      }
-*/
-    
-      /*
-      File renderfolder = new File(examfolder, "render");
-      if (!renderfolder.exists())
-      {
-        renderfolder.mkdir();
-      }
-      PrintTask ptask = new PrintTask(exam.examfile, renderfolder, preferences );
-      ptask.start();
-      */
-
-/*
-}                                               
-*/
     private void importscansButtonActionPerformed(java.awt.event.ActionEvent evt)                                                  
     {                                                      
       JFrame mainFrame = QyoutiApp.getApplication().getMainFrame();
@@ -1469,7 +1388,7 @@ public class QyoutiView extends FrameView
           QyoutiUtils.copyFile( images[i], target );
         }
          */
-        scantask = new ScanTask(this, exam, file, false, false );
+        scantask = new ScanTask(preferences, exam, file, false, false );
         scantask.start();
       }
       catch (Exception ex)
@@ -1502,7 +1421,7 @@ public class QyoutiView extends FrameView
 
       try
       {
-        scantask = new ScanTask(this, exam, file, false, true );
+        scantask = new ScanTask(preferences, exam, file, false, true );
         scantask.run();
         if ( scantask.getExitCode() != 0 )
           return 1;
@@ -1538,7 +1457,7 @@ public class QyoutiView extends FrameView
 
       try
       {
-        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true, true );
+        scantask = new ScanTask(preferences, new ExaminationData( examcatalogue ), file, true, true );
         scantask.run();
         if ( scantask.getExitCode() != 0 )
           return 1;
@@ -1794,6 +1713,7 @@ public class QyoutiView extends FrameView
           System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
           System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
           paginated = QTIItemRenderer.paginateItems(
+              null,
               printid,
               examfolderuri,
               exam.candidates_sorted.elementAt(j),
@@ -1811,7 +1731,6 @@ public class QyoutiView extends FrameView
         }
         pdftranscoder.complete();
         transout.getOutputStream().close();
-        exam.setOption("last_print_id", printid);
 
 //        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
 //        if ( qmrrecfile.exists() )
@@ -2094,7 +2013,7 @@ public class QyoutiView extends FrameView
           return;
 
 
-        scantask = new ScanTask(this, new ExaminationData( examcatalogue ), file, true, false );
+        scantask = new ScanTask(preferences, new ExaminationData( examcatalogue ), file, true, false );
         scantask.start();
       }
       catch (Exception ex)
