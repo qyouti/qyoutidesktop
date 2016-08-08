@@ -21,7 +21,7 @@
   <entry key="item-area-inset-top">0.8</entry>
   <entry key="item-area-inset-right">0.5</entry>
   <entry key="item-area-inset-bottom">1.3</entry>
-  <entry key="item-area-column-spacing">0.3</entry>
+  <entry key="item-area-column-spacing">0.1</entry>
   
   <entry key="bullseye-radius">0.25</entry>
   <entry key="barcode-width">0.4</entry>

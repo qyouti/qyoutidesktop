@@ -62,38 +62,10 @@
             <Property name="text" type="java.lang.String" value="Correct Answer:"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JRadioButton" name="buttona">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="A"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonaActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JRadioButton" name="buttonb">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="B"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonbActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JRadioButton" name="buttonc">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="C"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttoncActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JRadioButton" name="buttond">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="D"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttondActionPerformed"/>
-          </Events>
-        </Component>
+        <Container class="javax.swing.JPanel" name="radiobuttonpanel">
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
+        </Container>
       </SubComponents>
     </Container>
   </SubComponents>

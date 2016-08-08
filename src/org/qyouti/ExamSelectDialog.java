@@ -8,6 +8,7 @@ package org.qyouti;
 import java.io.*;
 import java.util.*;
 import javax.swing.*;
+import org.qyouti.data.*;
 
 /**
  *
@@ -18,6 +19,8 @@ public class ExamSelectDialog
 {
 
   QyoutiFrame frame;
+  File basefolder;
+  ExaminationCatalogue examcatalogue;
   DefaultListModel<String> listmodel;
   int type;
   
@@ -53,17 +56,23 @@ public class ExamSelectDialog
   }
 
   
-  public String getBaseFolder()
+  public File getBaseFolder()
   {
-    return baselabel.getText();
+    return basefolder;
   }
 
-  public void setBaseFolder( String baseFolder )
+  public void setBaseFolder( File basefolder )
   {
-    baselabel.setText( baseFolder );
-    updateList();
+    this.basefolder = basefolder;
+    examcatalogue = new ExaminationCatalogue( basefolder );
+    baselabel.setText( basefolder.getAbsolutePath() );
   }
 
+  public ExaminationCatalogue getExaminationCatalogue()
+  {
+    return this.examcatalogue;
+  }
+  
   public String getExamName()
   {
     return namefield.getText();
@@ -81,26 +90,30 @@ public class ExamSelectDialog
   
   public void updateList()
   {
-    ListModel<String> model = examlist.getModel();
+    String[] list = examcatalogue.getNames();
     listmodel.clear();
-    File folder = new File( getBaseFolder() );
-    File[] children = folder.listFiles();
-    Arrays.sort( children, new Comparator<File>(){
-      @Override
-      public int compare( File o1, File o2 )
-      {
-        return o1.getName().compareTo( o2.getName() );
-      }
-    } );
-    File qyoutifile;
-    for ( int i=0; i<children.length; i++ )
-    {
-      if ( !children[i].isDirectory() )
-        continue;
-      qyoutifile = new File( children[i], "qyouti.xml" );
-      if ( qyoutifile.isFile() )
-        listmodel.addElement( children[i].getName() );
-    } 
+    for ( int i=0; i<list.length; i++ )
+      listmodel.addElement( list[i] );
+    
+
+//    File folder = new File( getBaseFolder() );
+//    File[] children = folder.listFiles();
+//    Arrays.sort( children, new Comparator<File>(){
+//      @Override
+//      public int compare( File o1, File o2 )
+//      {
+//        return o1.getName().compareTo( o2.getName() );
+//      }
+//    } );
+//    File qyoutifile;
+//    for ( int i=0; i<children.length; i++ )
+//    {
+//      if ( !children[i].isDirectory() )
+//        continue;
+//      qyoutifile = new File( children[i], "qyouti.xml" );
+//      if ( qyoutifile.isFile() )
+//        listmodel.addElement( children[i].getName() );
+//    } 
   }
   
   /**
@@ -237,7 +250,7 @@ public class ExamSelectDialog
       return;
     
     folder = fc.getSelectedFile();
-    setBaseFolder( folder.getAbsolutePath() );
+    setBaseFolder( folder );
   }//GEN-LAST:event_changebuttonActionPerformed
 
   private void handleListChange(javax.swing.event.ListSelectionEvent evt)//GEN-FIRST:event_handleListChange
@@ -247,69 +260,6 @@ public class ExamSelectDialog
     namefield.setText( examlist.getSelectedValue() );
   }//GEN-LAST:event_handleListChange
 
-  /**
-   * @param args the command line arguments
-   */
-  public static void main( String args[] )
-  {
-    /* Set the Nimbus look and feel */
-    //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-    /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-     */
-    try
-    {
-      for ( javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.
-              getInstalledLookAndFeels() )
-      {
-        if ( "Nimbus".equals( info.getName() ) )
-        {
-          javax.swing.UIManager.setLookAndFeel( info.getClassName() );
-          break;
-        }
-      }
-    }
-    catch ( ClassNotFoundException ex )
-    {
-      java.util.logging.Logger.getLogger(ExamSelectDialog.class.getName() ).
-              log( java.util.logging.Level.SEVERE, null, ex );
-    }
-    catch ( InstantiationException ex )
-    {
-      java.util.logging.Logger.getLogger(ExamSelectDialog.class.getName() ).
-              log( java.util.logging.Level.SEVERE, null, ex );
-    }
-    catch ( IllegalAccessException ex )
-    {
-      java.util.logging.Logger.getLogger(ExamSelectDialog.class.getName() ).
-              log( java.util.logging.Level.SEVERE, null, ex );
-    }
-    catch ( javax.swing.UnsupportedLookAndFeelException ex )
-    {
-      java.util.logging.Logger.getLogger(ExamSelectDialog.class.getName() ).
-              log( java.util.logging.Level.SEVERE, null, ex );
-    }
-    //</editor-fold>
-    //</editor-fold>
-
-    /* Create and display the dialog */
-    java.awt.EventQueue.invokeLater(new Runnable()
-    {
-      public void run()
-      {
-        ExamSelectDialog dialog = new ExamSelectDialog( new javax.swing.JFrame(), true );
-        dialog.addWindowListener( new java.awt.event.WindowAdapter()
-        {
-          @Override
-          public void windowClosing( java.awt.event.WindowEvent e )
-          {
-            System.exit( 0 );
-          }
-        } );
-        dialog.setVisible( true );
-      }
-    } );
-  }
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JLabel baselabel;

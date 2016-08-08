@@ -40,6 +40,8 @@ import org.qyouti.dialog.TextPaneWrapper;
 import org.qyouti.print.ComponentToSvg;
 import org.qyouti.print.SvgConversionResult;
 import org.qyouti.barcode.ZXingCodec;
+import org.qyouti.dialog.*;
+import org.qyouti.print.*;
 import org.qyouti.qti1.*;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
@@ -68,6 +70,7 @@ public class QTIItemRenderer
   UserRenderPreferences prefs;
   QTIRenderOptions options;
   QuestionMetricsRecord mrec;
+  PrintThread printthread;
 
 
   static QTIMetrics metrics = null;
@@ -109,7 +112,7 @@ public class QTIItemRenderer
    * @param item
    */
   public QTIItemRenderer(
-
+      PrintThread printthread,
       URI examfolderuri,
       QTIElementItem item,
       int qnumber,
@@ -118,6 +121,7 @@ public class QTIItemRenderer
       )
   {
     int i;
+    this.printthread = printthread;
     this.examfolderuri = examfolderuri;
     this.qnumber = qnumber;
 
@@ -149,6 +153,7 @@ public class QTIItemRenderer
   private void renderItem( QTIElementItem item )
   {
     int i;
+    System.out.println( "Render item " + item.getIdent() );
 
     QTIElementPresentation presentation = item.getPresentation();
     // Compose the HTML
@@ -157,9 +162,9 @@ public class QTIItemRenderer
     state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
     //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-    System.out.println("===============================================");
-    System.out.println(state.html);
-    System.out.println("===============================================");
+//    System.out.println("===============================================");
+//    System.out.println(state.html);
+//    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
     TextPaneWrapper textPane = new TextPaneWrapper();
@@ -208,7 +213,31 @@ public class QTIItemRenderer
     width -= (double)(columns-1) * getMetrics().getPropertyInches( "item-area-column-spacing" );
     width = width / (double)columns;
     
-    svgres = ComponentToSvg.convert(textPane,(int)getMetrics().inchesToSvg(width));
+    // Conversion can lock up if called from this thread so here is some
+    // jiggery pokery...
+    svgres =  null;
+    QyoutiCustomAWTEvent qe = new QyoutiCustomAWTEvent( textPane, 123456 );
+    qe.setRenderer( this );
+    qe.setWidth( (int)getMetrics().inchesToSvg(width) );
+    synchronized ( this )
+    {
+      java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent( qe );
+      do
+      {
+        try
+        {
+          wait();
+        }
+        catch ( InterruptedException ex )
+        {
+          Logger.getLogger( QTIItemRenderer.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
+      }
+      while ( svgres == null );
+    }
+    
+    //svgres = ComponentToSvg.convert(textPane,(int)getMetrics().inchesToSvg(width));
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
     NodeList nl = svgroot.getElementsByTagName( "defs" );
     if ( nl.getLength() > 0 )
@@ -691,6 +720,7 @@ public class QTIItemRenderer
 
 
   public static Vector<GenericDocument> paginateItems( 
+      PrintThread printthread,
       String printid,
       URI examfolderuri,
       CandidateData candidate,
@@ -791,7 +821,7 @@ public class QTIItemRenderer
         }
         
         // if ( i==29 ) System.out.println( "Item 29" );
-        renderer = new QTIItemRenderer( examfolderuri, items.elementAt(i), i+1, 
+        renderer = new QTIItemRenderer( printthread, examfolderuri, items.elementAt(i), i+1, 
             options, candidate.preferences );
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
@@ -1240,7 +1270,12 @@ public class QTIItemRenderer
     return svgres.getDocument();
   }
 
-
+  public synchronized void setSVGResult( SvgConversionResult r )
+  {
+    this.svgres = r;
+    notify();
+  }
+  
   public static QTIMetrics getMetrics()
   {
     if ( metrics == null )

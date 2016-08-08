@@ -91,7 +91,7 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
         QuestionMetricsRecordSet qmrecset = new QuestionMetricsRecordSet("dummyprintid");
         qmrecset.setMonochromePrint( false );
       paginated = QTIItemRenderer.paginateItems( 
-          "dummyid", examfolderuri,
+          null, "dummyid", examfolderuri,
           new CandidateData( null, "A.Student", "00000000"),
           options, 
           //qmrecset, 

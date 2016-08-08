@@ -72,7 +72,8 @@ public class ExaminationData
         extends AbstractTableModel implements QTIRenderOptions
 {
   public ExaminationCatalogue examcatalogue = null;
-
+  LinkedList<ExaminationDataStatusListener> listeners = new LinkedList<ExaminationDataStatusListener>();
+        
   public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
   public QuestionDefinitions qdefs = null;
@@ -92,7 +93,8 @@ public class ExaminationData
 
   public QuestionMetricsRecordSetCache qmrcache;
 
-  public boolean unsaved_changes=false;
+  String lastprintid=null;
+  boolean unsaved_changes=false;
   
   public ExaminationData( ExaminationCatalogue examcatalogue )
   {
@@ -111,7 +113,20 @@ public class ExaminationData
     default_options.setProperty( "columns", "1" );
   }
 
-
+  public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
+  {
+    listeners.add( listener );
+  }
+  
+  
+  void fireStatusChange()
+  {
+    Iterator<ExaminationDataStatusListener> iterator = listeners.iterator();
+    while ( iterator.hasNext() )
+      iterator.next().examinationDataStatusChanged( this );
+  }
+  
+  
   public void clearPages()
   {
     CandidateData candidate;
@@ -171,6 +186,26 @@ public class ExaminationData
   public PageData lookUpPage( String id )
   {
     return pagemap.get( id );
+  }
+
+
+  public CandidateData getFirstCandidate( boolean hasquestiondata )
+  {
+    if ( candidates_sorted.size() == 0 ) return null;
+    
+    if ( !hasquestiondata )
+      return this.candidates_sorted.get( 0 );
+    
+    CandidateData c;
+    
+    for ( int i=0; i<this.candidates_sorted.size(); i++ )
+    {
+      c = this.candidates_sorted.get( i );
+      if ( c.firstQuestionData() != null )
+        return c;
+    }
+    
+    return null;
   }
   
   @Override
@@ -1434,9 +1469,37 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
     }
     unsaved_changes = false;
+    fireStatusChange();
     return true;
   }
 
+  public boolean areUnsavedChanges()
+  {
+    return unsaved_changes;
+  }
+  
+  public void setUnsavedChanges( boolean b )
+  {
+    if ( unsaved_changes != b )
+    {
+      unsaved_changes = b;
+      fireStatusChange();
+    }
+  }
+
+  public String getLastPrintID()
+  {
+    return lastprintid;
+  }
+
+  public void setLastPrintID( String lastprintid )
+  {
+    this.lastprintid = lastprintid;
+    fireStatusChange();
+  }
+
+  
+  
   public void emitOptions(Writer writer)
           throws IOException
   {
@@ -1485,7 +1548,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
           throws IOException
   {
     writer.write("<?xml version=\"1.0\"?>\n");
-    writer.write("<examination>\n");
+    writer.write("<examination" );
+    if ( lastprintid != null)
+      writer.write( " lastprintid=\"" + lastprintid + "\"" );
+    writer.write( ">\n");
 
 
     emitOptions( writer );
@@ -1609,6 +1675,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Document document = builder.parse( source );
 
     Element roote = document.getDocumentElement();
+    lastprintid = roote.getAttribute( "lastprintid" );
+    if ( lastprintid != null && lastprintid.length() == 0 )
+      lastprintid = null;
+    
     //System.out.println(roote.getNodeName());
     NodeList nl = roote.getChildNodes();
     NodeList cnl;
@@ -1673,7 +1743,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
       for ( int p=0; p<getPageCount(); p++ )
         getPage( p ).postLoad();
-    
+  
+    fireStatusChange();
     fireTableDataChanged();
   }
 
@@ -1701,7 +1772,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       case 3:
         return "Score";
       case 4:
-        return "Scanned Pages";
+        return "Scanned\nPages";
       case 5:
         return "Scanned Questions";
       case 6:

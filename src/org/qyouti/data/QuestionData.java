@@ -47,8 +47,14 @@ import org.w3c.dom.NodeList;
 public class QuestionData
                 extends AbstractTableModel
 {
+  public static final int EXAMINER_DECISION_NONE = 0;
+  public static final int EXAMINER_DECISION_STAND = 1;
+  public static final int EXAMINER_DECISION_OVERRIDE = 2;
+  
   public PageData page;
   public String ident="";
+  public boolean needsreview = false;
+  private int examinerdecision = EXAMINER_DECISION_NONE;
   public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
   public Hashtable<String,ResponseData> responsedatatable = new Hashtable<String,ResponseData>();
 
@@ -67,6 +73,12 @@ public class QuestionData
     this.page = page;
 
     ident = element.getAttribute("ident");
+    String str = element.getAttribute( "needsreview" );
+    needsreview = str != null && str.toLowerCase().startsWith( "y" );
+    str = element.getAttribute( "decision" );
+    try { examinerdecision = Integer.parseInt( str ); }
+    catch ( NumberFormatException nfe ) { examinerdecision =  EXAMINER_DECISION_NONE; }
+    
     NodeList nl = element.getElementsByTagName( "response" );
     ResponseData response;
 
@@ -88,6 +100,22 @@ public class QuestionData
     page.exam.fireTableDataChanged();
   }
 
+  public int getExaminerDecision()
+  {
+    return examinerdecision;
+  }
+
+  public void setExaminerDecision( int examinerdecision )
+  {
+    if ( this.examinerdecision == examinerdecision )
+      return;
+    this.examinerdecision = examinerdecision;
+    page.candidate.processAllResponses();
+    this.fireTableStructureChanged();
+  }
+
+  
+  
   public ResponseData getResponseData( String ident )
   {
     return responsedatatable.get( ident );
@@ -138,9 +166,16 @@ public class QuestionData
         for ( int k=0; k<rlabels.length; k++ )
         {
           responsedata = getResponseData( rlabels[k].getIdent() );
-          if ( responsedata.examiner_selected )
-            responselid.addCurrentValue( responsedata.ident );
-            //qtiitem.addResponseValueByOffset( i );
+          if ( examinerdecision == EXAMINER_DECISION_OVERRIDE )
+          {
+            if ( responsedata.examiner_selected )
+              responselid.addCurrentValue( responsedata.ident );
+          }
+          else
+          {
+            if ( responsedata.selected )
+              responselid.addCurrentValue( responsedata.ident );
+          }
         }
         continue;
       }
@@ -203,7 +238,10 @@ public class QuestionData
   public void emit( Writer writer )
           throws IOException
   {
-    writer.write( "      <question ident=\"" + ident + "\">\n" );
+    writer.write( "      <question ident=\"" + ident + "\"" );
+    writer.write( " needsreview=\"" + (needsreview?"yes":"no") + "\"" );
+    writer.write( " decision=\"" + examinerdecision + "\"" );
+    writer.write( ">\n" );
     for ( int i=0; i<responsedatas.size(); i++ )
       responsedatas.get( i ).emit( writer );
 
@@ -237,7 +275,7 @@ public class QuestionData
     @Override
   public int getColumnCount()
   {
-    return 6;
+    return examinerdecision==EXAMINER_DECISION_OVERRIDE?6:5;
   }
 
   @Override

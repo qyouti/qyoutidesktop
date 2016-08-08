@@ -23,7 +23,6 @@ public class MCQAnonymousNoTextExam
 "\n" +
 "<options>\n" +
 "<option name=\"ignore_flow\">false</option>\n" +
-"<option name=\"last_print_id\"/>\n" +
 "<option name=\"question_titles\">false</option>\n" +
 "<option name=\"double_sided\">false</option>\n" +
 "<option name=\"name_in_footer\">true</option>\n" +
@@ -598,7 +597,7 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "\n" +
 "\n" +
 "        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table>]]></mattext>\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p>&nbsp;</p>]]></mattext>\n" +
 "        </material>\n" +
 "\n" +
 "\n" +
@@ -1098,59 +1097,31 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "\n" +
 "\n" +
 "\n" +
-"\n" +
-"    <item ident=\"intro\" title=\"Intro to Questions\">\n" +
-"    <presentation qyouti:columns=\"1\">\n" +
-"      <material>\n" +
-"        <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">\n" +
-"<![CDATA[\n" +
-"<p></p>\n" +
-"<p><span style=\"font-size: 150%;\">Your answers</span></p>\n" +
-"<p></p>\n" +
-"]]>\n" +
-"        </mattext>\n" +
-"      </material>\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"      </outcomes>\n" +
-"    </resprocessing>\n" +
-"    </item>\n\n";
+"\n";
 
 
 
-public static final String itemmcq = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.FourOptionMCQNoText\" title=\"Question QUESTIONNUMBER\">\n" +
-"    <presentation qyouti:columns=\"2\">\n" +
+public static final String itemmcqa = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.PureMCQNoText\" title=\"Question QUESTIONNUMBER\">\n" +
+"    <presentation qyouti:columns=\"COLUMNS\">\n" +
 "      <material>\n" +
 "<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<div style=\"text-align: right;\">]]></mattext>\n" +
 "</material>\n" +
 "      <flow>\n" +
 "       <flow_label class=\"Row\">\n" +
 "        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<span style=\"font-size: 150%;\">QQUESTIONNUMBER&nbsp;&nbsp;</span>]]></mattext>\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<span style=\"font-size: 110%;\">QQUESTIONNUMBER&nbsp;&nbsp;</span>]]></mattext>\n" +
 "        </material>\n" +
 "        <response_lid ident=\"resp_abcd\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"              <response_label ident=\"a\" qyouti:correct=\"true\">\n" +
+"          <render_choice shuffle=\"No\">\n";
+
+public static final String itemmcqoption = 
+"              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\n" +
 "                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">A&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</mattext>\n" +
+"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">OPTIONLETTER</mattext>\n" +
 "                </material>\n" +
-"              </response_label>\n" +
-"              <response_label ident=\"b\" qyouti:correct=\"false\">\n" +
-"                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">B&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n" +
-"              <response_label ident=\"c\" qyouti:correct=\"false\">\n" +
-"                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">C&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n" +
-"              <response_label ident=\"d\" qyouti:correct=\"false\">\n" +
-"                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">D&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n" +
+"              </response_label>\n";
+
+public static final String itemmcqb = 
 "          </render_choice>\n" +
 "        </response_lid>\n" +
 "       </flow_label>\n" +
@@ -1232,11 +1203,10 @@ public static final String itemmcq = "    <item ident=\"QUESTIONNUMBER\" qyouti:
     optslist.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     optslist.setModel(new javax.swing.AbstractListModel<String>()
     {
-      String[] strings = { "4", "5", "6" };
+      String[] strings = { "4", "5", "6", "7", "8", "9", "10" };
       public int getSize() { return strings.length; }
       public String getElementAt(int i) { return strings[i]; }
     });
-    optslist.setSelectedIndex(1);
     optslist.setVisibleRowCount(3);
     scrollpane2.setViewportView(optslist);
 
@@ -1306,9 +1276,10 @@ public static final String itemmcq = "    <item ident=\"QUESTIONNUMBER\" qyouti:
   @Override
   public String getDocumentAsString()
   {
-    int i;
+    int i, j;
     int nq = Integer.parseInt( questionsfield.getText() );
     int nc = Integer.parseInt( candidatesfield.getText() );
+    int no = Integer.parseInt( optslist.getSelectedValue() );
     if ( nq < 0 || nc < 0 )
       throw new IllegalArgumentException( "Invalid number." );
     if ( nq > 1000 || nc > 1000 )
@@ -1317,11 +1288,28 @@ public static final String itemmcq = "    <item ident=\"QUESTIONNUMBER\" qyouti:
     Random r = new Random();
     r.setSeed( System.currentTimeMillis() );
     StringBuilder buffer = new StringBuilder(1000);
+    String opt, str;
     buffer.append( texta.replaceFirst( "ASSESSMENTIDENT", Long.toHexString( r.nextLong() ) ) );
     buffer.append( itemvoid );
     buffer.append( itemsid );
+    String spacer="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;";
+    String opttext;
     for ( i=0; i<nq; i++ )
-      buffer.append(itemmcq.replaceAll( "QUESTIONNUMBER", Integer.toString( i+1 ) ) );
+    {
+      str = itemmcqa.replaceAll( "QUESTIONNUMBER", Integer.toString( i+1 ) );
+      str = str.replaceAll( "COLUMNS", (no>=6)?"1":"2" );
+      buffer.append( str );
+      for ( j=0; j<no; j++ )
+      {
+        opt = itemmcqoption.replaceFirst( "OPTIONIDENT", Character.toString( (char)('a' + j) ) );
+        opt = opt.replaceFirst( "TRUEFALSE", (j==0)?"true":"false" );
+        opttext= Character.toString( (char)('A' + j) );
+        if ( j != (no-1) )
+          opttext = opttext + spacer;
+        buffer.append( opt.replaceFirst( "OPTIONLETTER", opttext ) );
+      }
+      buffer.append( itemmcqb );
+    }
     buffer.append( textb );
     
     DecimalFormat df = new DecimalFormat( "000" );

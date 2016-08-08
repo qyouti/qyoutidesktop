@@ -56,8 +56,8 @@ public class QyoutiPreferences
   {
     super.setProperty( "qyouti.print.font-family", Font.SANS_SERIF );
     super.setProperty( "qyouti.qrcode.error-correction", "M" );
-    super.setProperty( "qyouti.scanning.threshold", "50" );
-    super.setProperty( "qyouti.scanning.inset", "50" );
+    super.setProperty( "qyouti.scan.threshold", "85" );
+    super.setProperty( "qyouti.scan.inset", "50" );
   }
 
   public ErrorCorrectionLevel getQRCodeErrorCorrection()

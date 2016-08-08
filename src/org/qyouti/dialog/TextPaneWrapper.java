@@ -5,11 +5,11 @@
 
 package org.qyouti.dialog;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import java.awt.*;
 import javax.swing.JTextPane;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLDocument;
+import org.qyouti.print.*;
 
 /**
  *
@@ -27,6 +27,19 @@ public class TextPaneWrapper
       //setText(html);
     }
 
+    @Override
+    public void processEvent( AWTEvent e )
+    {
+      if ( e instanceof QyoutiCustomAWTEvent )
+      {
+        QyoutiCustomAWTEvent qe = (QyoutiCustomAWTEvent) e;
+        SvgConversionResult result = ComponentToSvg.convert( this, qe.getWidth() );
+        qe.getRenderer().setSVGResult( result );
+        return;
+      }
+      super.processEvent( e );
+    }
+    
     public HTMLDocument getHtmlDoc()
     {
       Document doc = getDocument();
