@@ -32,8 +32,10 @@ public class QuestionAllEditDialog
 
   public void addTemplate( ItemTemplate template )
   {
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.gridx = 0;
     templates.add( template );
-    centrepanel.add( template.getComponent() );
+    centrepanel.add( template.getComponent(), gbc );
     this.pack();
   }
   
@@ -59,7 +61,7 @@ public class QuestionAllEditDialog
     scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
     scrollpane.setMinimumSize(new java.awt.Dimension(100, 100));
 
-    centrepanel.setLayout(new java.awt.GridLayout(0, 1));
+    centrepanel.setLayout(new java.awt.GridBagLayout());
     scrollpane.setViewportView(centrepanel);
 
     getContentPane().add(scrollpane, java.awt.BorderLayout.CENTER);

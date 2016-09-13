@@ -6,7 +6,9 @@
 package org.qyouti.dialog;
 
 import java.awt.*;
-import javax.swing.JTextPane;
+import java.lang.reflect.*;
+import java.util.logging.*;
+import javax.swing.*;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLDocument;
 import org.qyouti.print.*;
@@ -18,6 +20,7 @@ import org.qyouti.print.*;
 public class TextPaneWrapper
         extends JTextPane
 {
+    SvgConversionResult result=null;
 
     public TextPaneWrapper( /*String html*/ )
     {
@@ -27,17 +30,64 @@ public class TextPaneWrapper
       //setText(html);
     }
 
-    @Override
-    public void processEvent( AWTEvent e )
+    /**
+     * This method calls ComponentToSvg.convert.  There is some jiggery
+     * pokery because that method must be called from within the Event
+     * Dispatcher Thread regardless of whether the callee is in that
+     * thread.  So, this sets up a runnable, detects the current thread
+     * and either directly calls the runnable or invokes it in the event
+     * dispatcher thread and blocks until done.
+     * 
+     * It is likely that this will be called from the event dispatcher
+     * when a single question is rendered (preview) but from a specially
+     * created Thread when rendering lots of questions and remaining
+     * responsive to user input.
+     * 
+     * @param width
+     * @return 
+     */
+    public SvgConversionResult getSVG( final int width )
     {
-      if ( e instanceof QyoutiCustomAWTEvent )
+      final TextPaneWrapper wrapper = this;
+      result = null;
+      
+      Runnable r = new Runnable()
       {
-        QyoutiCustomAWTEvent qe = (QyoutiCustomAWTEvent) e;
-        SvgConversionResult result = ComponentToSvg.convert( this, qe.getWidth() );
-        qe.getRenderer().setSVGResult( result );
-        return;
+        @Override
+        public void run()
+        {
+          result = ComponentToSvg.convert( wrapper, width );
+        }
+        
+      };
+      
+      if ( SwingUtilities.isEventDispatchThread() )
+      {
+        System.out.println( "Rendering component to SVG - ALREADY IN EVENT DISPATCH THREAD." );
+        r.run();
       }
-      super.processEvent( e );
+      else
+      {
+        System.out.println( "Rendering component to SVG - INVOKING EVENT DISPATCH THREAD." );
+        try
+        {
+          SwingUtilities.invokeAndWait( r );
+        }
+        catch ( InterruptedException ex )
+        {
+          Logger.getLogger( TextPaneWrapper.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+          return null;
+        }
+        catch ( InvocationTargetException ex )
+        {
+          Logger.getLogger( TextPaneWrapper.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+          return null;
+        }
+      }
+      
+      return result;
     }
     
     public HTMLDocument getHtmlDoc()

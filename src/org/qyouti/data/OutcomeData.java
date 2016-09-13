@@ -64,4 +64,14 @@ public class OutcomeData
         return data.get(i);
     return null;
   }
+  
+  /**
+   * Clears non-fixed outcomes ready for (re)calculation.
+   */
+  public void clear()
+  {
+    for ( int i=0; i<data.size(); i++ )
+      if ( !data.get(i).fixed )
+        data.remove( i-- );    
+  }
 }

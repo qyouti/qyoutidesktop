@@ -44,6 +44,7 @@ import java.net.*;
 import java.util.*;
 import javax.imageio.ImageIO;
 import org.bullseye.*;
+import org.bullseye.XLocator.ProgressListener;
 import org.qyouti.barcode.ZXingCodec;
 import org.qyouti.barcode.ZXingResult;
 import org.qyouti.qti1.QTIResponse;
@@ -52,10 +53,7 @@ import org.qyouti.qti1.element.QTIElementResponselabel;
 import org.qyouti.qti1.element.QTIElementResponselid;
 import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
 import org.qyouti.qti1.gui.*;
-import org.qyouti.scan.image.CannyEdgeDetector;
-import org.qyouti.scan.image.PageRotator;
-import org.qyouti.scan.image.BarcodeColourLookupTable;
-import org.qyouti.scan.image.ResponseImageProcessor;
+import org.qyouti.scan.image.*;
 
 /**
  *
@@ -204,12 +202,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     int i, j;
     PageData page;
     ZXingResult barcoderesult;
+    Rectangle r;
     Rectangle[] quadrants = new Rectangle[4];
     Rectangle[] barcodesearchrect = new Rectangle[4];
     int ih = image.getHeight();
     int iw = image.getWidth();
     Point[] points;
     Point bull_tl=null, bull_bl=null, bull_br=null;
+    double bradius_pixels = 1;
     
     //System.out.println( "Decoding a page." );
 
@@ -322,14 +322,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       double approxpixelspercentiinch =  page.rotatedimage.getWidth() / (double)prpage.getWidth();
       for ( i=0; i<3; i++ )
       {
-        double bradius_pixels = (double)bullseyerecord[i].getR() * approxpixelspercentiinch;
+        bradius_pixels = (double)bullseyerecord[i].getR() * approxpixelspercentiinch;
         Point approxcentre = new Point( 
                 (int)((double)bullseyerecord[i].getX() * approxpixelspercentiinch), 
                 (int)((double)bullseyerecord[i].getY() * approxpixelspercentiinch)   
               );
         
         System.out.println( "Trial bullseye radius = " + bradius_pixels + " pixels." );
-        Rectangle r = new Rectangle( approxcentre );
+        r = new Rectangle( approxcentre );
         r.grow( (int)(bradius_pixels*1.5), (int)(bradius_pixels*1.5) );
         r = r.intersection( page.scanbounds );
         BufferedImage searchimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
@@ -361,6 +361,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           bull_bl = points[0];
         if ( i == 2 )
           bull_br = points[0];
+        
       }
       
       if ( false )
@@ -369,8 +370,15 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         return page;
       }
       
+      // Use a bullseye area to measure blackest and whitest pixels
+      // 
         
-      
+      int nrad = Math.round( (float)bradius_pixels );
+      r = new Rectangle( bull_tl );
+      r.grow( nrad, nrad );
+      r = r.intersection( page.scanbounds );
+      BufferedImage bullseyeimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
+      BufferedImageStats stats = new BufferedImageStats( bullseyeimage );
       
       //page.blackness = calibrationresult[qrlocation[1]].getBlackness();
       
@@ -406,7 +414,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     AffineTransform questiontransform;
     double pageblackness;
     int w, h;
-    boolean debug = true;
+    boolean debug = false;
     BufferedImage debug_image=null;
     Graphics2D debug_graphics=null;
     
@@ -466,6 +474,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     for ( int q=0; q<items.length; q++ )
     {
       question = new QuestionData( page );
+      question.setImagesProcessed( false );
       question.ident = items[q].getIdent();
       questionmetrics = items[q].getQuestionMetricsRecord();
       //measureditempos_inches.setLocation( (double)items[q].getX()/100.0, (double)items[q].getY()/100.0 );
@@ -476,7 +485,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       // pull out images of the pink boxes that were printed on this page
       QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
       for ( int r=0; r<boxes.length; r++ )
-      {
+      { 
         subimage_topleft     = inchesToPixels(
             page.pagetransform,
             (items[q].getX() + boxes[r].x)/100.0,
@@ -489,6 +498,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         response = new ResponseData( question, r, boxes[r] );
         w = subimage_bottomright.x - subimage_topleft.x;
         h = subimage_bottomright.y - subimage_topleft.y;
+        response.setImageWidth( w );
+        response.setImageHeight( h );
         
         
         //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
@@ -512,9 +523,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         }
       }
     }
-      
+   
+    /*
     // now ready to try and interpret the images of the pink boxes
-    page.prepareImageProcessor( false /*qmrset.isMonochromePrint(),*/, page.blackness, boxthreshold );
+    //page.prepareImageProcessor( qmrset.isMonochromePrint(), page.blackness, boxthreshold );
+    page.prepareImageProcessor( false, page.blackness, boxthreshold );
     try
     {
       processBoxImages( page );
@@ -524,6 +537,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page.error = "Technical error processing filtered box images.";
       return page;
     }
+    */
     
     if ( debug )
     {
@@ -545,7 +559,52 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     return page;
   }
 
-  private void processBoxImages( PageData page ) throws IOException
+  public void processBoxImages( ExaminationData exam )
+          throws IOException
+  {
+    int i, j, k;
+    PageData page;
+    QuestionData q;
+    ResponseData r;
+    int maxw=0, maxh=0;
+    QTIElementItem qti_item;
+
+    
+    for ( i=0; i<exam.getPageCount(); i++ )
+    {
+      page = exam.getPage( i );
+      if ( page.error != null )
+        continue;
+      for ( j=0; j<page.questions.size(); j++ )
+      {
+        q = page.questions.get( j );
+        if ( q.areImagesProcessed() )
+          continue;
+        for ( k=0; k<q.responsedatas.size(); k++ )
+        {
+          r = q.responsedatas.get( k );
+          if ( "response_label".equals( r.type ) )
+          { 
+            if ( r.getImageWidth() > maxw ) maxw = r.getImageWidth();
+            if ( r.getImageHeight() > maxh ) maxh = r.getImageHeight();
+          }
+        }
+      }
+    }
+
+    XLocator xlocator = new XLocator( maxw, maxh );
+    xlocator.setDebugLevel( 0 );
+    for ( i=0; i<exam.getPageCount(); i++ )
+    {
+      page = exam.getPage( i );
+      if ( page.error != null )
+        continue;
+      processBoxImages( page, xlocator );
+    }
+  }
+  
+  
+  private void processBoxImages( PageData page, XLocator xlocator ) throws IOException
   {
     QuestionData questiondata;
     QTIElementItem qti_item;
@@ -554,7 +613,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     for ( int i=0; i<page.questions.size(); i++ )
     {
       questiondata = page.questions.get( i );
-      if ( questiondata == null || questiondata.ident == null )
+      if ( questiondata == null || questiondata.ident == null || questiondata.areImagesProcessed() )
         continue;
 
       qti_item = page.exam.qdefs.qti.getItem( questiondata.ident );
@@ -571,7 +630,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           continue;
         if ( responses[j] instanceof QTIElementResponselid )
         {
-          processBoxImagesForResponselid( (QTIElementResponselid)responses[j], questiondata );
+          processBoxImagesForResponselid( (QTIElementResponselid)responses[j], questiondata, xlocator );
           continue;
         }
         if ( responses[j] instanceof QTIExtensionRespextension )
@@ -586,6 +645,105 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     // sketch areas
   }
 
+  private void processBoxImagesForResponselid( 
+          QTIElementResponselid responselid, 
+          QuestionData questiondata, 
+          XLocator xlocator )
+          throws IOException
+  {
+    ResponseData responsedata;
+
+    QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
+    File[] filelist = new File[rlabels.length];
+    XLocatorReport[] reports = new XLocatorReport[rlabels.length];
+    BufferedImage[] debugimages = new BufferedImage[rlabels.length];
+    
+    for ( int j=0; j<rlabels.length; j++ )
+    {
+      responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+      filelist[j] = responsedata.getImageFile();
+    }
+
+    xlocator.setImageFiles( filelist );
+    XLocator.ProgressListener listener = new ProgressListener()
+      {
+        @Override
+        public void notifyProgress( int percentage )
+        {
+        }
+
+        @Override
+        public void notifyComplete( XLocatorReport report, int i )
+        {
+          reports[i] = report;
+        }
+
+        @Override
+        public void notifyNewDebugImage( BufferedImage image, int i )
+        {
+          debugimages[i] = image;
+        }
+    };
+    
+    xlocator.addProgressListener( listener );
+    xlocator.run();
+    xlocator.removeProgressListener( listener );
+    
+    int count=0;
+    for ( int j=0; j<rlabels.length; j++ )
+    {
+      responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+      responsedata.selected = reports[j].hasX();
+      responsedata.examiner_selected = false;
+      if ( debugimages[j] != null )
+      {
+        try
+        {
+          ImageIO.write(
+                        debugimages[j],
+                        "jpg",
+                        responsedata.getFilteredImageFile() );
+        } catch (IOException ex)
+        {
+          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+      
+      if ( responsedata.selected )
+      {
+        count++;
+        // Perhaps not a simple X
+        if ( reports[j].getAdditionalPointsofInterest().size() != 0 )
+        {
+          responsedata.needsreview = true;
+          questiondata.needsreview = true;        
+        }
+      }
+      else
+      {
+        // No X but not blank either
+        if ( reports[j].getPercentageCentreEdgePixels() > 0.5 )
+        {
+          responsedata.needsreview = true;
+          questiondata.needsreview = true;
+        }
+      }
+    }
+    
+    // More than one X but only one choice allowed
+    if ( responselid.isSingleChoice() && count > 1 )
+    {
+      questiondata.needsreview = true;    
+      for ( int j=0; j<rlabels.length; j++ )
+      {
+        responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+        if ( responsedata.selected )
+          responsedata.needsreview = true;
+      }
+    }
+  }
+  
+  
   private void processBoxImagesForResponselid( QTIElementResponselid responselid, QuestionData questiondata ) throws IOException
   {
     ResponseData responsedata;

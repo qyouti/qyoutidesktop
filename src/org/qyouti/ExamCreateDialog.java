@@ -24,7 +24,7 @@ public class ExamCreateDialog
 
   Class[] classes =
   {
-    EmptyExam.class, MCQAnonymousNoTextExam.class
+    EmptyExam.class, MCQAnonymousNoTextExam.class, MCQAnonymousExam.class
   };
 
   ExamTemplate[] instances = new ExamTemplate[classes.length];

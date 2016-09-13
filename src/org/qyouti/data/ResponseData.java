@@ -45,15 +45,18 @@ import org.w3c.dom.NodeList;
  */
 public class ResponseData
 {
-  QuestionData question;
+  public QuestionData question;
 
   public int position=-1;
   public String type;
   public String ident;
   public int index;
+  private int imagewidth;
+  private int imageheight;
   private BufferedImage box_image;
   private BufferedImage filtered_image;
   public double dark_pixels=-1;
+  public boolean needsreview=false;
   public boolean selected=false;
   public boolean examiner_selected=false;
 
@@ -71,15 +74,22 @@ public class ResponseData
     question.responsedatas.add( this );
     question.responsedatatable.put( ident, this );
   }
-
+  
+  
   public ResponseData( QuestionData question, Element element, int item )
   {
     this.question = question;
     position = item;
-    selected          = "true".equalsIgnoreCase( element.getAttribute( "selected" ) );
-    examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner" ) );
+    String str = element.getAttribute( "needsreview" );
+    needsreview = str != null && str.toLowerCase().startsWith( "y" );
+    selected          = "true".equalsIgnoreCase( element.getAttribute( "selected"  ) );
+    examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner"  ) );
     ident = element.getAttribute( "ident" );
     type = element.getAttribute( "type" );
+    try { imagewidth  = Integer.parseInt( element.getAttribute( "imagewidth"  ) ); }
+    catch ( NumberFormatException nfe ) { imagewidth=0; }
+    try { imageheight = Integer.parseInt( element.getAttribute( "imageheight" ) ); }
+    catch ( NumberFormatException nfe ) { imageheight=0; }
     if ( type == null || type.length() == 0 )
       type = "response_label";
     if ( "null".equalsIgnoreCase(ident)) ident = null;
@@ -115,6 +125,27 @@ public class ResponseData
     question.responsedatatable.put( ident, this );
   }
 
+  public int getImageWidth()
+  {
+    return imagewidth;
+  }
+
+  public void setImageWidth( int imagewidth )
+  {
+    this.imagewidth = imagewidth;
+  }
+
+  public int getImageHeight()
+  {
+    return imageheight;
+  }
+
+  public void setImageHeight( int imageheight )
+  {
+    this.imageheight = imageheight;
+  }
+
+  
 
   private void setIdentFromIndex()
   {
@@ -195,9 +226,12 @@ public class ResponseData
     int rgb;
     writer.write( "          <response ident=\"" + ident + "\" " );
     writer.write( "type=\"" + type + "\" " );
+    writer.write( "needsreview=\"" + (needsreview?"yes":"no") + "\" " );
     writer.write( "selected=\"" + (selected?"true":"false") + "\" " );
     writer.write( "examiner=\"" + (examiner_selected?"true":"false") + "\" " );
     writer.write( "imagefile=\"" + getImageFileName() + "\" ");
+    writer.write( "imagewidth=\"" + imagewidth + "\" ");
+    writer.write( "imageheight=\"" + imageheight + "\" ");
     writer.write( "/>\n" );
 
 //    writer.write( "            <box>\n" );

@@ -38,6 +38,7 @@ public class OutcomeDatum
 {
   String name;
   Object value;
+  boolean fixed;
   
 
   public OutcomeDatum()
@@ -54,8 +55,12 @@ public class OutcomeDatum
       value = new Integer( v );
     else if ( "decimal".equals( type ) )
       value = new Double( v );
+    else if ( "null".equals( type ) )
+      value = null;
     else
       value = v;
+    String str = element.getAttribute( "fixed" );
+    fixed = str != null && str.toLowerCase().startsWith( "y" );
   }
 
 
@@ -65,12 +70,16 @@ public class OutcomeDatum
     writer.write( "        <outcome" );
     writer.write( " ident=\"" + name  + "\"" );
     writer.write( " value=\"" + value + "\"" );
-    if ( value instanceof Integer )
+    if ( value == null )
+      writer.write( " type=\"null\"" );
+    else if ( value instanceof Integer )
       writer.write( " type=\"integer\"" );
     else if ( value instanceof Double )
       writer.write( " type=\"decimal\"" );
     else
       writer.write( " type=\"string\"" );
+    if ( fixed )
+      writer.write( " fixed=\"yes\"" );
     writer.write( "/>\n" );
   }
 
