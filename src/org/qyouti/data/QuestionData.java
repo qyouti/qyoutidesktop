@@ -53,6 +53,7 @@ public class QuestionData
   
   public PageData page;
   public String ident="";
+  public boolean imagesprocessed = false;
   public boolean needsreview = false;
   private int examinerdecision = EXAMINER_DECISION_NONE;
   public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
@@ -75,6 +76,8 @@ public class QuestionData
     ident = element.getAttribute("ident");
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
+    str = element.getAttribute( "imagesprocessed" );
+    imagesprocessed = str != null && str.toLowerCase().startsWith( "y" );
     str = element.getAttribute( "decision" );
     try { examinerdecision = Integer.parseInt( str ); }
     catch ( NumberFormatException nfe ) { examinerdecision =  EXAMINER_DECISION_NONE; }
@@ -100,6 +103,16 @@ public class QuestionData
     page.exam.fireTableDataChanged();
   }
 
+  public boolean areImagesProcessed()
+  {
+    return imagesprocessed;
+  }
+
+  public void setImagesProcessed( boolean processed )
+  {
+    this.imagesprocessed = processed;
+  }
+  
   public int getExaminerDecision()
   {
     return examinerdecision;
@@ -239,6 +252,7 @@ public class QuestionData
           throws IOException
   {
     writer.write( "      <question ident=\"" + ident + "\"" );
+    writer.write( " imagesprocessed=\"" + (imagesprocessed?"true":"false") + "\" " );
     writer.write( " needsreview=\"" + (needsreview?"yes":"no") + "\"" );
     writer.write( " decision=\"" + examinerdecision + "\"" );
     writer.write( ">\n" );
@@ -275,7 +289,7 @@ public class QuestionData
     @Override
   public int getColumnCount()
   {
-    return examinerdecision==EXAMINER_DECISION_OVERRIDE?6:5;
+    return examinerdecision==EXAMINER_DECISION_OVERRIDE?7:6;
   }
 
   @Override
@@ -294,6 +308,8 @@ public class QuestionData
       case 4:
         return "Interpreted";
       case 5:
+        return "Doubted";
+      case 6:
         return "Examiner Override";
     }
     return null;
@@ -316,6 +332,8 @@ public class QuestionData
         return Boolean.class;
       case 5:
         return Boolean.class;
+      case 6:
+        return Boolean.class;
     }
     return null;
   }
@@ -323,9 +341,20 @@ public class QuestionData
   @Override
   public boolean isCellEditable( int rowIndex, int columnIndex )
   {
-    return columnIndex == 5;
+    return columnIndex == 6;
   }
 
+  public int getRowHeight( int rowIndex )
+  {
+    int h = -1; // indicate no preference with -1
+    
+    ResponseData response = responsedatas.get( rowIndex );
+    if ( response.getImage() != null )
+      h = response.getImageHeight();
+    
+    return h;
+  }
+  
     @Override
   public Object getValueAt(int rowIndex, int columnIndex)
   {
@@ -355,12 +384,10 @@ public class QuestionData
             return "?";
         return new ImageIcon( response.getFilteredImage() );
       case 4:
-        //if ( qtiitem == null ) return "?";
-        //if ( !qtiitem.isSupported() ) return "n/a";
         return new Boolean( response.selected );
       case 5:
-        //if ( qtiitem == null ) return "?";
-        //if ( !qtiitem.isSupported() ) return "n/a";
+        return new Boolean( response.needsreview );
+      case 6:
         return new Boolean( response.examiner_selected );
     }
     return null;

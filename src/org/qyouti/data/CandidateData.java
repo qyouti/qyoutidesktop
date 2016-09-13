@@ -43,6 +43,7 @@ public class CandidateData
   public ArrayList<PageData> pages = new ArrayList<PageData>();
   public String name;
   public String id;
+  public boolean anonymous;
 
   public Double score = null;
   public OutcomeData outcomes = new OutcomeData();
@@ -52,11 +53,12 @@ public class CandidateData
   public Vector<String> itemidents = null;
   
 
-  public CandidateData( ExaminationData exam, String name, String id )
+  public CandidateData( ExaminationData exam, String name, String id, boolean anonymous )
   {
     this.exam = exam;
     this.name = name;
     this.id = id;
+    this.anonymous = anonymous;
     this.score = null;
     this.preferences = null;
   }
@@ -67,6 +69,8 @@ public class CandidateData
     this.exam = exam;
     name = element.getAttribute( "name" );
     id   = element.getAttribute( "id" );
+    String str = element.getAttribute( "anonymous" );
+    anonymous = str != null && str.toLowerCase().startsWith( "y" );
     try { score = Double.valueOf( element.getAttribute( "score" ) ); }
     catch ( Exception e ) { score = null; }
     //System.out.println( "Adding candidate " + id );
@@ -189,12 +193,27 @@ public class CandidateData
     return exam.qdefs.getRowCount();
   }
 
+  public String getErrorMessage()
+  {
+    int scanned = questionsScanned();
+    int asked = questionsAsked();
+    if ( scanned == 0 )
+      return "";
+    else if( scanned < asked )
+      return "Unscanned questions. ";
+    else if( scanned > asked )
+      return "Too many scanned questions. ";
+    return "O.K.";    
+  }
+  
   public void emit( Writer writer )
           throws IOException
   {
     writer.write( "  <candidate name=\"" + name + "\" id=\"" + id + "\"" );
     if ( score != null )
       writer.write( " score=\"" + score + "\"" );
+    if ( anonymous )
+      writer.write( " anonymous=\"yes\"" );
     writer.write( ">\n" );
     if ( itemidents != null )
     {
@@ -315,15 +334,29 @@ public class CandidateData
 
   public Vector<QTIElementItem> getItems()
   {
-    if ( this.itemidents == null )
-      return exam.qdefs.qti.getItems();
-
+    int i;
     Vector<QTIElementItem> v = new Vector<QTIElementItem>();
-    for ( int i=0; i<itemidents.size(); i++ )
-      v.add( exam.qdefs.qti.getItem( itemidents.elementAt( i ) ) );
-    for ( int i=0; i<v.size(); i++ )
-      if ( v.elementAt( i ) == null )
-        v.remove( i );
+    QTIElementItem item;
+    
+    if ( this.itemidents == null )
+    {
+      Vector<QTIElementItem> allitems = exam.qdefs.qti.getItems();
+      for ( i=0; i<allitems.size(); i++ )
+      {
+        item = allitems.get( i );
+        if ( item.isForCandidate( anonymous ) )
+          v.add( item );
+      }
+      return v;
+    }
+
+    for ( i=0; i<itemidents.size(); i++ )
+    {
+      item = exam.qdefs.qti.getItem( itemidents.elementAt( i ) );
+      if ( item != null && item.isForCandidate( anonymous ) )
+        v.add( item );
+    }
+    
     return v;
   }
 
@@ -370,7 +403,7 @@ public class CandidateData
     // object.
     String[] outcome_names = exam.qdefs.qti.getOutcomeNames();
     OutcomeDatum outcomedata;
-    outcomes.data.clear();
+    outcomes.clear();
     for ( int i=0; i<outcome_names.length; i++ )
     {
       outcomedata = new OutcomeDatum();

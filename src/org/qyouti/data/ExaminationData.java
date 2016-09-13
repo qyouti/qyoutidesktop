@@ -354,6 +354,30 @@ public class ExaminationData
     }
   }
 
+  public void importCandidates(List<CandidateData> list)
+  {
+    CandidateData candidate;
+    OutcomeDatum outcome;
+    for (int i = 0; i < list.size(); i++)
+    {
+      candidate = list.get( i );
+      if ( !candidate.anonymous )
+      {
+        outcome = new OutcomeDatum();
+        outcome.fixed = true;
+        outcome.name = "SID";
+        outcome.value = candidate.id;
+        candidate.outcomes.data.add( outcome );
+      }
+      candidates.put(candidate.id, candidate);
+      candidates_sorted.add(candidate);
+    }
+    sortCandidates();
+    fireTableDataChanged();
+  }
+
+
+  
   public void importCandidates(File xmlfile)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -369,7 +393,7 @@ public class ExaminationData
     for (int i = 0; i < nl.getLength(); i++)
     {
       ecandidate = (Element) nl.item(i);
-      candidate = new CandidateData(this, ecandidate.getAttribute("name"), ecandidate.getAttribute("id"));
+      candidate = new CandidateData(this, ecandidate.getAttribute("name"), ecandidate.getAttribute("id"), false );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -411,7 +435,7 @@ public class ExaminationData
       {
         System.out.println(line[j]);
       }
-      candidate = new CandidateData(this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn]);
+      candidate = new CandidateData(this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn], false );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -1362,7 +1386,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     CandidateData candidate = candidates.get(page.candidate_number);
     if (candidate == null)
     {
-      candidate = new CandidateData(this, page.candidate_name, page.candidate_number);
+      candidate = new CandidateData(this, page.candidate_name, page.candidate_number, false);
       candidates.put(page.candidate_number, candidate);
       candidates_sorted.add(candidate);
       sortCandidates();
@@ -1836,13 +1860,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       case 6:
         return new Integer( asked );
       case 7:
-        if ( scanned == 0 )
-          return "";
-        else if( scanned < asked )
-          return "Unscanned questions. ";
-        else if( scanned > asked )
-          return "Too many scanned questions. ";
-        return "O.K.";
+        return candidate.getErrorMessage();
     }
     return null;
   }

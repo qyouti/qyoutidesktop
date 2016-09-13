@@ -92,7 +92,7 @@ public class QyoutiPrintPreviewDialog extends javax.swing.JDialog
         qmrecset.setMonochromePrint( false );
       paginated = QTIItemRenderer.paginateItems( 
           null, "dummyid", examfolderuri,
-          new CandidateData( null, "A.Student", "00000000"),
+          new CandidateData( null, "A.Student", "00000000", false ),
           options, 
           //qmrecset, 
           null,

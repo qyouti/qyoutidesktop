@@ -49,6 +49,10 @@ public class QuestionEditDialog
     bottompanel = new javax.swing.JPanel();
     savebutton = new javax.swing.JButton();
     cancelbutton = new javax.swing.JButton();
+    menubar = new javax.swing.JMenuBar();
+    editmenu = new javax.swing.JMenu();
+    viewmenu = new javax.swing.JMenu();
+    formatmenu = new javax.swing.JMenu();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     setTitle("Question Edit");
@@ -76,6 +80,17 @@ public class QuestionEditDialog
 
     getContentPane().add(bottompanel, java.awt.BorderLayout.SOUTH);
 
+    editmenu.setText("Edit");
+    menubar.add(editmenu);
+
+    viewmenu.setText("View");
+    menubar.add(viewmenu);
+
+    formatmenu.setText("Format");
+    menubar.add(formatmenu);
+
+    setJMenuBar(menubar);
+
     pack();
   }// </editor-fold>//GEN-END:initComponents
 
@@ -102,6 +117,10 @@ public class QuestionEditDialog
   private javax.swing.JPanel bottompanel;
   private javax.swing.JButton cancelbutton;
   private javax.swing.JPanel centrepanel;
+  private javax.swing.JMenu editmenu;
+  private javax.swing.JMenu formatmenu;
+  private javax.swing.JMenuBar menubar;
   private javax.swing.JButton savebutton;
+  private javax.swing.JMenu viewmenu;
   // End of variables declaration//GEN-END:variables
 }

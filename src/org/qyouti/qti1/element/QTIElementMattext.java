@@ -40,6 +40,14 @@ public class QTIElementMattext
         if ( domelement == null ) return null;
         return domelement.getTextContent();
     }
+    
+    public void setContent( String str )
+    {
+        if ( domelement == null ) return;
+        while ( domelement.getFirstChild() != null )
+          domelement.removeChild( domelement.getFirstChild() );
+        domelement.appendChild( domelement.getOwnerDocument().createCDATASection( str ) );
+    }
 
     @Override
     public boolean isSupported()

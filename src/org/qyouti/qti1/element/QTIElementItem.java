@@ -45,6 +45,9 @@ public class QTIElementItem
   Hashtable<String,QTIResponse> response_table = new Hashtable<String,QTIResponse>();
   QTIResponse[] response_list = null;
 
+  boolean foranonymouscandidate;
+  boolean foridentifiedcandidate;
+
   public boolean highest_possible_score_known=false;
   public double highest_possible_score=0.0;
 
@@ -109,8 +112,26 @@ public class QTIElementItem
     }
     return null;
   }
-  
 
+  private void initCandidateType()
+  {
+    foranonymouscandidate = true;
+    foridentifiedcandidate = true;
+    String att = this.domelement.getAttributeNS( "http://www.qyouti.org/qtiext", "candidatetype" );
+    if ( att == null || att.length() == 0 )
+      return;
+    if ( "all".equals( att ) ) return;
+    if (  "anonymous".equals( att ) ) { foridentifiedcandidate = false; return; }
+    if ( "identified".equals( att ) ) {  foranonymouscandidate = false; return; }
+    foranonymouscandidate = false;
+    foridentifiedcandidate = false;
+  }
+  
+  public boolean isForCandidate( boolean anonymous )
+  {
+    return anonymous?foranonymouscandidate:foridentifiedcandidate;
+  }
+  
   /**
    * Sets value of response specified by ident
    * @param respident The ident of the response
@@ -387,7 +408,9 @@ public class QTIElementItem
     //int rlids=0, rstrs=0;
 
     supported = false;
-
+    
+    initCandidateType();
+    
     Vector<QTIItemDescendant> desc = findElements( QTIItemDescendant.class, true );
     for ( int i=0; i<desc.size(); i++ )
       desc.get(i).setItem( this );

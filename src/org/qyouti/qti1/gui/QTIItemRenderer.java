@@ -212,32 +212,10 @@ public class QTIItemRenderer
     
     width -= (double)(columns-1) * getMetrics().getPropertyInches( "item-area-column-spacing" );
     width = width / (double)columns;
-    
-    // Conversion can lock up if called from this thread so here is some
-    // jiggery pokery...
-    svgres =  null;
-    QyoutiCustomAWTEvent qe = new QyoutiCustomAWTEvent( textPane, 123456 );
-    qe.setRenderer( this );
-    qe.setWidth( (int)getMetrics().inchesToSvg(width) );
-    synchronized ( this )
-    {
-      java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent( qe );
-      do
-      {
-        try
-        {
-          wait();
-        }
-        catch ( InterruptedException ex )
-        {
-          Logger.getLogger( QTIItemRenderer.class.getName() ).
-                  log( Level.SEVERE, null, ex );
-        }
-      }
-      while ( svgres == null );
-    }
-    
-    //svgres = ComponentToSvg.convert(textPane,(int)getMetrics().inchesToSvg(width));
+
+    // This call may switch into the Event Dispatcher Thread.
+    svgres =  textPane.getSVG( (int)getMetrics().inchesToSvg(width) );
+        
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
     NodeList nl = svgroot.getElementsByTagName( "defs" );
     if ( nl.getLength() > 0 )

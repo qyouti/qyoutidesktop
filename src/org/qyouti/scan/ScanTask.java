@@ -37,11 +37,11 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
-import java.util.Vector;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
+import org.bullseye.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecoder;
@@ -354,6 +354,8 @@ public class ScanTask
         }
       }
 
+      pagedecoder.processBoxImages( exam );
+      
       // Images are now fully processed so now it's
       // time to work out the outcomes
       for ( i=0; i<exam.getPageCount(); i++ )
@@ -382,6 +384,8 @@ public class ScanTask
     active=false;
   }
 
+
+  
   private void processPageOutcomes( PageData page )
   {
     if ( page == null )
