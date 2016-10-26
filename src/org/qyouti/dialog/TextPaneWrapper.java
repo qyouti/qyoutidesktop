@@ -63,12 +63,12 @@ public class TextPaneWrapper
       
       if ( SwingUtilities.isEventDispatchThread() )
       {
-        System.out.println( "Rendering component to SVG - ALREADY IN EVENT DISPATCH THREAD." );
+        //System.out.println( "Rendering component to SVG - ALREADY IN EVENT DISPATCH THREAD." );
         r.run();
       }
       else
       {
-        System.out.println( "Rendering component to SVG - INVOKING EVENT DISPATCH THREAD." );
+        //System.out.println( "Rendering component to SVG - INVOKING EVENT DISPATCH THREAD." );
         try
         {
           SwingUtilities.invokeAndWait( r );

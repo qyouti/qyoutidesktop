@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.logging.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.*;
+import org.apache.fop.svg.*;
+import org.apache.pdfbox.util.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
 import org.qyouti.qti1.gui.*;
@@ -41,15 +43,24 @@ public class PrintThread extends Thread
   @Override
   public void run()
   {
+    int p=1;
+    
       try
       {
         URI examfolderuri;
           examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
         Vector<GenericDocument> paginated;
         TranscoderInput tinput;
-        TranscoderOutput transout = new TranscoderOutput(
-            new FileOutputStream(
-                new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" ) ) );
+        TranscoderOutput transout;
+        File pagefile;
+        ArrayList<File> pagefiles = new ArrayList<File>();
+        File pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
+        PDFMergerUtility pdfmerger = new PDFMergerUtility();
+        pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );
+        
+//        TranscoderOutput transout = new TranscoderOutput(
+//            new FileOutputStream(
+//                new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" ) ) );
 
 
         PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
@@ -57,6 +68,7 @@ public class PrintThread extends Thread
         // QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
         // qmrset.setMonochromePrint( false );
         MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
+        PDFTranscoder pdft = new PDFTranscoder();
 
         for ( int j=0; j<exam.candidates_sorted.size(); j++ )
         {
@@ -73,25 +85,29 @@ public class PrintThread extends Thread
               exam.getPreamble() );
           for ( int i=0; i<paginated.size(); i++ )
           {
+            pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p++ + ".pdf" );
+            pagefiles.add( pagefile );
             tinput = new TranscoderInput( paginated.elementAt(i) );
-            pdftranscoder.transcode( tinput, transout );
+            transout = new TranscoderOutput( new FileOutputStream( pagefile ) );
+            pdft.transcode( tinput, transout );
+            transout.getOutputStream().close();
             paginated.set(i, null);
           }
           paginated.clear();
         }
-        pdftranscoder.complete();
-        transout.getOutputStream().close();
+        
+        for ( int i=0; i<pagefiles.size(); i++ )
+          pdfmerger.addSource( pagefiles.get( i ) );
+        
+        pdfmerger.mergeDocuments();
+
+        for ( int i=0; i<pagefiles.size(); i++ )
+          pagefiles.get( i ).delete();
+        
+        //pdftranscoder.complete();
+        //transout.getOutputStream().close();
         exam.setLastPrintID( printid );
 
-//        File qmrrecfile = new File(examfolder, "printmetrics_" + printid + ".xml");
-//        if ( qmrrecfile.exists() )
-//          throw new IllegalArgumentException( "Unable to save print metrics." );
-//        // This helps with dodgy file systems
-//        try { qmrrecfile.createNewFile(); }
-//        catch ( Exception ee ) {}
-//        FileWriter writer = new FileWriter( qmrrecfile );
-//        qmrset.emit(writer);
-//        writer.close();
 
         FileWriter writer;
         File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");

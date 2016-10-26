@@ -153,7 +153,7 @@ public class QTIItemRenderer
   private void renderItem( QTIElementItem item )
   {
     int i;
-    System.out.println( "Render item " + item.getIdent() );
+    //System.out.println( "Render item " + item.getIdent() );
 
     QTIElementPresentation presentation = item.getPresentation();
     // Compose the HTML
