@@ -44,7 +44,6 @@ import java.net.*;
 import java.util.*;
 import javax.imageio.ImageIO;
 import org.bullseye.*;
-import org.bullseye.XLocator.ProgressListener;
 import org.qyouti.barcode.ZXingCodec;
 import org.qyouti.barcode.ZXingResult;
 import org.qyouti.qti1.QTIResponse;
@@ -385,7 +384,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page.pagetransform = pageTransform(
               bull_tl, bull_bl, bull_br,
               page.declared_calibration_width , page.declared_calibration_height );
-
+      
+      Point origin = inchesToPixels( page.pagetransform, 0.0, 0.0 );
+      Point inch = inchesToPixels( page.pagetransform, 1.0, 0.0 );
+      double dx = inch.x - origin.x;
+      double dy = inch.y - origin.y;
+      page.dpi = Math.sqrt( dx*dx + dy*dy );
+      
+      System.out.println( "Scanned page DPI = " + page.dpi );
     }
     catch (ReaderException e)
     {
@@ -409,10 +415,10 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
     Point subimage_topleft;
     Point subimage_bottomright;
-    Rectangle subimage_rect;
-    double[] triangle = new double[6];
-    AffineTransform questiontransform;
-    double pageblackness;
+//    Rectangle subimage_rect;
+//    double[] triangle = new double[6];
+//    AffineTransform questiontransform;
+//    double pageblackness;
     int w, h;
     boolean debug = false;
     BufferedImage debug_image=null;
@@ -424,7 +430,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     page = identifyPage( exam, image, sourcename, scanorder );
     if ( page == null || page.error != null )
       return page;    
-
+    
     if ( debug )
     {
       debug_image = new BufferedImage( page.rotatedimage.getWidth(), page.rotatedimage.getHeight(), page.rotatedimage.getType() );
@@ -477,10 +483,38 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       question.setImagesProcessed( false );
       question.ident = items[q].getIdent();
       questionmetrics = items[q].getQuestionMetricsRecord();
-      //measureditempos_inches.setLocation( (double)items[q].getX()/100.0, (double)items[q].getY()/100.0 );
 
-      //page.revpagetransform.transform( measureditempos, measureditempos_inches );
-      //System.out.println( "Location: " + measureditempos_inches.getX() + "   " +measureditempos_inches.getY() );
+      // Save an image of the whole question
+      subimage_topleft     = inchesToPixels(
+            page.pagetransform,
+            items[q].getX()/100.0,
+            items[q].getY()/100.0 );
+      subimage_bottomright = inchesToPixels(
+            page.pagetransform,
+            (items[q].getX() + items[q].getWidth())/100.0,
+            (items[q].getY() + items[q].getHeight())/100.0
+            );
+      w = subimage_bottomright.x - subimage_topleft.x;
+      h = subimage_bottomright.y - subimage_topleft.y;
+      
+      try
+      {
+        BufferedImage qimage = page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h );
+        float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
+        ImageIO.write(
+                      ImageResizer.resize( 
+                              qimage, 
+                              Math.round( qimage.getWidth()*scale ), 
+                              Math.round( qimage.getHeight()*scale ) ),
+                      "jpg",
+                      question.getImageFile()
+                );
+      } catch (Exception ex)
+      {
+        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        page.error = "Technical error saving question image.";
+        return page;
+      }
 
       // pull out images of the pink boxes that were printed on this page
       QuestionMetricBox[] boxes =  questionmetrics.getBoxesAsArray();
@@ -665,7 +699,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     }
 
     xlocator.setImageFiles( filelist );
-    XLocator.ProgressListener listener = new ProgressListener()
+    XLocatorListener listener = new XLocatorListener()
       {
         @Override
         public void notifyProgress( int percentage )

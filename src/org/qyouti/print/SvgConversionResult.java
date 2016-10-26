@@ -40,10 +40,29 @@ public class SvgConversionResult
 {
   //String svg;
   GenericDocument document;
-  GraphicsNode gvtRoot;
-  public SvgConversionResult( GenericDocument d, /*String s,*/ GraphicsNode g ) { document = d; /*svg = s;*/ gvtRoot = g; }
+  int w;
+  int h;
+  //GraphicsNode gvtRoot;
+  public SvgConversionResult( GenericDocument d, int width, int height /*GraphicsNode g*/ )
+  {
+    document = d; 
+    w = width;
+    h = height;
+    /*gvtRoot = g;*/ 
+  }
   public GenericDocument getDocument() { return document; }
+  
   //public String getSvg() { return svg; }
   //  public int getHeight() { return (int) Math.ceil(gvtRoot.getGeometryBounds().getMaxY()); }
   //  public Rectangle2D getBounds() { return gvtRoot.getGeometryBounds(); }
+
+  public int getWidth()
+  {
+    return w;
+  }
+
+  public int getHeight()
+  {
+    return h;
+  }
 }

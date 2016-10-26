@@ -78,6 +78,7 @@ public class PageData implements Comparable
   public int page_number;
   
   public PageDecoder.TransformData pagetransform;
+  public double dpi;
   
 //  public String candidate_name;
 //  public String candidate_number;
