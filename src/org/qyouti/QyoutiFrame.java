@@ -49,11 +49,29 @@ public class QyoutiFrame
   QuestionData currentquestiondata;
   String scanfolder = null;
 
+  // Possible Look & Feels
+  private static final String mac      =
+          "com.apple.laf.AquaLookAndFeel";
+  private static final String nimbus   =
+          "javax.swing.plaf.nimbus.NimbusLookAndFeel";
+  private static final String metal    =
+          "javax.swing.plaf.metal.MetalLookAndFeel";
+  private static final String motif    =
+          "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
+  private static final String windows  =
+          "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
+  private static final String gtk  =
+          "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
+  String currentLookAndFeel=metal;
+  JMenu lafMenu;
+  
   /**
    * Creates new form QyoutiFrame
    */
   public QyoutiFrame()
   {
+    currentLookAndFeel = UIManager.getLookAndFeel().getClass().getName();
+
     //File preferences_file = new File( appfolder, "preferences.xml" );
     preferences = new QyoutiPreferences( null );//preferences_file);
     //if ( preferences_file.exists() )
@@ -65,7 +83,8 @@ public class QyoutiFrame
     selectdialog = new ExamSelectDialog( this, true );
     selectdialog.setFrame( this );
     initComponents();
-
+    createLookAndFeelMenu();
+    
     //questiontable.getColumnModel().getColumn( 0 ).
     candidatetable.getSelectionModel().addListSelectionListener( 
             new ListSelectionListener() {
@@ -83,9 +102,122 @@ public class QyoutiFrame
     this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
   }
 
+  
+    /**
+     * Create menus
+     */
+    public void createLookAndFeelMenu()
+    {
+        JMenuItem mi;
+
+
+        // ***** create laf switcher menu
+        lafMenu = (JMenu) this.menubar.add(new JMenu("Look/Feel"));
+        ButtonGroup group = new ButtonGroup();
+        mi = createLafMenuItem(lafMenu, "Metal",group, metal);
+        mi.setSelected(true); // this is the default l&f
+
+        mi = createLafMenuItem(lafMenu, "Nimbus", group, nimbus);
+
+        UIManager.LookAndFeelInfo[] lafInfo = UIManager.
+                                       getInstalledLookAndFeels();
+
+        for (int counter = 0; counter < lafInfo.length; counter++) {
+            String className = lafInfo[counter].getClassName();
+            if (className == motif) {
+                createLafMenuItem(lafMenu, "Motif", group, motif);
+            } else if (className == windows) {
+                createLafMenuItem(lafMenu, "Windows", group, windows);
+            } else if (className == gtk) {
+                createLafMenuItem(lafMenu, "Gtk", group, gtk);
+            } else if (className == mac) {
+                createLafMenuItem(lafMenu, "Mac", group, mac);
+            }
+        }
+
+        for (int i = 0; i < lafMenu.getItemCount(); i++) {
+            JMenuItem item = lafMenu.getItem(i);
+            item.setSelected(item.getText().equalsIgnoreCase( currentLookAndFeel ) );
+        }
+    }
+  
+      /**
+     * Creates a JRadioButtonMenuItem for the Look and Feel menu
+     */
+    public JMenuItem createLafMenuItem(JMenu menu, String label, ButtonGroup group, String laf) {
+        JMenuItem mi = (JRadioButtonMenuItem) menu.add(new JRadioButtonMenuItem( label ));
+        group.add(mi);
+        mi.addActionListener(new ChangeLookAndFeelAction(this, laf));
+
+        mi.setEnabled(isAvailableLookAndFeel(laf));
+
+        return mi;
+    }
+
+    /**
+     * A utility function that layers on top of the LookAndFeel's
+     * isSupportedLookAndFeel() method. Returns true if the LookAndFeel
+     * is supported. Returns false if the LookAndFeel is not supported
+     * and/or if there is any kind of error checking if the LookAndFeel
+     * is supported.
+     *
+     * The L&F menu will use this method to detemine whether the various
+     * L&F options should be active or inactive.
+     *
+     */
+     protected boolean isAvailableLookAndFeel(String laf) {
+         try {
+             Class lnfClass = Class.forName(laf);
+             LookAndFeel newLAF = (LookAndFeel)(lnfClass.newInstance());
+             return newLAF.isSupportedLookAndFeel();
+         } catch(Exception e) { // If ANYTHING weird happens, return false
+             return false;
+         }
+     }
+  
+    /**
+     * Stores the current L&F, and calls updateLookAndFeel, below
+     */
+    public void setLookAndFeel(String laf) {
+        if(!currentLookAndFeel.equals(laf)) {
+            currentLookAndFeel = laf;
+            /* The recommended way of synchronizing state between multiple
+             * controls that represent the same command is to use Actions.
+             * The code below is a workaround and will be replaced in future
+             * version of SwingSet2 demo.
+             */
+            updateLookAndFeel();
+            for(int i=0;i<lafMenu.getItemCount();i++) {
+                JMenuItem item = lafMenu.getItem(i);
+                item.setSelected(item.getText().equalsIgnoreCase(currentLookAndFeel));
+            }
+        }
+    }
+
+    /**
+     * Sets the current L&F on each demo module
+     */
+    public void updateLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(currentLookAndFeel);
+                updateThisSwingSet();
+        } catch (Exception ex) {
+            System.out.println("Failed loading L&F: " + currentLookAndFeel);
+            System.out.println(ex);
+        }
+    }
+
+    private void updateThisSwingSet() {
+      SwingUtilities.updateComponentTreeUI(this);
+    }
+     
+     
+    
   public void candidateSelectionChanged( ListSelectionEvent e )
   {
     System.out.println( "Candidate selection change." );
+    candqpanel.removeAll();
+    
     if ( candidatetable.getSelectedRowCount() == 1 )
     {
       System.out.println( "Show candidate " + candidatetable.getSelectedRow() );
@@ -94,6 +226,21 @@ public class QyoutiFrame
       cdetailidlabel.setText( cd.id );
       cdetailoutcometable.setModel( cd.outcomes );
       cdetailerrorlabel.setText( cd.getErrorMessage() );
+      
+      Vector<QTIElementItem> items = cd.getItems();
+      GridBagConstraints gbc = new GridBagConstraints();
+      gbc.gridx = 0;
+      gbc.weightx = 0.5;
+      gbc.weighty = 0.5;
+      gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+      gbc.fill = GridBagConstraints.HORIZONTAL;
+      CandidateQuestionPanel cqp;
+      for ( int i=0; i<items.size(); i++ )
+      {
+        cqp = new CandidateQuestionPanel( cd, items.get( i ).getIdent() );
+        candqpanel.add( cqp, gbc );
+      }
+      sp6.revalidate();
     }
     else
     {
@@ -148,7 +295,7 @@ public class QyoutiFrame
     splitpane = new javax.swing.JSplitPane();
     sp2 = new javax.swing.JScrollPane();
     candidatetable = new javax.swing.JTable();
-    sp5 = new javax.swing.JScrollPane();
+    jSplitPane1 = new javax.swing.JSplitPane();
     cdetailpanel = new javax.swing.JPanel();
     jPanel3 = new javax.swing.JPanel();
     jLabel1 = new javax.swing.JLabel();
@@ -159,6 +306,9 @@ public class QyoutiFrame
     cdetailoutcometable = new javax.swing.JTable();
     jLabel6 = new javax.swing.JLabel();
     cdetailerrorlabel = new javax.swing.JLabel();
+    sp6 = new javax.swing.JScrollPane();
+    candqpanelouter = new javax.swing.JPanel();
+    candqpanel = new javax.swing.JPanel();
     stab = new javax.swing.JPanel();
     sp3 = new javax.swing.JScrollPane();
     scanstable = new javax.swing.JTable();
@@ -214,6 +364,8 @@ public class QyoutiFrame
     propsmenuitem = new javax.swing.JMenuItem();
     sep1 = new javax.swing.JPopupMenu.Separator();
     configmenuitem = new javax.swing.JMenuItem();
+    aboutmenuitem = new javax.swing.JMenuItem();
+    sep1b = new javax.swing.JPopupMenu.Separator();
     exitmenuitem = new javax.swing.JMenuItem();
     actionmenu = new javax.swing.JMenu();
     pdfprintmenuitem = new javax.swing.JMenuItem();
@@ -282,7 +434,7 @@ public class QyoutiFrame
 
     ctab.setLayout(new java.awt.BorderLayout());
 
-    splitpane.setDividerLocation(200);
+    splitpane.setDividerLocation(150);
     splitpane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
     candidatetable.setModel(new javax.swing.table.DefaultTableModel(
@@ -320,8 +472,7 @@ public class QyoutiFrame
 
     splitpane.setLeftComponent(sp2);
 
-    sp5.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-    sp5.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+    jSplitPane1.setDividerLocation(200);
 
     cdetailpanel.setLayout(new java.awt.GridBagLayout());
 
@@ -333,6 +484,8 @@ public class QyoutiFrame
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 0;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(jLabel1, gridBagConstraints);
 
@@ -340,6 +493,9 @@ public class QyoutiFrame
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 0;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(cdetailnamelabel, gridBagConstraints);
 
@@ -349,6 +505,8 @@ public class QyoutiFrame
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 1;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(jLabel3, gridBagConstraints);
 
@@ -356,10 +514,14 @@ public class QyoutiFrame
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 1;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(cdetailidlabel, gridBagConstraints);
 
     jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Outcomes"));
+    jPanel1.setMinimumSize(new java.awt.Dimension(80, 38));
     jPanel1.setLayout(new java.awt.BorderLayout());
 
     cdetailoutcometable.setModel(new javax.swing.table.DefaultTableModel(
@@ -378,6 +540,10 @@ public class QyoutiFrame
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 2;
     gridBagConstraints.gridwidth = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     jPanel3.add(jPanel1, gridBagConstraints);
 
     jLabel6.setText("Errors:");
@@ -385,6 +551,8 @@ public class QyoutiFrame
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 3;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(jLabel6, gridBagConstraints);
 
@@ -392,6 +560,9 @@ public class QyoutiFrame
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 3;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(cdetailerrorlabel, gridBagConstraints);
 
@@ -402,9 +573,28 @@ public class QyoutiFrame
     gridBagConstraints.weighty = 0.1;
     cdetailpanel.add(jPanel3, gridBagConstraints);
 
-    sp5.setViewportView(cdetailpanel);
+    jSplitPane1.setLeftComponent(cdetailpanel);
 
-    splitpane.setRightComponent(sp5);
+    sp6.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    sp6.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+
+    candqpanelouter.setBackground(java.awt.Color.white);
+    candqpanelouter.setLayout(new java.awt.GridBagLayout());
+
+    candqpanel.setBackground(java.awt.Color.white);
+    candqpanel.setLayout(new java.awt.GridBagLayout());
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
+    candqpanelouter.add(candqpanel, gridBagConstraints);
+
+    sp6.setViewportView(candqpanelouter);
+
+    jSplitPane1.setRightComponent(sp6);
+
+    splitpane.setRightComponent(jSplitPane1);
 
     ctab.add(splitpane, java.awt.BorderLayout.CENTER);
 
@@ -839,6 +1029,17 @@ public class QyoutiFrame
     configmenuitem.setText("Configure...");
     configmenuitem.setEnabled(false);
     filemenu.add(configmenuitem);
+
+    aboutmenuitem.setText("About...");
+    aboutmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        aboutmenuitemActionPerformed(evt);
+      }
+    });
+    filemenu.add(aboutmenuitem);
+    filemenu.add(sep1b);
 
     exitmenuitem.setText("Exit");
     exitmenuitem.addActionListener(new java.awt.event.ActionListener()
@@ -1613,6 +1814,14 @@ public class QyoutiFrame
 
   }//GEN-LAST:event_reviewcomboboxItemStateChanged
 
+  private void aboutmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_aboutmenuitemActionPerformed
+  {//GEN-HEADEREND:event_aboutmenuitemActionPerformed
+    
+    AboutDialog dialog = new AboutDialog( this, true );
+    dialog.setVisible( true );
+    
+  }//GEN-LAST:event_aboutmenuitemActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -1902,9 +2111,12 @@ public class QyoutiFrame
   }
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JMenuItem aboutmenuitem;
   private javax.swing.JMenu actionmenu;
   private javax.swing.JLabel candidatelabel;
   private javax.swing.JTable candidatetable;
+  private javax.swing.JPanel candqpanel;
+  private javax.swing.JPanel candqpanelouter;
   private javax.swing.JLabel cdetailerrorlabel;
   private javax.swing.JLabel cdetailidlabel;
   private javax.swing.JLabel cdetailnamelabel;
@@ -1938,6 +2150,7 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel5;
   private javax.swing.JPanel jPanel6;
   private javax.swing.JPopupMenu.Separator jSeparator1;
+  private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JLabel l1;
   private javax.swing.JLabel l2;
   private javax.swing.JLabel l3;
@@ -1983,6 +2196,7 @@ public class QyoutiFrame
   private javax.swing.JLabel savestatuslabel;
   private javax.swing.JTable scanstable;
   private javax.swing.JPopupMenu.Separator sep1;
+  private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
   private javax.swing.JLabel sourcelabel;
@@ -1990,7 +2204,7 @@ public class QyoutiFrame
   private javax.swing.JScrollPane sp2;
   private javax.swing.JScrollPane sp3;
   private javax.swing.JScrollPane sp4;
-  private javax.swing.JScrollPane sp5;
+  private javax.swing.JScrollPane sp6;
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JSplitPane splitpane;
   private javax.swing.JPanel stab;
@@ -2070,4 +2284,20 @@ public class QyoutiFrame
       gotoQuestion( c.firstQuestionData() );
     }
   }
+  
+    class ChangeLookAndFeelAction extends AbstractAction {
+        QyoutiFrame frame;
+        String laf;
+        protected ChangeLookAndFeelAction(QyoutiFrame frame, String laf) {
+            super("ChangeTheme");
+            this.frame = frame;
+            this.laf = laf;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            frame.setLookAndFeel(laf);
+        }
+    }
+
+  
 }

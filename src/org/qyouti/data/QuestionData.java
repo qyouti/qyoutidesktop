@@ -103,6 +103,24 @@ public class QuestionData
     page.exam.fireTableDataChanged();
   }
 
+  private File getFile( String fname )
+  {
+    File examfolder = page.exam.examfile.getParentFile();
+    File scanfolder = new File( examfolder, "scans" );
+    return new File( scanfolder, fname );
+  }
+
+  public String getImageFileName()
+  {
+    return ident + "_" + page.candidate_number + ".jpg";
+  }
+  
+  public File getImageFile()
+  {
+    return getFile( getImageFileName() );
+  }
+
+  
   public boolean areImagesProcessed()
   {
     return imagesprocessed;
@@ -329,9 +347,9 @@ public class QuestionData
       case 3:
         return Icon.class;
       case 4:
-        return Boolean.class;
+        return String.class;
       case 5:
-        return Boolean.class;
+        return String.class;
       case 6:
         return Boolean.class;
     }
@@ -374,7 +392,7 @@ public class QuestionData
         if ( rl == null ) return "n/a";
         if ( rl.isCorrect() ) return "yes";
         if ( rl.isIncorrect() ) return "no";
-        return "?";
+        return "n/a";
       case 2:
         if ( response.getImage() == null )
             return "?";
@@ -384,9 +402,9 @@ public class QuestionData
             return "?";
         return new ImageIcon( response.getFilteredImage() );
       case 4:
-        return new Boolean( response.selected );
+        return response.selected?"selected":"";
       case 5:
-        return new Boolean( response.needsreview );
+        return response.needsreview?"dubious":"";
       case 6:
         return new Boolean( response.examiner_selected );
     }

@@ -356,11 +356,21 @@ public class ExaminationData
 
   public void importCandidates(List<CandidateData> list)
   {
+    int i, j;
     CandidateData candidate;
     OutcomeDatum outcome;
-    for (int i = 0; i < list.size(); i++)
+    QTIElementItem item;
+    Vector<QTIElementItem> allitems = qdefs.qti.getItems();
+    
+    for ( i = 0; i < list.size(); i++ )
     {
       candidate = list.get( i );
+      for ( j=0; j<allitems.size(); j++ )
+      {
+        item = allitems.get( j );
+        if ( item.isForCandidate( candidate.anonymous ) )
+          candidate.addQuestion( item.getIdent() );
+      }      
       if ( !candidate.anonymous )
       {
         outcome = new OutcomeDatum();
@@ -1779,7 +1789,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public int getColumnCount()
   {
-    return 8;
+    return 5;
   }
 
   @Override
@@ -1788,21 +1798,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     switch (columnIndex)
     {
       case 0:
-        return "*";
+        return "Status";
       case 1:
-        return "Name";
+        return "Paper Name";
       case 2:
-        return "ID";
+        return "Paper ID";
       case 3:
-        return "Score";
-      case 4:
-        return "Scanned\nPages";
-      case 5:
-        return "Scanned Questions";
-      case 6:
         return "Questions";
-      case 7:
-        return "Errors";
+      case 4:
+        return "Score";
     }
     return null;
   }
@@ -1813,21 +1817,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     switch (columnIndex)
     {
       case 0:
-        return Object.class;
+        return String.class;
       case 1:
         return String.class;
       case 2:
         return String.class;
       case 3:
-        return Double.class;
+        return Integer.class;
       case 4:
-        return Integer.class;
-      case 5:
-        return Integer.class;
-      case 6:
-        return Integer.class;
-      case 7:
-        return String.class;
+        return Double.class;
     }
     return null;
   }
@@ -1841,26 +1839,19 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public Object getValueAt(int rowIndex, int columnIndex)
   {
     CandidateData candidate = candidates_sorted.get(rowIndex);
-    int scanned = candidate.questionsScanned();
     int asked = candidate.questionsAsked();
     switch (columnIndex)
     {
       case 0:
-        return null;
+        return candidate.getStatusDescription();
       case 1:
         return candidate.name;
       case 2:
         return candidate.id;
       case 3:
-        return candidate.score;
-      case 4:
-        return new Integer(candidate.pages.size());
-      case 5:
-        return new Integer( scanned );
-      case 6:
         return new Integer( asked );
-      case 7:
-        return candidate.getErrorMessage();
+      case 4:
+        return candidate.score;
     }
     return null;
   }

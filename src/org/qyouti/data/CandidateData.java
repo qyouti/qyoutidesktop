@@ -39,6 +39,12 @@ import org.w3c.dom.NodeList;
  */
 public class CandidateData
 {
+  public static final int STATUS_WAITING = 0;
+  public static final int STATUS_UNSCANNED = 1;
+  public static final int STATUS_ATTENTION = 2;
+  public static final int STATUS_RESOLVED = 3;
+  public static final int STATUS_OK = 4;
+  
   public ExaminationData exam;
   public ArrayList<PageData> pages = new ArrayList<PageData>();
   public String name;
@@ -50,6 +56,7 @@ public class CandidateData
 
   public UserRenderPreferences preferences = null;
 
+  public boolean fixeditems = false;
   public Vector<String> itemidents = null;
   
 
@@ -82,10 +89,14 @@ public class CandidateData
     nl = element.getElementsByTagName( "items" );
     Element items, itemref;
     String ident;
+    String strfixed;
     if ( nl.getLength() == 1 )
     {
       itemidents = new Vector<String>();
       items = (Element)nl.item( 0 );
+      strfixed = items.getAttribute( "fixed" );
+      fixeditems = strfixed!=null && strfixed.length()>0;
+      
       nl = items.getElementsByTagName( "itemref" );
       for ( int j=0; j<nl.getLength(); j++ )
       {
@@ -124,6 +135,55 @@ public class CandidateData
       preferences = null;
   }
 
+  public int getStatus()
+  {
+    if ( exam.getPageCount() == 0 )
+      return STATUS_WAITING;
+    if ( pages == null || pages.size() == 0 )
+      return STATUS_UNSCANNED;
+    
+    int n=0;
+    QuestionData qd;
+    for ( int i=0; itemidents!=null && i<itemidents.size(); i++ )
+    {
+      qd = getQuestionData( itemidents.get( i) );
+      if ( qd == null )
+        return STATUS_ATTENTION;
+        
+      if ( qd.needsreview )
+      {
+        n++;
+        if ( qd.getExaminerDecision() == QuestionData.EXAMINER_DECISION_NONE )
+          return STATUS_ATTENTION;
+      }
+    }
+    
+    if ( n>0 )
+      return STATUS_RESOLVED;
+    
+    return STATUS_OK;
+  }
+ 
+  public String getStatusDescription()
+  {
+    int status = this.getStatus();
+    switch ( status )
+    {
+      case CandidateData.STATUS_WAITING:
+        return "";  // nothing has been scanned
+      case CandidateData.STATUS_UNSCANNED:
+        return "No pages scanned";  // other pages scanned - none for this candidate
+      case CandidateData.STATUS_ATTENTION:
+        return "ATTENTION";   // Either missing questions in scans or dubious input
+      case CandidateData.STATUS_RESOLVED:
+        return "Resolved Issues";   // There was dubious input but these have been marked as dealt with
+      case CandidateData.STATUS_OK:
+        return "O.K.";   // All questions scanned and there was no dubious input
+      default:
+        return "Unk. Status";
+    }    
+  }
+  
   public void addPage( PageData page )
   {
     // make a local reference to the page
@@ -134,6 +194,13 @@ public class CandidateData
     Collections.sort( pages );
   }
 
+  public void addQuestion( String ident )
+  {
+    if ( itemidents == null )
+      itemidents = new Vector<String>();
+    itemidents.add( ident );
+  }
+  
   public ResponseData getResponse( String qid, int resp_offset )
   {
     int i, j;
@@ -190,7 +257,7 @@ public class CandidateData
   {
     if ( itemidents != null )
       return itemidents.size();
-    return exam.qdefs.getRowCount();
+    return 0;
   }
 
   public String getErrorMessage()
@@ -217,7 +284,10 @@ public class CandidateData
     writer.write( ">\n" );
     if ( itemidents != null )
     {
-      writer.write( "    <items>\n" );
+      writer.write( "    <items" );
+      if ( fixeditems )
+        writer.write( " fixed=\"yes\"" );
+      writer.write( ">\n" );
       for ( int i=0; i<itemidents.size(); i++ )
         writer.write( "      <itemref ident=\"" + itemidents.elementAt( i ) + "\"/>\n" );
       writer.write( "    </items>\n" );
@@ -340,20 +410,20 @@ public class CandidateData
     
     if ( this.itemidents == null )
     {
-      Vector<QTIElementItem> allitems = exam.qdefs.qti.getItems();
-      for ( i=0; i<allitems.size(); i++ )
-      {
-        item = allitems.get( i );
-        if ( item.isForCandidate( anonymous ) )
-          v.add( item );
-      }
+//      Vector<QTIElementItem> allitems = exam.qdefs.qti.getItems();
+//      for ( i=0; i<allitems.size(); i++ )
+//      {
+//        item = allitems.get( i );
+//        if ( item.isForCandidate( anonymous ) )
+//          v.add( item );
+//      }
       return v;
     }
 
     for ( i=0; i<itemidents.size(); i++ )
     {
       item = exam.qdefs.qti.getItem( itemidents.elementAt( i ) );
-      if ( item != null && item.isForCandidate( anonymous ) )
+      if ( item != null )
         v.add( item );
     }
     

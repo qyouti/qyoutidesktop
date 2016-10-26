@@ -144,9 +144,11 @@ public class PaginationRecord
   {
     int x = Integer.parseInt( e_item.getAttribute( "x" ) );
     int y = Integer.parseInt( e_item.getAttribute( "y" ) );
+    int w = Integer.parseInt( e_item.getAttribute( "w" ) );
+    int h = Integer.parseInt( e_item.getAttribute( "h" ) );
     
     QuestionMetricsRecord qmr = new QuestionMetricsRecord( e_item.getChildNodes() );
-    addItem( e_item.getAttribute( "id" ), x, y, qmr );
+    addItem( e_item.getAttribute( "id" ), x, y, w, h, qmr );
   }
 
   
@@ -187,10 +189,10 @@ public class PaginationRecord
     return printid + "/" + candidates.lastElement().pages.lastElement().id;
   }
   
-  public void addItem( String ident, int x, int y, QuestionMetricsRecord qmr )
+  public void addItem( String ident, int x, int y, int w, int h, QuestionMetricsRecord qmr )
   {
     Page lastpage = candidates.lastElement().pages.lastElement();
-    lastpage.items.add( new Item( lastpage, ident, x, y, qmr ) );
+    lastpage.items.add( new Item( lastpage, ident, x, y, w, h, qmr ) );
   }
 
   public void addBullseye( int type, int x, int y, int w )
@@ -440,13 +442,17 @@ public class PaginationRecord
     String ident;
     int x;
     int y;
+    int w;
+    int h;
     QuestionMetricsRecord qmr;
-    public Item( Page parent, String ident, int x, int y, QuestionMetricsRecord qmr )
+    public Item( Page parent, String ident, int x, int y, int w, int h, QuestionMetricsRecord qmr )
     {
       this.parent = parent;
       this.ident = ident;
       this.x = x;
       this.y = y;
+      this.w = w;
+      this.h = h;
       this.qmr = qmr;
     }
     public void emit(Writer writer) throws IOException
@@ -457,6 +463,10 @@ public class PaginationRecord
       writer.write( Integer.toString( x ) );
       writer.write("\" y=\"");
       writer.write( Integer.toString( y ) );
+      writer.write("\" w=\"");
+      writer.write( Integer.toString( w ) );
+      writer.write("\" h=\"");
+      writer.write( Integer.toString( h ) );
       writer.write( "\">\n");
       qmr.emit( writer );
       writer.write("      </item>\n" );
@@ -476,6 +486,18 @@ public class PaginationRecord
     {
       return y;
     }
+
+    public int getWidth()
+    {
+      return w;
+    }
+
+    public int getHeight()
+    {
+      return h;
+    }
+    
+    
     
     public QuestionMetricsRecord getQuestionMetricsRecord()
     {

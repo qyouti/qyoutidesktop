@@ -52,13 +52,14 @@ public class ComponentToSvg
       scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
       scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
       scrollpane.setViewportView(component);
-      scrollpane.getViewport().setSize( width, component.getSize().height );
+      int height = component.getSize().height;
+      scrollpane.getViewport().setSize( width, height );
       scrollpane.getViewport().doLayout();
 
-      return convert( component );
+      return convert( component, width, height );
     }
 
-    static SvgConversionResult convert(Component component)
+    static SvgConversionResult convert(Component component, int width, int height )
     {
         String svg = null;
         try
@@ -80,7 +81,7 @@ public class ComponentToSvg
 //            Rectangle2D rect = gvtRoot.getSensitiveBounds();
             //System.out.println("SVG bounds : " + rect );
 
-            SvgConversionResult svgresult = new SvgConversionResult(document, null ); // gvtRoot);
+            SvgConversionResult svgresult = new SvgConversionResult(document, width, height ); // gvtRoot);
 
             return svgresult;
         } catch (Exception e)

@@ -743,7 +743,7 @@ public class QTIItemRenderer
       double xoffset = 0.0;
       double yoffset = 0.0;
       
-      double itemheight;
+      double itemheight, itemwidth;
       boolean has_cover = options.getQTIRenderBooleanOption("cover_sheet");
       boolean has_blank = false;
 
@@ -804,6 +804,7 @@ public class QTIItemRenderer
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getDocumentElement().getAttribute("height") );
+        itemwidth = renderer.getSVGResult().getWidth();
         if ( itemheight > spaceleft )
         {
 //        System.out.println( "Out of space for item height" );
@@ -840,7 +841,9 @@ public class QTIItemRenderer
           paginationrecord.addItem( 
                   items.elementAt( i ).getIdent(), 
                   (int)((xoffset+itemareinsetleft - tlx)/10.0), 
-                  (int)((yoffset+itemareinsettop - tly)/10.0), 
+                  (int)((yoffset+itemareinsettop - tly)/10.0),
+                  (int)(itemwidth/10.0),
+                  (int)(itemheight/10.0),
                   renderer.mrec );
         spaceleft -= itemheight;
         yoffset += itemheight;
@@ -1243,17 +1246,16 @@ public class QTIItemRenderer
     return placeSVGOnPage( v, true, options, null, null );
   }
 
+  public SvgConversionResult getSVGResult()
+  {
+    return svgres;
+  }
+
   public GenericDocument getSVGDocument()
   {
     return svgres.getDocument();
   }
 
-  public synchronized void setSVGResult( SvgConversionResult r )
-  {
-    this.svgres = r;
-    notify();
-  }
-  
   public static QTIMetrics getMetrics()
   {
     if ( metrics == null )
