@@ -2037,7 +2037,10 @@ public class QyoutiFrame
 
     responsetable.setModel( question );
     for ( i=0; i<question.getRowCount(); i++ )
-      responsetable.setRowHeight( i, question.getRowHeight( i ) );
+    {
+      if ( question.getRowHeight( i ) > 32 )
+        responsetable.setRowHeight( i, question.getRowHeight( i ) );
+    }
 
     outcometable.setModel( question.outcomes );
     overalloutcometable.setModel( candidate.outcomes );

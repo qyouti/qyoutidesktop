@@ -627,7 +627,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     }
 
     XLocator xlocator = new XLocator( maxw, maxh );
-    xlocator.setDebugLevel( 0 );
+    xlocator.setDebugLevel( 2 );
     for ( i=0; i<exam.getPageCount(); i++ )
     {
       page = exam.getPage( i );
@@ -690,7 +690,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
     File[] filelist = new File[rlabels.length];
     XLocatorReport[] reports = new XLocatorReport[rlabels.length];
-    BufferedImage[] debugimages = new BufferedImage[rlabels.length];
+    ArrayList<BufferedImage> debugimages = new ArrayList<BufferedImage>();
     
     for ( int j=0; j<rlabels.length; j++ )
     {
@@ -715,33 +715,35 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         @Override
         public void notifyNewDebugImage( BufferedImage image, int i )
         {
-          debugimages[i] = image;
+          debugimages.add( image );
         }
     };
     
     xlocator.addProgressListener( listener );
     xlocator.run();
     xlocator.removeProgressListener( listener );
-    
-    int count=0;
-    for ( int j=0; j<rlabels.length; j++ )
-    {
-      responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-      responsedata.selected = reports[j].hasX();
-      responsedata.examiner_selected = false;
-      if ( debugimages[j] != null )
+
+    for ( int i=0; i<debugimages.size(); i++ )
       {
         try
         {
           ImageIO.write(
-                        debugimages[j],
+                        debugimages.get( i ),
                         "jpg",
-                        responsedata.getFilteredImageFile() );
+                        new File( questiondata.getImageFile().getParentFile(), questiondata.ident + "_debug_" + i + ".jpg" ) );
         } catch (IOException ex)
         {
           Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
       }
+    
+    int count=0;
+    for ( int j=0; j<rlabels.length; j++ )
+    {
+      responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
+      responsedata.debug_message = reports[j].toString();
+      responsedata.selected = reports[j].hasX();
+      responsedata.examiner_selected = false;
       
       if ( responsedata.selected )
       {
@@ -756,7 +758,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       else
       {
         // No X but not blank either
-        if ( reports[j].getPercentageCentreEdgePixels() > 0.5 )
+        if ( reports[j].getPercentageCentreEdgePixels() > 5.0 )
         {
           responsedata.needsreview = true;
           questiondata.needsreview = true;

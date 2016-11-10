@@ -60,6 +60,7 @@ public class ResponseData
   public boolean selected=false;
   public boolean examiner_selected=false;
 
+  public String debug_message=null;
 
   public ResponseData( QuestionData question, int position, QuestionMetricBox box )
   {
@@ -95,32 +96,11 @@ public class ResponseData
     if ( "null".equalsIgnoreCase(ident)) ident = null;
     if ( ident == null || ident.length() == 0 )
       setIdentFromIndex();
-    NodeList nl; // = element.getElementsByTagName( "box" );
-    NodeList lines;
-    BufferedImage image;
-    Element box, filtered, line;
-    String text;
-    int x, y;
 
-
-    nl = element.getElementsByTagName( "filtered" );
-    if ( nl.getLength() > 0 )
-    {
-      filtered = (Element) nl.item( 0 );
-      lines = filtered.getElementsByTagName( "line" );
-      line = (Element) lines.item( 0 );
-      text = line.getTextContent();
-      image = new BufferedImage( lines.getLength(), text.length(), BufferedImage.TYPE_INT_RGB );
-      for ( x=0; x<lines.getLength(); x++ )
-      {
-        line = (Element) lines.item( x );
-        text = line.getTextContent();
-        for ( y=0; y<text.length(); y++ )
-          //image.setRGB( x, y, "#".equals( text.substring( y, y+1 ) )?0xff000000:0xffffffff );
-          image.setRGB( x, y, (text.charAt(y) == '#')?0xff000000:0xffffffff );
-      }
-      filtered_image = image;
-    }
+    String content = element.getTextContent();
+    if ( content !=null && content.length() > 0 )
+      debug_message = content;
+    
     question.responsedatas.add( this );
     question.responsedatatable.put( ident, this );
   }
@@ -232,41 +212,15 @@ public class ResponseData
     writer.write( "imagefile=\"" + getImageFileName() + "\" ");
     writer.write( "imagewidth=\"" + imagewidth + "\" ");
     writer.write( "imageheight=\"" + imageheight + "\" ");
-    writer.write( "/>\n" );
+    if ( debug_message != null )
+    {
+      writer.write( ">" );
+      writer.write( debug_message );
+      writer.write( "</response>\n" );
+    }
+    else
+      writer.write( "/>\n" );
 
-//    writer.write( "            <box>\n" );
-//    for ( int i=0; i<box_image.getWidth(); i++ )
-//    {
-//      writer.write( "                <line>" );
-//      for ( int j=0; j<box_image.getHeight(); j++ )
-//      {
-//        rgb = box_image.getRGB( i, j );
-//        writer.write( "(" + Integer.toHexString( rgb ) + ")" );
-//      }
-//      writer.write( "</line>\n" );
-//    }
-//    writer.write( "            </box>\n" );
-
-//    if ( filtered_image != null )
-//    {
-//        writer.write( "            <filtered>\n" );
-//        for ( int i=0; i<filtered_image.getWidth(); i++ )
-//        {
-//          writer.write( "                <line>" );
-//          for ( int j=0; j<filtered_image.getHeight(); j++ )
-//          {
-//            rgb = filtered_image.getRGB( i, j );
-//            if ( (rgb & 1) == 0 )
-//              writer.write( "#" );
-//            else
-//              writer.write( "." );
-//          }
-//          writer.write( "</line>\n" );
-//        }
-//        writer.write( "            </filtered>\n" );
-//    }
-//
-//    writer.write( "          </response>\n" );
   }
 
 }
