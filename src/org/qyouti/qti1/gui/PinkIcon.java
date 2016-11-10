@@ -19,9 +19,12 @@ import org.w3c.dom.Document;
 public class PinkIcon
         extends UserInputIcon
 {
-    static String bordercolor = "#ffc4ff";
-    static String   fillcolor = "#ffccff";
-    static String  crosscolor = "#ffd8ff";
+    // If any of these are too dark then the
+    // print out may contain some cyan/yellow or black ink/toner
+    // and this box will become visible in the red channel
+    static String bordercolor = "#ffe8ff";
+    static String   fillcolor = "#ffe8ff";
+    static String  crosscolor = "#fff0ff";
 
     int borderwidth;
     int padding;
