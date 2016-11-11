@@ -27,6 +27,7 @@
 package org.qyouti.data;
 
 import java.util.Vector;
+import javax.swing.event.*;
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -36,7 +37,7 @@ import javax.swing.table.AbstractTableModel;
 public class OutcomeData
           extends AbstractTableModel
 {
-  public Vector<OutcomeDatum> data = new Vector<OutcomeDatum>();
+  private Vector<OutcomeDatum> data = new Vector<OutcomeDatum>();
 
 
   public int getRowCount()
@@ -70,8 +71,32 @@ public class OutcomeData
    */
   public void clear()
   {
+    int n = data.size()-1;
     for ( int i=0; i<data.size(); i++ )
       if ( !data.get(i).fixed )
-        data.remove( i-- );    
+        data.remove( i-- );
+    fireTableRowsDeleted( 0, n );
   }
+  
+  public void addDatum( OutcomeDatum datum )
+  {
+    data.add( datum );
+    this.fireTableRowsInserted( data.size()-1, data.size()-1 );
+  }
+
+  public OutcomeDatum getDatumAt(int rowIndex )
+  {
+    return data.get( rowIndex );
+  }
+
+  @Override
+  public void addTableModelListener( TableModelListener l )
+  {
+    super.addTableModelListener( l );
+    TableModelEvent e = new TableModelEvent(this, 0, data.size()-1,
+                             TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT );
+    // only inform this most recent listener, not all listeners.
+    l.tableChanged( e );
+  }
+  
 }

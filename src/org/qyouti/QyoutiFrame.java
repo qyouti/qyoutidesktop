@@ -97,6 +97,17 @@ public class QyoutiFrame
               
             });
     
+    questionreviewtable.getSelectionModel().addListSelectionListener( 
+            new ListSelectionListener() {
+              
+      @Override
+      public void valueChanged( ListSelectionEvent e )
+      {
+        reviewSelectionChanged( e );
+      }
+              
+            });
+    
     gotoQuestion( null );
     this.addWindowListener( this );
     this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
@@ -215,6 +226,9 @@ public class QyoutiFrame
     
   public void candidateSelectionChanged( ListSelectionEvent e )
   {
+    if ( e.getValueIsAdjusting() )
+      return;
+    
     System.out.println( "Candidate selection change." );
     candqpanel.removeAll();
     
@@ -313,6 +327,13 @@ public class QyoutiFrame
     sp3 = new javax.swing.JScrollPane();
     scanstable = new javax.swing.JTable();
     rtab = new javax.swing.JPanel();
+    jSplitPane2 = new javax.swing.JSplitPane();
+    jScrollPane1 = new javax.swing.JScrollPane();
+    questionreviewtable = new javax.swing.JTable();
+    jScrollPane2 = new javax.swing.JScrollPane();
+    qrpanelouter = new javax.swing.JPanel();
+    questionreviewpanel = new javax.swing.JPanel();
+    xtab = new javax.swing.JPanel();
     resptoppanel = new javax.swing.JPanel();
     respheadpanel = new javax.swing.JPanel();
     respleftpanel = new javax.swing.JPanel();
@@ -520,7 +541,7 @@ public class QyoutiFrame
     gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
     jPanel3.add(cdetailidlabel, gridBagConstraints);
 
-    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Outcomes"));
+    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Overall Outcomes"));
     jPanel1.setMinimumSize(new java.awt.Dimension(80, 38));
     jPanel1.setLayout(new java.awt.BorderLayout());
 
@@ -640,6 +661,43 @@ public class QyoutiFrame
     tabs.addTab("Scans", stab);
 
     rtab.setLayout(new java.awt.BorderLayout());
+
+    questionreviewtable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][]
+      {
+
+      },
+      new String []
+      {
+        "Candidate ID", "Question ID"
+      }
+    ));
+    questionreviewtable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
+    jScrollPane1.setViewportView(questionreviewtable);
+
+    jSplitPane2.setLeftComponent(jScrollPane1);
+
+    qrpanelouter.setBackground(java.awt.Color.white);
+    qrpanelouter.setLayout(new java.awt.GridBagLayout());
+
+    questionreviewpanel.setBackground(java.awt.Color.white);
+    questionreviewpanel.setLayout(new java.awt.GridBagLayout());
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
+    qrpanelouter.add(questionreviewpanel, gridBagConstraints);
+
+    jScrollPane2.setViewportView(qrpanelouter);
+
+    jSplitPane2.setRightComponent(jScrollPane2);
+
+    rtab.add(jSplitPane2, java.awt.BorderLayout.CENTER);
+
+    tabs.addTab("Review", rtab);
+
+    xtab.setLayout(new java.awt.BorderLayout());
 
     resptoppanel.setLayout(new java.awt.BorderLayout());
 
@@ -924,7 +982,7 @@ public class QyoutiFrame
 
     resptoppanel.add(outcomepanel, java.awt.BorderLayout.CENTER);
 
-    rtab.add(resptoppanel, java.awt.BorderLayout.NORTH);
+    xtab.add(resptoppanel, java.awt.BorderLayout.NORTH);
 
     responsetable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
@@ -959,9 +1017,9 @@ public class QyoutiFrame
     responsetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp4.setViewportView(responsetable);
 
-    rtab.add(sp4, java.awt.BorderLayout.CENTER);
+    xtab.add(sp4, java.awt.BorderLayout.CENTER);
 
-    tabs.addTab("Responses", rtab);
+    tabs.addTab("Responses", xtab);
 
     getContentPane().add(tabs, java.awt.BorderLayout.CENTER);
 
@@ -1398,7 +1456,7 @@ public class QyoutiFrame
       item = exam.qdefs.qti.getItems().elementAt( row );
       itemnumber = row;
     }
-    else if ( tabs.getSelectedComponent() == rtab )
+    else if ( tabs.getSelectedComponent() == xtab )
     {
       if ( !(responsetable.getModel() instanceof QuestionData) )
       {
@@ -1464,7 +1522,7 @@ public class QyoutiFrame
       }
       item = exam.qdefs.qti.getItems().elementAt( row );
     }
-    else if ( tabs.getSelectedComponent() == rtab )
+    else if ( tabs.getSelectedComponent() == xtab )
     {
       if ( !(responsetable.getModel() instanceof QuestionData) )
       {
@@ -1523,7 +1581,7 @@ public class QyoutiFrame
       }
       filename = (String) scanstable.getValueAt( row, 1 );
     }
-    else if ( tabs.getSelectedComponent() == rtab )
+    else if ( tabs.getSelectedComponent() == xtab )
     {
       if ( !(responsetable.getModel() instanceof QuestionData) )
       {
@@ -1926,6 +1984,7 @@ public class QyoutiFrame
       exam.addExaminationDataStatusListener( this );
       scanstable.setModel( exam.pagelistmodel );
       candidatetable.setModel( exam );
+      questionreviewtable.setModel( exam.reviewlist );
       exam.load();
       setTitle( "Qyouti - " + examfolder.getName() );
       if ( exam.qdefs != null )
@@ -2152,8 +2211,11 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
   private javax.swing.JPanel jPanel6;
+  private javax.swing.JScrollPane jScrollPane1;
+  private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JSplitPane jSplitPane1;
+  private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JLabel l1;
   private javax.swing.JLabel l2;
   private javax.swing.JLabel l3;
@@ -2180,8 +2242,11 @@ public class QyoutiFrame
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
+  private javax.swing.JPanel qrpanelouter;
   private javax.swing.JPanel qtab;
   private javax.swing.JLabel questionlabel;
+  private javax.swing.JPanel questionreviewpanel;
+  private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
   private javax.swing.JPanel respbottomleftpanel;
   private javax.swing.JPanel respbottomrightpanel;
@@ -2214,6 +2279,7 @@ public class QyoutiFrame
   private javax.swing.JPanel statuspanel;
   private javax.swing.JTabbedPane tabs;
   private javax.swing.JMenuItem viewscanmenuitem;
+  private javax.swing.JPanel xtab;
   // End of variables declaration//GEN-END:variables
 
   @Override
@@ -2287,6 +2353,36 @@ public class QyoutiFrame
       gotoQuestion( c.firstQuestionData() );
     }
   }
+
+
+  public void reviewSelectionChanged( ListSelectionEvent e )
+  {
+    int i;
+    CandidateData c;
+    QuestionData q;
+    CandidateQuestionPanel cqp;
+    GridBagConstraints gbc = new GridBagConstraints();
+
+    gbc.gridx = 0;
+    gbc.weightx = 0.5;
+    gbc.weighty = 0.5;
+    gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+
+    questionreviewpanel.removeAll();
+    for ( i=0; i<questionreviewtable.getRowCount(); i++ )
+    {
+      if ( questionreviewtable.isRowSelected( i ) )
+      {
+        c = exam.reviewlist.getCandidateData( i );
+        q = exam.reviewlist.getQuestionData( i );
+        cqp = new CandidateQuestionPanel( c, q.ident );
+        questionreviewpanel.add( cqp, gbc );
+      }
+    }
+  } 
+  
+
   
     class ChangeLookAndFeelAction extends AbstractAction {
         QyoutiFrame frame;

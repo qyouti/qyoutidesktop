@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -95,6 +96,11 @@ public class ExaminationData
 
   String lastprintid=null;
   boolean unsaved_changes=false;
+
+  OutcomeDataListener outcomelistener = new OutcomeDataListener();
+  ArrayList<String> outcomenames = new ArrayList<String>();
+ 
+  public QuestionReviewTable reviewlist = new QuestionReviewTable();
   
   public ExaminationData( ExaminationCatalogue examcatalogue )
   {
@@ -126,6 +132,33 @@ public class ExaminationData
       iterator.next().examinationDataStatusChanged( this );
   }
   
+  public void rebuildReviewList()
+  {
+    int i, j;
+    CandidateData c;
+    QuestionData q;
+    reviewlist.clear();
+    for ( i=0; i<this.candidates_sorted.size(); i++ )
+    {
+      c = this.candidates_sorted.get( i );
+      for ( j=0; j<c.itemidents.size(); j++ )
+      {
+        q = c.getQuestionData( c.itemidents.get( j ) );
+        if ( q.needsreview )
+          reviewlist.add( c, q );
+      }
+    }
+  }
+  
+  public void addOutcomeName( String name )
+  {
+    if ( outcomenames.contains( name ) )
+      return;
+    
+    outcomenames.add( name );
+    // extra column in candidate table
+    fireTableStructureChanged();
+  }
   
   public void clearPages()
   {
@@ -365,6 +398,7 @@ public class ExaminationData
     for ( i = 0; i < list.size(); i++ )
     {
       candidate = list.get( i );
+      candidate.outcomes.addTableModelListener( outcomelistener );
       for ( j=0; j<allitems.size(); j++ )
       {
         item = allitems.get( j );
@@ -377,7 +411,7 @@ public class ExaminationData
         outcome.fixed = true;
         outcome.name = "SID";
         outcome.value = candidate.id;
-        candidate.outcomes.data.add( outcome );
+        candidate.outcomes.addDatum( outcome );
       }
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
@@ -404,6 +438,7 @@ public class ExaminationData
     {
       ecandidate = (Element) nl.item(i);
       candidate = new CandidateData(this, ecandidate.getAttribute("name"), ecandidate.getAttribute("id"), false );
+      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -446,6 +481,7 @@ public class ExaminationData
         System.out.println(line[j]);
       }
       candidate = new CandidateData(this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn], false );
+      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -470,9 +506,9 @@ public class ExaminationData
     for (i = 0; i < candidates_sorted.size(); i++)
     {
       candidate = candidates_sorted.get(i);
-      for ( j=0; j<candidate.outcomes.data.size(); j++ )
+      for ( j=0; j<candidate.outcomes.getRowCount(); j++ )
       {
-        datum = candidate.outcomes.data.get( j );
+        datum = candidate.outcomes.getDatumAt( j );
         if ( "SCORE".equals( datum.name ) )
           continue;
         if ( !outcomenames.contains( datum.name ) )
@@ -1397,6 +1433,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     if (candidate == null)
     {
       candidate = new CandidateData(this, page.candidate_name, page.candidate_number, false);
+      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(page.candidate_number, candidate);
       candidates_sorted.add(candidate);
       sortCandidates();
@@ -1450,10 +1487,11 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       if ( page.processed )
         continue;
       updateOutcomes( page );
-    }    
+    }
+    //rebuildOutcomeNameList();    
   }
 
-  public void updateOutcomes( PageData page )
+  private void updateOutcomes( PageData page )
   {
     if ( page.candidate ==null )
         return;
@@ -1746,6 +1784,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         for (int j = 0; j < cnl.getLength(); j++)
         {
           candidate = new CandidateData(this, (Element) cnl.item(j));
+          candidate.outcomes.addTableModelListener( outcomelistener );
         }
         sortCandidates();
       }
@@ -1778,6 +1817,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       for ( int p=0; p<getPageCount(); p++ )
         getPage( p ).postLoad();
   
+    //rebuildOutcomeNameList();
+    rebuildReviewList();
+    
     fireStatusChange();
     fireTableDataChanged();
   }
@@ -1789,7 +1831,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public int getColumnCount()
   {
-    return 5;
+    return 4 + outcomenames.size();
   }
 
   @Override
@@ -1805,9 +1847,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         return "Paper ID";
       case 3:
         return "Questions";
-      case 4:
-        return "Score";
     }
+    int on = columnIndex-4;
+    if ( on>=0 && on<outcomenames.size() )
+      return outcomenames.get( on );
     return null;
   }
 
@@ -1824,9 +1867,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         return String.class;
       case 3:
         return Integer.class;
-      case 4:
-        return Double.class;
     }
+    int on = columnIndex-4;
+    if ( on>=0 && on<outcomenames.size() )
+      return String.class;
     return null;
   }
 
@@ -1850,10 +1894,32 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         return candidate.id;
       case 3:
         return new Integer( asked );
-      case 4:
-        return candidate.score;
     }
+    int on = columnIndex-4;
+    if ( on>=0 && on<outcomenames.size() )
+      return candidate.outcomes.getDatum( outcomenames.get( on ) ).value.toString();
     return null;
+  }
+  
+  class OutcomeDataListener implements TableModelListener
+  {
+
+    @Override
+    public void tableChanged( TableModelEvent e )
+    {
+      int i;
+      TableModel model;
+      
+      if ( e.getSource() instanceof TableModel &&
+           e.getType() == TableModelEvent.INSERT && 
+           e.getFirstRow() != TableModelEvent.HEADER_ROW )
+      {
+        model = (TableModel)e.getSource();
+        for ( i=e.getFirstRow(); i<=e.getLastRow(); i++ )
+          addOutcomeName( model.getValueAt( i, 0 ).toString() );
+      }
+    }
+    
   }
 }
 
