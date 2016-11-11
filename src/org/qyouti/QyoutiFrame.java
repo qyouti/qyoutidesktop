@@ -108,7 +108,6 @@ public class QyoutiFrame
               
             });
     
-    gotoQuestion( null );
     this.addWindowListener( this );
     this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
   }
@@ -333,45 +332,6 @@ public class QyoutiFrame
     jScrollPane2 = new javax.swing.JScrollPane();
     qrpanelouter = new javax.swing.JPanel();
     questionreviewpanel = new javax.swing.JPanel();
-    xtab = new javax.swing.JPanel();
-    resptoppanel = new javax.swing.JPanel();
-    respheadpanel = new javax.swing.JPanel();
-    respleftpanel = new javax.swing.JPanel();
-    resptopleftpanel = new javax.swing.JPanel();
-    previouscandidatebutton = new javax.swing.JButton();
-    respbottomleftpanel = new javax.swing.JPanel();
-    previousquestionbutton = new javax.swing.JButton();
-    jPanel2 = new javax.swing.JPanel();
-    resppropertypanel = new javax.swing.JPanel();
-    l1 = new javax.swing.JLabel();
-    candidatelabel = new javax.swing.JLabel();
-    l2 = new javax.swing.JLabel();
-    idlabel = new javax.swing.JLabel();
-    l3 = new javax.swing.JLabel();
-    pagelabel = new javax.swing.JLabel();
-    l4 = new javax.swing.JLabel();
-    sourcelabel = new javax.swing.JLabel();
-    l5 = new javax.swing.JLabel();
-    heightlabel = new javax.swing.JLabel();
-    l6 = new javax.swing.JLabel();
-    questionlabel = new javax.swing.JLabel();
-    l7 = new javax.swing.JLabel();
-    needsreviewlabel = new javax.swing.JLabel();
-    l8 = new javax.swing.JLabel();
-    reviewcombobox = new javax.swing.JComboBox<>();
-    resprightpanel = new javax.swing.JPanel();
-    resptoprightpanel = new javax.swing.JPanel();
-    nextcandidatebutton = new javax.swing.JButton();
-    respbottomrightpanel = new javax.swing.JPanel();
-    nextquestionbutton = new javax.swing.JButton();
-    outcomepanel = new javax.swing.JPanel();
-    jPanel4 = new javax.swing.JPanel();
-    jPanel6 = new javax.swing.JPanel();
-    overalloutcometable = new javax.swing.JTable();
-    jPanel5 = new javax.swing.JPanel();
-    outcometable = new javax.swing.JTable();
-    sp4 = new javax.swing.JScrollPane();
-    responsetable = new javax.swing.JTable();
     statuspanel = new javax.swing.JPanel();
     savestatuslabel = new javax.swing.JLabel();
     printstatuslabel = new javax.swing.JLabel();
@@ -696,330 +656,6 @@ public class QyoutiFrame
     rtab.add(jSplitPane2, java.awt.BorderLayout.CENTER);
 
     tabs.addTab("Review", rtab);
-
-    xtab.setLayout(new java.awt.BorderLayout());
-
-    resptoppanel.setLayout(new java.awt.BorderLayout());
-
-    respheadpanel.setLayout(new java.awt.BorderLayout());
-
-    respleftpanel.setLayout(new java.awt.BorderLayout());
-
-    resptopleftpanel.setLayout(new java.awt.BorderLayout());
-
-    previouscandidatebutton.setText("Previous");
-    previouscandidatebutton.setEnabled(false);
-    previouscandidatebutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        previouscandidatebuttonActionPerformed(evt);
-      }
-    });
-    resptopleftpanel.add(previouscandidatebutton, java.awt.BorderLayout.CENTER);
-
-    respleftpanel.add(resptopleftpanel, java.awt.BorderLayout.NORTH);
-
-    respbottomleftpanel.setLayout(new java.awt.BorderLayout());
-
-    previousquestionbutton.setText("Previous");
-    previousquestionbutton.setEnabled(false);
-    previousquestionbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        previousquestionbuttonActionPerformed(evt);
-      }
-    });
-    respbottomleftpanel.add(previousquestionbutton, java.awt.BorderLayout.PAGE_START);
-
-    respleftpanel.add(respbottomleftpanel, java.awt.BorderLayout.SOUTH);
-
-    respheadpanel.add(respleftpanel, java.awt.BorderLayout.WEST);
-
-    jPanel2.setLayout(new java.awt.GridBagLayout());
-
-    resppropertypanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 10));
-    resppropertypanel.setLayout(new java.awt.GridBagLayout());
-
-    l1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l1.setText("Candidate:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l1, gridBagConstraints);
-
-    candidatelabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(candidatelabel, gridBagConstraints);
-
-    l2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l2.setText("ID:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l2, gridBagConstraints);
-
-    idlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(idlabel, gridBagConstraints);
-
-    l3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l3.setText("Page:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l3, gridBagConstraints);
-
-    pagelabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(pagelabel, gridBagConstraints);
-
-    l4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l4.setText("Source:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l4, gridBagConstraints);
-
-    sourcelabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    sourcelabel.setMaximumSize(new java.awt.Dimension(250, 0));
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(sourcelabel, gridBagConstraints);
-
-    l5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l5.setText("Height:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 4;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l5, gridBagConstraints);
-
-    heightlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 4;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(heightlabel, gridBagConstraints);
-
-    l6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l6.setText("Question:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 5;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l6, gridBagConstraints);
-
-    questionlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 5;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(questionlabel, gridBagConstraints);
-
-    l7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l7.setText("Needs Review:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 6;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l7, gridBagConstraints);
-
-    needsreviewlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    needsreviewlabel.setText("No");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 6;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(needsreviewlabel, gridBagConstraints);
-
-    l8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-    l8.setText("Examiner Decision:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 7;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(l8, gridBagConstraints);
-
-    reviewcombobox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    reviewcombobox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Not Reviewed", "Confirm", "Override" }));
-    reviewcombobox.addItemListener(new java.awt.event.ItemListener()
-    {
-      public void itemStateChanged(java.awt.event.ItemEvent evt)
-      {
-        reviewcomboboxItemStateChanged(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 7;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    resppropertypanel.add(reviewcombobox, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    jPanel2.add(resppropertypanel, gridBagConstraints);
-
-    respheadpanel.add(jPanel2, java.awt.BorderLayout.CENTER);
-
-    resprightpanel.setLayout(new java.awt.BorderLayout());
-
-    resptoprightpanel.setLayout(new java.awt.BorderLayout());
-
-    nextcandidatebutton.setText("Next");
-    nextcandidatebutton.setEnabled(false);
-    nextcandidatebutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        nextcandidatebuttonActionPerformed(evt);
-      }
-    });
-    resptoprightpanel.add(nextcandidatebutton, java.awt.BorderLayout.CENTER);
-
-    resprightpanel.add(resptoprightpanel, java.awt.BorderLayout.NORTH);
-
-    respbottomrightpanel.setLayout(new java.awt.BorderLayout());
-
-    nextquestionbutton.setText("Next");
-    nextquestionbutton.setEnabled(false);
-    nextquestionbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        nextquestionbuttonActionPerformed(evt);
-      }
-    });
-    respbottomrightpanel.add(nextquestionbutton, java.awt.BorderLayout.CENTER);
-
-    resprightpanel.add(respbottomrightpanel, java.awt.BorderLayout.SOUTH);
-
-    respheadpanel.add(resprightpanel, java.awt.BorderLayout.EAST);
-
-    resptoppanel.add(respheadpanel, java.awt.BorderLayout.PAGE_START);
-
-    outcomepanel.setLayout(new java.awt.GridBagLayout());
-
-    jPanel4.setLayout(new java.awt.GridBagLayout());
-
-    jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Overall Outcomes"));
-
-    overalloutcometable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-        {null, null}
-      },
-      new String []
-      {
-        "Title 1", "Title 2"
-      }
-    ));
-    jPanel6.add(overalloutcometable);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-    jPanel4.add(jPanel6, gridBagConstraints);
-
-    jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Question Outcomes"));
-
-    outcometable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-        {null, null}
-      },
-      new String []
-      {
-        "Title 1", "Title 2"
-      }
-    ));
-    jPanel5.add(outcometable);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-    jPanel4.add(jPanel5, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.PAGE_START;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    outcomepanel.add(jPanel4, gridBagConstraints);
-
-    resptoppanel.add(outcomepanel, java.awt.BorderLayout.CENTER);
-
-    xtab.add(resptoppanel, java.awt.BorderLayout.NORTH);
-
-    responsetable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-
-      },
-      new String []
-      {
-        "*", "Response", "Enhanced", "Interpreted", "Override"
-      }
-    )
-    {
-      Class[] types = new Class []
-      {
-        java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class, java.lang.Boolean.class
-      };
-      boolean[] canEdit = new boolean []
-      {
-        false, false, false, false, true
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types [columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit [columnIndex];
-      }
-    });
-    responsetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
-    sp4.setViewportView(responsetable);
-
-    xtab.add(sp4, java.awt.BorderLayout.CENTER);
-
-    tabs.addTab("Responses", xtab);
 
     getContentPane().add(tabs, java.awt.BorderLayout.CENTER);
 
@@ -1374,63 +1010,6 @@ public class QyoutiFrame
 
   }//GEN-LAST:event_newmenuitemActionPerformed
 
-  private void nextcandidatebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_nextcandidatebuttonActionPerformed
-  {//GEN-HEADEREND:event_nextcandidatebuttonActionPerformed
-    TableModel model = responsetable.getModel();
-    if ( !(model instanceof QuestionData) )
-    {
-      return;
-    }
-    QuestionData question = (QuestionData) model;
-    CandidateData candidate = question.page.candidate;
-    CandidateData other = candidate.nextCandidateData( true );
-    if ( other == null )
-    {
-      gotoQuestion( null );
-    }
-    gotoQuestion( other.firstQuestionData() );
-  }//GEN-LAST:event_nextcandidatebuttonActionPerformed
-
-  private void previouscandidatebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previouscandidatebuttonActionPerformed
-  {//GEN-HEADEREND:event_previouscandidatebuttonActionPerformed
-    TableModel model = responsetable.getModel();
-    if ( !(model instanceof QuestionData) )
-    {
-      return;
-    }
-    QuestionData question = (QuestionData) model;
-    CandidateData candidate = question.page.candidate;
-    CandidateData other = candidate.previousCandidateData( true );
-    if ( other == null )
-    {
-      gotoQuestion( null );
-    }
-    gotoQuestion( other.lastQuestionData() );
-  }//GEN-LAST:event_previouscandidatebuttonActionPerformed
-
-  private void nextquestionbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_nextquestionbuttonActionPerformed
-  {//GEN-HEADEREND:event_nextquestionbuttonActionPerformed
-
-    TableModel model = responsetable.getModel();
-    if ( !(model instanceof QuestionData) )
-    {
-      return;
-    }
-    QuestionData question = (QuestionData) model;
-    gotoQuestion( question.nextQuestionData() );   // TODO add your handling code here:
-  }//GEN-LAST:event_nextquestionbuttonActionPerformed
-
-  private void previousquestionbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previousquestionbuttonActionPerformed
-  {//GEN-HEADEREND:event_previousquestionbuttonActionPerformed
-    TableModel model = responsetable.getModel();
-    if ( !(model instanceof QuestionData) )
-    {
-      return;
-    }
-    QuestionData question = (QuestionData) model;
-    gotoQuestion( question.previousQuestionData() );    // TODO add your handling code here:
-  }//GEN-LAST:event_previousquestionbuttonActionPerformed
-
   private void previewqmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previewqmenuitemActionPerformed
   {//GEN-HEADEREND:event_previewqmenuitemActionPerformed
 
@@ -1456,21 +1035,10 @@ public class QyoutiFrame
       item = exam.qdefs.qti.getItems().elementAt( row );
       itemnumber = row;
     }
-    else if ( tabs.getSelectedComponent() == xtab )
-    {
-      if ( !(responsetable.getModel() instanceof QuestionData) )
-      {
-        JOptionPane.
-                showMessageDialog( this, "There is no question to view in the responses tab." );
-        return;
-      }
-      QuestionData qd = (QuestionData) responsetable.getModel();
-      item = qd.getItem();
-    }
     else
     {
       JOptionPane.
-              showMessageDialog( this, "Question preview is only available on the Question and Responses tabs." );
+              showMessageDialog( this, "Question preview is only available on the Question tab." );
       return;
     }
 
@@ -1522,21 +1090,10 @@ public class QyoutiFrame
       }
       item = exam.qdefs.qti.getItems().elementAt( row );
     }
-    else if ( tabs.getSelectedComponent() == xtab )
-    {
-      if ( !(responsetable.getModel() instanceof QuestionData) )
-      {
-        JOptionPane.
-                showMessageDialog( this, "There is no question to edit in the responses tab." );
-        return;
-      }
-      QuestionData qd = (QuestionData) responsetable.getModel();
-      item = qd.getItem();
-    }
     else
     {
       JOptionPane.
-              showMessageDialog( this, "Question edit is only available on the Question and Responses tabs." );
+              showMessageDialog( this, "Question edit is only available on the Question tab." );
       return;
     }
 
@@ -1580,17 +1137,6 @@ public class QyoutiFrame
         return;
       }
       filename = (String) scanstable.getValueAt( row, 1 );
-    }
-    else if ( tabs.getSelectedComponent() == xtab )
-    {
-      if ( !(responsetable.getModel() instanceof QuestionData) )
-      {
-        JOptionPane.
-                showMessageDialog( this, "There is no question to edit in the responses tab." );
-        return;
-      }
-      QuestionData qd = (QuestionData) responsetable.getModel();
-      filename = qd.page.source;
     }
     else
     {
@@ -1687,7 +1233,6 @@ public class QyoutiFrame
 
     exam.clearPages();
     exam.save();
-    gotoQuestion( null );
     exam.pagelistmodel.
             fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
   }//GEN-LAST:event_clearscanneddatamenuitemActionPerformed
@@ -1856,22 +1401,6 @@ public class QyoutiFrame
 
   }//GEN-LAST:event_importimagesmenuitemActionPerformed
 
-  private void reviewcomboboxItemStateChanged(java.awt.event.ItemEvent evt)//GEN-FIRST:event_reviewcomboboxItemStateChanged
-  {//GEN-HEADEREND:event_reviewcomboboxItemStateChanged
-
-    if ( evt.getStateChange() == ItemEvent.SELECTED )
-    {
-      int n = reviewcombobox.getSelectedIndex();
-      if ( n != currentquestiondata.getExaminerDecision() )
-      {
-        System.out.println( "examiner decision combo box change." );
-        currentquestiondata.setExaminerDecision( n );
-        exam.setUnsavedChanges( true );
-      }
-    }
-
-  }//GEN-LAST:event_reviewcomboboxItemStateChanged
-
   private void aboutmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_aboutmenuitemActionPerformed
   {//GEN-HEADEREND:event_aboutmenuitemActionPerformed
     
@@ -1892,7 +1421,6 @@ public class QyoutiFrame
       exam.updateOutcomes();
     }
     exam.setUnsavedChanges( true );
-    gotoQuestion( currentquestiondata );
     exam.qdefs.fireTableDataChanged();
   }
 
@@ -1992,15 +1520,6 @@ public class QyoutiFrame
         questiontable.setModel( exam.qdefs );
       }
 
-      CandidateData c = exam.getFirstCandidate( true );
-      if ( c == null )
-      {
-        gotoQuestion( null );
-      }
-      else
-      {
-        gotoQuestion( c.firstQuestionData() );
-      }
     }
     catch ( Exception ex )
     {
@@ -2008,114 +1527,6 @@ public class QyoutiFrame
               log( Level.SEVERE, null, ex );
     }
 
-  }
-
-  private void clearResponseTable()
-  {
-    responsetable.setModel( new javax.swing.table.DefaultTableModel(
-            new Object[][]
-            {
-            },
-            new String[]
-            {
-              "*", "Response", "Enhanced", "Interpretation", "Overide"
-            } )
-    {
-
-      Class[] types = new Class[]
-      {
-        java.lang.String.class,
-        javax.swing.Icon.class,
-        javax.swing.Icon.class,
-        java.lang.Boolean.class,
-        java.lang.Boolean.class
-      };
-      boolean[] canEdit = new boolean[]
-      {
-        false, false, false, false, true
-      };
-
-      public Class getColumnClass( int columnIndex )
-      {
-        return types[columnIndex];
-      }
-
-      public boolean isCellEditable( int rowIndex, int columnIndex )
-      {
-        return canEdit[columnIndex];
-      }
-    } );
-  }
-
-  public void gotoQuestion( QuestionData question )
-  {
-    int i;
-
-    //System.out.println( "gotoQuestion " + question );
-    currentquestiondata = question;
-    needsreviewlabel.setOpaque( false );
-    if ( question == null )
-    {
-      clearResponseTable();
-      candidatelabel.setText( "" );
-      idlabel.setText( "" );
-      pagelabel.setText( "" );
-      sourcelabel.setText( "" );
-      heightlabel.setText( "" );
-      questionlabel.setText( "" );
-      needsreviewlabel.setText( "" );
-      reviewcombobox.setSelectedIndex( 0 );
-      reviewcombobox.setEnabled( false );
-      outcometable.setModel( new OutcomeData() );
-      overalloutcometable.setModel( new OutcomeData() );
-      nextquestionbutton.setEnabled( false );
-      previousquestionbutton.setEnabled( false );
-      nextcandidatebutton.setEnabled( false );
-      previouscandidatebutton.setEnabled( false );
-      return;
-    }
-
-    CandidateData candidate = question.page.candidate;
-
-    candidatelabel.setText( question.page.candidate_name );
-    idlabel.setText( question.page.candidate_number );
-    pagelabel.setText( Integer.toString( question.page.page_number ) );
-    sourcelabel.setText( question.page.source );
-    if ( question.page.height != 0.0 )
-    {
-      heightlabel.setText( Double.toString( question.page.height ) );
-    }
-    questionlabel.setText( question.ident );
-    needsreviewlabel.setText( question.needsreview ? "Yes" : "No" );
-    if ( question.needsreview && question.getExaminerDecision() == QuestionData.EXAMINER_DECISION_NONE )
-    {
-      needsreviewlabel.setOpaque( true );
-    }
-    reviewcombobox.setEnabled( true );
-    reviewcombobox.setSelectedIndex( question.getExaminerDecision() );
-
-    responsetable.setModel( question );
-    for ( i=0; i<question.getRowCount(); i++ )
-    {
-      if ( question.getRowHeight( i ) > 32 )
-        responsetable.setRowHeight( i, question.getRowHeight( i ) );
-    }
-
-    outcometable.setModel( question.outcomes );
-    overalloutcometable.setModel( candidate.outcomes );
-
-    QuestionData next, previous;
-    next = question.nextQuestionData();
-    previous = question.previousQuestionData();
-    nextquestionbutton.setEnabled( next != null );
-    previousquestionbutton.setEnabled( previous != null );
-
-    CandidateData nextc = (candidate == null) ? null : candidate.
-            nextCandidateData( true );
-    CandidateData previousc = (candidate == null) ? null : candidate.
-            previousCandidateData( true );
-    nextcandidatebutton.setEnabled( nextc != null );
-    previouscandidatebutton.setEnabled( previousc != null );
   }
 
   /**
@@ -2175,7 +1586,6 @@ public class QyoutiFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutmenuitem;
   private javax.swing.JMenu actionmenu;
-  private javax.swing.JLabel candidatelabel;
   private javax.swing.JTable candidatetable;
   private javax.swing.JPanel candqpanel;
   private javax.swing.JPanel candqpanelouter;
@@ -2196,8 +1606,6 @@ public class QyoutiFrame
   private javax.swing.JMenuItem expscoresmenuitem;
   private javax.swing.JMenu filemenu;
   private javax.swing.JMenuItem forgetprintmenuitem;
-  private javax.swing.JLabel heightlabel;
-  private javax.swing.JLabel idlabel;
   private javax.swing.JMenuItem importcanmenuitem;
   private javax.swing.JMenuItem importimagesmenuitem;
   private javax.swing.JMenuItem importqmenuitem;
@@ -2206,59 +1614,26 @@ public class QyoutiFrame
   private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
-  private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
-  private javax.swing.JPanel jPanel4;
-  private javax.swing.JPanel jPanel5;
-  private javax.swing.JPanel jPanel6;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
-  private javax.swing.JLabel l1;
-  private javax.swing.JLabel l2;
-  private javax.swing.JLabel l3;
-  private javax.swing.JLabel l4;
-  private javax.swing.JLabel l5;
-  private javax.swing.JLabel l6;
-  private javax.swing.JLabel l7;
-  private javax.swing.JLabel l8;
   private javax.swing.JMenuBar menubar;
-  private javax.swing.JLabel needsreviewlabel;
   private javax.swing.JMenuItem newmenuitem;
-  private javax.swing.JButton nextcandidatebutton;
-  private javax.swing.JButton nextquestionbutton;
   private javax.swing.JMenuItem openmenuitem;
-  private javax.swing.JPanel outcomepanel;
-  private javax.swing.JTable outcometable;
-  private javax.swing.JTable overalloutcometable;
-  private javax.swing.JLabel pagelabel;
   private javax.swing.JMenuItem pdfprintmenuitem;
   private javax.swing.JMenuItem preprocmenuitem;
   private javax.swing.JMenuItem previewqmenuitem;
-  private javax.swing.JButton previouscandidatebutton;
-  private javax.swing.JButton previousquestionbutton;
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
   private javax.swing.JPanel qrpanelouter;
   private javax.swing.JPanel qtab;
-  private javax.swing.JLabel questionlabel;
   private javax.swing.JPanel questionreviewpanel;
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
-  private javax.swing.JPanel respbottomleftpanel;
-  private javax.swing.JPanel respbottomrightpanel;
-  private javax.swing.JPanel respheadpanel;
-  private javax.swing.JPanel respleftpanel;
-  private javax.swing.JTable responsetable;
-  private javax.swing.JPanel resppropertypanel;
-  private javax.swing.JPanel resprightpanel;
-  private javax.swing.JPanel resptopleftpanel;
-  private javax.swing.JPanel resptoppanel;
-  private javax.swing.JPanel resptoprightpanel;
-  private javax.swing.JComboBox<String> reviewcombobox;
   private javax.swing.JPanel rtab;
   private javax.swing.JMenuItem savemenuitem;
   private javax.swing.JLabel savestatuslabel;
@@ -2267,11 +1642,9 @@ public class QyoutiFrame
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
-  private javax.swing.JLabel sourcelabel;
   private javax.swing.JScrollPane sp1;
   private javax.swing.JScrollPane sp2;
   private javax.swing.JScrollPane sp3;
-  private javax.swing.JScrollPane sp4;
   private javax.swing.JScrollPane sp6;
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JSplitPane splitpane;
@@ -2279,7 +1652,6 @@ public class QyoutiFrame
   private javax.swing.JPanel statuspanel;
   private javax.swing.JTabbedPane tabs;
   private javax.swing.JMenuItem viewscanmenuitem;
-  private javax.swing.JPanel xtab;
   // End of variables declaration//GEN-END:variables
 
   @Override
@@ -2343,15 +1715,6 @@ public class QyoutiFrame
     filemenu.setEnabled( true );
     actionmenu.setEnabled( true );
     progressbar.setIndeterminate( false );
-    CandidateData c = exam.getFirstCandidate( true );
-    if ( c == null )
-    {
-      gotoQuestion( null );
-    }
-    else
-    {
-      gotoQuestion( c.firstQuestionData() );
-    }
   }
 
 
