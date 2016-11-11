@@ -96,7 +96,7 @@ public class QuestionData
     for ( int j=0; j<nl.getLength(); j++ )
     {
       outcome = new OutcomeDatum( (Element)nl.item(j) );
-      outcomes.data.add( outcome );
+      outcomes.addDatum( outcome );
     }
     
     page.questions.add( this );
@@ -142,7 +142,7 @@ public class QuestionData
       return;
     this.examinerdecision = examinerdecision;
     page.candidate.processAllResponses();
-    this.fireTableStructureChanged();
+    //this.fireTableStructureChanged();
   }
 
   
@@ -230,7 +230,7 @@ public class QuestionData
     // record item outcomes from qti elements into candidate data store
     String[] outcome_names = qtiitem.getOutcomeNames();
     OutcomeDatum outcomedata;
-    outcomes.data.clear();
+    outcomes.clear();
     for ( int i=0; i<outcome_names.length; i++ )
     {
       outcomedata = new OutcomeDatum();
@@ -238,7 +238,7 @@ public class QuestionData
       outcomedata.value = qtiitem.getOutcomeValue( outcome_names[i] );
       //System.out.println( "Outcome " + outcomedata.name );
       //System.out.println( "Value " + outcomedata.value );
-      outcomes.data.add( outcomedata );
+      outcomes.addDatum( outcomedata );
     }
     outcomes.fireTableDataChanged();
   }
@@ -246,7 +246,7 @@ public class QuestionData
   public int getOutcomeCount()
   {
     if ( outcomes == null) return 0;
-    return outcomes.data.size();
+    return outcomes.getRowCount();
   }
 
   public String getOutcomeIdentifier( int offset )
@@ -258,7 +258,7 @@ public class QuestionData
 
   public String getOutcomeValueString( int n )
   {
-    OutcomeDatum outcomedata = outcomes.data.get( n );
+    OutcomeDatum outcomedata = outcomes.getDatumAt( n );
     if ( outcomedata == null || outcomedata.value == null )
       return "null";
     return outcomedata.value.toString();
@@ -277,8 +277,8 @@ public class QuestionData
     for ( int i=0; i<responsedatas.size(); i++ )
       responsedatas.get( i ).emit( writer );
 
-    for ( int i=0; i<outcomes.data.size(); i++ )
-      outcomes.data.get( i ).emit( writer );
+    for ( int i=0; i<outcomes.getRowCount(); i++ )
+      outcomes.getDatumAt( i ).emit( writer );
     
     writer.write( "      </question>\n" );
   }
@@ -307,7 +307,7 @@ public class QuestionData
     @Override
   public int getColumnCount()
   {
-    return examinerdecision==EXAMINER_DECISION_OVERRIDE?7:6;
+    return 7; //examinerdecision==EXAMINER_DECISION_OVERRIDE?7:6;
   }
 
   @Override
@@ -351,7 +351,9 @@ public class QuestionData
       case 5:
         return String.class;
       case 6:
-        return Boolean.class;
+        if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
+          return Boolean.class;
+        return String.class;
     }
     return null;
   }
@@ -406,7 +408,9 @@ public class QuestionData
       case 5:
         return response.needsreview?"dubious":"";
       case 6:
-        return new Boolean( response.examiner_selected );
+        if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
+          return new Boolean( response.examiner_selected );
+        return "n/a";
     }
     return null;
   }

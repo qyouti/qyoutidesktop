@@ -126,7 +126,7 @@ public class CandidateData
     for ( int j=0; j<nl.getLength(); j++ )
     {
       outcome = new OutcomeDatum( (Element)nl.item(j) );
-      outcomes.data.add( outcome );
+      outcomes.addDatum( outcome );
     }
     nl = element.getElementsByTagName( "preferences" );
     if ( nl.getLength() > 0 )
@@ -300,8 +300,8 @@ public class CandidateData
       writer.write( pages.get( i ).pageid );
       writer.write( "\"/>\n" );
     }
-    for ( int i=0; i<outcomes.data.size(); i++ )
-      outcomes.data.get( i ).emit( writer );
+    for ( int i=0; i<outcomes.getRowCount(); i++ )
+      outcomes.getDatumAt( i ).emit( writer );
     writer.write( "  </candidate>\n" );
   }
 
@@ -481,7 +481,7 @@ public class CandidateData
       outcomedata.value = exam.qdefs.qti.getOutcomeValue( outcome_names[i] );
       //System.out.println( "Outcome " + outcomedata.name );
       //System.out.println( "Value " + outcomedata.value );
-      outcomes.data.add( outcomedata );
+      outcomes.addDatum( outcomedata );
     }
     outcomes.fireTableDataChanged();
 

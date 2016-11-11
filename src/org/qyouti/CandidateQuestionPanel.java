@@ -5,11 +5,13 @@
  */
 package org.qyouti;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import javax.imageio.*;
 import javax.swing.*;
+import javax.swing.event.*;
 import org.qyouti.data.*;
 import org.qyouti.qti1.element.*;
 
@@ -62,18 +64,31 @@ public class CandidateQuestionPanel
         switch ( questiondata.getExaminerDecision() )
         {
           case QuestionData.EXAMINER_DECISION_NONE:
-            statuslabel.setText( "ATTENTION" );
+            statuslabel.setText( "Review recommended." );
             break;
           case QuestionData.EXAMINER_DECISION_OVERRIDE:
-            statuslabel.setText( "Responses overridden by examiner." );
+            statuslabel.setText( "Responses overridden by examiner. (Review was recommended.)" );
             break;
           case QuestionData.EXAMINER_DECISION_STAND:
-            statuslabel.setText( "Examiner decided responses will stand." );
+            statuslabel.setText( "Examiner decided responses will stand. (Review was recommended.)" );
             break;            
         }
       }
       else
-        statuslabel.setText( "" );
+      {
+        switch ( questiondata.getExaminerDecision() )
+        {
+          case QuestionData.EXAMINER_DECISION_NONE:
+            statuslabel.setText( "Review not recommended." );
+            break;
+          case QuestionData.EXAMINER_DECISION_OVERRIDE:
+            statuslabel.setText( "Responses overridden by examiner. (Review was not recommended.)" );
+            break;
+          case QuestionData.EXAMINER_DECISION_STAND:
+            statuslabel.setText( "Examiner decided responses will stand.  (Review was not recommended.)" );
+            break;            
+        }
+      }
 
       switch ( questiondata.getExaminerDecision() )
       {
@@ -89,13 +104,28 @@ public class CandidateQuestionPanel
       }
 
       responsetable.setModel( questiondata );
+      questiondata.addTableModelListener( new TableModelListener(){
+        @Override
+        public void tableChanged( TableModelEvent e )
+        {
+          System.out.println( "CandidateQuestionPanel detected table change." );
+          for ( int i=0; i<questiondata.getRowCount(); i++ )
+            responsetable.setRowHeight( i, questiondata.getRowHeight( i ) );
+          // Unable to set row height here...
+          // Maybe better not to add/remove columns but just change
+          // content of the last column
+          
+        }
+      } );
       for ( int i=0; i<questiondata.getRowCount(); i++ )
         responsetable.setRowHeight( i, questiondata.getRowHeight( i ) );
       outcometable.setModel( questiondata.outcomes );
     }
     
     imagescrollpanel.setVisible( false );
-    responsetable.setVisible( false );
+    responsetablepanel.setVisible( false );
+    responsetablepanel.add( responsetable.getTableHeader(), java.awt.BorderLayout.NORTH );
+    responsetable.setMinimumSize(new Dimension(200,responsetable.getRowHeight( 0 )*responsetable.getRowCount()));
   }
 
   /**
@@ -123,6 +153,7 @@ public class CandidateQuestionPanel
     imagelabel = new javax.swing.JLabel();
     responsepanel = new javax.swing.JPanel();
     viewresponsescheckbox = new javax.swing.JCheckBox();
+    responsetablepanel = new javax.swing.JPanel();
     responsetable = new javax.swing.JTable();
     jSeparator1 = new javax.swing.JSeparator();
 
@@ -164,7 +195,7 @@ public class CandidateQuestionPanel
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     innerpanel.add(reviewcombobox, gridBagConstraints);
 
-    outcomepanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Outcomes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 1, 12), java.awt.Color.lightGray)); // NOI18N
+    outcomepanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Overall Outcomes"));
     outcomepanel.setOpaque(false);
     outcomepanel.setLayout(new java.awt.GridBagLayout());
 
@@ -214,6 +245,7 @@ public class CandidateQuestionPanel
 
     imagelabel.setBackground(java.awt.Color.white);
     imagelabel.setText("      ");
+    imagelabel.setOpaque(true);
     imagescrollpanel.setViewportView(imagelabel);
 
     imagepanel.add(imagescrollpanel, java.awt.BorderLayout.CENTER);
@@ -242,17 +274,33 @@ public class CandidateQuestionPanel
     });
     responsepanel.add(viewresponsescheckbox, java.awt.BorderLayout.NORTH);
 
+    responsetablepanel.setLayout(new java.awt.BorderLayout());
+
     responsetable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
       {
-        {null, null, null, null}
+
       },
       new String []
       {
-        "Title 1", "Title 2", "Title 3", "Title 4"
+        "A", "B", "C", "D"
       }
-    ));
-    responsepanel.add(responsetable, java.awt.BorderLayout.CENTER);
+    )
+    {
+      boolean[] canEdit = new boolean []
+      {
+        false, false, false, false
+      };
+
+      public boolean isCellEditable(int rowIndex, int columnIndex)
+      {
+        return canEdit [columnIndex];
+      }
+    });
+    responsetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
+    responsetablepanel.add(responsetable, java.awt.BorderLayout.CENTER);
+
+    responsepanel.add(responsetablepanel, java.awt.BorderLayout.CENTER);
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
@@ -316,7 +364,7 @@ public class CandidateQuestionPanel
 
   private void viewresponsescheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewresponsescheckboxActionPerformed
   {//GEN-HEADEREND:event_viewresponsescheckboxActionPerformed
-      responsetable.setVisible( viewresponsescheckbox.isSelected() );
+      responsetablepanel.setVisible( viewresponsescheckbox.isSelected() );
       revalidate();
   }//GEN-LAST:event_viewresponsescheckboxActionPerformed
 
@@ -347,6 +395,7 @@ public class CandidateQuestionPanel
   private javax.swing.JTable outcometable;
   private javax.swing.JPanel responsepanel;
   private javax.swing.JTable responsetable;
+  private javax.swing.JPanel responsetablepanel;
   private javax.swing.JComboBox<String> reviewcombobox;
   private javax.swing.JLabel statuslabel;
   private javax.swing.JLabel titlelabel;

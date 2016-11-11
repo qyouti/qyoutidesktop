@@ -368,6 +368,8 @@ public class ScanTask
         processPageOutcomes( page );
       }
 
+      exam.rebuildReviewList();
+      
       if ( !this.commandline )
         JOptionPane.showMessageDialog( null, "Data will now be saved. Please do not shut down the software until complete." );
       exam.save();
