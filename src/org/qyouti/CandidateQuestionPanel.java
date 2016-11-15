@@ -119,11 +119,20 @@ public class CandidateQuestionPanel
       } );
       for ( int i=0; i<questiondata.getRowCount(); i++ )
         responsetable.setRowHeight( i, questiondata.getRowHeight( i ) );
+      //responsetable.getColumnModel().getColumn( 4 ).setCellRenderer( new PinkBoxTableCellRenderer() );
+      DefaultCellEditor dce;
+      JCheckBox cb = new JCheckBox();
+      cb.setSelectedIcon( TrueFalseIcon.TRUEICON );
+      cb.setIcon( TrueFalseIcon.FALSEICON );
+      dce = new DefaultCellEditor( cb );
+      responsetable.setDefaultEditor( Boolean.class, dce);
+      responsetable.setDefaultRenderer( Boolean.class, new PinkBoxTableCellRenderer() );
       outcometable.setModel( questiondata.outcomes );
     }
     
-    imagescrollpanel.setVisible( false );
-    responsetablepanel.setVisible( false );
+    imagescrollpanel.setVisible( true );
+    responsetablepanel.setVisible( true );
+    loadQuestionImage();
     responsetablepanel.add( responsetable.getTableHeader(), java.awt.BorderLayout.NORTH );
     responsetable.setMinimumSize(new Dimension(200,responsetable.getRowHeight( 0 )*responsetable.getRowCount()));
   }
@@ -195,7 +204,7 @@ public class CandidateQuestionPanel
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     innerpanel.add(reviewcombobox, gridBagConstraints);
 
-    outcomepanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Overall Outcomes"));
+    outcomepanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Question Outcomes"));
     outcomepanel.setOpaque(false);
     outcomepanel.setLayout(new java.awt.GridBagLayout());
 
@@ -228,6 +237,7 @@ public class CandidateQuestionPanel
     imagepanel.setLayout(new java.awt.BorderLayout());
 
     viewimagecheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    viewimagecheckbox.setSelected(true);
     viewimagecheckbox.setText("Show");
     viewimagecheckbox.setOpaque(false);
     viewimagecheckbox.addActionListener(new java.awt.event.ActionListener()
@@ -263,6 +273,7 @@ public class CandidateQuestionPanel
     responsepanel.setLayout(new java.awt.BorderLayout());
 
     viewresponsescheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    viewresponsescheckbox.setSelected(true);
     viewresponsescheckbox.setText("Show");
     viewresponsescheckbox.setOpaque(false);
     viewresponsescheckbox.addActionListener(new java.awt.event.ActionListener()
@@ -326,20 +337,8 @@ public class CandidateQuestionPanel
     add(centrepanel, java.awt.BorderLayout.CENTER);
   }// </editor-fold>//GEN-END:initComponents
 
-  private void viewimagecheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewimagecheckboxActionPerformed
-  {//GEN-HEADEREND:event_viewimagecheckboxActionPerformed
-    
-    imagelabel.setIcon( null );
-    imagelabel.setText( "" );
-      
-    if ( !viewimagecheckbox.isSelected() )
-    {
-      questionimage = null;
-      imagescrollpanel.setVisible( false );
-      revalidate();
-      return;
-    }
-
+  private void loadQuestionImage()
+  {
     try
     {
       if ( questiondata == null || !questiondata.getImageFile().exists() )
@@ -355,8 +354,25 @@ public class CandidateQuestionPanel
     }
     catch ( IOException ioe )
     {
+      imagelabel.setText( "Unable to Load" );
+    }    
+  }
+  
+  private void viewimagecheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewimagecheckboxActionPerformed
+  {//GEN-HEADEREND:event_viewimagecheckboxActionPerformed
+    
+    imagelabel.setIcon( null );
+    imagelabel.setText( "" );
       
+    if ( !viewimagecheckbox.isSelected() )
+    {
+      questionimage = null;
+      imagescrollpanel.setVisible( false );
+      revalidate();
+      return;
     }
+
+    loadQuestionImage();
 
     imagescrollpanel.setVisible( true );
     revalidate();    

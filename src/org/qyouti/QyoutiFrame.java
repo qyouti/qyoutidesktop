@@ -327,11 +327,15 @@ public class QyoutiFrame
     scanstable = new javax.swing.JTable();
     rtab = new javax.swing.JPanel();
     jSplitPane2 = new javax.swing.JSplitPane();
+    jPanel4 = new javax.swing.JPanel();
     jScrollPane1 = new javax.swing.JScrollPane();
+    jTextArea1 = new javax.swing.JTextArea();
+    jScrollPane3 = new javax.swing.JScrollPane();
     questionreviewtable = new javax.swing.JTable();
     jScrollPane2 = new javax.swing.JScrollPane();
     qrpanelouter = new javax.swing.JPanel();
     questionreviewpanel = new javax.swing.JPanel();
+    jLabel2 = new javax.swing.JLabel();
     statuspanel = new javax.swing.JPanel();
     savestatuslabel = new javax.swing.JLabel();
     printstatuslabel = new javax.swing.JLabel();
@@ -373,6 +377,8 @@ public class QyoutiFrame
 
     spacerlabel.setText(" ");
     getContentPane().add(spacerlabel, java.awt.BorderLayout.PAGE_START);
+
+    tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
     qtab.setLayout(new java.awt.BorderLayout());
 
@@ -622,6 +628,22 @@ public class QyoutiFrame
 
     rtab.setLayout(new java.awt.BorderLayout());
 
+    jSplitPane2.setResizeWeight(0.5);
+
+    jPanel4.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+    jTextArea1.setColumns(20);
+    jTextArea1.setLineWrap(true);
+    jTextArea1.setRows(5);
+    jTextArea1.setText("The table below lists items with dubious marks. Select one or more rows in the table to view details in the right hand panel.  In the panel you can decide to confirm the interpretation of the software or override it.");
+    jTextArea1.setWrapStyleWord(true);
+    jTextArea1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    jScrollPane1.setViewportView(jTextArea1);
+
+    jPanel4.add(jScrollPane1, java.awt.BorderLayout.NORTH);
+
     questionreviewtable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
       {
@@ -629,19 +651,25 @@ public class QyoutiFrame
       },
       new String []
       {
-        "Candidate ID", "Question ID"
+        "Candidate ID", "Question ID", "Review Status"
       }
     ));
     questionreviewtable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
-    jScrollPane1.setViewportView(questionreviewtable);
+    jScrollPane3.setViewportView(questionreviewtable);
 
-    jSplitPane2.setLeftComponent(jScrollPane1);
+    jPanel4.add(jScrollPane3, java.awt.BorderLayout.CENTER);
+
+    jSplitPane2.setLeftComponent(jPanel4);
 
     qrpanelouter.setBackground(java.awt.Color.white);
     qrpanelouter.setLayout(new java.awt.GridBagLayout());
 
     questionreviewpanel.setBackground(java.awt.Color.white);
     questionreviewpanel.setLayout(new java.awt.GridBagLayout());
+
+    jLabel2.setText("No questions selected");
+    questionreviewpanel.add(jLabel2, new java.awt.GridBagConstraints());
+
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
@@ -1611,15 +1639,19 @@ public class QyoutiFrame
   private javax.swing.JMenuItem importqmenuitem;
   private javax.swing.JMenuItem itemanalysismenuitem;
   private javax.swing.JLabel jLabel1;
+  private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel3;
+  private javax.swing.JPanel jPanel4;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
+  private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
+  private javax.swing.JTextArea jTextArea1;
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JMenuItem openmenuitem;
@@ -1733,6 +1765,10 @@ public class QyoutiFrame
     gbc.fill = GridBagConstraints.HORIZONTAL;
 
     questionreviewpanel.removeAll();
+    if ( e.getValueIsAdjusting() )
+      return;
+    
+    int n=0;
     for ( i=0; i<questionreviewtable.getRowCount(); i++ )
     {
       if ( questionreviewtable.isRowSelected( i ) )
@@ -1741,8 +1777,12 @@ public class QyoutiFrame
         q = exam.reviewlist.getQuestionData( i );
         cqp = new CandidateQuestionPanel( c, q.ident );
         questionreviewpanel.add( cqp, gbc );
+        n++;
       }
     }
+    
+    if ( n==0 )
+      questionreviewpanel.add( new JLabel("No questions selected.") );
   } 
   
 

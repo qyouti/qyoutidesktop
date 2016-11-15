@@ -142,7 +142,9 @@ public class QuestionData
       return;
     this.examinerdecision = examinerdecision;
     page.candidate.processAllResponses();
-    //this.fireTableStructureChanged();
+    // which row?  Don't know.
+    page.exam.reviewlist.fireTableRowsUpdated( 0, page.exam.reviewlist.getRowCount()-1 );
+    fireTableRowsUpdated( 0, getRowCount() );
   }
 
   
@@ -347,7 +349,7 @@ public class QuestionData
       case 3:
         return Icon.class;
       case 4:
-        return String.class;
+        return Boolean.class;
       case 5:
         return String.class;
       case 6:
@@ -361,7 +363,7 @@ public class QuestionData
   @Override
   public boolean isCellEditable( int rowIndex, int columnIndex )
   {
-    return columnIndex == 6;
+    return columnIndex == 6 && examinerdecision == EXAMINER_DECISION_OVERRIDE;
   }
 
   public int getRowHeight( int rowIndex )
@@ -404,7 +406,7 @@ public class QuestionData
             return "?";
         return new ImageIcon( response.getFilteredImage() );
       case 4:
-        return response.selected?"selected":"";
+        return response.selected;
       case 5:
         return response.needsreview?"dubious":"";
       case 6:

@@ -60,7 +60,7 @@ public class QuestionReviewTable
   @Override
   public int getColumnCount()
   {
-    return 2;
+    return 3;
   }
 
   @Override
@@ -72,6 +72,8 @@ public class QuestionReviewTable
         return "Candidate ID";
       case 1:
         return "Question ID";
+      case 2:
+        return "Review Status";
     }
     return null;
   }
@@ -88,6 +90,17 @@ public class QuestionReviewTable
         return item.candidatedata.id;
       case 1:
         return item.questiondata.ident;
+      case 2:
+        switch ( item.questiondata.getExaminerDecision() )
+        {
+          case QuestionData.EXAMINER_DECISION_NONE:
+            return "No review decision.";
+          case QuestionData.EXAMINER_DECISION_OVERRIDE:
+            return "Responses overridden by examiner";
+          case QuestionData.EXAMINER_DECISION_STAND:
+            return "Examiner decided responses will stand";
+        }        
+        return "Status no. " + item.questiondata.getExaminerDecision();
     }
     return null;
   }
