@@ -31,7 +31,7 @@ public class ExamSelectDialog
   {
     super( parent, modal );
     initComponents();
-    listmodel = new DefaultListModel();
+    listmodel = new DefaultListModel<String>();
     examlist.setModel( listmodel );
   }
 

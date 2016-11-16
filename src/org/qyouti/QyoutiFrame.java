@@ -378,7 +378,7 @@ public class QyoutiFrame
     spacerlabel.setText(" ");
     getContentPane().add(spacerlabel, java.awt.BorderLayout.PAGE_START);
 
-    tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
     qtab.setLayout(new java.awt.BorderLayout());
 
@@ -1082,7 +1082,7 @@ public class QyoutiFrame
       }
       catch ( IOException ex )
       {
-        Logger.getLogger( QyoutiView.class.getName() ).
+        Logger.getLogger( QyoutiFrame.class.getName() ).
                 log( Level.SEVERE, null, ex );
       }
       questiondialog.setLocationRelativeTo( this );
@@ -1551,7 +1551,7 @@ public class QyoutiFrame
     }
     catch ( Exception ex )
     {
-      Logger.getLogger( QyoutiView.class.getName() ).
+      Logger.getLogger( QyoutiFrame.class.getName() ).
               log( Level.SEVERE, null, ex );
     }
 

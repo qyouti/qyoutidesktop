@@ -103,7 +103,7 @@ public abstract class QTIElement
   public <U> U findAncestorOrThisElement( Class<U> type )
   {
     if ( type.isInstance( this ) )
-      return (U)this;
+      return type.cast( this );
     if ( parent == null )
       return null;
     return parent.findAncestorOrThisElement( type );
@@ -123,9 +123,7 @@ public abstract class QTIElement
     return found;
   }
 
-
-
-  void findElements( Vector found, Class type, boolean deep )
+  <U> Vector<U> findElements( Vector<U> found, Class<U> type, boolean deep )
   {
     int i;
     // find in order of appearance in XML regardless of depth
@@ -133,10 +131,11 @@ public abstract class QTIElement
     {
       //System.out.println( "child " + i + " class " + children.get(i).getClass() );
       if ( type.isInstance( children.get(i) ) )
-        found.add( children.get(i) );
+        found.add( type.cast( children.get(i) ) );
       if ( deep )
         children.get(i).findElements( found, type, true );
     }
+    return found;
   }
 
   public String toString()

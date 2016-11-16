@@ -116,7 +116,7 @@ public class ZXingCodec
     QRCode qrcode;
     AztecCode azteccode;
     ByteMatrix bytematrix;
-    Hashtable hints = new Hashtable();
+    Hashtable<EncodeHintType,String> hints = new Hashtable<EncodeHintType,String>();
     hints.put( EncodeHintType.CHARACTER_SET, encoding );
     char[] extra = {'1'};
 
@@ -365,7 +365,7 @@ public class ZXingCodec
   {
     LuminanceSource lsource;
     Result result=null;
-    Hashtable hints = new Hashtable();
+    Hashtable<DecodeHintType,Object> hints = new Hashtable<DecodeHintType,Object>();
     hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
 
 //    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
@@ -477,7 +477,7 @@ public class ZXingCodec
   {
     BufferedImage image = makeImage( qrcode );
 
-    Hashtable hints = new Hashtable();
+    Hashtable<DecodeHintType,Object> hints = new Hashtable<DecodeHintType,Object>();
     BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( image );
 //    LocalBlockBinarizer binarizer = new LocalBlockBinarizer( source );
     GlobalHistogramBinarizer binarizer = new GlobalHistogramBinarizer( source );

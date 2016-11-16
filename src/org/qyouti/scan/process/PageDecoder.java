@@ -61,14 +61,14 @@ import org.qyouti.scan.image.*;
 public class PageDecoder
 {
 
-  final Hashtable hints = new Hashtable();
+  //final Hashtable hints = new Hashtable();
 
   double boxthreshold;
   int boxinset;
 
   public PageDecoder( double threshold, int inset )
   {
-    hints.put( DecodeHintType.TRY_HARDER, Boolean.TRUE );
+    //hints.put( DecodeHintType.TRY_HARDER, Boolean.TRUE );
     boxthreshold = threshold;
     boxinset = inset;
   }
