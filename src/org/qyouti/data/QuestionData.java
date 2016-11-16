@@ -288,17 +288,6 @@ public class QuestionData
 
 
 
-  public QuestionData nextQuestionData()
-  {
-    return page.nextQuestionData( this );
-  }
-
-  public QuestionData previousQuestionData()
-  {
-    return page.previousQuestionData( this );
-  }
-
-
 
 
   public int getRowCount()

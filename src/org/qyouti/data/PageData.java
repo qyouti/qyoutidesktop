@@ -45,7 +45,7 @@ import org.w3c.dom.NodeList;
  *
  * @author jon
  */
-public class PageData implements Comparable
+public class PageData implements Comparable<PageData>
 {
   public ExaminationData exam;
 
@@ -170,68 +170,6 @@ public class PageData implements Comparable
   }
 
 
-  public void prepareImageProcessor( boolean monochrome, double blackness, double threshold )
-  {
-    QuestionData question;
-    ResponseData response;
-
-    responseimageprocessor = new ResponseImageProcessor( monochrome, blackness, threshold );
-    // Look at the centres of all pink boxes and measure
-    // brightness of the red channel
-    // Find the lightest of all boxes to calibrate the
-    // page.
-    for ( int i=0; i<questions.size(); i++ )
-    {
-      question = questions.get( i );
-      for ( int j=0; j<question.responsedatas.size(); j++ )
-      {
-        response = question.responsedatas.get( j );
-        responseimageprocessor.calibrateResponsePink( response.getImage() );
-      }
-    }
-    responseimageprocessor.makeReady();
-  }
-
-
-  public QuestionData nextQuestionData( QuestionData q )
-  {
-    int i = questions.indexOf( q );
-    if ( i < 0 )
-      return null;
-    if ( (i+1) < questions.size() )
-      return questions.get( i+1 );
-
-    PageData otherpage = candidate.nextPageData( this, true );
-    if ( otherpage == null )
-      return null;
-    if ( otherpage.questions.size() == 0 )
-      return null;
-    
-    return otherpage.questions.get( 0 );
-  }
-
-  public QuestionData previousQuestionData( QuestionData q )
-  {
-    int i = questions.indexOf( q );
-    if ( i < 0 )
-      return null;
-    if ( (i-1) >= 0 )
-      return questions.get( i-1 );
-
-    if ( candidate == null )
-    {
-      System.out.println( "No ref to candidate " + this.candidate_name );
-      return null;
-    }
-    PageData otherpage = candidate.previousPageData( this, true );
-    if ( otherpage == null )
-      return null;
-    if ( otherpage.questions.size() == 0 )
-      return null;
-
-    return otherpage.questions.lastElement();
-  }
-  
 
 
   public void emit( Writer writer )
@@ -269,11 +207,19 @@ public class PageData implements Comparable
     writer.write( "    </page>\n" );
   }
 
+//  @Override
+//  public int compareTo( Object o )
+//  {
+//    if ( !(o instanceof PageData) ) return -1;
+//    PageData other = (PageData)o;
+//    if ( this.page_number > other.page_number ) return 1;
+//    if ( this.page_number < other.page_number ) return -1;
+//    return 0;
+//  }
+
   @Override
-  public int compareTo( Object o )
+  public int compareTo( PageData other )
   {
-    if ( !(o instanceof PageData) ) return -1;
-    PageData other = (PageData)o;
     if ( this.page_number > other.page_number ) return 1;
     if ( this.page_number < other.page_number ) return -1;
     return 0;

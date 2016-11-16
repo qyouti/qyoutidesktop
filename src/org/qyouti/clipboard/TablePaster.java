@@ -29,7 +29,7 @@ public class TablePaster
   private int cols = 0;
 
   private String rawdata = "";
-  private java.util.List rowlist = new ArrayList<String[]>();
+  private java.util.List<String[]> rowlist = new ArrayList<String[]>();
   private final ArrayList<TableModelListener> listeners = new ArrayList<>();
   private final ArrayList<String> columnnames = new ArrayList<>();
 

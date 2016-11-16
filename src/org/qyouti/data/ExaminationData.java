@@ -144,7 +144,7 @@ public class ExaminationData
       for ( j=0; j<c.itemidents.size(); j++ )
       {
         q = c.getQuestionData( c.itemidents.get( j ) );
-        if ( q.needsreview )
+        if ( q!=null && q.needsreview )
           reviewlist.add( c, q );
       }
     }

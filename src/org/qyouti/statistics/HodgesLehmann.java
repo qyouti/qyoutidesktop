@@ -52,7 +52,7 @@ public class HodgesLehmann
             throw new ArithmeticException( "HodgesLehman requires both groups to have data points." );
         
         int i, j, x=group_a.length, y=group_b.length;
-        Vector vdiffs = new Vector();
+        Vector<Double> vdiffs = new Vector<Double>();
         for ( i=0; i<x; i++ )
             for ( j=0; j<y; j++ )
                 vdiffs.add( new Double( group_a[i].doubleValue() - group_b[j].doubleValue() ) );

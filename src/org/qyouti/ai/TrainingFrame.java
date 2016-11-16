@@ -230,44 +230,43 @@ public class TrainingFrame
     svgpanel.setLayout(new java.awt.BorderLayout());
     mainpanel.add(svgpanel);
 
-    org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(org.qyouti.QyoutiApp.class).getContext().getResourceMap(TrainingFrame.class);
-    foregroundrasterlabel.setBackground(resourceMap.getColor("foregroundrasterlabel.background")); // NOI18N
+    //foregroundrasterlabel.setBackground(resourceMap.getColor("foregroundrasterlabel.background")); // NOI18N
     foregroundrasterlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-    foregroundrasterlabel.setText(resourceMap.getString("foregroundrasterlabel.text")); // NOI18N
+    //foregroundrasterlabel.setText(resourceMap.getString("foregroundrasterlabel.text")); // NOI18N
     foregroundrasterlabel.setName("foregroundrasterlabel"); // NOI18N
     foregroundrasterlabel.setOpaque(true);
     mainpanel.add(foregroundrasterlabel);
 
-    rasterlabel.setBackground(resourceMap.getColor("rasterlabel.background")); // NOI18N
+    //rasterlabel.setBackground(resourceMap.getColor("rasterlabel.background")); // NOI18N
     rasterlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-    rasterlabel.setText(resourceMap.getString("rasterlabel.text")); // NOI18N
+    //rasterlabel.setText(resourceMap.getString("rasterlabel.text")); // NOI18N
     rasterlabel.setName("rasterlabel"); // NOI18N
     rasterlabel.setOpaque(true);
     mainpanel.add(rasterlabel);
 
-    predictlabel.setBackground(resourceMap.getColor("predictlabel.background")); // NOI18N
+    //predictlabel.setBackground(resourceMap.getColor("predictlabel.background")); // NOI18N
     predictlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     predictlabel.setName("predictlabel"); // NOI18N
     predictlabel.setOpaque(true);
     mainpanel.add(predictlabel);
 
-    jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+    //jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
     jLabel1.setName("jLabel1"); // NOI18N
     mainpanel.add(jLabel1);
 
-    forefftlabel.setBackground(resourceMap.getColor("forefftlabel.background")); // NOI18N
+    //forefftlabel.setBackground(resourceMap.getColor("forefftlabel.background")); // NOI18N
     forefftlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     forefftlabel.setName("forefftlabel"); // NOI18N
     forefftlabel.setOpaque(true);
     mainpanel.add(forefftlabel);
 
-    fftlabel.setBackground(resourceMap.getColor("fftlabel.background")); // NOI18N
+    //fftlabel.setBackground(resourceMap.getColor("fftlabel.background")); // NOI18N
     fftlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     fftlabel.setName("fftlabel"); // NOI18N
     fftlabel.setOpaque(true);
     mainpanel.add(fftlabel);
 
-    predictfftlabel.setBackground(resourceMap.getColor("predictfftlabel.background")); // NOI18N
+    //predictfftlabel.setBackground(resourceMap.getColor("predictfftlabel.background")); // NOI18N
     predictfftlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     predictfftlabel.setName("predictfftlabel"); // NOI18N
     predictfftlabel.setOpaque(true);
@@ -280,16 +279,16 @@ public class TrainingFrame
 
     jPanel1.setName("jPanel1"); // NOI18N
 
-    jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
+    //jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
     jLabel5.setName("jLabel5"); // NOI18N
     jPanel1.add(jLabel5);
 
     noimagesfield.setColumns(5);
-    noimagesfield.setText(resourceMap.getString("noimagesfield.text")); // NOI18N
+    //noimagesfield.setText(resourceMap.getString("noimagesfield.text")); // NOI18N
     noimagesfield.setName("noimagesfield"); // NOI18N
     jPanel1.add(noimagesfield);
 
-    createtrainingsertbutton.setText(resourceMap.getString("createtrainingsertbutton.text")); // NOI18N
+    //createtrainingsertbutton.setText(resourceMap.getString("createtrainingsertbutton.text")); // NOI18N
     createtrainingsertbutton.setName("createtrainingsertbutton"); // NOI18N
     createtrainingsertbutton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -298,7 +297,7 @@ public class TrainingFrame
     });
     jPanel1.add(createtrainingsertbutton);
 
-    nextimagebutton.setText(resourceMap.getString("nextimagebutton.text")); // NOI18N
+    //nextimagebutton.setText(resourceMap.getString("nextimagebutton.text")); // NOI18N
     nextimagebutton.setName("nextimagebutton"); // NOI18N
     nextimagebutton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -307,7 +306,7 @@ public class TrainingFrame
     });
     jPanel1.add(nextimagebutton);
 
-    stddevlabel.setText(resourceMap.getString("stddevlabel.text")); // NOI18N
+    //stddevlabel.setText(resourceMap.getString("stddevlabel.text")); // NOI18N
     stddevlabel.setName("stddevlabel"); // NOI18N
     jPanel1.add(stddevlabel);
 
@@ -315,29 +314,29 @@ public class TrainingFrame
 
     jPanel2.setName("jPanel2"); // NOI18N
 
-    jLabel4.setText(resourceMap.getString("jLabel4.text")); // NOI18N
+    //jLabel4.setText(resourceMap.getString("jLabel4.text")); // NOI18N
     jLabel4.setName("jLabel4"); // NOI18N
     jPanel2.add(jLabel4);
 
-    jLabel2.setText(resourceMap.getString("jLabel2.text")); // NOI18N
+    //jLabel2.setText(resourceMap.getString("jLabel2.text")); // NOI18N
     jLabel2.setName("jLabel2"); // NOI18N
     jPanel2.add(jLabel2);
 
     learningratefield.setColumns(10);
-    learningratefield.setText(resourceMap.getString("learningratefield.text")); // NOI18N
+    //learningratefield.setText(resourceMap.getString("learningratefield.text")); // NOI18N
     learningratefield.setName("learningratefield"); // NOI18N
     jPanel2.add(learningratefield);
 
-    jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
+    //jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
     jLabel3.setName("jLabel3"); // NOI18N
     jPanel2.add(jLabel3);
 
     learningstepsfield.setColumns(5);
-    learningstepsfield.setText(resourceMap.getString("learningstepsfield.text")); // NOI18N
+    //learningstepsfield.setText(resourceMap.getString("learningstepsfield.text")); // NOI18N
     learningstepsfield.setName("learningstepsfield"); // NOI18N
     jPanel2.add(learningstepsfield);
 
-    learnbutton.setText(resourceMap.getString("learnbutton.text")); // NOI18N
+    //learnbutton.setText(resourceMap.getString("learnbutton.text")); // NOI18N
     learnbutton.setName("learnbutton"); // NOI18N
     learnbutton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {

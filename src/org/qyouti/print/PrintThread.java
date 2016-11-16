@@ -122,7 +122,7 @@ public class PrintThread extends Thread
 
       } catch (Exception ex)
       {
-        Logger.getLogger(QyoutiView.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, ex);
       }
       finally
       {

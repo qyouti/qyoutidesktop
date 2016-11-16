@@ -95,7 +95,7 @@ public class JFontChooser extends JComponent
 	protected int dialogResultValue = ERROR_OPTION;
 	private ResourceBundle messageCatalog = ResourceBundle.getBundle(JFontChooser.class.getName() + "Messages", getLocale());
 
-	protected String _(String key)
+	protected String val(String key)
 	{
 		String value = key;
 		try
@@ -212,7 +212,7 @@ public class JFontChooser extends JComponent
 	{
 		if (fontNameList == null)
 		{
-			fontNameList = new JList(getFontFamilies());
+			fontNameList = new JList<String>(getFontFamilies());
 			fontNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			fontNameList.addListSelectionListener(
 				new ListSelectionHandler(getFontFamilyTextField()));
@@ -227,7 +227,7 @@ public class JFontChooser extends JComponent
 	{
 		if (fontStyleList == null)
 		{
-			fontStyleList = new JList(getFontStyleNames());
+			fontStyleList = new JList<String>(getFontStyleNames());
 			fontStyleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			fontStyleList.addListSelectionListener(
 				new ListSelectionHandler(getFontStyleTextField()));
@@ -242,7 +242,7 @@ public class JFontChooser extends JComponent
 	{
 		if (fontSizeList == null)
 		{
-			fontSizeList = new JList(this.fontSizeStrings);
+			fontSizeList = new JList<String>(this.fontSizeStrings);
 			fontSizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			fontSizeList.addListSelectionListener(
 				new ListSelectionHandler(getFontSizeTextField()));
@@ -405,7 +405,7 @@ public class JFontChooser extends JComponent
 
 	public String getVersionString()
 	{
-		return _("Version");
+		return val("Version");
 	}
 
 	/**
@@ -606,7 +606,7 @@ public class JFontChooser extends JComponent
 			this.dialog = dialog;
 			putValue(Action.DEFAULT, ACTION_NAME);
 			putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
-			putValue(Action.NAME, _(ACTION_NAME));
+			putValue(Action.NAME, val(ACTION_NAME));
 		}
 
 		public void actionPerformed(ActionEvent e)
@@ -626,7 +626,7 @@ public class JFontChooser extends JComponent
 			this.dialog = dialog;
 			putValue(Action.DEFAULT, ACTION_NAME);
 			putValue(Action.ACTION_COMMAND_KEY, ACTION_NAME);
-			putValue(Action.NAME, _(ACTION_NAME));
+			putValue(Action.NAME, val(ACTION_NAME));
 		}
 
 		public void actionPerformed(ActionEvent e)
@@ -640,7 +640,7 @@ public class JFontChooser extends JComponent
 	{
 		Frame frame = parent instanceof Frame ? (Frame) parent
 			: (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
-		JDialog dialog = new JDialog(frame, _("SelectFont"), true);
+		JDialog dialog = new JDialog(frame, val("SelectFont"), true);
 
 		Action okAction = new DialogOKAction(dialog);
 		Action cancelAction = new DialogCancelAction(dialog);
@@ -698,7 +698,7 @@ public class JFontChooser extends JComponent
 			p.add(getFontFamilyTextField(), BorderLayout.NORTH);
 			p.add(scrollPane, BorderLayout.CENTER);
 
-			JLabel label = new JLabel(_("FontName"));
+			JLabel label = new JLabel(val("FontName"));
 			label.setHorizontalAlignment(JLabel.LEFT);
 			label.setHorizontalTextPosition(JLabel.LEFT);
 			label.setLabelFor(getFontFamilyTextField());
@@ -729,7 +729,7 @@ public class JFontChooser extends JComponent
 			p.add(getFontStyleTextField(), BorderLayout.NORTH);
 			p.add(scrollPane, BorderLayout.CENTER);
 
-			JLabel label = new JLabel(_("FontStyle"));
+			JLabel label = new JLabel(val("FontStyle"));
 			label.setHorizontalAlignment(JLabel.LEFT);
 			label.setHorizontalTextPosition(JLabel.LEFT);
 			label.setLabelFor(getFontStyleTextField());
@@ -759,7 +759,7 @@ public class JFontChooser extends JComponent
 			p.add(getFontSizeTextField(), BorderLayout.NORTH);
 			p.add(scrollPane, BorderLayout.CENTER);
 
-			JLabel label = new JLabel(_("FontSize"));
+			JLabel label = new JLabel(val("FontSize"));
 			label.setHorizontalAlignment(JLabel.LEFT);
 			label.setHorizontalTextPosition(JLabel.LEFT);
 			label.setLabelFor(getFontSizeTextField());
@@ -775,8 +775,7 @@ public class JFontChooser extends JComponent
 	{
 		if (samplePanel == null)
 		{
-			Border titledBorder = BorderFactory.createTitledBorder(
-				BorderFactory.createEtchedBorder(), _("Sample"));
+			Border titledBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), val("Sample"));
 			Border empty = BorderFactory.createEmptyBorder(5, 10, 10, 10);
 			Border border = BorderFactory.createCompoundBorder(titledBorder, empty);
 
@@ -795,7 +794,7 @@ public class JFontChooser extends JComponent
 		{
 			Border lowered = BorderFactory.createLoweredBevelBorder();
 
-			sampleText = new JTextField(_("SampleString"));
+			sampleText = new JTextField(val("SampleString"));
 			sampleText.setBorder(lowered);
 			sampleText.setPreferredSize(new Dimension(300, 100));
 		}
@@ -818,10 +817,10 @@ public class JFontChooser extends JComponent
 		{
 			int i = 0;
 			fontStyleNames = new String[4];
-			fontStyleNames[i++] = _("Plain");
-			fontStyleNames[i++] = _("Bold");
-			fontStyleNames[i++] = _("Italic");
-			fontStyleNames[i++] = _("BoldItalic");
+			fontStyleNames[i++] = val("Plain");
+			fontStyleNames[i++] = val("Bold");
+			fontStyleNames[i++] = val("Italic");
+			fontStyleNames[i++] = val("BoldItalic");
 		}
 		return fontStyleNames;
 	}

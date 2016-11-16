@@ -99,6 +99,7 @@ public class TextPaneWrapper
     }
 
     @Override
+    @Deprecated
     public void reshape(int x, int y, int w, int h)
     {
         super.reshape(x, y, w, h);
@@ -119,12 +120,14 @@ public class TextPaneWrapper
     
 
     @Override
+    @Deprecated
     public void resize(int width, int height)
     {
         super.resize(width, height);
     }
 
     @Override
+    @Deprecated
     public void resize(Dimension d)
     {
         super.resize(d);

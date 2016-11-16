@@ -28,7 +28,6 @@ package org.qyouti.scan;
 
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
-import org.qyouti.QyoutiView;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
