@@ -12,6 +12,7 @@ import java.util.logging.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.*;
 import org.apache.fop.svg.*;
+import org.apache.pdfbox.multipdf.*;
 import org.apache.pdfbox.util.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
@@ -48,8 +49,8 @@ public class PrintThread extends Thread
       try
       {
         URI examfolderuri;
-          examfolderuri = exam.examfile.getParentFile().getCanonicalFile().toURI();
-        Vector<GenericDocument> paginated;
+          examfolderuri = exam.getExamFolder().getCanonicalFile().toURI();
+        java.util.Vector<GenericDocument> paginated;
         TranscoderInput tinput;
         TranscoderOutput transout;
         File pagefile;

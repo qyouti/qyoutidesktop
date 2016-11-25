@@ -56,7 +56,7 @@ public class PageListModel
   @Override
   public Class<?> getColumnClass( int columnIndex )
   {
-    if ( columnIndex == 0 ) return Integer.class;
+    //if ( columnIndex == 0 ) return Integer.class;
     return String.class;
   }
 
@@ -73,7 +73,7 @@ public class PageListModel
     switch( columnIndex )
     {
       case 0:
-        return page.scanorder;
+        return "ident";
       case 1:
         return page.source;
       case 2:

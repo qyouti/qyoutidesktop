@@ -317,50 +317,24 @@ public class ZXingCodec
     return result.getText();
   }
 
-//  public static byte[] decodeToByteArray( BufferedImage image )
-//          throws ReaderException, UnsupportedEncodingException
-//  {
-//    QRScanResult result = decode( image );
-//    if ( result == null ) return null;
-//    return result.getBytes();
-//  }
-
 
   public static ZXingResult decode( BarcodeFormat format, BufferedImage image )
-          throws ReaderException, UnsupportedEncodingException
-  {
-    return decode( format, image, null );
-  }
-
-  public static ZXingResult decode( BarcodeFormat format, BufferedImage image, BufferedImage originalimage )
           throws ReaderException, UnsupportedEncodingException
   {
     BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( image );
     if ( debugImageLabel != null )
       debugImageLabel.setIcon( new ImageIcon( image ) );
     if ( format.equals( BarcodeFormat.QR_CODE ) )
-      return decodeWithTwist( source, originalimage );
+      return decodeWithTwist( source );
     if ( format.equals( BarcodeFormat.CODE_128 ) )
-      return decodeWithoutTwist( format, source, originalimage );
+      return decodeWithoutTwist( format, source );
     if ( format.equals( BarcodeFormat.AZTEC ) )
-      return decodeWithoutTwist( format, source, originalimage );
+      return decodeWithoutTwist( format, source );
     throw new IllegalArgumentException("Unsupported barcode format.");
   }
 
-//  public static QRScanResult decode( BufferedImage image, int x, int y, int width, int height )
-//          throws ReaderException, UnsupportedEncodingException
-//  {
-//    BufferedImage cropped = new BufferedImage( width, height, BufferedImage.TYPE_INT_RGB );
-//    int[] rgbArray = image.getRGB( x, y, width, height, null, 0,  width );
-//    cropped.setRGB( 0, 0, width, height, rgbArray, 0, width );
-//    if ( debugImageLabel != null )
-//      debugImageLabel.setIcon( new ImageIcon( cropped ) );
-//
-//    BufferedImageLuminanceSource source = new BufferedImageLuminanceSource( cropped );
-//    return decode( source, cropped );
-//  }
 
-  private static ZXingResult decodeWithTwist( BufferedImageLuminanceSource source, BufferedImage originalimage )
+  private static ZXingResult decodeWithTwist( BufferedImageLuminanceSource source )
           throws ReaderException, UnsupportedEncodingException
   {
     LuminanceSource lsource;
@@ -399,14 +373,11 @@ public class ZXingCodec
       return null;
     }
 
-    double blackness = 0.0;
-    if ( originalimage !=null )
-      blackness = calibrateBlack( originalimage, result.getResultPoints() );
-    return new ZXingResult( source, result, blackness, twist );
+    return new ZXingResult( source, result, twist );
   }
 
   
-  private static ZXingResult decodeWithoutTwist( BarcodeFormat format, BufferedImageLuminanceSource source, BufferedImage originalimage )
+  private static ZXingResult decodeWithoutTwist( BarcodeFormat format, BufferedImageLuminanceSource source )
           throws ReaderException, UnsupportedEncodingException
   {
     LuminanceSource lsource;
@@ -438,10 +409,7 @@ public class ZXingCodec
     if ( result == null )
       return null;
 
-    double blackness = 0.0;
-    if ( originalimage !=null )
-      blackness = calibrateBlack( originalimage, result.getResultPoints() );
-    return new ZXingResult( source, result, blackness, 0 );
+    return new ZXingResult( source, result, 0 );
   }
   
   
