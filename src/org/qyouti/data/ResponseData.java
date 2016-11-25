@@ -139,8 +139,7 @@ public class ResponseData
 
   private File getFile( String fname )
   {
-    File examfolder = question.page.exam.examfile.getParentFile();
-    File scanfolder = new File( examfolder, "scans" );
+    File scanfolder = question.page.exam.getResponseImageFolder();
     return new File( scanfolder, fname );
   }
 

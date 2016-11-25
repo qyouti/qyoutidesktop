@@ -627,13 +627,15 @@ public class QTIItemRenderer
         return;
 
 
-
+      int a = prefs.isBigpinkbox() ? 4 : 1;
+      int b = prefs.isBigpinkbox() ? 3 : 1;
+      
       state.inserts.add(new InteractionInsert(state.next_id, e, null,
               new PinkIcon(
-              (int) QTIMetrics.inchesToSvg(0.27),
-              (int) QTIMetrics.inchesToSvg(0.27),
-              (int) QTIMetrics.inchesToSvg(0.02),
-              (int) QTIMetrics.inchesToSvg(0.025),
+              getMetrics().getPropertySvgUnitsInt("pinkbox_width") * a / b,
+              getMetrics().getPropertySvgUnitsInt("pinkbox_width") * a / b,
+              getMetrics().getPropertySvgUnitsInt("pinkbox_border") * a / b,
+              getMetrics().getPropertySvgUnitsInt("pinkbox_padding") * a / b,
               true,
               "response_label",
               e.getIdent()
@@ -933,7 +935,7 @@ public class QTIItemRenderer
 //    calibration_tl = QRCodec.encode2DSVG( "tl", qrwidth );
 //    calibration_bl = QRCodec.encode2DSVG( "bl", qrwidth );
 //    calibration_br = QRCodec.encode2DSVG( "br", qrwidth );
-    QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/bullseye.svg", doc.getDocumentElement(), true );
+    //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/bullseye.svg", doc.getDocumentElement(), true );
   }
   
   
@@ -1070,7 +1072,7 @@ public class QTIItemRenderer
 
     org.w3c.dom.Element onedbarcode = ZXingCodec.encode1DSVG( pageqr, (bry-tly)*3/4, w );
     SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 90.0, tlx, (tly+bry)/2 );
-    QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", onedbarcode, true );
+    //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", onedbarcode, true );
 
     SVGUtils.appendFragmentToDocument( decorationgroup, bullseye, 0.0, tlx, bry );
     SVGUtils.appendFragmentToDocument( decorationgroup, bullseye, 0.0, brx, bry );
@@ -1208,7 +1210,7 @@ public class QTIItemRenderer
       SVGUtils.insertDocumentContents(pdoc, itemg, itemdoc.getDoc() );
     }
     //pdoc.normalizeDocument();
-    QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/page.svg", pdoc.getDocumentElement(), true );
+    //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/page.svg", pdoc.getDocumentElement(), true );
     return pdoc;
   }
 

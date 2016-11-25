@@ -73,30 +73,6 @@ public class PageDecoder
     boxinset = inset;
   }
 
-  public PageData decode(ExaminationData exam, String argument, int n )
-          throws IOException, URISyntaxException
-  {
-
-    File inputFile = new File(argument);
-    if (inputFile.exists()) {
-        return decode(exam,inputFile.toURI(), n);
-    } else {
-      return decode(exam,new URI(argument), n );
-    }
-  }
-
-  public PageData identifyPage(ExaminationData exam, String argument, int n )
-          throws IOException, URISyntaxException
-  {
-
-    File inputFile = new File(argument);
-    if (inputFile.exists()) {
-        return identifyPage(exam,inputFile.toURI(), n);
-    } else {
-      return identifyPage(exam,new URI(argument), n );
-    }
-  }
-
 private int previous_threshold=120;
 private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           throws ReaderException
@@ -112,8 +88,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     for ( int i=0; i<r.length; i++ )
     {
       cropped[i] = image.getSubimage(r[i].x, r[i].y, r[i].width, r[i].height);
-      img_filt[i] =  new BufferedImage( cropped[i].getWidth(), cropped[i].getHeight(),
-                                                cropped[i].getType() );
+      img_filt[i] =  new BufferedImage( cropped[i].getWidth(), cropped[i].getHeight(), BufferedImage.TYPE_3BYTE_BGR );
+                                                //cropped[i].getType() );
     }
     lookup = new BarcodeColourLookupTable( image.getColorModel().getNumComponents() );
     lop = new LookupOp( lookup, null );
@@ -128,7 +104,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         img_filt[i] = lop.filter( cropped[i], img_filt[i] );
         try
         {
-          result = ZXingCodec.decode( BarcodeFormat.CODE_128, img_filt[i], cropped[i] );
+          result = ZXingCodec.decode( BarcodeFormat.CODE_128, img_filt[i] );
           if ( result != null )
           {
             if ( n != 0 )
@@ -151,41 +127,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
 
 
-
-  private PageData decode( ExaminationData exam, URI uri, int i )
-          throws IOException
-  {
-    BufferedImage image;
-    try {
-      image = ImageIO.read(uri.toURL());
-    } catch (IllegalArgumentException iae) {
-      throw new FileNotFoundException("Resource not found: " + uri);
-    }
-    if (image == null) {
-      System.err.println(uri.toString() + ": Could not load image");
-      return null;
-    }
-    return decode( exam, image, uri.toString(), i );
-  }
-
-
-  private PageData identifyPage( ExaminationData exam, URI uri, int i )
-          throws IOException
-  {
-    BufferedImage image;
-    try {
-      image = ImageIO.read(uri.toURL());
-    } catch (IllegalArgumentException iae) {
-      throw new FileNotFoundException("Resource not found: " + uri);
-    }
-    if (image == null) {
-      System.err.println(uri.toString() + ": Could not load image");
-      return null;
-    }
-    return identifyPage( exam, image, uri.toString(), i );
-  }
-
-
 /**
  * 
  * @param exam  Data about this examination
@@ -195,7 +136,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
  * @return
  * @throws IOException 
  */  
-  private PageData identifyPage(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
+  public PageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws IOException
   {
     int i, j;
@@ -210,11 +151,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     Point bull_tl=null, bull_bl=null, bull_br=null;
     double bradius_pixels = 1;
     
-    //System.out.println( "Decoding a page." );
-
     // Initialise the page record that this method builds up
-    page = new PageData( exam, sourcename, scanorder );
-    page.source = sourcename;
+    page = new PageData( exam, ifd.getImportedname() );
 
     // Look for the bar code in a strip down the left side or in case
     // the scan was made with a rotation look in strips on the other
@@ -230,8 +168,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       barcoderesult = decodeBarcode( image, barcodesearchrect );
       if ( barcoderesult == null )
       {
-        page.error = "Barcode not found.";
-        return page;
+        ifd.setError( "No barcode found on this image." );
+        return null;
       }
 
       System.out.println( "Barcode orientation: " + barcoderesult.getOrientation() );
@@ -241,14 +179,24 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       StringTokenizer ptok = new StringTokenizer( page.code, "/" );
       try
       {
-        ptok.nextToken();  // skip 'qyouti'
+        if ( !"qyouti".equals( ptok.nextToken() ) )
+        {
+          ifd.setError( "Non-qyouti barcode found '" + page.code + "'." );
+          return null;        
+        }                
         page.printid = ptok.nextToken();
         page.pageid = ptok.nextToken();
       }
       catch ( NoSuchElementException nsee )
       {
-        page.error = "Unable to parse text in the barcode '" + page.code + "'.";
-        return page;        
+        ifd.setError( "Unable to parse text in the barcode '" + page.code + "'." );
+        return null;        
+      }
+      
+      if ( !page.printid.equals( exam.getLastPrintID() ) )
+      {
+        ifd.setError( "The printid in the barcode does not match this exam/survey '" + page.printid + "'." );
+        return null;                
       }
       
       // use printid and pageid to get information about the page...
@@ -258,10 +206,17 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
       if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
       {
-        page.error = "Cannot find the pagination data file for this page.";
-        return page;
+        ifd.setError( "Cannot find the pagination data file for this page." );
+        return null;
       }
 
+      PageData otherpage = exam.lookUpPage( page.pageid );
+      if ( otherpage != null )
+      {
+        ifd.setError( "Page has already been imported. '" + page.pageid + "'" );
+        return null;
+      }
+      
       PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
       PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
       PaginationRecord.Page prpage = paginationrecord.getPage( page.pageid );
@@ -270,6 +225,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       if ( caldim == null )
       {
         page.error = "Cannot calibrate page.";
+        ifd.setError( page.error );
         return page;
       }
       
@@ -298,6 +254,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         else
         {
           page.error = "Unable to reorient image. (Barcode at " + barcoderesult.getOrientation() + " degrees.)";
+          ifd.setError( page.error );
           return page;          
         }
         
@@ -315,6 +272,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       if ( bullseyerecord[0] == null || bullseyerecord[1] == null || bullseyerecord[2] == null )
       {
         page.error = "Printed page lacked info about calibration bullseyes.";
+        ifd.setError( page.error );
         return page;
       }
 
@@ -329,21 +287,25 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         
         System.out.println( "Trial bullseye radius = " + bradius_pixels + " pixels." );
         r = new Rectangle( approxcentre );
-        r.grow( (int)(bradius_pixels*1.5), (int)(bradius_pixels*1.5) );
+        r.grow( (int)(bradius_pixels*2.5), (int)(bradius_pixels*2.5) );
         r = r.intersection( page.scanbounds );
         BufferedImage searchimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
-        try
+        if ( false )
         {
-          ImageIO.write(
-                      searchimage,
-                      "jpg",
-                      new File( exam.examfile.getParentFile(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
-                );
-        } catch (IOException ex)
-        {
-          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-          page.error = "Technical error saving debug image.";
-          return page;
+          try
+          {
+            ImageIO.write(
+                        searchimage,
+                        "jpg",
+                        new File( exam.getExamFolder(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                  );
+          } catch (IOException ex)
+          {
+            Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            page.error = "Technical error saving debug image.";
+            ifd.setError( page.error );
+            return page;
+          }
         }
         
         BullseyeLocator bloc = new BullseyeLocator( searchimage, bradius_pixels, BullseyeGenerator.RADII );
@@ -351,6 +313,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         if ( points.length != 1 )
         {
           page.error = "Failed to find bullseye in corner of page.";
+          ifd.setError( page.error );
           return page;
         }
         points[0].translate( r.x, r.y );
@@ -366,6 +329,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       if ( false )
       {
         page.error = "Done.";
+        ifd.setError( page.error );
         return page;
       }
       
@@ -396,8 +360,9 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     catch (ReaderException e)
     {
       e.printStackTrace();
-      System.err.println(sourcename + ": No barcode found");
-      page.error = "Can't read question QRCode.";
+      System.err.println( ifd.getSource() + ": No barcode found");
+      page.error = "Can't read bar code.";
+      ifd.setError( page.error );
     }
 
     return page;
@@ -405,31 +370,30 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
 
 
-  private PageData decode(ExaminationData exam, BufferedImage image, String sourcename, int scanorder )
+  public PageData decode( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws IOException
   {
     int i;
     PageData page;
     QuestionData question;
     ResponseData response;
-
     Point subimage_topleft;
     Point subimage_bottomright;
-//    Rectangle subimage_rect;
-//    double[] triangle = new double[6];
-//    AffineTransform questiontransform;
-//    double pageblackness;
     int w, h;
     boolean debug = false;
     BufferedImage debug_image=null;
     Graphics2D debug_graphics=null;
     
-    
     System.out.println( "Decoding a page." );
 
-    page = identifyPage( exam, image, sourcename, scanorder );
-    if ( page == null || page.error != null )
-      return page;    
+    // identify the page first (which includes calibrating
+    // coordinates too.) and if this fails give up
+    page = identifyPage( exam, ifd, image );
+    if ( ifd.getError() != null )
+      return null;  
+    
+    if ( false )
+      return page;
     
     if ( debug )
     {
@@ -581,7 +545,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         ImageIO.write(
                       debug_image,
                       "jpg",
-                      new File( exam.examfile.getParentFile(), "debug_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                      new File( exam.getExamFolder(), "debug_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
                 );
       } catch (IOException ex)
       {
@@ -801,7 +765,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       for ( int j=0; j<rlabels.length; j++ )
       {
         responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-        responseimageprocessor.filter( responsedata, questiondata.page.exam.scanfolder );
+        responseimageprocessor.filter( responsedata, questiondata.page.exam.getResponseImageFolder() );
       }
 
 

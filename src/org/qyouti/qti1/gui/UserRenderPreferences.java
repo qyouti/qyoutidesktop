@@ -17,6 +17,7 @@ public class UserRenderPreferences
 {
   boolean serif=false;
   double fontsize;
+  boolean bigpinkbox=false;
 
   String packed=null;
   int hash;
@@ -31,6 +32,8 @@ public class UserRenderPreferences
     fontsize = Double.parseDouble(s);
     s = element.getAttribute( "serif" );
     serif = "true".equals(s);
+    s = element.getAttribute( "bigpinkbox" );
+    bigpinkbox = "true".equals(s);
   }
 
   public void emit( Writer writer )
@@ -41,13 +44,15 @@ public class UserRenderPreferences
     writer.write( "\"" );
     if ( serif )
       writer.write( " serif=\"true\"" );
+    if ( bigpinkbox )
+      writer.write( " bigpinkbox=\"true\"" );
     writer.write( "/>\n" );
   }
 
   public String packedRepresentation()
   {
     if ( packed != null ) return packed;
-    packed = "version1_" + Double.toString(fontsize) + (serif?"s":"");
+    packed = "v2_" + Double.toString(fontsize) + (serif?"_s":"") + (bigpinkbox?"_b":"");
     hash = packed.hashCode();
     return packed;
   }
@@ -72,6 +77,18 @@ public class UserRenderPreferences
     this.serif = serif;
   }
 
+  public boolean isBigpinkbox()
+  {
+    return bigpinkbox;
+  }
+
+  public void setBigpinkbox( boolean bigpinkbox )
+  {
+    this.bigpinkbox = bigpinkbox;
+  }
+
+  
+  
   @Override
   public boolean equals(Object obj)
   {

@@ -16,6 +16,7 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.*;
+import org.qyouti.barcode.*;
 import org.qyouti.data.*;
 import org.qyouti.print.*;
 import org.qyouti.qti1.element.*;
@@ -84,6 +85,7 @@ public class QyoutiFrame
     selectdialog.setFrame( this );
     initComponents();
     createLookAndFeelMenu();
+    ZXingCodec.setDebugImageLabel( debuglabel );
     
     //questiontable.getColumnModel().getColumn( 0 ).
     candidatetable.getSelectionModel().addListSelectionListener( 
@@ -322,9 +324,12 @@ public class QyoutiFrame
     sp6 = new javax.swing.JScrollPane();
     candqpanelouter = new javax.swing.JPanel();
     candqpanel = new javax.swing.JPanel();
-    stab = new javax.swing.JPanel();
+    ptab = new javax.swing.JPanel();
     sp3 = new javax.swing.JScrollPane();
-    scanstable = new javax.swing.JTable();
+    pagestable = new javax.swing.JTable();
+    stab = new javax.swing.JPanel();
+    sp4 = new javax.swing.JScrollPane();
+    scanfiletable = new javax.swing.JTable();
     rtab = new javax.swing.JPanel();
     jSplitPane2 = new javax.swing.JSplitPane();
     jPanel4 = new javax.swing.JPanel();
@@ -336,6 +341,8 @@ public class QyoutiFrame
     qrpanelouter = new javax.swing.JPanel();
     questionreviewpanel = new javax.swing.JPanel();
     jLabel2 = new javax.swing.JLabel();
+    debugtab = new javax.swing.JPanel();
+    debuglabel = new javax.swing.JLabel();
     statuspanel = new javax.swing.JPanel();
     savestatuslabel = new javax.swing.JLabel();
     printstatuslabel = new javax.swing.JLabel();
@@ -587,9 +594,9 @@ public class QyoutiFrame
 
     tabs.addTab("Candidates", ctab);
 
-    stab.setLayout(new java.awt.BorderLayout());
+    ptab.setLayout(new java.awt.BorderLayout());
 
-    scanstable.setModel(new javax.swing.table.DefaultTableModel(
+    pagestable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
       {
 
@@ -619,10 +626,49 @@ public class QyoutiFrame
         return canEdit [columnIndex];
       }
     });
-    scanstable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
-    sp3.setViewportView(scanstable);
+    pagestable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+    sp3.setViewportView(pagestable);
 
-    stab.add(sp3, java.awt.BorderLayout.CENTER);
+    ptab.add(sp3, java.awt.BorderLayout.CENTER);
+
+    tabs.addTab("Pages", ptab);
+
+    stab.setLayout(new java.awt.BorderLayout());
+
+    scanfiletable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][]
+      {
+
+      },
+      new String []
+      {
+        "Ident", "Source", "Imported Name", "Processed", "Errors"
+      }
+    )
+    {
+      Class[] types = new Class []
+      {
+        java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class, java.lang.String.class
+      };
+      boolean[] canEdit = new boolean []
+      {
+        false, false, false, false, false
+      };
+
+      public Class getColumnClass(int columnIndex)
+      {
+        return types [columnIndex];
+      }
+
+      public boolean isCellEditable(int rowIndex, int columnIndex)
+      {
+        return canEdit [columnIndex];
+      }
+    });
+    scanfiletable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+    sp4.setViewportView(scanfiletable);
+
+    stab.add(sp4, java.awt.BorderLayout.CENTER);
 
     tabs.addTab("Scans", stab);
 
@@ -684,6 +730,11 @@ public class QyoutiFrame
     rtab.add(jSplitPane2, java.awt.BorderLayout.CENTER);
 
     tabs.addTab("Review", rtab);
+
+    debugtab.setLayout(new java.awt.BorderLayout());
+    debugtab.add(debuglabel, java.awt.BorderLayout.CENTER);
+
+    tabs.addTab("Debug", debugtab);
 
     getContentPane().add(tabs, java.awt.BorderLayout.CENTER);
 
@@ -1075,8 +1126,7 @@ public class QyoutiFrame
       try
       {
         questiondialog = new QuestionPreviewDialog( this, true,
-                                                    exam.examfile.
-                                                    getParentFile().
+                                                    exam.getExamFolder().
                                                     getCanonicalFile().toURI(),
                                                     exam );
       }
@@ -1155,16 +1205,16 @@ public class QyoutiFrame
     }
 
     String filename = null;
-    if ( tabs.getSelectedComponent() == stab )
+    if ( tabs.getSelectedComponent() == ptab )
     {
-      int row = scanstable.getSelectedRow();
+      int row = pagestable.getSelectedRow();
       if ( row < 0 )
       {
         JOptionPane.
                 showMessageDialog( this, "Select a scan in the Scans tab to edit." );
         return;
       }
-      filename = (String) scanstable.getValueAt( row, 1 );
+      filename = (String) pagestable.getValueAt( row, 1 );
     }
     else
     {
@@ -1390,8 +1440,31 @@ public class QyoutiFrame
     try
     {
       final JFileChooser fc = new JFileChooser();
-      fc.setDialogTitle( "Select directory that contains the scanned images." );
-      fc.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+      fc.setDialogTitle( "Select images files to scan." );
+      fc.setFileSelectionMode( JFileChooser.FILES_ONLY );
+      fc.setMultiSelectionEnabled( true );
+      fc.setFileFilter(
+              new javax.swing.filechooser.FileFilter()
+              {
+                @Override
+                public boolean accept( File pathname )
+                {
+                  if ( pathname.isDirectory() ) return true;
+                  String n = pathname.getName().toLowerCase();
+                  if ( n.endsWith( ".png" ) )  return true;
+                  if ( n.endsWith( ".jpg" ) )  return true;
+                  if ( n.endsWith( ".jpeg" ) ) return true;
+                  if ( n.endsWith( ".pdf" ) )  return true;
+                  return false;
+                }
+
+                @Override
+                public String getDescription()
+                {
+                  return "All supported image formats.";
+                }
+              }
+      );
       if ( scanfolder != null )
       {
         fc.setCurrentDirectory( new File( scanfolder ) );
@@ -1402,19 +1475,16 @@ public class QyoutiFrame
       {
         return;
       }
-      File file = fc.getSelectedFile();
-      if ( !file.exists() || !file.isDirectory() )
-      {
-        return;
-      }
+      
+      File[] files = fc.getSelectedFiles();
 
       tabs.setSelectedIndex( 2 );
-      tabs.setEnabled( false );
+      //tabs.setEnabled( false );
       filemenu.setEnabled( false );
       actionmenu.setEnabled( false );
       exam.setUnsavedChanges( true );
       progressbar.setIndeterminate( true );
-      ScanTask scantask = new ScanTask( preferences, exam, file, false, false );
+      ScanTask scantask = new ScanTask( preferences, exam, files, false, false );
       scantask.setScanTaskListener( this );
       scantask.start();
     }
@@ -1538,7 +1608,8 @@ public class QyoutiFrame
     {
       exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
       exam.addExaminationDataStatusListener( this );
-      scanstable.setModel( exam.pagelistmodel );
+      pagestable.setModel( exam.pagelistmodel );
+      scanfiletable.setModel( exam.scans );
       candidatetable.setModel( exam );
       questionreviewtable.setModel( exam.reviewlist );
       exam.load();
@@ -1625,6 +1696,8 @@ public class QyoutiFrame
   private javax.swing.JMenuItem clearscanneddatamenuitem;
   private javax.swing.JMenuItem configmenuitem;
   private javax.swing.JPanel ctab;
+  private javax.swing.JLabel debuglabel;
+  private javax.swing.JPanel debugtab;
   private javax.swing.JMenuItem editallquestionsmenuitem;
   private javax.swing.JMenuItem editquestionmenuitem;
   private javax.swing.JLabel errorlabel;
@@ -1655,12 +1728,14 @@ public class QyoutiFrame
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JMenuItem openmenuitem;
+  private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
   private javax.swing.JMenuItem preprocmenuitem;
   private javax.swing.JMenuItem previewqmenuitem;
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
+  private javax.swing.JPanel ptab;
   private javax.swing.JPanel qrpanelouter;
   private javax.swing.JPanel qtab;
   private javax.swing.JPanel questionreviewpanel;
@@ -1669,7 +1744,7 @@ public class QyoutiFrame
   private javax.swing.JPanel rtab;
   private javax.swing.JMenuItem savemenuitem;
   private javax.swing.JLabel savestatuslabel;
-  private javax.swing.JTable scanstable;
+  private javax.swing.JTable scanfiletable;
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep2;
@@ -1677,6 +1752,7 @@ public class QyoutiFrame
   private javax.swing.JScrollPane sp1;
   private javax.swing.JScrollPane sp2;
   private javax.swing.JScrollPane sp3;
+  private javax.swing.JScrollPane sp4;
   private javax.swing.JScrollPane sp6;
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JSplitPane splitpane;

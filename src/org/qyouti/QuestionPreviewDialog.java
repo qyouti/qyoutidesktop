@@ -49,7 +49,7 @@ public class QuestionPreviewDialog
         }
 
         GenericDocument svg = (GenericDocument) renderer.getPreviewSVGDocument( options );
-        QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svg.getDocumentElement(), true );
+        //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svg.getDocumentElement(), true );
 
         previewcanvas.setDocument( svg );
         // how to set zoom factor so page fits to width?

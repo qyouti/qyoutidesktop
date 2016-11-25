@@ -38,7 +38,6 @@ public class ZXingResult
 {
   Result wrapped_result;
   
-  double blackness;
   int twist;
   int width, height;
   int image=0;               // if multiple images, index to one where qrcode was found
@@ -46,14 +45,13 @@ public class ZXingResult
   ResultPoint[] points = null;
 
 
-  public ZXingResult( LuminanceSource source, Result wr, double blackness, int twist )
+  public ZXingResult( LuminanceSource source, Result wr, int twist )
   {
     if  ( wr==null )
       throw new IllegalArgumentException( "Null qrcode result." );
     wrapped_result = wr;
     this.width  = source.getWidth();
     this.height = source.getHeight();
-    this.blackness = blackness;
     this.twist = twist;
   }
 
@@ -101,11 +99,7 @@ public class ZXingResult
     throw new IllegalArgumentException( "Cannot handle rotations yet." );
   }
   
-  public double getBlackness()
-  {
-    return blackness;
-  }
-  
+
   public String getText()
   {
     String str = wrapped_result.getText();

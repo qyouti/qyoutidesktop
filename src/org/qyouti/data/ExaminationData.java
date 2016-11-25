@@ -29,6 +29,7 @@ import java.math.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,13 +81,16 @@ public class ExaminationData
   public QuestionDefinitions qdefs = null;
   public Hashtable<String, QuestionAnalysis> analysistable = null;
   public Vector<QuestionAnalysis> analyses = null;
-  public File examfile;
-  public File scanfolder;
+  File examfile;
+  File scanfolder;
+  File responsefolder;
   
   private Vector<PageData> pages = new Vector<PageData>();
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
+  public ImageFileTable scans = new ImageFileTable();
+  
   Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
 
   public Properties options = new Properties();
@@ -102,6 +106,8 @@ public class ExaminationData
  
   public QuestionReviewTable reviewlist = new QuestionReviewTable();
   
+  int nextscanfileident = 10000;
+  
   public ExaminationData( ExaminationCatalogue examcatalogue )
   {
     this.examcatalogue = examcatalogue;
@@ -112,13 +118,34 @@ public class ExaminationData
     this.examcatalogue = examcatalogue;
     examfile = xmlfile;
     File examfolder = examfile.getParentFile();
-    scanfolder = new File( examfolder, "scans" );
+    scanfolder     = new File( examfolder, "scans" );
+    responsefolder = new File( examfolder, "responses" );
     qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
     default_options.setProperty( "columns", "1" );
   }
 
+  public String getNextScanFileIdent()
+  {
+    return Integer.toString( nextscanfileident++ );
+  }
+  
+  public File getExamFolder()
+  {
+    return examfile.getParentFile();
+  }
+  
+  public File getScanImageFolder()
+  {
+    return scanfolder;
+  }
+  
+  public File getResponseImageFolder()
+  {
+    return responsefolder;
+  }
+  
   public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
   {
     listeners.add( listener );
@@ -192,6 +219,19 @@ public class ExaminationData
     
     pages.clear();
     pagemap.clear();
+    
+    for ( int i=0; i<scans.size(); i++ )
+    {
+      try
+      {
+        Files.deleteIfExists( scans.get( i ).getImportedFile().toPath() );
+      }
+      catch ( Exception e )
+      {
+      }
+    }
+    
+    scans.clear();
   }
   
   public int getPageCount()
@@ -221,6 +261,20 @@ public class ExaminationData
     return pagemap.get( id );
   }
 
+  public void addScanImageFile( ImageFileData ifd )
+  {
+    scans.add( ifd );
+  }
+  
+  public boolean isScanImageFileImported( ImageFileData ifd )
+  {
+    for ( int i=0; i<scans.size(); i++ )
+    {
+      if ( scans.get( i ).isImported() && scans.get( i ).digest.equals( ifd.digest ) )
+        return true;
+    }
+    return false;
+  }
 
   public CandidateData getFirstCandidate( boolean hasquestiondata )
   {
@@ -1642,6 +1696,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
     }
 
+    writer.write( "<scans nextscanfileident=\"" + nextscanfileident + "\">\n" );
+    for ( int i=0; i<scans.size(); i++ )
+      scans.get( i ).emit( writer );
+    writer.write( "</scans>\n" );
 
     // write out ahead of candidates so that candidate data
     // can reference the pages
@@ -1789,6 +1847,16 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         sortCandidates();
       }
 
+      if ("scans".equals(e.getNodeName()))
+      {
+        String a = e.getAttribute( "nextscanfileident" );
+        if ( a != null && a.length() > 0 )
+          nextscanfileident = new Integer( a ).intValue();
+        cnl = e.getElementsByTagName("file");
+        for (int j = 0; j < cnl.getLength(); j++)
+          scans.add( new ImageFileData(this, (Element) cnl.item(j) ) );
+      }
+      
       if ("pages".equals(e.getNodeName()))
       {
          cnl = e.getElementsByTagName("page");
@@ -1796,7 +1864,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         for (int j = 0; j < cnl.getLength(); j++)
         {
           page = new PageData(this, (Element) cnl.item(j) );
-          page.scanorder = new Integer( j );
           addPage( page );
         }
 

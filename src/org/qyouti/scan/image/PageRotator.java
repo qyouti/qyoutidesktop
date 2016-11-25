@@ -69,16 +69,16 @@ public class PageRotator
     return destimg;
   }
 
-  public static void main( String[] args )
-          throws IOException
-  {
-    BufferedImage image = ImageIO.read( new File( "/home/jon/Desktop/VAT Return Nov-Jan-2008.jpg" ) );
-    PageRotator rot = new PageRotator( image );
-    BufferedImage i90 = rot.rotate90();
-    BufferedImage i180 = rot.rotate180();
-    BufferedImage i270 = rot.rotate270();
-    ImageIO.write( i90, "jpg", new File( "/home/jon/Desktop/i90.jpg" ) );
-    ImageIO.write( i180, "jpg", new File( "/home/jon/Desktop/i180.jpg" ) );
-    ImageIO.write( i270, "jpg", new File( "/home/jon/Desktop/i270.jpg" ) );
-  }
+//  public static void main( String[] args )
+//          throws IOException
+//  {
+//    BufferedImage image = ImageIO.read( new File( "/home/jon/Desktop/VAT Return Nov-Jan-2008.jpg" ) );
+//    PageRotator rot = new PageRotator( image );
+//    BufferedImage i90 = rot.rotate90();
+//    BufferedImage i180 = rot.rotate180();
+//    BufferedImage i270 = rot.rotate270();
+//    ImageIO.write( i90, "jpg", new File( "/home/jon/Desktop/i90.jpg" ) );
+//    ImageIO.write( i180, "jpg", new File( "/home/jon/Desktop/i180.jpg" ) );
+//    ImageIO.write( i270, "jpg", new File( "/home/jon/Desktop/i270.jpg" ) );
+//  }
 }

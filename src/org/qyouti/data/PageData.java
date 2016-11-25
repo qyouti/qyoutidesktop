@@ -52,7 +52,6 @@ public class PageData implements Comparable<PageData>
   public String source;
   public BufferedImage rotatedimage;
   public int quarterturns;
-  public Integer scanorder;
   public double blackness;
   public String code;
   public String error=null;
@@ -88,12 +87,10 @@ public class PageData implements Comparable<PageData>
 
 
   public PageData( ExaminationData exam,
-                    String source,
-                    int scanorder )
+                    String source )
   {
     this.exam = exam;
     this.source = source;
-    this.scanorder = new Integer( scanorder );
   }
 
 

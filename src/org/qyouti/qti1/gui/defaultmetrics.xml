@@ -60,5 +60,9 @@
   <entry key="header-anchor-x">7.5</entry>
   <entry key="header-anchor-y">0.6</entry>
 
+  <entry key="pinkbox_width">0.27</entry>
+  <entry key="pinkbox_border">0.02</entry>
+  <entry key="pinkbox_padding">0.025</entry>
+  
 </properties>
 
