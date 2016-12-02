@@ -27,7 +27,7 @@
 package org.qyouti.data;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.*;
 import javax.swing.table.AbstractTableModel;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.*;
@@ -75,7 +75,7 @@ public class QuestionDefinitions
   }
 
 
-  public void itemAnalysis( Vector<CandidateData> candidates, Vector<QuestionAnalysis> analyses )
+  public void itemAnalysis( Vector<CandidateData> candidates, ArrayList<QuestionAnalysis> analyses )
   {
     int i, j, k;
     Vector<QTIElementItem> items = qti.getItems();

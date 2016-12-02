@@ -2,6 +2,12 @@
 
 <Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <NonVisualComponents>
+    <Component class="javax.swing.JTextPane" name="analysistextpane">
+      <Properties>
+        <Property name="contentType" type="java.lang.String" value="text/html" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="&lt;html&gt;&#xa;  &lt;head&gt;&#xa;    &lt;style&gt;&#xa;      body { font-family: sans; }&#xa;    &lt;/style&gt;&#xa;  &lt;/head&gt;&#xa;  &lt;body&gt;&#xa;    &lt;h1&gt;Analysis&lt;/h1&gt;&#xa;    &lt;p&gt;No questions analysed.&lt;/p&gt;&#xa;  &lt;/body&gt;&#xa;&lt;/html&gt;&#xa;"/>
+      </Properties>
+    </Component>
     <Menu class="javax.swing.JMenuBar" name="menubar">
       <SubComponents>
         <Menu class="javax.swing.JMenu" name="filemenu">
@@ -128,7 +134,6 @@
             <MenuItem class="javax.swing.JMenuItem" name="itemanalysismenuitem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Item Analysis"/>
-                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="itemanalysismenuitemActionPerformed"/>
@@ -136,11 +141,15 @@
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="sep2">
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="preprocmenuitem">
+            <MenuItem class="javax.swing.JMenuItem" name="importcanmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Preprocess Scanned Images..."/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Import Candidates..."/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importcanmenuitemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator2">
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="importimagesmenuitem">
               <Properties>
@@ -168,18 +177,9 @@
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="sep3">
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="importcanmenuitem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Import Candidates..."/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importcanmenuitemActionPerformed"/>
-              </Events>
-            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="expscoresmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Export Scores..."/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Export Outcomes..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="expscoresmenuitemActionPerformed"/>
@@ -187,13 +187,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="exprepliesmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Export Replies..."/>
-                <Property name="enabled" type="boolean" value="false"/>
-              </Properties>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="expreportmenuitem">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Export Report..."/>
+                <Property name="text" type="java.lang.String" value="Export Responses..."/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
             </MenuItem>
@@ -263,29 +257,63 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
           <SubComponents>
-            <Container class="javax.swing.JScrollPane" name="sp1">
-              <AuxValues>
-                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
-              </AuxValues>
+            <Container class="javax.swing.JSplitPane" name="jSplitPane3">
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
                   <BorderConstraints direction="Center"/>
                 </Constraint>
               </Constraints>
 
-              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
               <SubComponents>
-                <Component class="javax.swing.JTable" name="questiontable">
-                  <Properties>
-                    <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="2" rowCount="0">
-                        <Column editable="false" title="ID" type="java.lang.String"/>
-                        <Column editable="false" title="Title" type="java.lang.String"/>
-                      </Table>
-                    </Property>
-                    <Property name="autoResizeMode" type="int" value="0"/>
-                  </Properties>
-                </Component>
+                <Container class="javax.swing.JScrollPane" name="sp1">
+                  <AuxValues>
+                    <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+                  </AuxValues>
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
+                      <JSplitPaneConstraints position="left"/>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+                  <SubComponents>
+                    <Component class="javax.swing.JTable" name="questiontable">
+                      <Properties>
+                        <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                          <Table columnCount="2" rowCount="0">
+                            <Column editable="false" title="ID" type="java.lang.String"/>
+                            <Column editable="false" title="Title" type="java.lang.String"/>
+                          </Table>
+                        </Property>
+                        <Property name="autoResizeMode" type="int" value="0"/>
+                      </Properties>
+                    </Component>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JScrollPane" name="jScrollPane4">
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
+                      <JSplitPaneConstraints position="right"/>
+                    </Constraint>
+                  </Constraints>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+                  <SubComponents>
+                    <Component class="javax.swing.JTable" name="analysistable">
+                      <Properties>
+                        <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                          <Table columnCount="4" rowCount="4">
+                            <Column editable="true" title="Title 1" type="java.lang.Object"/>
+                            <Column editable="true" title="Title 2" type="java.lang.Object"/>
+                            <Column editable="true" title="Title 3" type="java.lang.Object"/>
+                            <Column editable="true" title="Title 4" type="java.lang.Object"/>
+                          </Table>
+                        </Property>
+                      </Properties>
+                    </Component>
+                  </SubComponents>
+                </Container>
               </SubComponents>
             </Container>
           </SubComponents>

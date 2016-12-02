@@ -377,7 +377,6 @@ public class ScanTask
     if ( page!=null )
     {
       page.rotatedimage=null;
-      exam.addPage( page );
       String fn = page.getPreferredFileName();
       if ( fn != null )
         ifd.rename( fn );
@@ -456,6 +455,25 @@ public class ScanTask
           importPDF( i );
         }
       }
+
+      try
+      {
+        // work out which boxes the candidate put
+        // crosses in
+        pagedecoder.processBoxImages( exam );
+        // score the items and work out other outcomes
+        processPageOutcomes();
+        // which candidate marks are dubious?
+        exam.rebuildReviewList();
+        exam.save();
+        exam.pagelistmodel.
+              fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+      }
+      catch ( IOException ex )
+      {
+        Logger.getLogger( ScanTask.class.getName() ).log( Level.SEVERE, null, ex );
+      }
+      
     }
     finally
     {
@@ -707,6 +725,22 @@ public class ScanTask
     active = false;
   }
 
+  private void processPageOutcomes()
+  {
+    int i;
+    PageData page;
+    
+    // Images are now fully processed so now it's
+    // time to work out the outcomes
+    for ( i = 0; i < exam.getPageCount(); i++ )
+    {
+      page = exam.getPage( i );
+      if ( page.error != null || page.processed )
+        continue;
+      processPageOutcomes( page );
+    }    
+  }
+  
   private void processPageOutcomes( PageData page )
   {
     if ( page == null )

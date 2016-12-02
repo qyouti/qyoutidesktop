@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.*;
 import java.security.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 import org.w3c.dom.*;
@@ -24,6 +25,9 @@ public class PaginationRecord
   int nextid = 1;
   HashMap<String,Page> pagesbyid = new HashMap<String,Page>();
   
+  
+  public static final DecimalFormat pageidformat = new DecimalFormat("0000");
+
   public PaginationRecord( String name )
   {
     // The print ID is a portion of an MD5 hash
@@ -92,15 +96,14 @@ public class PaginationRecord
       if ( !"page".equals( node.getNodeName() ) )
         continue;
       
-      loadPage( (Element)node, p++ );
+      loadPage( (Element)node );
     }
   }
   
-  public void loadPage( Element e_page, int p )
+  public void loadPage( Element e_page )
   {
     addPage( 
             e_page.getAttribute( "id" ),
-            p,
             Integer.parseInt( e_page.getAttribute( "width" ) ),
             Integer.parseInt( e_page.getAttribute( "height" ) ),
             Integer.parseInt( e_page.getAttribute( "originx" ) ),
@@ -162,23 +165,24 @@ public class PaginationRecord
     candidates.add( new Candidate( id ) );
   }
 
-  public void addPage( int width, int height, int originx, int originy )
+  public String addPage( int width, int height, int originx, int originy )
   {
     Page page = new Page( 
             candidates.lastElement(), 
             Integer.toString( nextid++ ), 
-            candidates.lastElement().pages.size() + 1,
+            //candidates.lastElement().pages.size() + 1,
             width, height, originx, originy );
     candidates.lastElement().pages.add( page );
     pagesbyid.put( page.id, page );
+    return page.id;    
   }
 
-  public void addPage( String id, int p, int width, int height, int originx, int originy )
+  public void addPage( String id, int width, int height, int originx, int originy )
   {
     Page page = new Page( 
             candidates.lastElement(), 
             id, 
-            p,
+//            p,
             width, height, originx, originy );
     candidates.lastElement().pages.add( page );
     pagesbyid.put( page.id, page );
@@ -267,7 +271,7 @@ public class PaginationRecord
   {
     Candidate parent;
     String id;
-    int pagenumber;
+//    int pagenumber;
     int width;
     int height;
     int originx;
@@ -279,11 +283,11 @@ public class PaginationRecord
     Bullseye br;
     Bullseye tl;
     
-    public Page( Candidate parent, String id, int pagenumber, int width, int height, int originx, int originy )
+    public Page( Candidate parent, String id, int width, int height, int originx, int originy )
     {
       this.parent  = parent;
       this.id      = id;
-      this.pagenumber = pagenumber;
+//      this.pagenumber = pagenumber;
       this.width   = width;
       this.height  = height;
       this.originx = originx;
@@ -330,10 +334,10 @@ public class PaginationRecord
       writer.write("    </page>\n");
     }
 
-    public int getPagenumber()
-    {
-      return pagenumber;
-    }
+//    public int getPagenumber()
+//    {
+//      return pagenumber;
+//    }
     
     public Item[] getItems()
     {

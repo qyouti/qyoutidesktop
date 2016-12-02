@@ -49,11 +49,19 @@ public class PageData implements Comparable<PageData>
 {
   public ExaminationData exam;
 
+  // fields that are saved to disk
+  public String code;
   public String source;
+  public boolean scanned=false;
+  public boolean processed=false;
+  public String printid;
+  public String pageid;
+//  public int page_number;
+  
+  // fields that are NOT saved to disk
   public BufferedImage rotatedimage;
   public int quarterturns;
   public double blackness;
-  public String code;
   public String error=null;
     
 //  public boolean landscape=false;
@@ -62,19 +70,15 @@ public class PageData implements Comparable<PageData>
   public double declared_calibration_width;
   public double declared_calibration_height;
 
-  public boolean processed=false;
 
   public ResponseImageProcessor responseimageprocessor = null;
 
-  public String printid;
   public File examfolder;
   public File paginationfile;
   public CandidateData candidate;
   public String candidate_number;
   public String candidate_name;
   public double height;
-  public String pageid;
-  public int page_number;
   
   public PageDecoder.TransformData pagetransform;
   public double dpi;
@@ -86,11 +90,25 @@ public class PageData implements Comparable<PageData>
   public static final DecimalFormat pagenumberformat = new DecimalFormat("000");
 
 
+//  public PageData( ExaminationData exam,
+//                    String source )
+//  {
+//    this.exam = exam;
+//    this.source = source;
+//  }
+
   public PageData( ExaminationData exam,
-                    String source )
+                    String printid,
+                    String pageid,
+                    CandidateData candidate )
   {
     this.exam = exam;
-    this.source = source;
+    this.printid = printid;
+    this.pageid = pageid;
+    this.code = "qyouti/" + printid + "/" + pageid;
+    this.candidate = candidate;
+    this.candidate_name = candidate.name;
+    this.candidate_number = candidate.id;
   }
 
 
@@ -101,16 +119,18 @@ public class PageData implements Comparable<PageData>
     this.candidate_number = element.getAttribute( "id" );
     this.source = element.getAttribute( "source" );
     this.code = element.getAttribute( "code" );
+    this.scanned = "true".equalsIgnoreCase( element.getAttribute( "scanned" ) );
     this.processed = "true".equalsIgnoreCase( element.getAttribute( "processed" ) );
     this.pageid = element.getAttribute( "pageid" );
-    try
-    {
-      this.page_number = Integer.parseInt( element.getAttribute( "page" ) );
-    }
-    catch ( NumberFormatException numberFormatException )
-    {
-      this.page_number = 0;
-    }
+    this.printid = element.getAttribute( "printid" );
+//    try
+//    {
+//      this.page_number = Integer.parseInt( element.getAttribute( "page" ) );
+//    }
+//    catch ( NumberFormatException numberFormatException )
+//    {
+//      this.page_number = 0;
+//    }
     NodeList nl = element.getElementsByTagName( "error" );
     if ( nl.getLength() == 1 )
       this.error = nl.item( 0 ).getTextContent();
@@ -151,7 +171,7 @@ public class PageData implements Comparable<PageData>
 
   public String getPreferredFileName()
   {
-    if ( source == null || candidate_name==null || candidate_number== null || page_number < 0 )
+    if ( source == null || candidate_name==null || candidate_number== null || pageid == null )
       return null;
     StringBuffer b = new StringBuffer();
     b.append( "imported_" );
@@ -159,8 +179,6 @@ public class PageData implements Comparable<PageData>
     b.append( "_" );
     b.append( candidate_number );
     b.append(  "_page_" );
-//    b.append( pagenumberformat.format( page_number+1L ) );
-   // temp bodge because page numbers not in pagination file
     b.append( this.pageid );
     b.append( getPreferredFileExtension() );
     return b.toString();
@@ -177,15 +195,17 @@ public class PageData implements Comparable<PageData>
       writer.write( "name=\""   + candidate_name   + "\" " );
     if ( candidate_number != null )
       writer.write( "id=\""     + candidate_number + "\" " );
-    if ( page_number > 0 )
-      writer.write( "page=\""   + page_number      + "\" " );
+    writer.write( "printid=\"" + printid           + "\" " );
     writer.write( "pageid=\"" + pageid           + "\" " );
-    writer.write( "source=\"" + source           + "\" " );
     if ( code != null )
       writer.write( "code=\""   + code             + "\" " );
 //    writer.write( "black=\""  + blackness        + "\" " );
 //    writer.write( "pink=\""   + lightestredmean  + "\" " );
-    writer.write( "processed=\"" );
+    if ( source != null )
+      writer.write( "source=\"" + source           + "\" " );
+    writer.write( "scanned=\"" );
+    writer.write( scanned?"true":"false" );
+    writer.write( "\" processed=\"" );
     writer.write( processed?"true":"false" );
     writer.write( "\" " );
 
@@ -217,8 +237,12 @@ public class PageData implements Comparable<PageData>
   @Override
   public int compareTo( PageData other )
   {
-    if ( this.page_number > other.page_number ) return 1;
-    if ( this.page_number < other.page_number ) return -1;
-    return 0;
+    String t, o;
+    t = this.pageid;
+    o = other.pageid;
+    
+    if ( t == null ) t = "0000";
+    if ( o == null ) o = "0000";
+    return t.compareTo( o );
   }
 }
