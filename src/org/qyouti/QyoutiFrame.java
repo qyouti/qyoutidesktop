@@ -5,6 +5,7 @@
  */
 package org.qyouti;
 
+import au.com.bytecode.opencsv.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -85,9 +86,21 @@ public class QyoutiFrame
     selectdialog.setFrame( this );
     initComponents();
     createLookAndFeelMenu();
+    
     ZXingCodec.setDebugImageLabel( debuglabel );
     
     //questiontable.getColumnModel().getColumn( 0 ).
+    questiontable.getSelectionModel().addListSelectionListener( 
+            new ListSelectionListener() {
+              
+      @Override
+      public void valueChanged( ListSelectionEvent e )
+      {
+        questionSelectionChanged( e );
+      }
+              
+            });
+    
     candidatetable.getSelectionModel().addListSelectionListener( 
             new ListSelectionListener() {
               
@@ -224,7 +237,25 @@ public class QyoutiFrame
     }
      
      
+  public void questionSelectionChanged( ListSelectionEvent e )
+  {
+    if ( e.getValueIsAdjusting() )
+      return;
     
+    System.out.println( "question selection change." );
+    questiontable.getSelectedRow();
+
+    QTIElementItem item = null;
+    int row = questiontable.getSelectedRow();
+    if ( row < 0 )
+      exam.analysistable.setSelectedQuestion( null );
+    else
+    {
+      item = exam.qdefs.qti.getItems().elementAt( row );
+      exam.analysistable.setSelectedQuestion( (item==null)?null:item.getIdent() );
+    }
+  }
+  
   public void candidateSelectionChanged( ListSelectionEvent e )
   {
     if ( e.getValueIsAdjusting() )
@@ -301,11 +332,15 @@ public class QyoutiFrame
   {
     java.awt.GridBagConstraints gridBagConstraints;
 
+    analysistextpane = new javax.swing.JTextPane();
     spacerlabel = new javax.swing.JLabel();
     tabs = new javax.swing.JTabbedPane();
     qtab = new javax.swing.JPanel();
+    jSplitPane3 = new javax.swing.JSplitPane();
     sp1 = new javax.swing.JScrollPane();
     questiontable = new javax.swing.JTable();
+    jScrollPane4 = new javax.swing.JScrollPane();
+    analysistable = new javax.swing.JTable();
     ctab = new javax.swing.JPanel();
     splitpane = new javax.swing.JSplitPane();
     sp2 = new javax.swing.JScrollPane();
@@ -369,15 +404,17 @@ public class QyoutiFrame
     previewqmenuitem = new javax.swing.JMenuItem();
     itemanalysismenuitem = new javax.swing.JMenuItem();
     sep2 = new javax.swing.JPopupMenu.Separator();
-    preprocmenuitem = new javax.swing.JMenuItem();
+    importcanmenuitem = new javax.swing.JMenuItem();
+    jSeparator2 = new javax.swing.JPopupMenu.Separator();
     importimagesmenuitem = new javax.swing.JMenuItem();
     clearscanneddatamenuitem = new javax.swing.JMenuItem();
     viewscanmenuitem = new javax.swing.JMenuItem();
     sep3 = new javax.swing.JPopupMenu.Separator();
-    importcanmenuitem = new javax.swing.JMenuItem();
     expscoresmenuitem = new javax.swing.JMenuItem();
     exprepliesmenuitem = new javax.swing.JMenuItem();
-    expreportmenuitem = new javax.swing.JMenuItem();
+
+    analysistextpane.setContentType("text/html"); // NOI18N
+    analysistextpane.setText("<html>\n  <head>\n    <style>\n      body { font-family: sans; }\n    </style>\n  </head>\n  <body>\n    <h1>Analysis</h1>\n    <p>No questions analysed.</p>\n  </body>\n</html>\n");
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
     setTitle("Qyouti Exam/Survey Processor");
@@ -422,7 +459,26 @@ public class QyoutiFrame
     questiontable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp1.setViewportView(questiontable);
 
-    qtab.add(sp1, java.awt.BorderLayout.CENTER);
+    jSplitPane3.setLeftComponent(sp1);
+
+    analysistable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][]
+      {
+        {null, null, null, null},
+        {null, null, null, null},
+        {null, null, null, null},
+        {null, null, null, null}
+      },
+      new String []
+      {
+        "Title 1", "Title 2", "Title 3", "Title 4"
+      }
+    ));
+    jScrollPane4.setViewportView(analysistable);
+
+    jSplitPane3.setRightComponent(jScrollPane4);
+
+    qtab.add(jSplitPane3, java.awt.BorderLayout.CENTER);
 
     tabs.addTab("Questions", qtab);
 
@@ -891,7 +947,6 @@ public class QyoutiFrame
     actionmenu.add(previewqmenuitem);
 
     itemanalysismenuitem.setText("Item Analysis");
-    itemanalysismenuitem.setEnabled(false);
     itemanalysismenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -902,9 +957,16 @@ public class QyoutiFrame
     actionmenu.add(itemanalysismenuitem);
     actionmenu.add(sep2);
 
-    preprocmenuitem.setText("Preprocess Scanned Images...");
-    preprocmenuitem.setEnabled(false);
-    actionmenu.add(preprocmenuitem);
+    importcanmenuitem.setText("Import Candidates...");
+    importcanmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        importcanmenuitemActionPerformed(evt);
+      }
+    });
+    actionmenu.add(importcanmenuitem);
+    actionmenu.add(jSeparator2);
 
     importimagesmenuitem.setText("Import Scanned Images...");
     importimagesmenuitem.addActionListener(new java.awt.event.ActionListener()
@@ -937,18 +999,7 @@ public class QyoutiFrame
     actionmenu.add(viewscanmenuitem);
     actionmenu.add(sep3);
 
-    importcanmenuitem.setText("Import Candidates...");
-    importcanmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        importcanmenuitemActionPerformed(evt);
-      }
-    });
-    actionmenu.add(importcanmenuitem);
-
-    expscoresmenuitem.setText("Export Scores...");
-    expscoresmenuitem.setEnabled(false);
+    expscoresmenuitem.setText("Export Outcomes...");
     expscoresmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -958,13 +1009,9 @@ public class QyoutiFrame
     });
     actionmenu.add(expscoresmenuitem);
 
-    exprepliesmenuitem.setText("Export Replies...");
+    exprepliesmenuitem.setText("Export Responses...");
     exprepliesmenuitem.setEnabled(false);
     actionmenu.add(exprepliesmenuitem);
-
-    expreportmenuitem.setText("Export Report...");
-    expreportmenuitem.setEnabled(false);
-    actionmenu.add(expreportmenuitem);
 
     menubar.add(actionmenu);
 
@@ -990,11 +1037,34 @@ public class QyoutiFrame
 
     if ( exam == null )
     {
-      JOptionPane.
-              showMessageDialog( this, "No exam/survey open." );
+      JOptionPane.showMessageDialog( this, "No exam/survey open." );
       return;
     }
-    // TODO add your handling code here:
+    
+    if ( exam.qdefs.getColumnCount() == 0 )
+    {
+      JOptionPane.showMessageDialog( this, "No question to analyse." );
+      return;
+    }
+    
+    int i, n=0;
+    CandidateData cd;
+    for ( i=0; i<exam.candidates_sorted.size(); i++ )
+    {
+      cd = exam.candidates_sorted.get( i );
+      if ( cd.questionsAsked() == cd.questionsScanned() )
+        n++;
+    }
+    
+    if ( n<3 )
+    {
+      JOptionPane.showMessageDialog( this, "There are not enough candidates with all questions marked." );
+      return;
+    }
+    
+    String analysis = exam.itemAnalysis();
+    analysistextpane.setContentType( "text/plain" );
+    analysistextpane.setText( analysis );
   }//GEN-LAST:event_itemanalysismenuitemActionPerformed
 
   private void expscoresmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_expscoresmenuitemActionPerformed
@@ -1006,7 +1076,67 @@ public class QyoutiFrame
               showMessageDialog( this, "No exam/survey open." );
       return;
     }
-    // TODO add your handling code here:
+    
+    try
+    {
+      final JFileChooser fc = new JFileChooser();
+      fc.setDialogTitle( "Select folder and file name to save." );
+      fc.setFileSelectionMode( JFileChooser.FILES_ONLY );
+      fc.setMultiSelectionEnabled( false );
+      fc.setFileFilter(
+              new javax.swing.filechooser.FileFilter()
+              {
+                @Override
+                public boolean accept( File pathname )
+                {
+                  if ( pathname.isDirectory() ) return true;
+                  String n = pathname.getName().toLowerCase();
+                  if ( n.endsWith( ".csv" ) )  return true;
+                  if ( n.endsWith( ".txt" ) )  return true;
+                  return false;
+                }
+
+                @Override
+                public String getDescription()
+                {
+                  return "All supported image formats.";
+                }
+              }
+      );
+      int returnVal = fc.showSaveDialog( this );
+
+      if ( returnVal != JFileChooser.APPROVE_OPTION )
+      {
+        return;
+      }
+      
+      File file = fc.getSelectedFile();
+      FileWriter writer = new FileWriter( file );
+      CSVWriter csvwriter = new CSVWriter( writer, ',', '"', "\r\n" );
+      String[] line = new String[exam.getColumnCount()];
+      int i, j;
+      Object value;
+      for ( i=0; i<line.length; i++ )
+        line[i] = exam.getColumnName( i );
+      csvwriter.writeNext( line );
+      for ( j=0; j<exam.getRowCount(); j++ )
+      {
+        for ( i=0; i<line.length; i++ )
+        {
+          value = exam.getValueAt( j, i );
+          line[i] = (value==null)?"":value.toString();
+        }
+        csvwriter.writeNext( line );
+      }
+      csvwriter.flush();
+      writer.close();
+    }
+    catch ( Exception ex )
+    {
+      ex.printStackTrace();
+      JOptionPane.
+              showMessageDialog( this, "Problem trying to save data." );
+    }
   }//GEN-LAST:event_expscoresmenuitemActionPerformed
 
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
@@ -1333,7 +1463,7 @@ public class QyoutiFrame
       return;
     }
 
-    if ( exam.getPageCount() > 0 )
+    if ( exam.scans.size() > 0 )
     {
       JOptionPane.
               showMessageDialog( this, "Before you can forget a print run you must clear all scan data." );
@@ -1347,7 +1477,7 @@ public class QyoutiFrame
     {
       return;
     }
-    exam.setLastPrintID( null );
+    exam.forgetPrint();
     exam.save();
   }//GEN-LAST:event_forgetprintmenuitemActionPerformed
 
@@ -1618,6 +1748,8 @@ public class QyoutiFrame
       {
         questiontable.setModel( exam.qdefs );
       }
+      analysistable.setModel( exam.analysistable );
+      analysistable.getTableHeader().setDefaultRenderer( new VerticalTextTableCellRenderer() );
 
     }
     catch ( Exception ex )
@@ -1685,6 +1817,8 @@ public class QyoutiFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutmenuitem;
   private javax.swing.JMenu actionmenu;
+  private javax.swing.JTable analysistable;
+  private javax.swing.JTextPane analysistextpane;
   private javax.swing.JTable candidatetable;
   private javax.swing.JPanel candqpanel;
   private javax.swing.JPanel candqpanelouter;
@@ -1703,7 +1837,6 @@ public class QyoutiFrame
   private javax.swing.JLabel errorlabel;
   private javax.swing.JMenuItem exitmenuitem;
   private javax.swing.JMenuItem exprepliesmenuitem;
-  private javax.swing.JMenuItem expreportmenuitem;
   private javax.swing.JMenuItem expscoresmenuitem;
   private javax.swing.JMenu filemenu;
   private javax.swing.JMenuItem forgetprintmenuitem;
@@ -1721,16 +1854,18 @@ public class QyoutiFrame
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JScrollPane jScrollPane3;
+  private javax.swing.JScrollPane jScrollPane4;
   private javax.swing.JPopupMenu.Separator jSeparator1;
+  private javax.swing.JPopupMenu.Separator jSeparator2;
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
+  private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JTextArea jTextArea1;
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
-  private javax.swing.JMenuItem preprocmenuitem;
   private javax.swing.JMenuItem previewqmenuitem;
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;

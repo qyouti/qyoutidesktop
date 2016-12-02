@@ -142,14 +142,15 @@ public class CandidateData
     if ( pages == null || pages.size() == 0 )
       return STATUS_UNSCANNED;
     
-    int n=0;
+    int q=0, n=0;
     QuestionData qd;
     for ( int i=0; itemidents!=null && i<itemidents.size(); i++ )
     {
       qd = getQuestionData( itemidents.get( i) );
       if ( qd == null )
-        return STATUS_ATTENTION;
-        
+        continue;
+      
+      q++;
       if ( qd.needsreview )
       {
         n++;

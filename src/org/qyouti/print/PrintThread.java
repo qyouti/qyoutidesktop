@@ -46,90 +46,81 @@ public class PrintThread extends Thread
   {
     int p=1;
     
-      try
+    try
+    {
+      URI examfolderuri = exam.getExamFolder().getCanonicalFile().toURI();
+      List<GenericDocument> paginated;
+      PageData page;
+      TranscoderInput tinput;
+      TranscoderOutput transout;
+      File pagefile;
+      ArrayList<File> pagefiles = new ArrayList<>();
+      File pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
+      PDFMergerUtility pdfmerger = new PDFMergerUtility();
+      pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );        
+      PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
+      String printid = paginationrecord.getPrintId();
+      PDFTranscoder pdft = new PDFTranscoder();
+
+      for ( int j=0; j<exam.candidates_sorted.size(); j++ )
       {
-        URI examfolderuri;
-          examfolderuri = exam.getExamFolder().getCanonicalFile().toURI();
-        java.util.Vector<GenericDocument> paginated;
-        TranscoderInput tinput;
-        TranscoderOutput transout;
-        File pagefile;
-        ArrayList<File> pagefiles = new ArrayList<File>();
-        File pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
-        PDFMergerUtility pdfmerger = new PDFMergerUtility();
-        pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );
-        
-//        TranscoderOutput transout = new TranscoderOutput(
-//            new FileOutputStream(
-//                new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" ) ) );
-
-
-        PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
-        String printid = paginationrecord.getPrintId();
-        // QuestionMetricsRecordSet qmrset = new QuestionMetricsRecordSet(printid);
-        // qmrset.setMonochromePrint( false );
-        MultiPagePDFTranscoder pdftranscoder = new MultiPagePDFTranscoder();
-        PDFTranscoder pdft = new PDFTranscoder();
-
-        for ( int j=0; j<exam.candidates_sorted.size(); j++ )
+        System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
+        System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
+        paginated = QTIItemRenderer.paginateItems(
+            this,
+            printid,
+            examfolderuri,
+            exam.candidates_sorted.elementAt(j),
+            exam,
+            //qmrset,
+            paginationrecord,
+            exam.getPreamble() );
+        for ( int i=0; i<paginated.size(); i++ )
         {
-          System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
-          System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
-          paginated = QTIItemRenderer.paginateItems(
-              this,
-              printid,
-              examfolderuri,
-              exam.candidates_sorted.elementAt(j),
-              exam,
-              //qmrset,
-              paginationrecord,
-              exam.getPreamble() );
-          for ( int i=0; i<paginated.size(); i++ )
-          {
-            pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p++ + ".pdf" );
-            pagefiles.add( pagefile );
-            tinput = new TranscoderInput( paginated.elementAt(i) );
-            transout = new TranscoderOutput( new FileOutputStream( pagefile ) );
-            pdft.transcode( tinput, transout );
-            transout.getOutputStream().close();
-            paginated.set(i, null);
-          }
-          paginated.clear();
+          pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p++ + ".pdf" );
+          pagefiles.add( pagefile );
+          tinput = new TranscoderInput( paginated.get( i ) );
+          transout = new TranscoderOutput( new FileOutputStream( pagefile ) );
+          pdft.transcode( tinput, transout );
+          transout.getOutputStream().close();
+          paginated.set(i, null);
         }
-        
-        for ( int i=0; i<pagefiles.size(); i++ )
-          pdfmerger.addSource( pagefiles.get( i ) );
-        
-        pdfmerger.mergeDocuments();
-
-        for ( int i=0; i<pagefiles.size(); i++ )
-          pagefiles.get( i ).delete();
-        
-        //pdftranscoder.complete();
-        //transout.getOutputStream().close();
-        exam.setLastPrintID( printid );
-
-
-        FileWriter writer;
-        File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
-        if ( pagrecfile.exists() )
-          throw new IllegalArgumentException( "Unable to save pagination record." );
-        // This helps with dodgy file systems
-        try { pagrecfile.createNewFile(); }
-        catch ( Exception ee ) {}
-        writer = new FileWriter( pagrecfile );
-        paginationrecord.emit(writer);
-        writer.close();
-
-      } catch (Exception ex)
-      {
-        Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, ex);
+        paginated.clear();
       }
-      finally
-      {
-        if ( frame != null )
-          frame.pdfPrintComplete();
-      }
+
+      for ( int i=0; i<pagefiles.size(); i++ )
+        pdfmerger.addSource( pagefiles.get( i ) );
+
+      pdfmerger.mergeDocuments();
+
+      for ( int i=0; i<pagefiles.size(); i++ )
+        pagefiles.get( i ).delete();
+
+      //pdftranscoder.complete();
+      //transout.getOutputStream().close();
+      exam.setLastPrintID( printid );
+
+
+      FileWriter writer;
+      File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
+      if ( pagrecfile.exists() )
+        throw new IllegalArgumentException( "Unable to save pagination record." );
+      // This helps with dodgy file systems
+      try { pagrecfile.createNewFile(); }
+      catch ( Exception ee ) {}
+      writer = new FileWriter( pagrecfile );
+      paginationrecord.emit(writer);
+      writer.close();
+
+    } catch (Exception ex)
+    {
+      Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    finally
+    {
+      if ( frame != null )
+        frame.pdfPrintComplete();
+    }
     System.out.println( "Printing to PDF complete." );
   }
   

@@ -16,9 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -40,6 +38,7 @@ import org.qyouti.dialog.TextPaneWrapper;
 import org.qyouti.print.ComponentToSvg;
 import org.qyouti.print.SvgConversionResult;
 import org.qyouti.barcode.ZXingCodec;
+import org.qyouti.data.*;
 import org.qyouti.dialog.*;
 import org.qyouti.print.*;
 import org.qyouti.qti1.*;
@@ -699,12 +698,12 @@ public class QTIItemRenderer
 
 
 
-  public static Vector<GenericDocument> paginateItems( 
+  public static List<GenericDocument> paginateItems( 
       PrintThread printthread,
       String printid,
       URI examfolderuri,
       CandidateData candidate,
-      QTIRenderOptions options,
+      ExaminationData exam,
       //QuestionMetricsRecordSet metricrecordset,
       PaginationRecord paginationrecord,
       String preamble )
@@ -729,7 +728,7 @@ public class QTIItemRenderer
       double itemareinsetleft = getMetrics().getPropertySvgUnits("item-area-inset-left");
       double itemareinsettop = getMetrics().getPropertySvgUnits("item-area-inset-top");
       
-//      int columns = options.getQTIRenderIntegerOption( "columns" );
+//      int columns = exam.getQTIRenderIntegerOption( "columns" );
       int columns = -1;
       int previous_columns=-1;
       int column = 0;
@@ -746,28 +745,36 @@ public class QTIItemRenderer
       double yoffset = 0.0;
       
       double itemheight, itemwidth;
-      boolean has_cover = options.getQTIRenderBooleanOption("cover_sheet");
+      boolean has_cover = exam.getQTIRenderBooleanOption("cover_sheet");
       boolean has_blank = false;
 
       // get a blank page ready for questions...
       page = new Vector<SVGDocumentPlacement>();
-      if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+      String pageid;
+      if ( paginationrecord != null )
+      {
+        pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        exam.createPage( printid, pageid, candidate );
+      }
             
       if ( has_cover )
       {
-        GenericDocument coversvg = renderSpecialPage(
-            "org/qyouti/qti1/gui/examcover.xhtml",
-            options,
+        GenericDocument coversvg = renderSpecialPage("org/qyouti/qti1/gui/examcover.xhtml",
+            exam,
             candidate.name,
             candidate.id,
             (preamble!=null)?preamble:"" );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
         svghooks.add( new SVGHooks() );
-        paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
         
         // get a blank page ready for questions...
         page = new Vector<SVGDocumentPlacement>();
-        if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        {
+          pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+          exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+        }
       }
 
       svgdocs = new GenericDocument[items.size()];
@@ -802,7 +809,7 @@ public class QTIItemRenderer
         
         // if ( i==29 ) System.out.println( "Item 29" );
         renderer = new QTIItemRenderer( printthread, examfolderuri, items.elementAt(i), i+1, 
-            options, candidate.preferences );
+            exam, candidate.preferences );
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getDocumentElement().getAttribute("height") );
@@ -822,10 +829,15 @@ public class QTIItemRenderer
           {
             // finish off the page
             svghooks.add( new SVGHooks() );
-            paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
             
             // start a new page for this question
-            if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+            if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+            {
+              pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+              exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+            }
+            
             page = new Vector<SVGDocumentPlacement>();
             
             spaceleft = totalspace;
@@ -854,18 +866,22 @@ public class QTIItemRenderer
 
       // complete the last page of questions
       svghooks.add( new SVGHooks() );
-      paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
 
-      boolean doublesided = options.getQTIRenderBooleanOption("double_sided");
+      boolean doublesided = exam.getQTIRenderBooleanOption("double_sided");
       boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
       
       
       if ( (svghooks.size() & 1) == 1 && doublesided )
       {
         has_blank = true;
-        GenericDocument blanksvg = renderSpecialPage( "org/qyouti/qti1/gui/blank.xhtml", options );
+        GenericDocument blanksvg = renderSpecialPage("org/qyouti/qti1/gui/blank.xhtml", exam );
         // start a page
-        if ( paginationrecord != null ) paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        {
+          pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+          exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+        }
         page = new Vector<SVGDocumentPlacement>();
         
         // create some SVG
@@ -873,7 +889,7 @@ public class QTIItemRenderer
 
         // complete page
         svghooks.add( new SVGHooks() );
-        paginated.add( QTIItemRenderer.placeSVGOnPage( page, false, options, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
       }
 
       String footer;
@@ -882,9 +898,9 @@ public class QTIItemRenderer
         if ( i==0 && multipage && svghooks.get( i ).staplegroupelement != null )
           addStaple( svghooks.get( i ).staplegroupelement );
         footer = "";
-        if ( options.getQTIRenderBooleanOption( "name_in_footer" ) )
+        if ( exam.getQTIRenderBooleanOption( "name_in_footer" ) )
           footer += candidate.name + "   ";
-        if ( options.getQTIRenderBooleanOption( "id_in_footer" ) )
+        if ( exam.getQTIRenderBooleanOption( "id_in_footer" ) )
           footer += candidate.id + "\u00a0\u00a0\u00a0\u00a0";
         footer += "Page " + (i+1) + " of " + svghooks.size();
         svghooks.get(i).footertextelement.setTextContent( footer );

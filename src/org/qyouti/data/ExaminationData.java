@@ -79,8 +79,8 @@ public class ExaminationData
   public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
   public QuestionDefinitions qdefs = null;
-  public Hashtable<String, QuestionAnalysis> analysistable = null;
-  public Vector<QuestionAnalysis> analyses = null;
+  public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
+  public QuestionAnalysisTable analysistable = new QuestionAnalysisTable( analyses );
   File examfile;
   File scanfolder;
   File responsefolder;
@@ -213,8 +213,13 @@ public class ExaminationData
               response.getImageFile().delete();
           }
         }
+        page.questions.clear();
+        page.scanned = false;
+        page.processed = false;
+        page.error = null;
+        page.source = null;
       }
-      candidate.pages.clear();
+      //candidate.pages.clear();
     }
     
     pages.clear();
@@ -233,6 +238,20 @@ public class ExaminationData
     
     scans.clear();
   }
+
+  public void forgetPrint()
+  {
+    CandidateData candidate;
+    
+    setLastPrintID( null );
+    for ( int i = 0; i < candidates_sorted.size(); i++ )
+    {
+      candidate = candidates_sorted.get( i );
+      candidate.pages.clear();
+    }
+    pages.clear();
+    pagemap.clear();
+  }
   
   public int getPageCount()
   {
@@ -243,6 +262,17 @@ public class ExaminationData
   {
     pages.add( page );
     pagemap.put( page.pageid, page );
+  }
+  
+  public PageData createPage(
+                    String printid,
+                    String pageid,
+                    CandidateData candidate )
+  {
+    PageData page = new PageData( this, printid, pageid, candidate );
+    addPage( page );
+    linkPageToCandidate( page );
+    return page;
   }
   
   public void replacePage( int p, PageData page )
@@ -351,22 +381,24 @@ public class ExaminationData
 
 
 
-  public void itemAnalysis()
+  public String itemAnalysis()
   {
     if (qdefs == null)
     {
-      return;
+      return null;
     }
     if (qdefs.qti == null)
     {
-      return;
+      return null;
     }
-    analyses = new Vector<QuestionAnalysis>();
-    analysistable = new Hashtable<String, QuestionAnalysis>();
+    analyses.clear();
+    analysistable.setSelectedQuestion( null );
 
     qdefs.itemAnalysis(candidates_sorted, analyses);
     ResponseAnalysis ranal;
-    System.out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 90% limit\",\"Upper 90% limit\",,,,,,,\n");
+    StringWriter writer = new StringWriter();
+    PrintWriter out = new PrintWriter( writer );
+    out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 90% limit\",\"Upper 90% limit\",,,,,,,\n");
     for (int i = 0; i < analyses.size(); i++)
     {
       for (int j = 0; j < analyses.get(i).response_analyses.size(); j++)
@@ -375,70 +407,72 @@ public class ExaminationData
 
         if (j == 0)
         {
-          System.out.print("\"" + analyses.get(i).title + "\"");
+          out.print("\"" + analyses.get(i).title + "\"");
         } else
         {
-          System.out.print("\"\"");
+          out.print("\"\"");
         }
-        System.out.print(",\"");
-        System.out.print((char) ('a' + ranal.offset - 1));
-        System.out.print("\",");
-        System.out.print(ranal.correct ? "\"T\"" : "\"F\"");
-        System.out.print(",");
-        System.out.print(ranal.right);
-        System.out.print(",");
-        System.out.print(ranal.wrong);
-        System.out.print(",");
+        out.print(",\"");
+        out.print((char) ('a' + ranal.offset - 1));
+        out.print("\",");
+        out.print(ranal.correct ? "\"T\"" : "\"F\"");
+        out.print(",");
+        out.print(ranal.right);
+        out.print(",");
+        out.print(ranal.wrong);
+        out.print(",");
         if ((ranal.right + ranal.wrong) > 0)
         {
-          System.out.print((double) ranal.right / (double) (ranal.right + ranal.wrong));
+          out.print((double) ranal.right / (double) (ranal.right + ranal.wrong));
         }
 
         if (ranal.right < 2 || ranal.wrong < 2)
         {
-          System.out.print(",,,");
+          out.print(",,,");
           if (ranal.right + ranal.wrong < 10)
           {
-            System.out.print(",*,,,,,,");
+            out.print(",*,,,,,,");
           } else
           {
             if (ranal.right > ranal.wrong)
             {
-              System.out.print(",,*,,,,,");
+              out.print(",,*,,,,,");
             } else if (ranal.right < ranal.wrong)
             {
-              System.out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
+              out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
             } else
             {
-              System.out.print(",*,,,,,,");
+              out.print(",*,,,,,,");
             }
           }
         } else
         {
-          System.out.print(",");
-          System.out.print(ranal.median_difference);
-          System.out.print(",");
-          System.out.print(ranal.median_difference_lower);
-          System.out.print(",");
-          System.out.print(ranal.median_difference_upper);
+          out.print(",");
+          out.print(ranal.median_difference);
+          out.print(",");
+          out.print(ranal.median_difference_lower);
+          out.print(",");
+          out.print(ranal.median_difference_upper);
           if (ranal.median_difference_lower >= 0.0 && ranal.median_difference_upper > 0.0)
           {
-            System.out.print(",,,,*,,,\"Positive discriminator.\"");
+            out.print(",,,,*,,,\"Positive discriminator.\"");
           } else if (ranal.median_difference_upper <= 0.0 && ranal.median_difference_lower < 0.0)
           {
-            System.out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
+            out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
           } else
           {
-            System.out.print(",,,,,,*,");
+            out.print(",,,,,,*,");
           }
         }
-        System.out.print("\n");
+        out.print("\n");
         if ((j + 1) == analyses.get(i).response_analyses.size())
         {
-          System.out.print(",,,,,,,,,,,,,,\n");
+          out.print(",,,,,,,,,,,,,,\n");
         }
       }
     }
+    out.close();
+    return writer.getBuffer().toString();
   }
 
   public void importCandidates(List<CandidateData> list)
@@ -1481,16 +1515,22 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public CandidateData linkPageToCandidate(PageData page)
   {
     if ( page.candidate_number == null )
-        return null;
+      return null;
     
     CandidateData candidate = candidates.get(page.candidate_number);
     if (candidate == null)
     {
-      candidate = new CandidateData(this, page.candidate_name, page.candidate_number, false);
-      candidate.outcomes.addTableModelListener( outcomelistener );
-      candidates.put(page.candidate_number, candidate);
-      candidates_sorted.add(candidate);
-      sortCandidates();
+      page.candidate = null;
+      return null;
+      
+      // do not add a candidate like this - if we lost the record of this
+      // candidate then que sera sera
+      
+//      candidate = new CandidateData(this, page.candidate_name, page.candidate_number, false);
+//      candidate.outcomes.addTableModelListener( outcomelistener );
+//      candidates.put(page.candidate_number, candidate);
+//      candidates_sorted.add(candidate);
+//      sortCandidates();
     }
     // forward link
     page.candidate = candidate;
@@ -1964,7 +2004,12 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
     int on = columnIndex-4;
     if ( on>=0 && on<outcomenames.size() )
-      return candidate.outcomes.getDatum( outcomenames.get( on ) ).value.toString();
+    {
+      if ( candidate.outcomes == null ) return null;
+      OutcomeDatum d = candidate.outcomes.getDatum( outcomenames.get( on ) );
+      if ( d == null || d.value == null ) return null;
+      return d.value.toString();
+    }
     return null;
   }
   

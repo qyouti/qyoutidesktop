@@ -21,7 +21,7 @@ public class PageListModel
 
   private static final String[] column_headings =
   {
-    "No.", "File", "Code", "Error"
+    "Page ID", "Barcode", "Candidate", "Scanned", "Scan File", "Error"
   };
 
   Vector<PageData> pages = new Vector<PageData>();
@@ -73,12 +73,16 @@ public class PageListModel
     switch( columnIndex )
     {
       case 0:
-        return "ident";
+        return page.pageid;
       case 1:
-        return page.source;
-      case 2:
         return page.code;
+      case 2:
+        return page.candidate_name;
       case 3:
+        return page.scanned?"yes":"no";
+      case 4:
+        return page.source;
+      case 5:
         return page.error;
     }
     return null;

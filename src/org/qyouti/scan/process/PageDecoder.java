@@ -139,11 +139,10 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
   public PageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws IOException
   {
-    int i, j;
-    PageData page;
+    int i;
+    PageData page=null;
     ZXingResult barcoderesult;
     Rectangle r;
-    Rectangle[] quadrants = new Rectangle[4];
     Rectangle[] barcodesearchrect = new Rectangle[4];
     int ih = image.getHeight();
     int iw = image.getWidth();
@@ -151,8 +150,12 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     Point bull_tl=null, bull_bl=null, bull_br=null;
     double bradius_pixels = 1;
     
+    String code;
+    String printid;
+    String pageid;
+    
     // Initialise the page record that this method builds up
-    page = new PageData( exam, ifd.getImportedname() );
+    //page = new PageData( exam, ifd.getImportedname() );
 
     // Look for the bar code in a strip down the left side or in case
     // the scan was made with a rotation look in strips on the other
@@ -175,29 +178,44 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       System.out.println( "Barcode orientation: " + barcoderesult.getOrientation() );
       
       System.out.println( "Barcode = {" + barcoderesult.getText() + "}" );
-      page.code = barcoderesult.getText();
-      StringTokenizer ptok = new StringTokenizer( page.code, "/" );
+      code = barcoderesult.getText();
+      StringTokenizer ptok = new StringTokenizer( code, "/" );
       try
       {
         if ( !"qyouti".equals( ptok.nextToken() ) )
         {
-          ifd.setError( "Non-qyouti barcode found '" + page.code + "'." );
+          ifd.setError( "Non-qyouti barcode found '" + code + "'." );
           return null;        
         }                
-        page.printid = ptok.nextToken();
-        page.pageid = ptok.nextToken();
+        printid = ptok.nextToken();
+        pageid = ptok.nextToken();
       }
       catch ( NoSuchElementException nsee )
       {
-        ifd.setError( "Unable to parse text in the barcode '" + page.code + "'." );
+        ifd.setError( "Unable to parse text in the barcode '" + code + "'." );
         return null;        
       }
       
-      if ( !page.printid.equals( exam.getLastPrintID() ) )
+      if ( !printid.equals( exam.getLastPrintID() ) )
       {
-        ifd.setError( "The printid in the barcode does not match this exam/survey '" + page.printid + "'." );
+        ifd.setError( "The printid in the barcode does not match this exam/survey '" + printid + "'." );
         return null;                
       }
+      
+      // now we can look up the PrintData object...
+      page = exam.lookUpPage( pageid );
+      if ( page == null )
+      {
+        ifd.setError( "Unable to find the page in the print record " + pageid + "'." );
+        return null;                
+      }      
+      
+      if ( page.scanned )
+      {
+        ifd.setError( "A scan for this page ID has already been imported " + pageid + "'." );
+        return null;                
+      }      
+      page.scanned=true;
       
       // use printid and pageid to get information about the page...
       page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
@@ -207,13 +225,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
       {
         ifd.setError( "Cannot find the pagination data file for this page." );
-        return null;
-      }
-
-      PageData otherpage = exam.lookUpPage( page.pageid );
-      if ( otherpage != null )
-      {
-        ifd.setError( "Page has already been imported. '" + page.pageid + "'" );
         return null;
       }
       
@@ -234,7 +245,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page.candidate_name = page.candidate.name;      
       page.declared_calibration_width  = caldim[0];
       page.declared_calibration_height = caldim[1];
-      page.page_number = prpage.getPagenumber();
 
       
       // Now is the time to flip/rotate the image.
