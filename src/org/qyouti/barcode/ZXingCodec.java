@@ -271,7 +271,8 @@ public class ZXingCodec
     g.appendChild( doc.createTextNode( "\n" ) );
 
     Element mark;
-
+    double swellx = matrix.getWidth()  == 1 ?1.0:1.1;
+    double swelly = matrix.getHeight() == 1 ?1.0:1.1;
     for (int i = 0; i < matrix.getWidth(); i++)
     {
       for (int j = 0; j < matrix.getHeight(); j++)
@@ -281,8 +282,8 @@ public class ZXingCodec
           mark = doc.createElementNS(svgNS, "rect" );
           mark.setAttribute("x", Double.toString(((double)(i - refpixx) - 0.5) * mark_w ) );
           mark.setAttribute("y", Double.toString(((double)(j - refpixy) - 0.5) * mark_h ) );
-          mark.setAttribute("width",  Double.toString(mark_w * 1.1 ) );
-          mark.setAttribute("height", Double.toString(mark_h * 1.1 ) );
+          mark.setAttribute("width",  Double.toString( mark_w * swellx ) );
+          mark.setAttribute("height", Double.toString( mark_h * swelly ) );
           mark.setAttribute( "stroke", "black" );
           mark.setAttribute( "stroke-width", "0.0" );
           mark.setAttribute( "fill", "black" );
