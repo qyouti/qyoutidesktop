@@ -161,9 +161,9 @@ public class QTIItemRenderer
     state.ignore_flow = options.getQTIRenderBooleanOption("ignore_flow");
     //state.break_response_labels = options.getQTIRenderBooleanOption("break_response_labels");
     renderElement(presentation, state);
-//    System.out.println("===============================================");
-//    System.out.println(state.html);
-//    System.out.println("===============================================");
+    System.out.println("===============================================");
+    System.out.println(state.html);
+    System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
     TextPaneWrapper textPane = new TextPaneWrapper();
@@ -766,7 +766,7 @@ public class QTIItemRenderer
             (preamble!=null)?preamble:"" );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
         
         // get a blank page ready for questions...
         page = new Vector<SVGDocumentPlacement>();
@@ -829,7 +829,7 @@ public class QTIItemRenderer
           {
             // finish off the page
             svghooks.add( new SVGHooks() );
-            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
+            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
             
             // start a new page for this question
             if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
@@ -866,7 +866,7 @@ public class QTIItemRenderer
 
       // complete the last page of questions
       svghooks.add( new SVGHooks() );
-      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
+      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
 
       boolean doublesided = exam.getQTIRenderBooleanOption("double_sided");
       boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
@@ -889,7 +889,7 @@ public class QTIItemRenderer
 
         // complete page
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
       }
 
       String footer;
@@ -959,6 +959,7 @@ public class QTIItemRenderer
           Vector<SVGDocumentPlacement> itemdocs , 
           boolean rulers, 
           QTIRenderOptions options,
+          UserRenderPreferences userprefs,
           PaginationRecord paginationrecord,
           SVGHooks hooks
         )
@@ -971,6 +972,13 @@ public class QTIItemRenderer
 
     double widthinches = getMetrics().getPropertyInches("page-width") + rulerwidth;
     double heightinches = getMetrics().getPropertyInches("page-height") + rulerheight;
+    
+    String backgroundrgb = "rgb(255,255,255)";
+    if ( userprefs != null && userprefs.getBackground() != null )
+    {
+      Color colour = userprefs.getBackground();
+      backgroundrgb = "rgb(" + colour.getRed() + "," + colour.getGreen() + "," + colour.getBlue() + ")";
+    } 
 
     AbstractElement svg = (AbstractElement) pdoc.getDocumentElement();
     //        (org.w3c.dom.Element) docpreview.removeChild(docpreview.getDocumentElement());
@@ -1005,7 +1013,7 @@ public class QTIItemRenderer
     r.setAttribute("y", "0" );
     r.setAttribute( "stroke", "rgb(0,0,0)" );
     r.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.02 ) );
-    r.setAttribute( "fill", "rgb(255,255,255)" );
+    r.setAttribute( "fill", backgroundrgb );
     r.setAttribute( "width",  "" + getMetrics().getPropertySvgUnitsInt("page-width") );
     r.setAttribute( "height", "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( r );
@@ -1261,7 +1269,7 @@ public class QTIItemRenderer
 
     SVGDocumentPlacement dp = new SVGDocumentPlacement((GenericDocument) svgres.getDocument().cloneNode(true), itemareinsetleft, itemareinsettop );
     v.add( dp );
-    return placeSVGOnPage( v, true, options, null, null );
+    return placeSVGOnPage( v, true, options, null, null, null );
   }
 
   public SvgConversionResult getSVGResult()
