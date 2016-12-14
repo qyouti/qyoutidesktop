@@ -13,6 +13,7 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 import javax.swing.*;
+import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import org.apache.batik.dom.*;
@@ -293,7 +294,7 @@ public class QyoutiFrame
       System.out.println( "Clear candidate panel" );
       cdetailnamelabel.setText( "" );
       cdetailidlabel.setText( "" );
-      cdetailoutcometable.setModel( new OutcomeData() );
+      cdetailoutcometable.setModel( null );
       cdetailerrorlabel.setText( "" );
     }
   }
@@ -339,6 +340,9 @@ public class QyoutiFrame
     jSplitPane3 = new javax.swing.JSplitPane();
     sp1 = new javax.swing.JScrollPane();
     questiontable = new javax.swing.JTable();
+    jPanel2 = new javax.swing.JPanel();
+    questionanalysistoppane = new javax.swing.JPanel();
+    jLabel4 = new javax.swing.JLabel();
     jScrollPane4 = new javax.swing.JScrollPane();
     analysistable = new javax.swing.JTable();
     ctab = new javax.swing.JPanel();
@@ -461,6 +465,13 @@ public class QyoutiFrame
 
     jSplitPane3.setLeftComponent(sp1);
 
+    jPanel2.setLayout(new java.awt.BorderLayout());
+
+    jLabel4.setText("Results of Statistical Analysis for Selected Question");
+    questionanalysistoppane.add(jLabel4);
+
+    jPanel2.add(questionanalysistoppane, java.awt.BorderLayout.NORTH);
+
     analysistable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
       {
@@ -476,7 +487,9 @@ public class QyoutiFrame
     ));
     jScrollPane4.setViewportView(analysistable);
 
-    jSplitPane3.setRightComponent(jScrollPane4);
+    jPanel2.add(jScrollPane4, java.awt.BorderLayout.CENTER);
+
+    jSplitPane3.setRightComponent(jPanel2);
 
     qtab.add(jSplitPane3, java.awt.BorderLayout.CENTER);
 
@@ -1441,8 +1454,7 @@ public class QyoutiFrame
 
     exam.clearPages();
     exam.save();
-    exam.pagelistmodel.
-            fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+    exam.processDataChanged( exam.pagelistmodel );
   }//GEN-LAST:event_clearscanneddatamenuitemActionPerformed
 
   private void forgetprintmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_forgetprintmenuitemActionPerformed
@@ -1649,7 +1661,7 @@ public class QyoutiFrame
       exam.updateOutcomes();
     }
     exam.setUnsavedChanges( true );
-    exam.qdefs.fireTableDataChanged();
+    exam.processDataChanged( exam.qdefs );
   }
 
   /**
@@ -1750,6 +1762,26 @@ public class QyoutiFrame
       }
       analysistable.setModel( exam.analysistable );
       analysistable.getTableHeader().setDefaultRenderer( new VerticalTextTableCellRenderer() );
+      analysistable.setRowHeight( 48 );
+      analysistable.setDefaultRenderer( String.class, new TableCellRenderer() {
+        JLabel label=null;
+        @Override
+        public Component getTableCellRendererComponent( JTable table,
+                                                        Object value,
+                                                        boolean isSelected,
+                                                        boolean hasFocus,
+                                                        int row, int column )
+        {
+          Dimension d;
+          if ( label == null )
+          {
+            label = new JLabel();
+            label.setHorizontalAlignment( JLabel.CENTER );
+          }
+          label.setText( value.toString() );
+          return label;
+        }
+      } );
 
     }
     catch ( Exception ex )
@@ -1847,8 +1879,10 @@ public class QyoutiFrame
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel3;
+  private javax.swing.JLabel jLabel4;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
+  private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
   private javax.swing.JScrollPane jScrollPane1;
@@ -1873,6 +1907,7 @@ public class QyoutiFrame
   private javax.swing.JPanel ptab;
   private javax.swing.JPanel qrpanelouter;
   private javax.swing.JPanel qtab;
+  private javax.swing.JPanel questionanalysistoppane;
   private javax.swing.JPanel questionreviewpanel;
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
