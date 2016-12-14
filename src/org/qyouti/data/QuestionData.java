@@ -59,13 +59,14 @@ public class QuestionData
   public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
   public Hashtable<String,ResponseData> responsedatatable = new Hashtable<String,ResponseData>();
 
-  public OutcomeData outcomes = new OutcomeData();
+  public OutcomeData outcomes;
 
   public QuestionData( PageData page )
   {
     this.page = page;
+    outcomes = new OutcomeData( page.exam );
     page.questions.add( this );
-    page.exam.fireTableDataChanged();
+    page.exam.processDataChanged( this );
   }
 
 
@@ -91,6 +92,7 @@ public class QuestionData
 //    for ( int j=0; j<responses.size(); j++ )
 //      responses.get( j ).filterImage( page.blackness, page.lightestredmean );
 
+    outcomes = new OutcomeData( page.exam );
     nl = element.getElementsByTagName( "outcome" );
     OutcomeDatum outcome;
     for ( int j=0; j<nl.getLength(); j++ )
@@ -100,7 +102,7 @@ public class QuestionData
     }
     
     page.questions.add( this );
-    page.exam.fireTableDataChanged();
+    page.exam.processDataChanged( this );
   }
 
   private File getFile( String fname )
@@ -142,8 +144,7 @@ public class QuestionData
     this.examinerdecision = examinerdecision;
     page.candidate.processAllResponses();
     // which row?  Don't know.
-    page.exam.reviewlist.fireTableRowsUpdated( 0, page.exam.reviewlist.getRowCount()-1 );
-    fireTableRowsUpdated( 0, getRowCount() );
+    page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
   }
 
   
@@ -241,7 +242,7 @@ public class QuestionData
       //System.out.println( "Value " + outcomedata.value );
       outcomes.addDatum( outcomedata );
     }
-    outcomes.fireTableDataChanged();
+    page.exam.processDataChanged( this );
   }
 
   public int getOutcomeCount()

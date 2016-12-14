@@ -50,6 +50,7 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.fop.apps.*;
+import org.qyouti.clipboard.*;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -80,7 +81,7 @@ public class ExaminationData
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
-  public QuestionAnalysisTable analysistable = new QuestionAnalysisTable( analyses );
+  public QuestionAnalysisTable analysistable = new QuestionAnalysisTable( this, analyses );
   File examfile;
   File scanfolder;
   File responsefolder;
@@ -89,7 +90,7 @@ public class ExaminationData
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
-  public ImageFileTable scans = new ImageFileTable();
+  public ImageFileTable scans = new ImageFileTable( this );
   
   Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
 
@@ -104,7 +105,7 @@ public class ExaminationData
   OutcomeDataListener outcomelistener = new OutcomeDataListener();
   ArrayList<String> outcomenames = new ArrayList<String>();
  
-  public QuestionReviewTable reviewlist = new QuestionReviewTable();
+  public QuestionReviewTable reviewlist = new QuestionReviewTable( this );
   
   int nextscanfileident = 10000;
   
@@ -126,6 +127,55 @@ public class ExaminationData
     default_options.setProperty( "columns", "1" );
   }
 
+  // Gather all use of "fireTable***" to methods here to make it hard to
+  // forget that changes in one table may involve changes in others...
+  public void processRowsInserted( ImageFileTable model, int first, int last )
+  {
+    model.fireTableRowsInserted( first, last );
+  }  
+  public void processRowsInserted( OutcomeData model, int first, int last )
+  {
+    model.fireTableRowsInserted( first, last );
+  }
+  public void processRowsDeleted( OutcomeData model, int first, int last )
+  {
+    model.fireTableRowsDeleted( first, last );
+  }
+  public void processDataChanged( OutcomeData model )
+  {
+    model.fireTableDataChanged();
+  }
+  public void processDataChanged( PageListModel model )
+  {
+    model.fireTableDataChanged();
+  }
+  public void processDataChanged( QuestionAnalysisTable model )
+  {
+    model.fireTableDataChanged();
+  }
+  public void processDataChanged( QuestionDefinitions model )
+  {
+    model.fireTableDataChanged();
+  }
+  public void processDataChanged( QuestionData model )
+  {
+    model.fireTableDataChanged();
+  }
+  public void processRowsUpdated( QuestionData model, int first, int last )
+  {
+    reviewlist.fireTableRowsUpdated( 0, reviewlist.getRowCount()-1 );    
+    model.fireTableRowsUpdated( first, last );
+  }
+  public void processRowsInserted( QuestionReviewTable model, int first, int last )
+  {
+    model.fireTableRowsInserted( first, last );
+  }
+  public void processRowsDeleted( QuestionReviewTable model, int first, int last )
+  {
+    model.fireTableRowsDeleted( first, last );
+  }
+  
+  
   public String getNextScanFileIdent()
   {
     return Integer.toString( nextscanfileident++ );

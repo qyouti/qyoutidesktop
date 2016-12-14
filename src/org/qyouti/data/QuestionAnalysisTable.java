@@ -14,24 +14,26 @@ import javax.swing.table.*;
  */
 public class QuestionAnalysisTable extends AbstractTableModel
 {
+  ExaminationData exam;
   int selection = -1;
   List<QuestionAnalysis> analyses;
 
   static String[] columnnames = 
   {
-    "Question",
+    "Question                     ",
     "Option",
     "True/False",
     "No. Students Right",
     "No. Students Wrong",
     "%Class Right",
-    "Median Aptitude Difference",
+    "Diff. in Median Aptitude",
     "Lower 90% Limit",
     "Upper 90% Limit"
   };
   
-  public QuestionAnalysisTable( List<QuestionAnalysis> analyses )
+  public QuestionAnalysisTable( ExaminationData exam, List<QuestionAnalysis> analyses )
   {
+    this.exam = exam;
     this.analyses = analyses;
   }
   
@@ -47,7 +49,7 @@ public class QuestionAnalysisTable extends AbstractTableModel
           break;
         }
     }
-    this.fireTableDataChanged();
+    exam.processDataChanged( this );
   }
   
   @Override

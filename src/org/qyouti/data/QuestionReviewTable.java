@@ -21,7 +21,13 @@ public class QuestionReviewTable
     QuestionData questiondata;
   }
   
+  ExaminationData exam;
   ArrayList<QuestionReviewItem> list = new ArrayList<QuestionReviewItem>();
+
+  public QuestionReviewTable( ExaminationData exam )
+  {
+    this.exam = exam;
+  }
   
   public void clear()
   {
@@ -29,7 +35,7 @@ public class QuestionReviewTable
     
     int n = list.size()-1;
     list.clear();
-    fireTableRowsDeleted( 0, n );
+    exam.processRowsDeleted( this, 0, n );
   }
   
   public void add( CandidateData candidatedata, QuestionData questiondata )
@@ -38,7 +44,7 @@ public class QuestionReviewTable
     item.candidatedata = candidatedata;
     item.questiondata = questiondata;
     list.add( item );
-    fireTableRowsInserted( list.size()-1, list.size()-1 );
+    exam.processRowsInserted( this, list.size()-1, list.size()-1 );
   }
   
   public CandidateData getCandidateData( int i )

@@ -52,7 +52,7 @@ public class CandidateData
   public boolean anonymous;
 
   public Double score = null;
-  public OutcomeData outcomes = new OutcomeData();
+  public OutcomeData outcomes = null;
 
   public UserRenderPreferences preferences = null;
 
@@ -68,6 +68,7 @@ public class CandidateData
     this.anonymous = anonymous;
     this.score = null;
     this.preferences = null;
+    outcomes = new OutcomeData( exam );
   }
 
 
@@ -121,6 +122,8 @@ public class CandidateData
         addPage( page );
       }
     }
+
+    outcomes = new OutcomeData( exam );
     nl = element.getElementsByTagName( "outcome" );
     OutcomeDatum outcome;
     for ( int j=0; j<nl.getLength(); j++ )
@@ -484,7 +487,7 @@ public class CandidateData
       //System.out.println( "Value " + outcomedata.value );
       outcomes.addDatum( outcomedata );
     }
-    outcomes.fireTableDataChanged();
+    exam.processDataChanged( outcomes );
 
 
     score = null;

@@ -14,12 +14,18 @@ import javax.swing.table.*;
  */
 public class ImageFileTable extends AbstractTableModel
 {
+  private ExaminationData exam;
   private ArrayList<ImageFileData> scans = new ArrayList<ImageFileData>();
+
+  public ImageFileTable( ExaminationData exam )
+  {
+    this.exam = exam;
+  }
 
   public void add( ImageFileData data )
   {
     scans.add( data );
-    fireTableRowsInserted( scans.size()-1, scans.size()-1 );
+    exam.processRowsInserted( this, scans.size()-1, scans.size()-1 );
   }
   
   public int size()
@@ -36,7 +42,7 @@ public class ImageFileTable extends AbstractTableModel
   {
     int size = scans.size();
     scans.clear();
-    fireTableRowsInserted( 0, size );
+    exam.processRowsInserted( this, 0, size );
   }
   
   @Override
