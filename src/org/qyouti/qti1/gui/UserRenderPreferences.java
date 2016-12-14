@@ -5,6 +5,7 @@
 
 package org.qyouti.qti1.gui;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.Writer;
 import org.w3c.dom.Element;
@@ -18,6 +19,7 @@ public class UserRenderPreferences
   boolean serif=false;
   double fontsize;
   boolean bigpinkbox=false;
+  Color background=null;
 
   String packed=null;
   int hash;
@@ -34,6 +36,12 @@ public class UserRenderPreferences
     serif = "true".equals(s);
     s = element.getAttribute( "bigpinkbox" );
     bigpinkbox = "true".equals(s);
+    s = element.getAttribute( "background" );
+    if ( s.startsWith( "0x" ) )
+    {
+      int hex = Integer.parseInt( s.substring( 2 ), 16 );
+      background = new Color( hex );
+    }
   }
 
   public void emit( Writer writer )
@@ -46,6 +54,8 @@ public class UserRenderPreferences
       writer.write( " serif=\"true\"" );
     if ( bigpinkbox )
       writer.write( " bigpinkbox=\"true\"" );
+    if ( background != null )
+      writer.write( " background=\"0x" + Integer.toString( background.getRGB(), 16 ) + "\"" );
     writer.write( "/>\n" );
   }
 
@@ -53,6 +63,7 @@ public class UserRenderPreferences
   {
     if ( packed != null ) return packed;
     packed = "v2_" + Double.toString(fontsize) + (serif?"_s":"") + (bigpinkbox?"_b":"");
+    if ( background != null ) packed += "_c" + Integer.toString( background.getRGB(), 16 );
     hash = packed.hashCode();
     return packed;
   }
@@ -87,6 +98,16 @@ public class UserRenderPreferences
     this.bigpinkbox = bigpinkbox;
   }
 
+  public Color getBackground()
+  {
+    return background;
+  }
+
+  public void setBackground( Color background )
+  {
+    this.background = background;
+  }
+
   
   
   @Override
@@ -95,7 +116,7 @@ public class UserRenderPreferences
     if ( obj == null ) return false;
     if ( !(obj instanceof UserRenderPreferences)) return false;
     UserRenderPreferences other = (UserRenderPreferences)obj;
-    return this.serif == other.serif && this.fontsize == other.fontsize;
+    return this.packedRepresentation().equals( other.packedRepresentation() );
   }
 
 

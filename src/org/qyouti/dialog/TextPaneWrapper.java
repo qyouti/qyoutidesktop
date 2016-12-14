@@ -26,6 +26,9 @@ public class TextPaneWrapper
     {
       super();
       setOpaque(false);
+      // making not opaque doesn't seem to work so we set the background
+      // colour with zero alpha channel to supress background drawing.
+      setBackground( new Color( 255, 255, 255, 0 ) );
       setContentType("text/html");
       //setText(html);
     }

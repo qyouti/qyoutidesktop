@@ -12,6 +12,7 @@ import java.util.logging.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.*;
 import org.apache.fop.svg.*;
+import org.apache.pdfbox.io.*;
 import org.apache.pdfbox.multipdf.*;
 import org.apache.pdfbox.util.*;
 import org.qyouti.*;
@@ -75,23 +76,28 @@ public class PrintThread extends Thread
             //qmrset,
             paginationrecord,
             exam.getPreamble() );
+        System.out.println( "SVG Ready" );
         for ( int i=0; i<paginated.size(); i++ )
         {
           pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p++ + ".pdf" );
           pagefiles.add( pagefile );
+          System.out.println( "Transcoding page " + (i+1) + " to " + pagefile.getAbsolutePath() );
           tinput = new TranscoderInput( paginated.get( i ) );
           transout = new TranscoderOutput( new FileOutputStream( pagefile ) );
           pdft.transcode( tinput, transout );
           transout.getOutputStream().close();
           paginated.set(i, null);
+          System.out.println( "Page done." );
         }
         paginated.clear();
       }
 
+      System.out.println( "Merging all candidates, all pages...." );
       for ( int i=0; i<pagefiles.size(); i++ )
         pdfmerger.addSource( pagefiles.get( i ) );
 
-      pdfmerger.mergeDocuments();
+      pdfmerger.mergeDocuments( MemoryUsageSetting.setupMixed( 100L * 1024L * 1024L ) );
+      //pdfmerger.mergeDocuments();
 
       for ( int i=0; i<pagefiles.size(); i++ )
         pagefiles.get( i ).delete();
@@ -100,6 +106,7 @@ public class PrintThread extends Thread
       //transout.getOutputStream().close();
       exam.setLastPrintID( printid );
 
+      System.out.println( "Recording pagination data." );
 
       FileWriter writer;
       File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
@@ -111,8 +118,13 @@ public class PrintThread extends Thread
       writer = new FileWriter( pagrecfile );
       paginationrecord.emit(writer);
       writer.close();
-
-    } catch (Exception ex)
+    }
+    catch (TranscoderException te )
+    {
+      Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, te);      
+      Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, te.getException() );  
+    }
+    catch (Exception ex)
     {
       Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, ex);
     }
