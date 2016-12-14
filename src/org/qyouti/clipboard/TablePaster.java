@@ -16,6 +16,10 @@ import javax.swing.table.*;
  * clipboard data format used by the adapter is compatible with the clipboard
  * format used by Excel. This provides for clipboard interoperability between
  * enabled JTables and Excel.
+ * 
+ * At present TablePaster is the only subclass of AbstractTableModel which
+ * is not part of the data set referenced by an ExaminationData object. So,
+ * table event don't need to be coordinated with other data objects.
  */
 public class TablePaster
         extends AbstractTableModel
