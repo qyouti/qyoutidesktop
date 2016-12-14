@@ -22,7 +22,7 @@ public class VerticalTextTableCellRenderer implements TableCellRenderer
   public VerticalTextTableCellRenderer()
   {
     label = new VerticalTextLabel();
-    label.setBorder( new BevelBorder(BevelBorder.RAISED) );
+    //label.setBorder( new BevelBorder(BevelBorder.RAISED) );
   }
   
   @Override

@@ -22,8 +22,8 @@
  */
 package org.qyouti.scan;
 
-import com.sun.pdfview.PDFFile;
-import com.sun.pdfview.PDFPage;
+//import com.sun.pdfview.PDFFile;
+//import com.sun.pdfview.PDFPage;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.geom.*;
@@ -165,8 +165,8 @@ public class ScanTask
       FileInputStream fis;
       FileChannel fc;
       MappedByteBuffer bb;
-      PDFFile pdffile;
-      PDFPage pdfpage;
+//      PDFFile pdffile;
+//      PDFPage pdfpage;
       Image image;
       String uri;
       String newname;
@@ -215,8 +215,7 @@ public class ScanTask
 
           if ( !commandline )
           {
-            exam.pagelistmodel.
-                    fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+            exam.processDataChanged( exam.pagelistmodel );
           }
         }
       }
@@ -466,8 +465,7 @@ public class ScanTask
         // which candidate marks are dubious?
         exam.rebuildReviewList();
         exam.save();
-        exam.pagelistmodel.
-              fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+        exam.processDataChanged( exam.pagelistmodel );
       }
       catch ( IOException ex )
       {
@@ -593,9 +591,7 @@ public class ScanTask
           {
             page.source = newfile.toURI().toString();
           }
-
-          exam.pagelistmodel.
-                  fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+          exam.processDataChanged( exam.pagelistmodel );
         }
 
         if ( scanfilelist.get( i ).getName().endsWith( ".pdf" ) )
@@ -707,8 +703,7 @@ public class ScanTask
                 showMessageDialog( null, "Data will now be saved. Please do not shut down the software until complete." );
       }
       exam.save();
-      exam.pagelistmodel.
-              fireTableChanged( new TableModelEvent( exam.pagelistmodel ) );
+      exam.processDataChanged( exam.pagelistmodel );
       if ( !this.commandline )
       {
         JOptionPane.
