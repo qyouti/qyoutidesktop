@@ -57,6 +57,15 @@ public class QTIElementDecvar
     return domelement.getAttribute( "maxvalue" );
   }
 
+  public String getDefaultValue()
+  {
+    return domelement.getAttribute( "defaultval" );
+  }
+
+  public void setDefaultValue( String val )
+  {
+    domelement.setAttribute( "defaultval", val );
+  }
   
   public String getVarname()
   {

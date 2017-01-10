@@ -297,11 +297,19 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         
         System.out.println( "Trial bullseye radius = " + bradius_pixels + " pixels." );
         r = new Rectangle( approxcentre );
-        r.grow( (int)(bradius_pixels*2.5), (int)(bradius_pixels*2.5) );
+        r.grow( (int)(bradius_pixels*3.5), (int)(bradius_pixels*3.5) );
         r = r.intersection( page.scanbounds );
         BufferedImage searchimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
-        if ( false )
+
+        
+        BullseyeLocator bloc = new BullseyeLocator( searchimage, bradius_pixels, BullseyeGenerator.RADII );
+        points = bloc.locateBullseye();
+
+
+        if ( points.length != 1 )
         {
+          page.error = "Failed to find bullseye in corner " + (i+1) + " of page.";
+          ifd.setError( page.error );
           try
           {
             ImageIO.write(
@@ -309,21 +317,16 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
                         "jpg",
                         new File( exam.getExamFolder(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
                   );
-          } catch (IOException ex)
+            ImageIO.write(
+                        bloc.getVoteMapImage(),
+                        "jpg",
+                        new File( exam.getExamFolder(), "debug_bullseye_votes_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                  );          } catch (IOException ex)
           {
             Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-            page.error = "Technical error saving debug image.";
-            ifd.setError( page.error );
-            return page;
+            //page.error = "Technical error saving debug image.";
+            //ifd.setError( page.error );
           }
-        }
-        
-        BullseyeLocator bloc = new BullseyeLocator( searchimage, bradius_pixels, BullseyeGenerator.RADII );
-        points = bloc.locateBullseye();
-        if ( points.length != 1 )
-        {
-          page.error = "Failed to find bullseye in corner of page.";
-          ifd.setError( page.error );
           return page;
         }
         points[0].translate( r.x, r.y );
@@ -697,7 +700,9 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     xlocator.run();
     xlocator.removeProgressListener( listener );
 
-    for ( int i=0; i<debugimages.size(); i++ )
+    if ( false )
+    {
+      for ( int i=0; i<debugimages.size(); i++ )
       {
         try
         {
@@ -710,16 +715,17 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
       }
+    }
     
     int count=0;
     for ( int j=0; j<rlabels.length; j++ )
     {
       responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
       responsedata.debug_message = reports[j].toString();
-      responsedata.selected = reports[j].hasX();
+      responsedata.candidate_selected = reports[j].hasX();
       responsedata.examiner_selected = false;
       
-      if ( responsedata.selected )
+      if ( responsedata.candidate_selected )
       {
         count++;
         // Perhaps not a simple X
@@ -747,7 +753,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       for ( int j=0; j<rlabels.length; j++ )
       {
         responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-        if ( responsedata.selected )
+        if ( responsedata.candidate_selected )
           responsedata.needsreview = true;
       }
     }
@@ -809,8 +815,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           if ( next_darkest_ident == null || (next_darkest_dark_pixels / responseimageprocessor.darkest_dark_pixels) < 0.8 )
           {
             responsedata = questiondata.getResponseData( responseimageprocessor.darkest_ident );
-            responsedata.selected = true;
-            responsedata.examiner_selected = true;
+            responsedata.candidate_selected = true;
+            //responsedata.examiner_selected = true;
           }
         }
       }
@@ -821,8 +827,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         for ( int j=0; j<rlabels.length; j++ )
         {
           responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-          responsedata.selected = responsedata.dark_pixels > 0.05;
-          responsedata.examiner_selected = responsedata.selected;
+          responsedata.candidate_selected = responsedata.dark_pixels > 0.05;
+          //responsedata.examiner_selected = responsedata.candidate_selected;
         }
       }
 

@@ -123,13 +123,15 @@ public class QuestionDefinitions
           //System.out.println( "Candidate: " + candidate.id + "(" + candidate.score + ") " );
           if ( candidate.score == null )
             continue;
+          if ( candidate.score.doubleValue() == 0.0 )
+            continue;
           response = candidate.getResponse( item.getIdent(), j );
           if ( response != null )
           {
-            //System.out.println( (response.examiner_selected?"selected":"blank") );
+            //System.out.println( (response.examiner_selected?"candidate_selected":"blank") );
             if ( 
-                     ( response.examiner_selected && label.isCorrect() )
-                  || ( !response.examiner_selected && label.isIncorrect() )
+                     (  response.isSelected() && label.isCorrect() )
+                  || ( !response.isSelected() && label.isIncorrect() )
                )
             {
               candidates_right.add( candidate.score );

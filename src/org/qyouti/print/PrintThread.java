@@ -28,13 +28,30 @@ public class PrintThread extends Thread
   ExaminationData exam;
   File examfolder;
   QyoutiFrame frame;
+
+  public static final int TYPE_PAPERS = 0;
+  public static final int TYPE_ANALYSIS = 1;
   
+  int type = TYPE_PAPERS;
+          
   public PrintThread( ExaminationData exam, File examfolder )
   {
     super();
     this.exam = exam;
     this.examfolder = examfolder;
   }
+
+  public int getType()
+  {
+    return type;
+  }
+
+  public void setType( int type )
+  {
+    this.type = type;
+  }
+  
+  
   
   public void setQyoutiFrame( QyoutiFrame frame )
   {
@@ -56,22 +73,46 @@ public class PrintThread extends Thread
       TranscoderOutput transout;
       File pagefile;
       ArrayList<File> pagefiles = new ArrayList<>();
-      File pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
+      File pdffile;
+      if ( type == TYPE_ANALYSIS )
+        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + "_analysis.pdf" );
+      else
+        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
       PDFMergerUtility pdfmerger = new PDFMergerUtility();
       pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );        
-      PaginationRecord paginationrecord = new PaginationRecord(examfolder.getName());
-      String printid = paginationrecord.getPrintId();
+      PaginationRecord paginationrecord;
+      String printid;
+      if ( type == TYPE_ANALYSIS )
+      {
+        paginationrecord = null;
+        printid = "no id";
+      }
+      else
+      {
+        paginationrecord = new PaginationRecord(examfolder.getName());
+        printid = paginationrecord.getPrintId();
+      }
       PDFTranscoder pdft = new PDFTranscoder();
 
-      for ( int j=0; j<exam.candidates_sorted.size(); j++ )
+      java.util.Vector<CandidateData> candidates;
+      if ( type == TYPE_ANALYSIS )
       {
-        System.out.println( "Candidate " + (j+1) + " of " + exam.candidates_sorted.size() );
+        candidates = new java.util.Vector<CandidateData>();
+        candidates.add( null );
+      }
+      else
+        candidates = exam.candidates_sorted;
+      
+      for ( int j=0; j<candidates.size(); j++ )
+      {
+        System.out.println( "Candidate " + (j+1) + " of " + candidates.size() );
         System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
         paginated = QTIItemRenderer.paginateItems(
             this,
+            type,
             printid,
             examfolderuri,
-            exam.candidates_sorted.elementAt(j),
+            candidates.elementAt(j),
             exam,
             //qmrset,
             paginationrecord,
@@ -102,6 +143,9 @@ public class PrintThread extends Thread
       for ( int i=0; i<pagefiles.size(); i++ )
         pagefiles.get( i ).delete();
 
+      if ( paginationrecord == null )
+        return;
+      
       //pdftranscoder.complete();
       //transout.getOutputStream().close();
       exam.setLastPrintID( printid );

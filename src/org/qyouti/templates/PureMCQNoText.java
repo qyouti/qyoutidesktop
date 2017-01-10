@@ -22,11 +22,14 @@ public class PureMCQNoText
   boolean presentationeditenabled=false;
   boolean processingeditenabled=false;
   QTIElementItem item = null;
+  QTIElementDecvar scoredecvar = null;
   int optioncount;
   boolean changed=false;
 
   String itemtitle;  // Title as it was when dialog was opened
-  int itemoption;    // Option as it was...
+  int itemoption;    // Option as it was... no option indicated with -1
+  String defaultscore;  // as it was when opened
+  int override;
   JRadioButton[] buttons;  // variable number of buttons - depends on no. opts
   /**
    * Creates new instance
@@ -69,6 +72,11 @@ public class PureMCQNoText
         l.get( i ).setCorrect( false );
         l.get( i ).setIncorrect( true );
       }
+    }
+    
+    if ( scoredecvar != null )
+    {
+      scoredecvar.setDefaultValue( nocorrect1button.isSelected() ? "1.0" : "0.0" );
     }
     
     List<QTIElementVarequal> varequals =  item.findElements( QTIElementVarequal.class, true );
@@ -135,7 +143,36 @@ public class PureMCQNoText
         buttons[i].setSelected( true );
       }
     }
-    titlefield.setText( itemtitle );    
+    titlefield.setText( itemtitle );
+    
+    defaultscore="0.0";
+
+    Vector<QTIElementDecvar> decvars = item.findElements( QTIElementDecvar.class, true );
+    for ( i=0; i<decvars.size(); i++ )
+    {
+      if ( "SCORE".equals( decvars.get( i ).getVarname() ) )
+        scoredecvar = decvars.get( i );
+    }
+
+    if ( scoredecvar != null )
+      defaultscore = scoredecvar.getDefaultValue();
+    
+    if ( itemoption == -1 )
+    {
+      if ( "1.0".equals( defaultscore ) )
+      {
+        override = 1;
+        nocorrect1button.setSelected( true );
+      }
+      else
+      {
+        override = 0;
+        nocorrect0button.setSelected( true );
+      }
+    }
+    else
+      override = -1;
+            
     updateProcessingeditenabled();
   }  
 
@@ -153,7 +190,12 @@ public class PureMCQNoText
       if ( buttons[i].isSelected() )
           currentoption = i;
     String currenttitle = titlefield.getText();
-    changed =  currentoption != itemoption || !currenttitle.equals( itemtitle );
+    int currentoverride = -1;
+    if ( nocorrect0button.isSelected() )
+      currentoverride = 0;
+    if ( nocorrect1button.isSelected() )
+      currentoverride = 1;
+    changed =  currentoption != itemoption || currentoverride != override || !currenttitle.equals( itemtitle );
   }
   
   /**
@@ -165,6 +207,7 @@ public class PureMCQNoText
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents()
   {
+    java.awt.GridBagConstraints gridBagConstraints;
 
     buttongroup = new javax.swing.ButtonGroup();
     jPanel1 = new javax.swing.JPanel();
@@ -173,6 +216,9 @@ public class PureMCQNoText
     jPanel2 = new javax.swing.JPanel();
     correctlabel = new javax.swing.JLabel();
     radiobuttonpanel = new javax.swing.JPanel();
+    jPanel3 = new javax.swing.JPanel();
+    nocorrect1button = new javax.swing.JRadioButton();
+    nocorrect0button = new javax.swing.JRadioButton();
 
     jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Presentation"));
 
@@ -192,10 +238,31 @@ public class PureMCQNoText
     add(jPanel1);
 
     jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Response Processing"));
+    jPanel2.setLayout(new java.awt.GridBagLayout());
 
     correctlabel.setText("Correct Answer:");
-    jPanel2.add(correctlabel);
-    jPanel2.add(radiobuttonpanel);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
+    jPanel2.add(correctlabel, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 0;
+    jPanel2.add(radiobuttonpanel, gridBagConstraints);
+
+    buttongroup.add(nocorrect1button);
+    nocorrect1button.setText("Everyone 1 out of 1");
+    jPanel3.add(nocorrect1button);
+
+    buttongroup.add(nocorrect0button);
+    nocorrect0button.setText("Everyone 0 out of 0");
+    jPanel3.add(nocorrect0button);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridwidth = 2;
+    jPanel2.add(jPanel3, gridBagConstraints);
 
     add(jPanel2);
   }// </editor-fold>//GEN-END:initComponents
@@ -212,6 +279,9 @@ public class PureMCQNoText
   private javax.swing.JLabel correctlabel;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel jPanel3;
+  private javax.swing.JRadioButton nocorrect0button;
+  private javax.swing.JRadioButton nocorrect1button;
   private javax.swing.JPanel radiobuttonpanel;
   private javax.swing.JTextField titlefield;
   private javax.swing.JLabel titlelabel;

@@ -80,7 +80,8 @@ public class OutcomeData
     for ( int i=0; i<data.size(); i++ )
       if ( !data.get(i).fixed )
         data.remove( i-- );
-    exam.processRowsDeleted( this, 0, n );
+    if ( n > 0 )    
+      exam.processRowsDeleted( this, 0, n );
   }
   
   public void addDatum( OutcomeDatum datum )
