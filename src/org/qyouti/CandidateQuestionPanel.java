@@ -93,13 +93,13 @@ public class CandidateQuestionPanel
       switch ( questiondata.getExaminerDecision() )
       {
         case QuestionData.EXAMINER_DECISION_NONE:
-          reviewcombobox.setSelectedIndex( 0 );
+          decisionbuttona.setSelected( true );
           break;
         case QuestionData.EXAMINER_DECISION_STAND:
-          reviewcombobox.setSelectedIndex( 1 );
+          decisionbuttonb.setSelected( true );
           break;            
         case QuestionData.EXAMINER_DECISION_OVERRIDE:
-          reviewcombobox.setSelectedIndex( 2 );
+          decisionbuttonc.setSelected( true );
           break;
       }
 
@@ -109,8 +109,13 @@ public class CandidateQuestionPanel
         public void tableChanged( TableModelEvent e )
         {
           System.out.println( "CandidateQuestionPanel detected table change." );
+          int h;
           for ( int i=0; i<questiondata.getRowCount(); i++ )
-            responsetable.setRowHeight( i, questiondata.getRowHeight( i ) );
+          {
+            h = questiondata.getRowHeight( i );
+            if ( h>0 )
+              responsetable.setRowHeight( i, h );
+          }
           // Unable to set row height here...
           // Maybe better not to add/remove columns but just change
           // content of the last column
@@ -118,7 +123,11 @@ public class CandidateQuestionPanel
         }
       } );
       for ( int i=0; i<questiondata.getRowCount(); i++ )
-        responsetable.setRowHeight( i, questiondata.getRowHeight( i ) );
+      {
+        int h = questiondata.getRowHeight( i );
+        if ( h>0 )
+          responsetable.setRowHeight( i, h );
+      }
       //responsetable.getColumnModel().getColumn( 4 ).setCellRenderer( new PinkBoxTableCellRenderer() );
       DefaultCellEditor dce;
       JCheckBox cb = new JCheckBox();
@@ -148,12 +157,16 @@ public class CandidateQuestionPanel
   {
     java.awt.GridBagConstraints gridBagConstraints;
 
+    decisionbuttongroup = new javax.swing.ButtonGroup();
     toppanel = new javax.swing.JPanel();
     titlelabel = new javax.swing.JLabel();
     statuslabel = new javax.swing.JLabel();
     centrepanel = new javax.swing.JPanel();
     innerpanel = new javax.swing.JPanel();
-    reviewcombobox = new javax.swing.JComboBox<>();
+    decisionpanel = new javax.swing.JPanel();
+    decisionbuttona = new javax.swing.JToggleButton();
+    decisionbuttonb = new javax.swing.JToggleButton();
+    decisionbuttonc = new javax.swing.JToggleButton();
     outcomepanel = new javax.swing.JPanel();
     outcometable = new javax.swing.JTable();
     imagepanel = new javax.swing.JPanel();
@@ -177,7 +190,7 @@ public class CandidateQuestionPanel
     titlelabel.setText("Title of Question");
     toppanel.add(titlelabel);
 
-    statuslabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    statuslabel.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
     statuslabel.setText("question status");
     toppanel.add(statuslabel);
 
@@ -189,20 +202,52 @@ public class CandidateQuestionPanel
     innerpanel.setBackground(java.awt.Color.white);
     innerpanel.setLayout(new java.awt.GridBagLayout());
 
-    reviewcombobox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    reviewcombobox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Not Reviewed", "Confirm", "Override" }));
-    reviewcombobox.addItemListener(new java.awt.event.ItemListener()
+    decisionpanel.setOpaque(false);
+
+    decisionbuttongroup.add(decisionbuttona);
+    decisionbuttona.setMnemonic('r');
+    decisionbuttona.setSelected(true);
+    decisionbuttona.setText("No Review");
+    decisionbuttona.addActionListener(new java.awt.event.ActionListener()
     {
-      public void itemStateChanged(java.awt.event.ItemEvent evt)
+      public void actionPerformed(java.awt.event.ActionEvent evt)
       {
-        reviewcomboboxItemStateChanged(evt);
+        decisionbuttonaActionPerformed(evt);
       }
     });
+    decisionpanel.add(decisionbuttona);
+
+    decisionbuttongroup.add(decisionbuttonb);
+    decisionbuttonb.setMnemonic('C');
+    decisionbuttonb.setText("Confirm");
+    decisionbuttonb.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        decisionbuttonbActionPerformed(evt);
+      }
+    });
+    decisionpanel.add(decisionbuttonb);
+
+    decisionbuttongroup.add(decisionbuttonc);
+    decisionbuttonc.setMnemonic('o');
+    decisionbuttonc.setText("Override");
+    decisionbuttonc.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        decisionbuttoncActionPerformed(evt);
+      }
+    });
+    decisionpanel.add(decisionbuttonc);
+
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    innerpanel.add(reviewcombobox, gridBagConstraints);
+    gridBagConstraints.weightx = 0.5;
+    gridBagConstraints.weighty = 0.5;
+    innerpanel.add(decisionpanel, gridBagConstraints);
 
     outcomepanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Question Outcomes"));
     outcomepanel.setOpaque(false);
@@ -384,24 +429,43 @@ public class CandidateQuestionPanel
       revalidate();
   }//GEN-LAST:event_viewresponsescheckboxActionPerformed
 
-  private void reviewcomboboxItemStateChanged(java.awt.event.ItemEvent evt)//GEN-FIRST:event_reviewcomboboxItemStateChanged
-  {//GEN-HEADEREND:event_reviewcomboboxItemStateChanged
-
-    if ( evt.getStateChange() == ItemEvent.SELECTED )
+  
+  private void handleDecision( int n )
+  {
+    if ( n != questiondata.getExaminerDecision() )
     {
-      int n = reviewcombobox.getSelectedIndex();
-      if ( n != questiondata.getExaminerDecision() )
-      {
-        System.out.println( "examiner decision combo box change." );
-        questiondata.setExaminerDecision( n );
-        candidate.exam.setUnsavedChanges( true );
-      }
-    }
-  }//GEN-LAST:event_reviewcomboboxItemStateChanged
+      System.out.println( "examiner decision change." );
+      questiondata.setExaminerDecision( n );
+      candidate.exam.setUnsavedChanges( true );
+    }    
+  }
+  
+  private void decisionbuttoncActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_decisionbuttoncActionPerformed
+  {//GEN-HEADEREND:event_decisionbuttoncActionPerformed
+    // TODO add your handling code here:
+    handleDecision(2);
+  }//GEN-LAST:event_decisionbuttoncActionPerformed
+
+  private void decisionbuttonaActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_decisionbuttonaActionPerformed
+  {//GEN-HEADEREND:event_decisionbuttonaActionPerformed
+    // TODO add your handling code here:
+    handleDecision(0);
+  }//GEN-LAST:event_decisionbuttonaActionPerformed
+
+  private void decisionbuttonbActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_decisionbuttonbActionPerformed
+  {//GEN-HEADEREND:event_decisionbuttonbActionPerformed
+    // TODO add your handling code here:
+    handleDecision(1);
+  }//GEN-LAST:event_decisionbuttonbActionPerformed
 
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel centrepanel;
+  private javax.swing.JToggleButton decisionbuttona;
+  private javax.swing.JToggleButton decisionbuttonb;
+  private javax.swing.JToggleButton decisionbuttonc;
+  private javax.swing.ButtonGroup decisionbuttongroup;
+  private javax.swing.JPanel decisionpanel;
   private javax.swing.JLabel imagelabel;
   private javax.swing.JPanel imagepanel;
   private javax.swing.JScrollPane imagescrollpanel;
@@ -412,7 +476,6 @@ public class CandidateQuestionPanel
   private javax.swing.JPanel responsepanel;
   private javax.swing.JTable responsetable;
   private javax.swing.JPanel responsetablepanel;
-  private javax.swing.JComboBox<String> reviewcombobox;
   private javax.swing.JLabel statuslabel;
   private javax.swing.JLabel titlelabel;
   private javax.swing.JPanel toppanel;

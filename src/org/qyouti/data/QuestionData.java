@@ -199,16 +199,8 @@ public class QuestionData
         for ( int k=0; k<rlabels.length; k++ )
         {
           responsedata = getResponseData( rlabels[k].getIdent() );
-          if ( examinerdecision == EXAMINER_DECISION_OVERRIDE )
-          {
-            if ( responsedata.examiner_selected )
-              responselid.addCurrentValue( responsedata.ident );
-          }
-          else
-          {
-            if ( responsedata.selected )
-              responselid.addCurrentValue( responsedata.ident );
-          }
+          if ( responsedata.isSelected() )
+            responselid.addCurrentValue( responsedata.ident );
         }
         continue;
       }
@@ -395,7 +387,7 @@ public class QuestionData
             return "?";
         return new ImageIcon( response.getFilteredImage() );
       case 4:
-        return response.selected;
+        return response.candidate_selected;
       case 5:
         return response.needsreview?"dubious":"";
       case 6:
@@ -418,5 +410,6 @@ public class QuestionData
 
     //processResponses();
     page.candidate.processAllResponses();
+    page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
   }
 }

@@ -7,7 +7,6 @@ package org.qyouti.qti1.gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,9 +19,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
@@ -60,6 +57,7 @@ import org.w3c.dom.svg.SVGSVGElement;
 public class QTIItemRenderer
 //        extends QTIComponent
 {
+  QTIElementItem item;
   URI examfolderuri;
   JPanel comp;
   static final TextPaneWrapper textPane = new TextPaneWrapper();
@@ -71,6 +69,10 @@ public class QTIItemRenderer
   QuestionMetricsRecord mrec;
   PrintThread printthread;
 
+  String analysishtml = "";
+  
+  int type = PrintThread.TYPE_PAPERS;
+  
 
   static QTIMetrics metrics = null;
 
@@ -108,10 +110,17 @@ public class QTIItemRenderer
    * These components are indexed against the IDs.  Once the HTML is in the
    * document model the positions of the placeholders are found and the <span>
    * elements replaced with the corresponding components.
+   * @param printthread
+   * @param type
+   * @param examfolderuri
    * @param item
+   * @param qnumber
+   * @param options
+   * @param prefs
    */
   public QTIItemRenderer(
       PrintThread printthread,
+      int type,
       URI examfolderuri,
       QTIElementItem item,
       int qnumber,
@@ -120,7 +129,9 @@ public class QTIItemRenderer
       )
   {
     int i;
+    this.item = item;
     this.printthread = printthread;
+    this.type = type;
     this.examfolderuri = examfolderuri;
     this.qnumber = qnumber;
 
@@ -139,7 +150,7 @@ public class QTIItemRenderer
 //
 //    if ( entry == null )
 //    {
-      renderItem( item );
+//      renderItem( item );
 //      putIntoCache( item.getIdent(), this.prefs, new CacheEntry( mrec, svgres ) );
 //    }
 //    else
@@ -149,7 +160,19 @@ public class QTIItemRenderer
 //    }
   }
 
-  private void renderItem( QTIElementItem item )
+  public String getAnalysisHTML()
+  {
+    return analysishtml;
+  }
+
+  public void setAnalysisHTML( String analysishtml )
+  {
+    this.analysishtml = analysishtml;
+  }
+
+  
+  
+  public void renderItem()
   {
     int i;
     //System.out.println( "Render item " + item.getIdent() );
@@ -201,7 +224,30 @@ public class QTIItemRenderer
       }
     }
 
+//  couldn't get this bit to work so revert to outputting
+//  an HTML table.
 
+//    if ( type == PrintThread.TYPE_ANALYSIS )
+//    {
+//      docelement = htmldoc.getElement("qti_insert_analysis");
+//      if (docelement != null)
+//      {
+//        offset = docelement.getStartOffset();
+//        s = htmldoc.addStyle("qyouti_svg_icon_analysis", def);
+//        JButton b = new JButton( "Testing" );
+//        b.setFont( b.getFont().deriveFont( 200.0f ) );
+//        StyleConstants.setComponent( s, b );
+//        try
+//        {
+//          htmldoc.remove(offset, 1);
+//          htmldoc.insertString(offset, " ", s);
+//        } catch (BadLocationException ex)
+//        {
+//          Logger.getLogger(QTIItemRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//      }
+//    }
+//
     // Get the textPane to paint itself into an SVG document.
     // This will have blank rectangles whereever SVGIcon objects are.
     double width = getMetrics().getPropertyInches( "page-width" );
@@ -428,8 +474,12 @@ public class QTIItemRenderer
 
       state.html.append("<div>");
       renderSubElements( e, state );
-
-      state.html.append("\n</div>\n</body>\n</html>\n");
+      state.html.append("\n</div>\n");
+      
+      if ( type == PrintThread.TYPE_ANALYSIS )
+        state.html.append( analysishtml );
+      
+      state.html.append("</div>\n</body>\n</html>\n");
       return;
     }
 
@@ -700,6 +750,7 @@ public class QTIItemRenderer
 
   public static List<GenericDocument> paginateItems( 
       PrintThread printthread,
+      int type,
       String printid,
       URI examfolderuri,
       CandidateData candidate,
@@ -710,13 +761,19 @@ public class QTIItemRenderer
   {
       int i;
       //Vector<Vector<SVGDocumentPlacement>> pages = new Vector<Vector<SVGDocumentPlacement>>();
-      if ( paginationrecord != null ) paginationrecord.addCandidate( candidate.id );
+      if ( candidate!=null && paginationrecord != null )
+        paginationrecord.addCandidate( candidate.id );
       Vector<SVGDocumentPlacement> page;
       GenericDocument svgdocs[]=null;
       Vector<GenericDocument> paginated = new Vector<GenericDocument>();
       Vector<SVGHooks> svghooks = new Vector<SVGHooks>();
-      Vector<QTIElementItem> items = candidate.getItems();
-
+      Vector<QTIElementItem> items;
+      if ( candidate == null )
+        items = exam.qdefs.qti.getItems();
+      else
+        items = candidate.getItems();
+      UserRenderPreferences prefs = (candidate!=null)?candidate.preferences:null;
+      
       int pwidth = (int)(getMetrics().getPropertyInches( "page-width" )*100);
       int pheight = (int)(getMetrics().getPropertyInches( "page-height" )*100);
       int tlx  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-x");
@@ -751,7 +808,7 @@ public class QTIItemRenderer
       // get a blank page ready for questions...
       page = new Vector<SVGDocumentPlacement>();
       String pageid;
-      if ( paginationrecord != null )
+      if ( candidate!=null && paginationrecord != null )
       {
         pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         exam.createPage( printid, pageid, candidate );
@@ -761,16 +818,22 @@ public class QTIItemRenderer
       {
         GenericDocument coversvg = renderSpecialPage("org/qyouti/qti1/gui/examcover.xhtml",
             exam,
-            candidate.name,
-            candidate.id,
+            (candidate!=null)?candidate.name:"---",
+            (candidate!=null)?candidate.id:"---",
             (preamble!=null)?preamble:"" );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(
+                page, 
+                false, 
+                exam, 
+                prefs, 
+                paginationrecord, 
+                svghooks.lastElement() ) );
         
         // get a blank page ready for questions...
         page = new Vector<SVGDocumentPlacement>();
-        if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        if ( candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         {
           pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
           exam.addPage( new PageData( exam, printid, pageid, candidate ) );
@@ -808,8 +871,11 @@ public class QTIItemRenderer
         }
         
         // if ( i==29 ) System.out.println( "Item 29" );
-        renderer = new QTIItemRenderer( printthread, examfolderuri, items.elementAt(i), i+1, 
-            exam, candidate.preferences );
+        renderer = new QTIItemRenderer( printthread, type, examfolderuri, items.elementAt(i), i+1, 
+            exam, prefs );
+        if ( type == PrintThread.TYPE_ANALYSIS )
+          renderer.setAnalysisHTML( exam.getQuestionAnalysis( items.elementAt(i).getIdent() ).toHTML() );
+        renderer.renderItem();
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getDocumentElement().getAttribute("height") );
@@ -829,10 +895,10 @@ public class QTIItemRenderer
           {
             // finish off the page
             svghooks.add( new SVGHooks() );
-            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
+            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
             
             // start a new page for this question
-            if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+            if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
             {
               pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
               exam.addPage( new PageData( exam, printid, pageid, candidate ) );
@@ -851,7 +917,7 @@ public class QTIItemRenderer
         page.add( new SVGDocumentPlacement( svgdocs[i], xoffset + itemareinsetleft, yoffset + itemareinsettop ) );
         // xoffset is relative to itemareainsetleft
         // record integer relative to top left bullseye in hundredths of inch
-        if ( paginationrecord != null )
+        if ( candidate != null && paginationrecord != null )
           paginationrecord.addItem( 
                   items.elementAt( i ).getIdent(), 
                   (int)((xoffset+itemareinsetleft - tlx)/10.0), 
@@ -866,7 +932,7 @@ public class QTIItemRenderer
 
       // complete the last page of questions
       svghooks.add( new SVGHooks() );
-      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
+      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
 
       boolean doublesided = exam.getQTIRenderBooleanOption("double_sided");
       boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
@@ -877,7 +943,7 @@ public class QTIItemRenderer
         has_blank = true;
         GenericDocument blanksvg = renderSpecialPage("org/qyouti/qti1/gui/blank.xhtml", exam );
         // start a page
-        if ( paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
+        if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         {
           pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
           exam.addPage( new PageData( exam, printid, pageid, candidate ) );
@@ -889,7 +955,7 @@ public class QTIItemRenderer
 
         // complete page
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, candidate.preferences, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
       }
 
       String footer;
@@ -898,9 +964,9 @@ public class QTIItemRenderer
         if ( i==0 && multipage && svghooks.get( i ).staplegroupelement != null )
           addStaple( svghooks.get( i ).staplegroupelement );
         footer = "";
-        if ( exam.getQTIRenderBooleanOption( "name_in_footer" ) )
+        if ( candidate != null && exam.getQTIRenderBooleanOption( "name_in_footer" ) )
           footer += candidate.name + "   ";
-        if ( exam.getQTIRenderBooleanOption( "id_in_footer" ) )
+        if (  candidate != null && exam.getQTIRenderBooleanOption( "id_in_footer" ) )
           footer += candidate.id + "\u00a0\u00a0\u00a0\u00a0";
         footer += "Page " + (i+1) + " of " + svghooks.size();
         svghooks.get(i).footertextelement.setTextContent( footer );

@@ -7,6 +7,7 @@ package org.qyouti;
 
 import java.net.*;
 import org.apache.batik.dom.*;
+import org.qyouti.print.*;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.gui.*;
 import org.qyouti.util.*;
@@ -41,12 +42,13 @@ public class QuestionPreviewDialog
         this.item = item;
 
         renderer = new QTIItemRenderer( 
-            null, examfolderuri, item, qnumber, options, null );
+            null, PrintThread.TYPE_PAPERS, examfolderuri, item, qnumber, options, null );
         if ( renderer == null )
         {
             previewcanvas.setSVGDocument(null);
             return;
         }
+        renderer.renderItem();
 
         GenericDocument svg = (GenericDocument) renderer.getPreviewSVGDocument( options );
         //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svg.getDocumentElement(), true );

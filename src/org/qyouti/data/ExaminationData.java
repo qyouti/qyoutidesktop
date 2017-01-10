@@ -208,6 +208,17 @@ public class ExaminationData
     while ( iterator.hasNext() )
       iterator.next().examinationDataStatusChanged( this );
   }
+
+
+  public QuestionAnalysis getQuestionAnalysis( String ident )
+  {
+    if ( analyses == null ) return null;
+    for ( int i=0; i<analyses.size(); i++ )
+      if ( analyses.get( i ).ident.equals( ident ) )
+        return analyses.get( i );
+    return null;
+  }
+
   
   public void rebuildReviewList()
   {
@@ -236,8 +247,8 @@ public class ExaminationData
     // extra column in candidate table
     fireTableStructureChanged();
   }
-  
-  public void clearPages()
+
+  public void clearScans()
   {
     CandidateData candidate;
     PageData page;
@@ -271,10 +282,7 @@ public class ExaminationData
       }
       //candidate.pages.clear();
     }
-    
-    pages.clear();
-    pagemap.clear();
-    
+        
     for ( int i=0; i<scans.size(); i++ )
     {
       try
@@ -287,6 +295,21 @@ public class ExaminationData
     }
     
     scans.clear();
+  }
+  
+  public void clearPages()
+  {
+    CandidateData candidate;
+    
+    clearScans();
+    for ( int i = 0; i < candidates_sorted.size(); i++ )
+    {
+      candidate = candidates_sorted.get( i );
+      candidate.pages.clear();
+    }
+    clearScans();
+    pages.clear();
+    pagemap.clear();
   }
 
   public void forgetPrint()
@@ -348,9 +371,14 @@ public class ExaminationData
   
   public boolean isScanImageFileImported( ImageFileData ifd )
   {
+    if ( ifd == null || ifd.getDigest() == null )
+      return false;
+    
     for ( int i=0; i<scans.size(); i++ )
     {
-      if ( scans.get( i ).isImported() && scans.get( i ).digest.equals( ifd.digest ) )
+      if ( scans.get( i ).isImported() && 
+           ifd.digest.equals( scans.get( i ).digest )
+              )
         return true;
     }
     return false;

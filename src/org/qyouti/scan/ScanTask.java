@@ -333,6 +333,7 @@ public class ScanTask
       ifd.setError( "Unable to read PDF file." );
       return ifd;
     }
+    ifd.setDigest( digest );
     
     if ( exam.isScanImageFileImported( ifd ) )
     {
@@ -688,7 +689,7 @@ public class ScanTask
         {
           continue;
         }
-        if ( page.processed )
+        if ( false ) //page.processed )
         {
           continue;
         }

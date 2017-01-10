@@ -345,6 +345,8 @@ public class QyoutiFrame
     jLabel4 = new javax.swing.JLabel();
     jScrollPane4 = new javax.swing.JScrollPane();
     analysistable = new javax.swing.JTable();
+    jScrollPane5 = new javax.swing.JScrollPane();
+    jTextPane1 = new javax.swing.JTextPane();
     ctab = new javax.swing.JPanel();
     splitpane = new javax.swing.JSplitPane();
     sp2 = new javax.swing.JScrollPane();
@@ -372,8 +374,12 @@ public class QyoutiFrame
     rtab = new javax.swing.JPanel();
     jSplitPane2 = new javax.swing.JSplitPane();
     jPanel4 = new javax.swing.JPanel();
+    jPanel5 = new javax.swing.JPanel();
     jScrollPane1 = new javax.swing.JScrollPane();
     jTextArea1 = new javax.swing.JTextArea();
+    jPanel6 = new javax.swing.JPanel();
+    previousreviewbutton = new javax.swing.JButton();
+    nextreviewbutton = new javax.swing.JButton();
     jScrollPane3 = new javax.swing.JScrollPane();
     questionreviewtable = new javax.swing.JTable();
     jScrollPane2 = new javax.swing.JScrollPane();
@@ -488,6 +494,17 @@ public class QyoutiFrame
     jScrollPane4.setViewportView(analysistable);
 
     jPanel2.add(jScrollPane4, java.awt.BorderLayout.CENTER);
+
+    jScrollPane5.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    jScrollPane5.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+    jScrollPane5.setMaximumSize(new java.awt.Dimension(32767, 75));
+    jScrollPane5.setPreferredSize(new java.awt.Dimension(2961, 75));
+
+    jTextPane1.setText("Each student's score on the whole exam is assumed to be a good estimate of the student's aptitude.  For each statement students are grouped according to whether they selected the item or not.  A Hodges-Lehmann estimate is calculated which compares the two groups and measures the median difference in aptitude. Confidence limits are also calculated on the estimate - if one is positive and the other negative then the difference in aptitude is not significant.\n\nA signficant positive difference in aptitude is expected for statements that effectively discriminate between students based on aptitude.");
+    jTextPane1.setOpaque(false);
+    jScrollPane5.setViewportView(jTextPane1);
+
+    jPanel2.add(jScrollPane5, java.awt.BorderLayout.SOUTH);
 
     jSplitPane3.setRightComponent(jPanel2);
 
@@ -747,6 +764,8 @@ public class QyoutiFrame
 
     jPanel4.setLayout(new java.awt.BorderLayout());
 
+    jPanel5.setLayout(new java.awt.BorderLayout());
+
     jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
     jTextArea1.setColumns(20);
@@ -757,7 +776,33 @@ public class QyoutiFrame
     jTextArea1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
     jScrollPane1.setViewportView(jTextArea1);
 
-    jPanel4.add(jScrollPane1, java.awt.BorderLayout.NORTH);
+    jPanel5.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+    previousreviewbutton.setMnemonic('p');
+    previousreviewbutton.setText("Previous");
+    previousreviewbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        previousreviewbuttonActionPerformed(evt);
+      }
+    });
+    jPanel6.add(previousreviewbutton);
+
+    nextreviewbutton.setMnemonic('n');
+    nextreviewbutton.setText("Next");
+    nextreviewbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        nextreviewbuttonActionPerformed(evt);
+      }
+    });
+    jPanel6.add(nextreviewbutton);
+
+    jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
+
+    jPanel4.add(jPanel5, java.awt.BorderLayout.PAGE_START);
 
     questionreviewtable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
@@ -1078,6 +1123,16 @@ public class QyoutiFrame
     String analysis = exam.itemAnalysis();
     analysistextpane.setContentType( "text/plain" );
     analysistextpane.setText( analysis );
+    
+    printstatuslabel.setText( "Printing..." );
+    progressbar.setIndeterminate( true );
+
+    //busydialog.setVisible( true );
+    PrintThread thread = new PrintThread( exam, examfolder );
+    thread.setQyoutiFrame( this );
+    thread.setType( PrintThread.TYPE_ANALYSIS );
+    thread.start();    
+    
   }//GEN-LAST:event_itemanalysismenuitemActionPerformed
 
   private void expscoresmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_expscoresmenuitemActionPerformed
@@ -1452,7 +1507,7 @@ public class QyoutiFrame
       return;
     }
 
-    exam.clearPages();
+    exam.clearScans();
     exam.save();
     exam.processDataChanged( exam.pagelistmodel );
   }//GEN-LAST:event_clearscanneddatamenuitemActionPerformed
@@ -1649,6 +1704,34 @@ public class QyoutiFrame
     
   }//GEN-LAST:event_aboutmenuitemActionPerformed
 
+  private void previousreviewbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previousreviewbuttonActionPerformed
+  {//GEN-HEADEREND:event_previousreviewbuttonActionPerformed
+    // TODO add your handling code here:
+    
+  }//GEN-LAST:event_previousreviewbuttonActionPerformed
+
+  private void nextreviewbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_nextreviewbuttonActionPerformed
+  {//GEN-HEADEREND:event_nextreviewbuttonActionPerformed
+    // TODO add your handling code here:
+    
+    if ( questionreviewtable.getSelectedRowCount() != 1 )
+    {
+      questionreviewtable.clearSelection();
+      questionreviewtable.addRowSelectionInterval( 0, 0 );
+      return;
+    }
+
+    for ( int i=0; i<( questionreviewtable.getRowCount() - 1 ); i++ )
+    {
+      if ( questionreviewtable.isRowSelected( i ) )
+      {
+        questionreviewtable.clearSelection();
+        questionreviewtable.addRowSelectionInterval( i+1, i+1 );
+        return;
+      }
+    }    
+  }//GEN-LAST:event_nextreviewbuttonActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -1779,6 +1862,7 @@ public class QyoutiFrame
             label.setHorizontalAlignment( JLabel.CENTER );
           }
           label.setText( value.toString() );
+          exam.analysistable.setValueProperties( label, row, column );
           return label;
         }
       } );
@@ -1885,22 +1969,28 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
+  private javax.swing.JPanel jPanel5;
+  private javax.swing.JPanel jPanel6;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JScrollPane jScrollPane4;
+  private javax.swing.JScrollPane jScrollPane5;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JPopupMenu.Separator jSeparator2;
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JTextArea jTextArea1;
+  private javax.swing.JTextPane jTextPane1;
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
+  private javax.swing.JButton nextreviewbutton;
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
   private javax.swing.JMenuItem previewqmenuitem;
+  private javax.swing.JButton previousreviewbutton;
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
@@ -2029,6 +2119,9 @@ public class QyoutiFrame
     
     if ( n==0 )
       questionreviewpanel.add( new JLabel("No questions selected.") );
+    qrpanelouter.validate();
+    System.out.println( "Update question review panel... " + questionreviewpanel.getWidth() +  " x " + questionreviewpanel.getHeight() );
+    System.out.println( "qrpanelouter... " + qrpanelouter.getWidth() +  " x " + qrpanelouter.getHeight() );
   } 
   
 

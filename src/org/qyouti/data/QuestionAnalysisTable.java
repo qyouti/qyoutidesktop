@@ -5,7 +5,10 @@
  */
 package org.qyouti.data;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
+import javax.swing.*;
 import javax.swing.table.*;
 
 /**
@@ -20,13 +23,13 @@ public class QuestionAnalysisTable extends AbstractTableModel
 
   static String[] columnnames = 
   {
-    "Question                     ",
+    "Question                        ",
     "Option",
     "True/False",
-    "No. Students Right",
-    "No. Students Wrong",
+    "No. Selected",
+    "No. Not Selected",
     "%Class Right",
-    "Diff. in Median Aptitude",
+    "Median Diff in Aptitude",
     "Lower 90% Limit",
     "Upper 90% Limit"
   };
@@ -66,6 +69,45 @@ public class QuestionAnalysisTable extends AbstractTableModel
     return 9;
   }
 
+  /**
+   * Sets properties on a JLabel for the particular data point
+   * 
+   * @param label
+   * @param rowIndex
+   * @param columnIndex 
+   */
+  public void setValueProperties( JLabel label, int rowIndex, int columnIndex )
+  {
+    if ( selection < 0 )
+      return;
+    QuestionAnalysis qa = analyses.get( selection );
+    ResponseAnalysis ra = qa.response_analyses.get( rowIndex );
+    label.setOpaque( true );
+    label.setBackground( Color.WHITE );
+    switch ( columnIndex )
+    {
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        if ( ra.correct )
+          label.setBackground( Color.GREEN );
+        break;
+      case 6:
+      case 7:
+      case 8:
+        if ( Double.isNaN( ra.median_difference ) )
+          label.setBackground( Color.GRAY );          
+        else if ( ra.median_difference_lower >= 0.0 )
+          label.setBackground( Color.GREEN );
+        else if ( ra.median_difference_upper <= 0.0 )
+          label.setBackground( Color.RED );
+        else
+          label.setBackground( Color.PINK );
+        break;
+    }      
+  }
+  
   @Override
   public Object getValueAt( int rowIndex, int columnIndex )
   {
@@ -88,9 +130,9 @@ public class QuestionAnalysisTable extends AbstractTableModel
       case 2:
         return ra.correct?"T":"F";
       case 3:
-        return ra.right;
+        return ra.correct?ra.right:ra.wrong;
       case 4:
-        return ra.wrong;
+        return ra.correct?ra.wrong:ra.right;
       case 5:
         return Integer.toString( Math.round( 100.0f * (float)ra.right / (float)(ra.right + ra.wrong) ) ) + "%";
       case 6:
