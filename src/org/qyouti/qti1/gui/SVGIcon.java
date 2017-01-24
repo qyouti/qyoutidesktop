@@ -47,7 +47,10 @@ public class SVGIcon
     public void paintSVG( Document doc )
     {
         if ( x == null || y == null )
-            throw new IllegalArgumentException( "SVGIcon not ready to paint into SVG doc" );
+        {
+            System.err.println( "SVGIcon not ready to paint into SVG doc" );
+            return;
+        }
         SVGUtils.appendFragmentToDocument( doc, fragment, 0.0, x.intValue(), y.intValue() );
     }
 

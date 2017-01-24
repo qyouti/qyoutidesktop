@@ -52,6 +52,8 @@ public class QyoutiFrame
   QuestionData currentquestiondata;
   String scanfolder = null;
 
+  TableModel emptytablemodel = new javax.swing.table.DefaultTableModel( new Object [][]{},new String []{} );
+  
   // Possible Look & Feels
   private static final String mac      =
           "com.apple.laf.AquaLookAndFeel";
@@ -124,6 +126,17 @@ public class QyoutiFrame
               
             });
     
+    qrevlefttable.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+    qrevlefttable.getSelectionModel().addListSelectionListener( 
+            new ListSelectionListener() {
+              
+      @Override
+      public void valueChanged( ListSelectionEvent e )
+      {
+        reviewLeftSelectionChanged( e );
+      }
+              
+            });
     this.addWindowListener( this );
     this.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
   }
@@ -255,6 +268,27 @@ public class QyoutiFrame
       item = exam.qdefs.qti.getItems().elementAt( row );
       exam.analysistable.setSelectedQuestion( (item==null)?null:item.getIdent() );
     }
+    
+//    if ( row >= 0 )
+//    {
+//      CandidateData cd;
+//      for ( int j=0; j<exam.candidates_sorted.size(); j++ )
+//      {
+//        cd = exam.candidates_sorted.get( j );
+//        
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.gridx = 0;
+//        gbc.weightx = 0.5;
+//        gbc.weighty = 0.5;
+//        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+//        gbc.fill = GridBagConstraints.HORIZONTAL;
+//        CandidateQuestionPanel cqp;
+//        cqp = new CandidateQuestionPanel( cd, item.getIdent() );
+//        if ( cqp != null )
+//          qreviewpanel.add( cqp, gbc );
+//        sp7.revalidate();
+//      }
+//    }
   }
   
   public void candidateSelectionChanged( ListSelectionEvent e )
@@ -294,7 +328,14 @@ public class QyoutiFrame
       System.out.println( "Clear candidate panel" );
       cdetailnamelabel.setText( "" );
       cdetailidlabel.setText( "" );
-      cdetailoutcometable.setModel( null );
+      cdetailoutcometable.setModel( 
+              new javax.swing.table.DefaultTableModel(new Object [][]{}, new String []{"."})
+              {
+                public Class getColumnClass(int columnIndex) {return String.class;}
+                public boolean isCellEditable(int rowIndex, int columnIndex) {return false;}
+              }
+      );
+      
       cdetailerrorlabel.setText( "" );
     }
   }
@@ -334,12 +375,17 @@ public class QyoutiFrame
     java.awt.GridBagConstraints gridBagConstraints;
 
     analysistextpane = new javax.swing.JTextPane();
+    reviewtypebuttongroup = new javax.swing.ButtonGroup();
     spacerlabel = new javax.swing.JLabel();
+    centralpanel = new javax.swing.JPanel();
+    noexamloadedpanel = new javax.swing.JPanel();
+    noexamloadedlabel = new javax.swing.JLabel();
     tabs = new javax.swing.JTabbedPane();
     qtab = new javax.swing.JPanel();
     jSplitPane3 = new javax.swing.JSplitPane();
     sp1 = new javax.swing.JScrollPane();
     questiontable = new javax.swing.JTable();
+    jTabbedPane1 = new javax.swing.JTabbedPane();
     jPanel2 = new javax.swing.JPanel();
     questionanalysistoppane = new javax.swing.JPanel();
     jLabel4 = new javax.swing.JLabel();
@@ -375,12 +421,18 @@ public class QyoutiFrame
     jSplitPane2 = new javax.swing.JSplitPane();
     jPanel4 = new javax.swing.JPanel();
     jPanel5 = new javax.swing.JPanel();
-    jScrollPane1 = new javax.swing.JScrollPane();
-    jTextArea1 = new javax.swing.JTextArea();
+    jPanel7 = new javax.swing.JPanel();
+    reviewtype1button = new javax.swing.JRadioButton();
+    reviewtype2button = new javax.swing.JRadioButton();
+    reviewtype3button = new javax.swing.JRadioButton();
     jPanel6 = new javax.swing.JPanel();
     previousreviewbutton = new javax.swing.JButton();
     nextreviewbutton = new javax.swing.JButton();
-    jScrollPane3 = new javax.swing.JScrollPane();
+    jSplitPane4 = new javax.swing.JSplitPane();
+    jScrollPane1 = new javax.swing.JScrollPane();
+    qrevlefttable = new javax.swing.JTable();
+    jPanel9 = new javax.swing.JPanel();
+    sp8 = new javax.swing.JScrollPane();
     questionreviewtable = new javax.swing.JTable();
     jScrollPane2 = new javax.swing.JScrollPane();
     qrpanelouter = new javax.swing.JPanel();
@@ -419,6 +471,7 @@ public class QyoutiFrame
     importimagesmenuitem = new javax.swing.JMenuItem();
     clearscanneddatamenuitem = new javax.swing.JMenuItem();
     viewscanmenuitem = new javax.swing.JMenuItem();
+    recomputemenuitem = new javax.swing.JMenuItem();
     sep3 = new javax.swing.JPopupMenu.Separator();
     expscoresmenuitem = new javax.swing.JMenuItem();
     exprepliesmenuitem = new javax.swing.JMenuItem();
@@ -431,6 +484,14 @@ public class QyoutiFrame
 
     spacerlabel.setText(" ");
     getContentPane().add(spacerlabel, java.awt.BorderLayout.PAGE_START);
+
+    centralpanel.setLayout(new java.awt.CardLayout());
+
+    noexamloadedlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    noexamloadedlabel.setText("No active exam/survey");
+    noexamloadedpanel.add(noexamloadedlabel);
+
+    centralpanel.add(noexamloadedpanel, "card3");
 
     tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
@@ -506,7 +567,9 @@ public class QyoutiFrame
 
     jPanel2.add(jScrollPane5, java.awt.BorderLayout.SOUTH);
 
-    jSplitPane3.setRightComponent(jPanel2);
+    jTabbedPane1.addTab("Analysis", jPanel2);
+
+    jSplitPane3.setRightComponent(jTabbedPane1);
 
     qtab.add(jSplitPane3, java.awt.BorderLayout.CENTER);
 
@@ -766,17 +829,49 @@ public class QyoutiFrame
 
     jPanel5.setLayout(new java.awt.BorderLayout());
 
-    jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    jPanel7.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 1));
+    jPanel7.setLayout(new java.awt.GridLayout(3, 1));
 
-    jTextArea1.setColumns(20);
-    jTextArea1.setLineWrap(true);
-    jTextArea1.setRows(5);
-    jTextArea1.setText("The table below lists items with dubious marks. Select one or more rows in the table to view details in the right hand panel.  In the panel you can decide to confirm the interpretation of the software or override it.");
-    jTextArea1.setWrapStyleWord(true);
-    jTextArea1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    jScrollPane1.setViewportView(jTextArea1);
+    reviewtypebuttongroup.add(reviewtype1button);
+    reviewtype1button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewtype1button.setSelected(true);
+    reviewtype1button.setText("Review Recommended");
+    reviewtype1button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewtype1buttonActionPerformed(evt);
+      }
+    });
+    jPanel7.add(reviewtype1button);
 
-    jPanel5.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+    reviewtypebuttongroup.add(reviewtype2button);
+    reviewtype2button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewtype2button.setText("Question, candidate by candidate");
+    reviewtype2button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewtype2buttonActionPerformed(evt);
+      }
+    });
+    jPanel7.add(reviewtype2button);
+
+    reviewtypebuttongroup.add(reviewtype3button);
+    reviewtype3button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewtype3button.setText("Candidate, question by question");
+    reviewtype3button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewtype3buttonActionPerformed(evt);
+      }
+    });
+    jPanel7.add(reviewtype3button);
+
+    jPanel5.add(jPanel7, java.awt.BorderLayout.NORTH);
+
+    jPanel6.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
     previousreviewbutton.setMnemonic('p');
     previousreviewbutton.setText("Previous");
@@ -802,7 +897,23 @@ public class QyoutiFrame
 
     jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
 
-    jPanel4.add(jPanel5, java.awt.BorderLayout.PAGE_START);
+    jPanel4.add(jPanel5, java.awt.BorderLayout.NORTH);
+
+    qrevlefttable.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][]
+      {
+
+      },
+      new String []
+      {
+
+      }
+    ));
+    jScrollPane1.setViewportView(qrevlefttable);
+
+    jSplitPane4.setLeftComponent(jScrollPane1);
+
+    jPanel9.setLayout(new java.awt.GridBagLayout());
 
     questionreviewtable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
@@ -815,9 +926,17 @@ public class QyoutiFrame
       }
     ));
     questionreviewtable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
-    jScrollPane3.setViewportView(questionreviewtable);
+    sp8.setViewportView(questionreviewtable);
 
-    jPanel4.add(jScrollPane3, java.awt.BorderLayout.CENTER);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.weightx = 0.6;
+    gridBagConstraints.weighty = 0.5;
+    jPanel9.add(sp8, gridBagConstraints);
+
+    jSplitPane4.setRightComponent(jPanel9);
+
+    jPanel4.add(jSplitPane4, java.awt.BorderLayout.CENTER);
 
     jSplitPane2.setLeftComponent(jPanel4);
 
@@ -850,7 +969,9 @@ public class QyoutiFrame
 
     tabs.addTab("Debug", debugtab);
 
-    getContentPane().add(tabs, java.awt.BorderLayout.CENTER);
+    centralpanel.add(tabs, "card2");
+
+    getContentPane().add(centralpanel, java.awt.BorderLayout.CENTER);
 
     statuspanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
     statuspanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
@@ -1055,6 +1176,16 @@ public class QyoutiFrame
       }
     });
     actionmenu.add(viewscanmenuitem);
+
+    recomputemenuitem.setText("Recompute Outcomes");
+    recomputemenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        recomputemenuitemActionPerformed(evt);
+      }
+    });
+    actionmenu.add(recomputemenuitem);
     actionmenu.add(sep3);
 
     expscoresmenuitem.setText("Export Outcomes...");
@@ -1225,7 +1356,6 @@ public class QyoutiFrame
       }
     }
     selectdialog.setBaseFolder( basefolder );
-    selectdialog.updateList();
     selectdialog.setExamName( "" );
 
     //selectdialog.setBaseFolder( );
@@ -1440,8 +1570,11 @@ public class QyoutiFrame
               showMessageDialog( this, "No exam/survey open." );
       return;
     }
-    exam.save();
-
+    
+    if ( exam.save() )
+      return;
+    JOptionPane.showMessageDialog( this, "Technical error attempting to save exam/survey." );
+    
   }//GEN-LAST:event_savemenuitemActionPerformed
 
   private void editallquestionsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editallquestionsmenuitemActionPerformed
@@ -1592,13 +1725,18 @@ public class QyoutiFrame
     thread.start();
   }//GEN-LAST:event_pdfprintmenuitemActionPerformed
 
-  public void pdfPrintComplete()
+  public void pdfPrintComplete( boolean error )
   {
     tabs.setEnabled( true );
     filemenu.setEnabled( true );
     actionmenu.setEnabled( true );
     progressbar.setIndeterminate( false );
     //busydialog.setVisible( false );
+    if ( error )
+    {
+      JOptionPane.showMessageDialog( this, "There was a technical error while attempting to print to PDF." );
+      printstatuslabel.setText( "printing error" );
+    }
   }
 
   private void propsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_propsmenuitemActionPerformed
@@ -1732,6 +1870,54 @@ public class QyoutiFrame
     }    
   }//GEN-LAST:event_nextreviewbuttonActionPerformed
 
+  private void updateLeftList()
+  {
+    if ( exam.getReviewType() == ExaminationData.REVIEW_BY_QUESTION )  // All questions
+    {
+      qrevlefttable.setModel( exam.qdefs );
+    }
+    else if ( exam.getReviewType() == ExaminationData.REVIEW_BY_CANDIDATE )  // All Candidates
+    {
+      qrevlefttable.setModel( exam );
+    }
+    else
+    {
+      qrevlefttable.setModel( emptytablemodel );
+    }
+  }
+  
+  private void reviewTypeChanged( int type )
+  {
+    if ( exam.getReviewType() == type )
+      return;
+    exam.setReviewType( type );
+    updateLeftList();
+  }
+  
+  
+  private void reviewtype1buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewtype1buttonActionPerformed
+  {//GEN-HEADEREND:event_reviewtype1buttonActionPerformed
+    reviewTypeChanged( 1 );
+  }//GEN-LAST:event_reviewtype1buttonActionPerformed
+
+  private void reviewtype2buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewtype2buttonActionPerformed
+  {//GEN-HEADEREND:event_reviewtype2buttonActionPerformed
+    reviewTypeChanged( 2 );
+  }//GEN-LAST:event_reviewtype2buttonActionPerformed
+
+  private void reviewtype3buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewtype3buttonActionPerformed
+  {//GEN-HEADEREND:event_reviewtype3buttonActionPerformed
+    reviewTypeChanged( 3 );
+  }//GEN-LAST:event_reviewtype3buttonActionPerformed
+
+  private void recomputemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_recomputemenuitemActionPerformed
+  {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
+    exam.invalidateAllOutcomes();
+    exam.updateOutcomes();
+    exam.setUnsavedChanges( true );
+    exam.processDataChanged( exam.qdefs );
+  }//GEN-LAST:event_recomputemenuitemActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -1748,19 +1934,19 @@ public class QyoutiFrame
   }
 
   /**
-   * Indicates that the question edit dialog stored some changes into its item
-   * object. So, the exam file needs saving to disk.
+   * Indicates that the template system created a string representation
+   * of a new exam. It is ready to be saved to file.
    */
-  void examinationBuilt( File folder, String string )
+  void examinationBuilt( File folder, ExamTemplate template )
   {
     File file = new File( folder, "qyouti.xml" );
     FileWriter writer = null;
     try
     {
       writer = new FileWriter( file );
-      writer.write( string );
+      writer.write( template.getDocumentAsString() );
     }
-    catch ( IOException ex )
+    catch ( Exception ex )
     {
       Logger.getLogger( QyoutiFrame.class.getName() ).
               log( Level.SEVERE, null, ex );
@@ -1829,6 +2015,7 @@ public class QyoutiFrame
   {
     this.examfolder = examfolder;
 
+    noexamloadedlabel.setText( "No exam/survey loaded." );
     try
     {
       exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
@@ -1837,6 +2024,7 @@ public class QyoutiFrame
       scanfiletable.setModel( exam.scans );
       candidatetable.setModel( exam );
       questionreviewtable.setModel( exam.reviewlist );
+      updateLeftList();
       exam.load();
       setTitle( "Qyouti - " + examfolder.getName() );
       if ( exam.qdefs != null )
@@ -1866,12 +2054,14 @@ public class QyoutiFrame
           return label;
         }
       } );
-
+      ((CardLayout)centralpanel.getLayout()).last( centralpanel );
     }
     catch ( Exception ex )
     {
       Logger.getLogger( QyoutiFrame.class.getName() ).
               log( Level.SEVERE, null, ex );
+      noexamloadedlabel.setText( "Error attempting to load exam/survey." );
+      ((CardLayout)centralpanel.getLayout()).first( centralpanel );
     }
 
   }
@@ -1943,6 +2133,7 @@ public class QyoutiFrame
   private javax.swing.JLabel cdetailnamelabel;
   private javax.swing.JTable cdetailoutcometable;
   private javax.swing.JPanel cdetailpanel;
+  private javax.swing.JPanel centralpanel;
   private javax.swing.JMenuItem clearscanneddatamenuitem;
   private javax.swing.JMenuItem configmenuitem;
   private javax.swing.JPanel ctab;
@@ -1971,9 +2162,10 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
   private javax.swing.JPanel jPanel6;
+  private javax.swing.JPanel jPanel7;
+  private javax.swing.JPanel jPanel9;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
-  private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JScrollPane jScrollPane4;
   private javax.swing.JScrollPane jScrollPane5;
   private javax.swing.JPopupMenu.Separator jSeparator1;
@@ -1981,11 +2173,14 @@ public class QyoutiFrame
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
-  private javax.swing.JTextArea jTextArea1;
+  private javax.swing.JSplitPane jSplitPane4;
+  private javax.swing.JTabbedPane jTabbedPane1;
   private javax.swing.JTextPane jTextPane1;
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JButton nextreviewbutton;
+  private javax.swing.JLabel noexamloadedlabel;
+  private javax.swing.JPanel noexamloadedpanel;
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
@@ -1995,12 +2190,18 @@ public class QyoutiFrame
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
   private javax.swing.JPanel ptab;
+  private javax.swing.JTable qrevlefttable;
   private javax.swing.JPanel qrpanelouter;
   private javax.swing.JPanel qtab;
   private javax.swing.JPanel questionanalysistoppane;
   private javax.swing.JPanel questionreviewpanel;
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
+  private javax.swing.JMenuItem recomputemenuitem;
+  private javax.swing.JRadioButton reviewtype1button;
+  private javax.swing.JRadioButton reviewtype2button;
+  private javax.swing.JRadioButton reviewtype3button;
+  private javax.swing.ButtonGroup reviewtypebuttongroup;
   private javax.swing.JPanel rtab;
   private javax.swing.JMenuItem savemenuitem;
   private javax.swing.JLabel savestatuslabel;
@@ -2014,6 +2215,7 @@ public class QyoutiFrame
   private javax.swing.JScrollPane sp3;
   private javax.swing.JScrollPane sp4;
   private javax.swing.JScrollPane sp6;
+  private javax.swing.JScrollPane sp8;
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JSplitPane splitpane;
   private javax.swing.JPanel stab;
@@ -2124,6 +2326,29 @@ public class QyoutiFrame
     System.out.println( "qrpanelouter... " + qrpanelouter.getWidth() +  " x " + qrpanelouter.getHeight() );
   } 
   
+  public void reviewLeftSelectionChanged( ListSelectionEvent e )
+  {
+    questionreviewpanel.removeAll();
+    if ( e.getValueIsAdjusting() )
+      return;
+
+    System.out.println( "Left selection changed." );
+    
+    int row = qrevlefttable.getSelectedRow();
+    String ident;
+    
+    if ( exam.getReviewType() == ExaminationData.REVIEW_BY_CANDIDATE )
+    {
+      ident = ( row < 0 )?null:exam.getValueAt( row, 2 ).toString();
+      exam.setReviewCandidateIdent( ident );
+    }
+
+    if ( exam.getReviewType() == ExaminationData.REVIEW_BY_QUESTION )
+    {
+      ident = ( row < 0 )?null:exam.qdefs.getValueAt( row, 0 ).toString();
+      exam.setReviewQuestionIdent( ident );
+    }  
+  }
 
   
     class ChangeLookAndFeelAction extends AbstractAction {

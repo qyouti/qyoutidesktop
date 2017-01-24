@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.lang.ref.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -53,8 +54,8 @@ public class ResponseData
   public int index;
   private int imagewidth;
   private int imageheight;
-  private BufferedImage box_image;
-  private BufferedImage filtered_image;
+  private SoftReference<BufferedImage> box_image;
+  private SoftReference<BufferedImage> filtered_image;
   public double dark_pixels=-1;
   public boolean needsreview=false;
   public boolean candidate_selected=false;
@@ -168,14 +169,16 @@ public class ResponseData
 
   public BufferedImage getImage()
   {
-    if ( box_image != null ) return box_image;
-    return box_image=loadImage( getImageFileName() );
+    if ( box_image == null || box_image.get() == null )
+      box_image = new SoftReference<>( loadImage( getImageFileName() ) );
+    return box_image.get();
   }
 
   public BufferedImage getFilteredImage()
   {
-    if ( filtered_image != null ) return filtered_image;
-    return filtered_image=loadImage( getFilteredImageFileName() );
+    if ( filtered_image == null || filtered_image.get() == null )
+      filtered_image = new SoftReference<>( loadImage( getFilteredImageFileName() ) );
+    return filtered_image.get();
   }
 
 

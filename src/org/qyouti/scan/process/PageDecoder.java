@@ -514,11 +514,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         
         
         //System.out.println( "Look for box here: " + subimage_topleft.x + " : " + subimage_topleft.y + " : " + w + " : " + h );
-        if ( response.getImageFile().exists() )
-        {
-          page.error = "Scanned same page twice?";
-          return page;
-        }
+//        if ( response.getImageFile().exists() )
+//        {
+//          page.error = "Scanned same page twice?";
+//          return page;
+//        }
         try
         {
           ImageIO.write(
@@ -626,7 +626,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       questiondata = page.questions.get( i );
       if ( questiondata == null || questiondata.ident == null || questiondata.areImagesProcessed() )
         continue;
-
+      questiondata.setImagesProcessed( true );
+      
       qti_item = page.exam.qdefs.qti.getItem( questiondata.ident );
 
       // skip questions that aren't supported

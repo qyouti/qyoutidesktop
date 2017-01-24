@@ -78,7 +78,7 @@ public class QuestionData
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
     str = element.getAttribute( "imagesprocessed" );
-    imagesprocessed = str != null && str.toLowerCase().startsWith( "y" );
+    imagesprocessed = str != null && str.toLowerCase().startsWith( "t" );
     str = element.getAttribute( "decision" );
     try { examinerdecision = Integer.parseInt( str ); }
     catch ( NumberFormatException nfe ) { examinerdecision =  EXAMINER_DECISION_NONE; }
