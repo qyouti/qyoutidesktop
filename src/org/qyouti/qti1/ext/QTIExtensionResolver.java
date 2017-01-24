@@ -6,8 +6,7 @@
 package org.qyouti.qti1.ext;
 
 import org.qyouti.qti1.ext.blackboard.QTIExtensionMatformattedtext;
-import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
-import org.qyouti.qti1.ext.qyouti.QTIExtensionRespextension;
+import org.qyouti.qti1.ext.qyouti.*;
 import org.qyouti.qti1.ext.webct.*;
 
 /**
@@ -26,6 +25,12 @@ public class QTIExtensionResolver
                 return QTIExtensionRespextension.class;
             if ( "render_sketcharea".equals(name) )
                 return QTIExtensionRendersketcharea.class;
+            if ( "itemproc_extension".equals(name) )
+                return QTIExtensionItemproc.class;
+            if ( "outcomemapping".equals(name) )
+                return QTIExtensionOutcomemapping.class;
+            if ( "outcomemapentry".equals(name) )
+                return QTIExtensionOutcomemapentry.class;
         }
 
       if ( "http://www.webct.com/vista/assessment".equals( namespace ) )
