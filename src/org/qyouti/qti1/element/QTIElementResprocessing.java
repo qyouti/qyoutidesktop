@@ -39,6 +39,7 @@ public class QTIElementResprocessing
   boolean supported=false;
   QTIElementOutcomes outcomes;
   Vector<QTIElementRespcondition> conditions;
+  Vector<QTIItemproc> itemprocs;
 
   public boolean isSupported()
   {
@@ -65,6 +66,7 @@ public class QTIElementResprocessing
     QTIElementRespcondition respcondition;
     QTIElementConditionvar conditionvar;
     QTIElementSetvar setvar;
+    QTIItemproc itemproc;
 
 
     // special case for WEBCT 'all or nothing' scheme
@@ -125,6 +127,12 @@ public class QTIElementResprocessing
                   );
       }
     }
+    
+    for ( i=0; i<itemprocs.size(); i++ )
+    {
+      itemproc = itemprocs.get(i);
+      itemproc.computeOutcomes();
+    }
   }
 
 
@@ -146,6 +154,10 @@ public class QTIElementResprocessing
       if ( !conditions.get(i).isSupported() )
         return;
 
+    itemprocs = findElements( QTIItemproc.class, false );
+    for ( int i=0; i<itemprocs.size(); i++ )
+      if ( !itemprocs.get(i).isSupported() )
+        return;
 
     supported = outcomes.isSupported();
   }
