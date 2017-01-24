@@ -25,8 +25,8 @@ public class PageListModel
   };
 
   Vector<PageData> pages = new Vector<PageData>();
-  Vector<PageData> unprocessedpages = new Vector<PageData>();
-  Hashtable<String,Vector<PageData>> candidatelookup = new Hashtable<String,Vector<PageData>>();
+  //Vector<PageData> unprocessedpages = new Vector<PageData>();
+  //Hashtable<String,Vector<PageData>> candidatelookup = new Hashtable<String,Vector<PageData>>();
 
 
 
@@ -34,7 +34,7 @@ public class PageListModel
   {
     this.pages = data;
   }
-
+  
   @Override
   public int getRowCount()
   {

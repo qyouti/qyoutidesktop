@@ -69,6 +69,7 @@ public class QTIItemRenderer
   QuestionMetricsRecord mrec;
   PrintThread printthread;
 
+  int columnoverride = 0;
   String analysishtml = "";
   
   int type = PrintThread.TYPE_PAPERS;
@@ -170,6 +171,16 @@ public class QTIItemRenderer
     this.analysishtml = analysishtml;
   }
 
+  public int getColumnOverride()
+  {
+    return columnoverride;
+  }
+
+  public void setColumnOverride( int c )
+  {
+    this.columnoverride = c;
+  }
+
   
   
   public void renderItem()
@@ -254,7 +265,7 @@ public class QTIItemRenderer
     width -= getMetrics().getPropertyInches( "item-area-inset-left" );
     width -= getMetrics().getPropertyInches( "item-area-inset-right" );
     int columns = item.getPresentation().getColumns();
-    
+    if ( columnoverride > 0 ) columns = columnoverride;
     width -= (double)(columns-1) * getMetrics().getPropertyInches( "item-area-column-spacing" );
     width = width / (double)columns;
 
@@ -312,7 +323,10 @@ public class QTIItemRenderer
     for ( i = 0; i < state.inserts.size(); i++)
     {
       insert = state.inserts.get(i);
-      if (insert.icon != null && insert.icon instanceof UserInputIcon )
+      if ( insert.icon != null && 
+           insert.icon instanceof UserInputIcon &&
+           insert.icon.x != null && 
+           insert.icon.y != null    )
       {
         picon = (UserInputIcon)insert.icon;
         pinkbox = picon.getPinkRectangle();
@@ -786,6 +800,10 @@ public class QTIItemRenderer
       double itemareinsettop = getMetrics().getPropertySvgUnits("item-area-inset-top");
       
 //      int columns = exam.getQTIRenderIntegerOption( "columns" );
+      int columnoverride = 0;
+      if ( type == PrintThread.TYPE_ANALYSIS )
+         columnoverride = 1;
+      
       int columns = -1;
       int previous_columns=-1;
       int column = 0;
@@ -846,6 +864,7 @@ public class QTIItemRenderer
       {
         previous_columns = columns;
         columns = items.elementAt(i).getPresentation().getColumns();
+        if ( columnoverride > 0 ) columns = columnoverride;
         if ( columns != previous_columns )
         {
           // new section with different number of columns
@@ -874,7 +893,10 @@ public class QTIItemRenderer
         renderer = new QTIItemRenderer( printthread, type, examfolderuri, items.elementAt(i), i+1, 
             exam, prefs );
         if ( type == PrintThread.TYPE_ANALYSIS )
+        {
           renderer.setAnalysisHTML( exam.getQuestionAnalysis( items.elementAt(i).getIdent() ).toHTML() );
+          renderer.setColumnOverride( 1 );
+        }
         renderer.renderItem();
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );

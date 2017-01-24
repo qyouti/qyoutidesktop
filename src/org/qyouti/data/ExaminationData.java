@@ -106,6 +106,17 @@ public class ExaminationData
   ArrayList<String> outcomenames = new ArrayList<String>();
  
   public QuestionReviewTable reviewlist = new QuestionReviewTable( this );
+  public static final int REVIEW_ALL = 1;
+  public static final int REVIEW_BY_QUESTION = 2;
+  public static final int REVIEW_BY_CANDIDATE = 3;
+  
+  public static final int REVIEW_FILTER_NONE        = 1;
+  public static final int REVIEW_FILTER_RECOMMENDED = 2;
+  
+  int reviewtype = REVIEW_ALL;
+  int reviewfilter = REVIEW_FILTER_NONE;
+  String reviewcandidateident = null;
+  String reviewquestionident = null;
   
   int nextscanfileident = 10000;
   
@@ -219,13 +230,83 @@ public class ExaminationData
     return null;
   }
 
+  public int getReviewType()
+  {
+    return reviewtype;
+  }
+
+  public void setReviewType( int reviewtype )
+  {
+    reviewcandidateident = null;
+    reviewquestionident = null;
+    this.reviewtype = reviewtype;
+    rebuildReviewList();
+  }
+  
+  public String getReviewCandidateIdent()
+  {
+    return reviewcandidateident;
+  }
+  
+  public void setReviewCandidateIdent( String reviewcandidateident )
+  {
+    this.reviewcandidateident = reviewcandidateident;
+    // rebuild the table model that lists question data for this
+    // candidate...
+    rebuildReviewList();
+  }
+
+  public String getReviewQuestionIdent()
+  {
+    return reviewquestionident;
+  }
+  
+  public void setReviewQuestionIdent( String reviewquestionident )
+  {
+    this.reviewquestionident = reviewquestionident;
+    // rebuild the table model that lists question data for this
+    // question...
+    rebuildReviewList();
+  }  
+  
   
   public void rebuildReviewList()
   {
     int i, j;
     CandidateData c;
     QuestionData q;
+    
     reviewlist.clear();
+    
+    if ( reviewtype == REVIEW_BY_CANDIDATE )
+    {
+      if ( reviewcandidateident == null ) return;
+      c = this.candidates.get( reviewcandidateident );
+      for ( j=0; j<c.itemidents.size(); j++ )
+      {
+        q = c.getQuestionData( c.itemidents.get( j ) );
+        if ( q!=null )
+          reviewlist.add( c, q );
+      }
+      return;
+    }
+
+    if ( reviewtype == REVIEW_BY_QUESTION )
+    {
+      if ( reviewquestionident == null ) return;
+      for ( i=0; i<this.candidates_sorted.size(); i++ )
+      {
+        c = this.candidates_sorted.get( i );
+        for ( j=0; j<c.itemidents.size(); j++ )
+        {
+          q = c.getQuestionData( c.itemidents.get( j ) );
+          if ( q!=null && q.ident.equals( reviewquestionident ) )
+            reviewlist.add( c, q );
+        }
+      }
+      return;
+    }
+
     for ( i=0; i<this.candidates_sorted.size(); i++ )
     {
       c = this.candidates_sorted.get( i );
@@ -282,6 +363,8 @@ public class ExaminationData
       }
       //candidate.pages.clear();
     }
+    
+    pagelistmodel.fireTableDataChanged();
         
     for ( int i=0; i<scans.size(); i++ )
     {
@@ -297,20 +380,6 @@ public class ExaminationData
     scans.clear();
   }
   
-  public void clearPages()
-  {
-    CandidateData candidate;
-    
-    clearScans();
-    for ( int i = 0; i < candidates_sorted.size(); i++ )
-    {
-      candidate = candidates_sorted.get( i );
-      candidate.pages.clear();
-    }
-    clearScans();
-    pages.clear();
-    pagemap.clear();
-  }
 
   public void forgetPrint()
   {
@@ -324,6 +393,7 @@ public class ExaminationData
     }
     pages.clear();
     pagemap.clear();
+    pagelistmodel.fireTableDataChanged();
   }
   
   public int getPageCount()
@@ -335,6 +405,7 @@ public class ExaminationData
   {
     pages.add( page );
     pagemap.put( page.pageid, page );
+    pagelistmodel.fireTableDataChanged();
   }
   
   public PageData createPage(
@@ -346,12 +417,6 @@ public class ExaminationData
     addPage( page );
     linkPageToCandidate( page );
     return page;
-  }
-  
-  public void replacePage( int p, PageData page )
-  {
-    pages.set( p, page );
-    pagemap.put( page.pageid, page );
   }
   
   public PageData getPage( int n )
@@ -1618,7 +1683,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     return page.candidate;
   }
 
-  public void invalidateOutcomes()
+  public void invalidateAllOutcomes()
   {
     invalidateOutcomes( null );
   }
@@ -1706,7 +1771,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     {
       try
       {
-        writer.close();
+        if ( writer != null )
+          writer.close();
       } catch (IOException ex)
       {
         Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);

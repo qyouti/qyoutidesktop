@@ -66,6 +66,7 @@ public class ExamSelectDialog
     this.basefolder = basefolder;
     examcatalogue = new ExaminationCatalogue( basefolder );
     baselabel.setText( basefolder.getAbsolutePath() );
+    updateList();
   }
 
   public ExaminationCatalogue getExaminationCatalogue()

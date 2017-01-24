@@ -63,6 +63,7 @@ public class PrintThread extends Thread
   public void run()
   {
     int p=1;
+    boolean error = false;
     
     try
     {
@@ -167,15 +168,17 @@ public class PrintThread extends Thread
     {
       Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, te);      
       Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, te.getException() );  
+      error = true;
     }
     catch (Exception ex)
     {
       Logger.getLogger(PrintThread.class.getName()).log(Level.SEVERE, null, ex);
+      error = true;
     }
     finally
     {
       if ( frame != null )
-        frame.pdfPrintComplete();
+        frame.pdfPrintComplete( error );
     }
     System.out.println( "Printing to PDF complete." );
   }

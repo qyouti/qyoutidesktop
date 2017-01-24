@@ -151,7 +151,7 @@ public class ExamCreateDialog
 
   private void createbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_createbuttonActionPerformed
   {//GEN-HEADEREND:event_createbuttonActionPerformed
-    parent.examinationBuilt( folder, template.getDocumentAsString() );
+    parent.examinationBuilt( folder, template );
     this.setVisible( false );
     this.dispose();
   }//GEN-LAST:event_createbuttonActionPerformed
