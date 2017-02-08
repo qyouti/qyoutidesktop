@@ -104,16 +104,6 @@ public class QyoutiFrame
               
             });
     
-    candidatetable.getSelectionModel().addListSelectionListener( 
-            new ListSelectionListener() {
-              
-      @Override
-      public void valueChanged( ListSelectionEvent e )
-      {
-        candidateSelectionChanged( e );
-      }
-              
-            });
     
     questionreviewtable.getSelectionModel().addListSelectionListener( 
             new ListSelectionListener() {
@@ -290,56 +280,7 @@ public class QyoutiFrame
 //      }
 //    }
   }
-  
-  public void candidateSelectionChanged( ListSelectionEvent e )
-  {
-    if ( e.getValueIsAdjusting() )
-      return;
     
-    System.out.println( "Candidate selection change." );
-    candqpanel.removeAll();
-    
-    if ( candidatetable.getSelectedRowCount() == 1 )
-    {
-      System.out.println( "Show candidate " + candidatetable.getSelectedRow() );
-      CandidateData cd = exam.candidates_sorted.get( candidatetable.getSelectedRow() );
-      cdetailnamelabel.setText( cd.name );
-      cdetailidlabel.setText( cd.id );
-      cdetailoutcometable.setModel( cd.outcomes );
-      cdetailerrorlabel.setText( cd.getErrorMessage() );
-      
-      Vector<QTIElementItem> items = cd.getItems();
-      GridBagConstraints gbc = new GridBagConstraints();
-      gbc.gridx = 0;
-      gbc.weightx = 0.5;
-      gbc.weighty = 0.5;
-      gbc.anchor = GridBagConstraints.FIRST_LINE_START;
-      gbc.fill = GridBagConstraints.HORIZONTAL;
-      CandidateQuestionPanel cqp;
-      for ( int i=0; i<items.size(); i++ )
-      {
-        cqp = new CandidateQuestionPanel( cd, items.get( i ).getIdent() );
-        candqpanel.add( cqp, gbc );
-      }
-      sp6.revalidate();
-    }
-    else
-    {
-      System.out.println( "Clear candidate panel" );
-      cdetailnamelabel.setText( "" );
-      cdetailidlabel.setText( "" );
-      cdetailoutcometable.setModel( 
-              new javax.swing.table.DefaultTableModel(new Object [][]{}, new String []{"."})
-              {
-                public Class getColumnClass(int columnIndex) {return String.class;}
-                public boolean isCellEditable(int rowIndex, int columnIndex) {return false;}
-              }
-      );
-      
-      cdetailerrorlabel.setText( "" );
-    }
-  }
-  
   boolean confirmDataLoss( String message )
   {
     if ( exam != null && exam.areUnsavedChanges() )
@@ -394,23 +335,8 @@ public class QyoutiFrame
     jScrollPane5 = new javax.swing.JScrollPane();
     jTextPane1 = new javax.swing.JTextPane();
     ctab = new javax.swing.JPanel();
-    splitpane = new javax.swing.JSplitPane();
     sp2 = new javax.swing.JScrollPane();
     candidatetable = new javax.swing.JTable();
-    jSplitPane1 = new javax.swing.JSplitPane();
-    cdetailpanel = new javax.swing.JPanel();
-    jPanel3 = new javax.swing.JPanel();
-    jLabel1 = new javax.swing.JLabel();
-    cdetailnamelabel = new javax.swing.JLabel();
-    jLabel3 = new javax.swing.JLabel();
-    cdetailidlabel = new javax.swing.JLabel();
-    jPanel1 = new javax.swing.JPanel();
-    cdetailoutcometable = new javax.swing.JTable();
-    jLabel6 = new javax.swing.JLabel();
-    cdetailerrorlabel = new javax.swing.JLabel();
-    sp6 = new javax.swing.JScrollPane();
-    candqpanelouter = new javax.swing.JPanel();
-    candqpanel = new javax.swing.JPanel();
     ptab = new javax.swing.JPanel();
     sp3 = new javax.swing.JScrollPane();
     pagestable = new javax.swing.JTable();
@@ -577,9 +503,6 @@ public class QyoutiFrame
 
     ctab.setLayout(new java.awt.BorderLayout());
 
-    splitpane.setDividerLocation(150);
-    splitpane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-
     candidatetable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
       {
@@ -613,133 +536,7 @@ public class QyoutiFrame
     candidatetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp2.setViewportView(candidatetable);
 
-    splitpane.setLeftComponent(sp2);
-
-    jSplitPane1.setDividerLocation(200);
-
-    cdetailpanel.setLayout(new java.awt.GridBagLayout());
-
-    jPanel3.setLayout(new java.awt.GridBagLayout());
-
-    jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    jLabel1.setText("Name :");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(jLabel1, gridBagConstraints);
-
-    cdetailnamelabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(cdetailnamelabel, gridBagConstraints);
-
-    jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    jLabel3.setText("ID :");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(jLabel3, gridBagConstraints);
-
-    cdetailidlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(cdetailidlabel, gridBagConstraints);
-
-    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Overall Outcomes"));
-    jPanel1.setMinimumSize(new java.awt.Dimension(80, 38));
-    jPanel1.setLayout(new java.awt.BorderLayout());
-
-    cdetailoutcometable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-        {null, null}
-      },
-      new String []
-      {
-        "Title 1", "Title 2"
-      }
-    ));
-    jPanel1.add(cdetailoutcometable, java.awt.BorderLayout.CENTER);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.gridwidth = 2;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    jPanel3.add(jPanel1, gridBagConstraints);
-
-    jLabel6.setText("Errors:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(jLabel6, gridBagConstraints);
-
-    cdetailerrorlabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    gridBagConstraints.insets = new java.awt.Insets(4, 8, 4, 8);
-    jPanel3.add(cdetailerrorlabel, gridBagConstraints);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-    gridBagConstraints.weightx = 0.1;
-    gridBagConstraints.weighty = 0.1;
-    cdetailpanel.add(jPanel3, gridBagConstraints);
-
-    jSplitPane1.setLeftComponent(cdetailpanel);
-
-    sp6.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-    sp6.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-    candqpanelouter.setBackground(java.awt.Color.white);
-    candqpanelouter.setLayout(new java.awt.GridBagLayout());
-
-    candqpanel.setBackground(java.awt.Color.white);
-    candqpanel.setLayout(new java.awt.GridBagLayout());
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-    gridBagConstraints.weightx = 0.5;
-    gridBagConstraints.weighty = 0.5;
-    candqpanelouter.add(candqpanel, gridBagConstraints);
-
-    sp6.setViewportView(candqpanelouter);
-
-    jSplitPane1.setRightComponent(sp6);
-
-    splitpane.setRightComponent(jSplitPane1);
-
-    ctab.add(splitpane, java.awt.BorderLayout.CENTER);
+    ctab.add(sp2, java.awt.BorderLayout.CENTER);
 
     tabs.addTab("Candidates", ctab);
 
@@ -2126,13 +1923,6 @@ public class QyoutiFrame
   private javax.swing.JTable analysistable;
   private javax.swing.JTextPane analysistextpane;
   private javax.swing.JTable candidatetable;
-  private javax.swing.JPanel candqpanel;
-  private javax.swing.JPanel candqpanelouter;
-  private javax.swing.JLabel cdetailerrorlabel;
-  private javax.swing.JLabel cdetailidlabel;
-  private javax.swing.JLabel cdetailnamelabel;
-  private javax.swing.JTable cdetailoutcometable;
-  private javax.swing.JPanel cdetailpanel;
   private javax.swing.JPanel centralpanel;
   private javax.swing.JMenuItem clearscanneddatamenuitem;
   private javax.swing.JMenuItem configmenuitem;
@@ -2151,14 +1941,9 @@ public class QyoutiFrame
   private javax.swing.JMenuItem importimagesmenuitem;
   private javax.swing.JMenuItem importqmenuitem;
   private javax.swing.JMenuItem itemanalysismenuitem;
-  private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel4;
-  private javax.swing.JLabel jLabel6;
-  private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
-  private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
   private javax.swing.JPanel jPanel6;
@@ -2170,7 +1955,6 @@ public class QyoutiFrame
   private javax.swing.JScrollPane jScrollPane5;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JPopupMenu.Separator jSeparator2;
-  private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JSplitPane jSplitPane4;
@@ -2214,10 +1998,8 @@ public class QyoutiFrame
   private javax.swing.JScrollPane sp2;
   private javax.swing.JScrollPane sp3;
   private javax.swing.JScrollPane sp4;
-  private javax.swing.JScrollPane sp6;
   private javax.swing.JScrollPane sp8;
   private javax.swing.JLabel spacerlabel;
-  private javax.swing.JSplitPane splitpane;
   private javax.swing.JPanel stab;
   private javax.swing.JPanel statuspanel;
   private javax.swing.JTabbedPane tabs;
