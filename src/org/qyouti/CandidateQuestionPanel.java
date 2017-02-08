@@ -12,6 +12,7 @@ import java.io.*;
 import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.*;
 import org.qyouti.data.*;
 import org.qyouti.qti1.element.*;
 
@@ -25,6 +26,7 @@ public class CandidateQuestionPanel
   CandidateData candidate;
   String questionident;
   QuestionData questiondata;
+  TableModelListener questiondatalistener;
   QTIElementItem item;
   
   BufferedImage questionimage;
@@ -104,7 +106,7 @@ public class CandidateQuestionPanel
       }
 
       responsetable.setModel( questiondata );
-      questiondata.addTableModelListener( new TableModelListener(){
+      questiondatalistener = new TableModelListener(){
         @Override
         public void tableChanged( TableModelEvent e )
         {
@@ -121,7 +123,9 @@ public class CandidateQuestionPanel
           // content of the last column
           
         }
-      } );
+      };
+      
+      questiondata.addTableModelListener( questiondatalistener );
       for ( int i=0; i<questiondata.getRowCount(); i++ )
       {
         int h = questiondata.getRowHeight( i );
@@ -146,6 +150,17 @@ public class CandidateQuestionPanel
     responsetable.setMinimumSize(new Dimension(200,responsetable.getRowHeight( 0 )*responsetable.getRowCount()));
   }
 
+  @Override
+  public void removeNotify()
+  {
+    super.removeNotify();
+    this.responsetable.setModel( new DefaultTableModel() );
+    this.outcometable.setModel( new DefaultTableModel() );
+    questiondata.removeTableModelListener( questiondatalistener );
+  }
+
+  
+  
   /**
    * This method is called from within the constructor to initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is always
