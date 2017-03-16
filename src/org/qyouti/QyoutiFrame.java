@@ -252,10 +252,14 @@ public class QyoutiFrame
     QTIElementItem item = null;
     int row = questiontable.getSelectedRow();
     if ( row < 0 )
+    {
       exam.analysistable.setSelectedQuestion( null );
+      setPreviewItem( null, row );
+    }
     else
     {
       item = exam.qdefs.qti.getItems().elementAt( row );
+      setPreviewItem( item, row );
       exam.analysistable.setSelectedQuestion( (item==null)?null:item.getIdent() );
     }
     
@@ -317,6 +321,7 @@ public class QyoutiFrame
 
     analysistextpane = new javax.swing.JTextPane();
     reviewtypebuttongroup = new javax.swing.ButtonGroup();
+    reviewincludebuttongroup = new javax.swing.ButtonGroup();
     spacerlabel = new javax.swing.JLabel();
     centralpanel = new javax.swing.JPanel();
     noexamloadedpanel = new javax.swing.JPanel();
@@ -327,6 +332,9 @@ public class QyoutiFrame
     sp1 = new javax.swing.JScrollPane();
     questiontable = new javax.swing.JTable();
     jTabbedPane1 = new javax.swing.JTabbedPane();
+    jPanel8 = new javax.swing.JPanel();
+    jScrollPane3 = new javax.swing.JScrollPane();
+    previewsvgcanvas = new org.apache.batik.swing.JSVGCanvas();
     jPanel2 = new javax.swing.JPanel();
     questionanalysistoppane = new javax.swing.JPanel();
     jLabel4 = new javax.swing.JLabel();
@@ -348,9 +356,14 @@ public class QyoutiFrame
     jPanel4 = new javax.swing.JPanel();
     jPanel5 = new javax.swing.JPanel();
     jPanel7 = new javax.swing.JPanel();
+    jPanel1 = new javax.swing.JPanel();
     reviewtype1button = new javax.swing.JRadioButton();
     reviewtype2button = new javax.swing.JRadioButton();
     reviewtype3button = new javax.swing.JRadioButton();
+    jPanel3 = new javax.swing.JPanel();
+    reviewincludeall = new javax.swing.JRadioButton();
+    reviewincludenotreviewed = new javax.swing.JRadioButton();
+    reviewincludeoverridden = new javax.swing.JRadioButton();
     jPanel6 = new javax.swing.JPanel();
     previousreviewbutton = new javax.swing.JButton();
     nextreviewbutton = new javax.swing.JButton();
@@ -389,7 +402,6 @@ public class QyoutiFrame
     importqmenuitem = new javax.swing.JMenuItem();
     editquestionmenuitem = new javax.swing.JMenuItem();
     editallquestionsmenuitem = new javax.swing.JMenuItem();
-    previewqmenuitem = new javax.swing.JMenuItem();
     itemanalysismenuitem = new javax.swing.JMenuItem();
     sep2 = new javax.swing.JPopupMenu.Separator();
     importcanmenuitem = new javax.swing.JMenuItem();
@@ -422,6 +434,8 @@ public class QyoutiFrame
     tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
     qtab.setLayout(new java.awt.BorderLayout());
+
+    jSplitPane3.setDividerLocation(400);
 
     questiontable.setModel(new javax.swing.table.DefaultTableModel(
       new Object [][]
@@ -457,6 +471,14 @@ public class QyoutiFrame
     sp1.setViewportView(questiontable);
 
     jSplitPane3.setLeftComponent(sp1);
+
+    jPanel8.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane3.setViewportView(previewsvgcanvas);
+
+    jPanel8.add(jScrollPane3, java.awt.BorderLayout.CENTER);
+
+    jTabbedPane1.addTab("Preview", jPanel8);
 
     jPanel2.setLayout(new java.awt.BorderLayout());
 
@@ -627,7 +649,10 @@ public class QyoutiFrame
     jPanel5.setLayout(new java.awt.BorderLayout());
 
     jPanel7.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 10, 1, 1));
-    jPanel7.setLayout(new java.awt.GridLayout(3, 1));
+    jPanel7.setLayout(new java.awt.GridLayout(0, 2));
+
+    jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Review Type"));
+    jPanel1.setLayout(new java.awt.GridLayout(0, 1));
 
     reviewtypebuttongroup.add(reviewtype1button);
     reviewtype1button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
@@ -640,7 +665,7 @@ public class QyoutiFrame
         reviewtype1buttonActionPerformed(evt);
       }
     });
-    jPanel7.add(reviewtype1button);
+    jPanel1.add(reviewtype1button);
 
     reviewtypebuttongroup.add(reviewtype2button);
     reviewtype2button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
@@ -652,7 +677,7 @@ public class QyoutiFrame
         reviewtype2buttonActionPerformed(evt);
       }
     });
-    jPanel7.add(reviewtype2button);
+    jPanel1.add(reviewtype2button);
 
     reviewtypebuttongroup.add(reviewtype3button);
     reviewtype3button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
@@ -664,7 +689,50 @@ public class QyoutiFrame
         reviewtype3buttonActionPerformed(evt);
       }
     });
-    jPanel7.add(reviewtype3button);
+    jPanel1.add(reviewtype3button);
+
+    jPanel7.add(jPanel1);
+
+    jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
+    jPanel3.setLayout(new java.awt.GridLayout(0, 1));
+
+    reviewincludebuttongroup.add(reviewincludeall);
+    reviewincludeall.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewincludeall.setText("All review statuses");
+    reviewincludeall.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewincludeallActionPerformed(evt);
+      }
+    });
+    jPanel3.add(reviewincludeall);
+
+    reviewincludebuttongroup.add(reviewincludenotreviewed);
+    reviewincludenotreviewed.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewincludenotreviewed.setText("Not reviewed only");
+    reviewincludenotreviewed.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewincludenotreviewedActionPerformed(evt);
+      }
+    });
+    jPanel3.add(reviewincludenotreviewed);
+
+    reviewincludebuttongroup.add(reviewincludeoverridden);
+    reviewincludeoverridden.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewincludeoverridden.setText("Overridden only");
+    reviewincludeoverridden.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewincludeoverriddenActionPerformed(evt);
+      }
+    });
+    jPanel3.add(reviewincludeoverridden);
+
+    jPanel7.add(jPanel3);
 
     jPanel5.add(jPanel7, java.awt.BorderLayout.NORTH);
 
@@ -911,16 +979,6 @@ public class QyoutiFrame
       }
     });
     actionmenu.add(editallquestionsmenuitem);
-
-    previewqmenuitem.setText("Preview Question");
-    previewqmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        previewqmenuitemActionPerformed(evt);
-      }
-    });
-    actionmenu.add(previewqmenuitem);
 
     itemanalysismenuitem.setText("Item Analysis");
     itemanalysismenuitem.addActionListener(new java.awt.event.ActionListener()
@@ -1214,63 +1272,37 @@ public class QyoutiFrame
 
   }//GEN-LAST:event_newmenuitemActionPerformed
 
-  private void previewqmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previewqmenuitemActionPerformed
-  {//GEN-HEADEREND:event_previewqmenuitemActionPerformed
-
-    if ( exam == null )
+  
+    public void setPreviewItem( QTIElementItem item, int qnumber )
     {
-      JOptionPane.
-              showMessageDialog( this, "No exam/survey open." );
-      return;
-    }
-
-    QTIElementItem item = null;
-    int itemnumber = 0;
-    if ( tabs.getSelectedComponent() == qtab )
-    {
-      int row = questiontable.getSelectedRow();
-      if ( row < 0 )
-      {
-        JOptionPane.
-                showMessageDialog( this, "Select a question in the Questions tab to preview." );
-        return;
-      }
-
-      item = exam.qdefs.qti.getItems().elementAt( row );
-      itemnumber = row;
-    }
-    else
-    {
-      JOptionPane.
-              showMessageDialog( this, "Question preview is only available on the Question tab." );
-      return;
-    }
-
-    if ( questiondialog == null )
-    {
+      URI uri;
+      
+      previewsvgcanvas.setSVGDocument(null);
+      if ( item == null ) return;
+      
       try
       {
-        questiondialog = new QuestionPreviewDialog( this, true,
-                                                    exam.getExamFolder().
-                                                    getCanonicalFile().toURI(),
-                                                    exam );
+        uri = exam.getExamFolder().getCanonicalFile().toURI();
       }
-      catch ( IOException ex )
+      catch ( IOException ioe )
       {
-        Logger.getLogger( QyoutiFrame.class.getName() ).
-                log( Level.SEVERE, null, ex );
+        return;
       }
-      questiondialog.setLocationRelativeTo( this );
+      
+          
+      // TO DO - create preview in background thread
+      QTIItemRenderer renderer = new QTIItemRenderer( 
+            null, PrintThread.TYPE_PAPERS, uri, item, qnumber, exam, null );
+      
+      if ( renderer == null )
+          return;
+      renderer.renderItem();
+
+      GenericDocument svg = (GenericDocument) renderer.getPreviewSVGDocument( exam );
+      previewsvgcanvas.setDocument( svg );
+      // how to set zoom factor so page fits to width?
     }
-    questiondialog.setItem( item, itemnumber );
-
-    questiondialog.setVisible( true );
-    Dimension d = questiondialog.getSize();
-    // This will trigger centering and resizing to fit document to window
-    questiondialog.setSize( d.width - 1, d.height - 1 );
-
-  }//GEN-LAST:event_previewqmenuitemActionPerformed
-
+  
   private void editquestionmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editquestionmenuitemActionPerformed
   {//GEN-HEADEREND:event_editquestionmenuitemActionPerformed
 
@@ -1641,13 +1673,27 @@ public class QyoutiFrame
 
   private void previousreviewbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previousreviewbuttonActionPerformed
   {//GEN-HEADEREND:event_previousreviewbuttonActionPerformed
-    // TODO add your handling code here:
-    
+    if ( questionreviewtable.getSelectedRowCount() != 1 )
+    {
+      questionreviewtable.clearSelection();
+      questionreviewtable.addRowSelectionInterval( 0, 0 );
+      return;
+    }
+
+    for ( int i=1; i<( questionreviewtable.getRowCount() - 1 ); i++ )
+    {
+      if ( questionreviewtable.isRowSelected( i ) )
+      {
+        questionreviewtable.clearSelection();
+        questionreviewtable.addRowSelectionInterval( i-1, i-1 );
+        return;
+      }
+    }
   }//GEN-LAST:event_previousreviewbuttonActionPerformed
 
   private void nextreviewbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_nextreviewbuttonActionPerformed
   {//GEN-HEADEREND:event_nextreviewbuttonActionPerformed
-    // TODO add your handling code here:
+
     
     if ( questionreviewtable.getSelectedRowCount() != 1 )
     {
@@ -1690,6 +1736,17 @@ public class QyoutiFrame
     exam.setReviewType( type );
     updateLeftList();
   }
+
+  private void reviewFilterChanged( int filter )
+  {
+//    if ( exam.getReviewFilter() == filter )
+//      return;
+    // update if the user clicks on the same radio button
+    // because this will allow them to thin out the list as
+    // they change the review statuses on entries.
+    exam.setReviewFilter( filter );
+    updateLeftList();
+  }
   
   
   private void reviewtype1buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewtype1buttonActionPerformed
@@ -1714,6 +1771,21 @@ public class QyoutiFrame
     exam.setUnsavedChanges( true );
     exam.processDataChanged( exam.qdefs );
   }//GEN-LAST:event_recomputemenuitemActionPerformed
+
+  private void reviewincludeallActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeallActionPerformed
+  {//GEN-HEADEREND:event_reviewincludeallActionPerformed
+    reviewFilterChanged( 1 );
+  }//GEN-LAST:event_reviewincludeallActionPerformed
+
+  private void reviewincludenotreviewedActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludenotreviewedActionPerformed
+  {//GEN-HEADEREND:event_reviewincludenotreviewedActionPerformed
+    reviewFilterChanged( 2 );
+  }//GEN-LAST:event_reviewincludenotreviewedActionPerformed
+
+  private void reviewincludeoverriddenActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeoverriddenActionPerformed
+  {//GEN-HEADEREND:event_reviewincludeoverriddenActionPerformed
+    reviewFilterChanged( 3 );
+  }//GEN-LAST:event_reviewincludeoverriddenActionPerformed
 
   /**
    * Indicates that the question edit dialog stored some changes into its item
@@ -1943,14 +2015,18 @@ public class QyoutiFrame
   private javax.swing.JMenuItem itemanalysismenuitem;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel4;
+  private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
   private javax.swing.JPanel jPanel6;
   private javax.swing.JPanel jPanel7;
+  private javax.swing.JPanel jPanel8;
   private javax.swing.JPanel jPanel9;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
+  private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JScrollPane jScrollPane4;
   private javax.swing.JScrollPane jScrollPane5;
   private javax.swing.JPopupMenu.Separator jSeparator1;
@@ -1968,7 +2044,7 @@ public class QyoutiFrame
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
-  private javax.swing.JMenuItem previewqmenuitem;
+  private org.apache.batik.swing.JSVGCanvas previewsvgcanvas;
   private javax.swing.JButton previousreviewbutton;
   private javax.swing.JLabel printstatuslabel;
   private javax.swing.JProgressBar progressbar;
@@ -1982,6 +2058,10 @@ public class QyoutiFrame
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
   private javax.swing.JMenuItem recomputemenuitem;
+  private javax.swing.JRadioButton reviewincludeall;
+  private javax.swing.ButtonGroup reviewincludebuttongroup;
+  private javax.swing.JRadioButton reviewincludenotreviewed;
+  private javax.swing.JRadioButton reviewincludeoverridden;
   private javax.swing.JRadioButton reviewtype1button;
   private javax.swing.JRadioButton reviewtype2button;
   private javax.swing.JRadioButton reviewtype3button;
