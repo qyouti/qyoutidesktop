@@ -109,6 +109,10 @@ public class ExaminationData
   public static final int REVIEW_ALL = 1;
   public static final int REVIEW_BY_QUESTION = 2;
   public static final int REVIEW_BY_CANDIDATE = 3;
+
+  public static final int REVIEW_FILTER_ALL = 1;
+  public static final int REVIEW_FILTER_UNREVIEWED = 2;
+  public static final int REVIEW_FILTER_OVERRIDDEN = 3;
   
   public static final int REVIEW_FILTER_NONE        = 1;
   public static final int REVIEW_FILTER_RECOMMENDED = 2;
@@ -242,6 +246,19 @@ public class ExaminationData
     this.reviewtype = reviewtype;
     rebuildReviewList();
   }
+
+  public int getReviewFilter()
+  {
+    return reviewfilter;
+  }
+
+  public void setReviewFilter( int reviewfilter )
+  {
+    reviewcandidateident = null;
+    reviewquestionident = null;
+    this.reviewfilter = reviewfilter;
+    rebuildReviewList();
+  }
   
   public String getReviewCandidateIdent()
   {
@@ -269,6 +286,17 @@ public class ExaminationData
     rebuildReviewList();
   }  
   
+
+  public void addToReviewList( CandidateData c, QuestionData q )
+  {
+    if ( reviewfilter == REVIEW_FILTER_UNREVIEWED && 
+            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_NONE )
+      return;
+    if ( reviewfilter == REVIEW_FILTER_OVERRIDDEN && 
+            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE )
+      return;
+    reviewlist.add( c, q );    
+  }
   
   public void rebuildReviewList()
   {
@@ -286,9 +314,8 @@ public class ExaminationData
       {
         q = c.getQuestionData( c.itemidents.get( j ) );
         if ( q!=null )
-          reviewlist.add( c, q );
+          addToReviewList( c, q );
       }
-      return;
     }
 
     if ( reviewtype == REVIEW_BY_QUESTION )
@@ -301,22 +328,24 @@ public class ExaminationData
         {
           q = c.getQuestionData( c.itemidents.get( j ) );
           if ( q!=null && q.ident.equals( reviewquestionident ) )
-            reviewlist.add( c, q );
+            addToReviewList( c, q );
         }
       }
-      return;
     }
 
-    for ( i=0; i<this.candidates_sorted.size(); i++ )
+    if ( reviewtype == REVIEW_ALL )
     {
-      c = this.candidates_sorted.get( i );
-      for ( j=0; j<c.itemidents.size(); j++ )
+      for ( i=0; i<this.candidates_sorted.size(); i++ )
       {
-        q = c.getQuestionData( c.itemidents.get( j ) );
-        if ( q!=null && q.needsreview )
-          reviewlist.add( c, q );
+        c = this.candidates_sorted.get( i );
+        for ( j=0; j<c.itemidents.size(); j++ )
+        {
+          q = c.getQuestionData( c.itemidents.get( j ) );
+          if ( q!=null && q.needsreview )
+            addToReviewList( c, q );
+        }
       }
-    }
+    }      
   }
   
   public void addOutcomeName( String name )
