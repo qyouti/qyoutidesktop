@@ -1079,6 +1079,7 @@ public class QTIItemRenderer
             );
     svg.setAttribute("width",  ""+widthinches+"in" );
     svg.setAttribute("height", ""+heightinches+"in" );
+    svg.setAttribute("preserveAspectRatio", "xMinYMin meet" );
 
 
 //    while ( svg.getChildNodes().getLength() != 0 )

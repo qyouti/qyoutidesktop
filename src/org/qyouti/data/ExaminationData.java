@@ -81,7 +81,7 @@ public class ExaminationData
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
-  public QuestionAnalysisTable analysistable = new QuestionAnalysisTable( this, analyses );
+  public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
   File examfile;
   File scanfolder;
   File responsefolder;
@@ -113,12 +113,9 @@ public class ExaminationData
   public static final int REVIEW_FILTER_ALL = 1;
   public static final int REVIEW_FILTER_UNREVIEWED = 2;
   public static final int REVIEW_FILTER_OVERRIDDEN = 3;
-  
-  public static final int REVIEW_FILTER_NONE        = 1;
-  public static final int REVIEW_FILTER_RECOMMENDED = 2;
-  
+    
   int reviewtype = REVIEW_ALL;
-  int reviewfilter = REVIEW_FILTER_NONE;
+  int reviewfilter = REVIEW_FILTER_ALL;
   String reviewcandidateident = null;
   String reviewquestionident = null;
   
@@ -166,7 +163,8 @@ public class ExaminationData
   }
   public void processDataChanged( QuestionAnalysisTable model )
   {
-    model.fireTableDataChanged();
+    model.fireTableStructureChanged();
+  //model.fireTableDataChanged();
   }
   public void processDataChanged( QuestionDefinitions model )
   {
@@ -254,8 +252,6 @@ public class ExaminationData
 
   public void setReviewFilter( int reviewfilter )
   {
-    reviewcandidateident = null;
-    reviewquestionident = null;
     this.reviewfilter = reviewfilter;
     rebuildReviewList();
   }
@@ -563,88 +559,90 @@ public class ExaminationData
     {
       return null;
     }
+    String ident = analysistablemodel.getSelectedQuestion();
     analyses.clear();
-    analysistable.setSelectedQuestion( null );
-
     qdefs.itemAnalysis(candidates_sorted, analyses);
-    ResponseAnalysis ranal;
-    StringWriter writer = new StringWriter();
-    PrintWriter out = new PrintWriter( writer );
-    out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 90% limit\",\"Upper 90% limit\",,,,,,,\n");
-    for (int i = 0; i < analyses.size(); i++)
-    {
-      for (int j = 0; j < analyses.get(i).response_analyses.size(); j++)
-      {
-        ranal = analyses.get(i).response_analyses.get(j);
-
-        if (j == 0)
-        {
-          out.print("\"" + analyses.get(i).title + "\"");
-        } else
-        {
-          out.print("\"\"");
-        }
-        out.print(",\"");
-        out.print((char) ('a' + ranal.offset - 1));
-        out.print("\",");
-        out.print(ranal.correct ? "\"T\"" : "\"F\"");
-        out.print(",");
-        out.print(ranal.right);
-        out.print(",");
-        out.print(ranal.wrong);
-        out.print(",");
-        if ((ranal.right + ranal.wrong) > 0)
-        {
-          out.print((double) ranal.right / (double) (ranal.right + ranal.wrong));
-        }
-
-        if (ranal.right < 2 || ranal.wrong < 2)
-        {
-          out.print(",,,");
-          if (ranal.right + ranal.wrong < 10)
-          {
-            out.print(",*,,,,,,");
-          } else
-          {
-            if (ranal.right > ranal.wrong)
-            {
-              out.print(",,*,,,,,");
-            } else if (ranal.right < ranal.wrong)
-            {
-              out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
-            } else
-            {
-              out.print(",*,,,,,,");
-            }
-          }
-        } else
-        {
-          out.print(",");
-          out.print(ranal.median_difference);
-          out.print(",");
-          out.print(ranal.median_difference_lower);
-          out.print(",");
-          out.print(ranal.median_difference_upper);
-          if (ranal.median_difference_lower >= 0.0 && ranal.median_difference_upper > 0.0)
-          {
-            out.print(",,,,*,,,\"Positive discriminator.\"");
-          } else if (ranal.median_difference_upper <= 0.0 && ranal.median_difference_lower < 0.0)
-          {
-            out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
-          } else
-          {
-            out.print(",,,,,,*,");
-          }
-        }
-        out.print("\n");
-        if ((j + 1) == analyses.get(i).response_analyses.size())
-        {
-          out.print(",,,,,,,,,,,,,,\n");
-        }
-      }
-    }
-    out.close();
-    return writer.getBuffer().toString();
+    analysistablemodel.setSelectedQuestion( ident );
+    setUnsavedChanges( true );
+    
+//    ResponseAnalysis ranal;
+//    StringWriter writer = new StringWriter();
+//    PrintWriter out = new PrintWriter( writer );
+//    out.print(",,,\"No. Students Right\",\"No. Students Wrong\",\"% Class Right\",\"Median Aptitude Difference\",\"Lower 90% limit\",\"Upper 90% limit\",,,,,,,\n");
+//    for (int i = 0; i < analyses.size(); i++)
+//    {
+//      for (int j = 0; j < analyses.get(i).response_analyses.size(); j++)
+//      {
+//        ranal = analyses.get(i).response_analyses.get(j);
+//
+//        if (j == 0)
+//        {
+//          out.print("\"" + analyses.get(i).title + "\"");
+//        } else
+//        {
+//          out.print("\"\"");
+//        }
+//        out.print(",\"");
+//        out.print((char) ('a' + ranal.offset - 1));
+//        out.print("\",");
+//        out.print(ranal.correct ? "\"T\"" : "\"F\"");
+//        out.print(",");
+//        out.print(ranal.right);
+//        out.print(",");
+//        out.print(ranal.wrong);
+//        out.print(",");
+//        if ((ranal.right + ranal.wrong) > 0)
+//        {
+//          out.print((double) ranal.right / (double) (ranal.right + ranal.wrong));
+//        }
+//
+//        if (ranal.right < 2 || ranal.wrong < 2)
+//        {
+//          out.print(",,,");
+//          if (ranal.right + ranal.wrong < 10)
+//          {
+//            out.print(",*,,,,,,");
+//          } else
+//          {
+//            if (ranal.right > ranal.wrong)
+//            {
+//              out.print(",,*,,,,,");
+//            } else if (ranal.right < ranal.wrong)
+//            {
+//              out.print(",,,*,,,,\"Too difficult. Can't calculate stats.\"");
+//            } else
+//            {
+//              out.print(",*,,,,,,");
+//            }
+//          }
+//        } else
+//        {
+//          out.print(",");
+//          out.print(ranal.median_difference);
+//          out.print(",");
+//          out.print(ranal.median_difference_lower);
+//          out.print(",");
+//          out.print(ranal.median_difference_upper);
+//          if (ranal.median_difference_lower >= 0.0 && ranal.median_difference_upper > 0.0)
+//          {
+//            out.print(",,,,*,,,\"Positive discriminator.\"");
+//          } else if (ranal.median_difference_upper <= 0.0 && ranal.median_difference_lower < 0.0)
+//          {
+//            out.print(",,,,,*,,\"NEGATIVE DISCRIMINATOR!!\"");
+//          } else
+//          {
+//            out.print(",,,,,,*,");
+//          }
+//        }
+//        out.print("\n");
+//        if ((j + 1) == analyses.get(i).response_analyses.size())
+//        {
+//          out.print(",,,,,,,,,,,,,,\n");
+//        }
+//      }
+//    }
+//    out.close();
+    return null; //writer.getBuffer().toString();
   }
 
   public void importCandidates(List<CandidateData> list)
@@ -2081,7 +2079,18 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         }
 
       }
+      
+      if ("analysis".equals(e.getNodeName()))
+      {
+        cnl = e.getElementsByTagName("itemanalysis");
+        QuestionAnalysis qa;
+        for (int j = 0; j < cnl.getLength(); j++)
+        {
+          qa = new QuestionAnalysis( (Element) cnl.item(j) );
+          analyses.add( qa );
+        }
 
+      }
       if ("transforms".equals(e.getNodeName()))
       {
         DataTransformInstruction datatransform;

@@ -200,8 +200,13 @@ public class QuestionDefinitions
     return null;
   }
 
-
-  public void emit( Writer writer )
+  public void emit( Writer writer, QTIElement element  )
+          throws IOException, TransformerConfigurationException, TransformerException
+  {
+    emit( writer, element.getDOMElement() );
+  }
+  
+  public void emit( Writer writer, Element element  )
           throws IOException, TransformerConfigurationException, TransformerException
   {
     TransformerFactory transfac = TransformerFactory.newInstance();
@@ -209,9 +214,14 @@ public class QuestionDefinitions
     trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
     trans.setOutputProperty(OutputKeys.INDENT, "yes");
     StreamResult result = new StreamResult( writer );
-    DOMSource source = new DOMSource( questestinterop );
+    DOMSource source = new DOMSource( element );
     trans.transform(source, result);
   }
-
+  
+  public void emit( Writer writer)
+          throws IOException, TransformerConfigurationException, TransformerException
+  {
+    emit( writer, questestinterop );
+  }
 
 }
