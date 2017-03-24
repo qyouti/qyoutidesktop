@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.io.*;
 import java.util.Vector;
+import org.w3c.dom.*;
 
 /**
  *
@@ -41,6 +42,31 @@ public class QuestionAnalysis
   double mean_score;
   Vector<ResponseAnalysis> response_analyses = new Vector<ResponseAnalysis>();
 
+  public QuestionAnalysis()
+  {
+  }
+  
+  public QuestionAnalysis( Element element )
+  {
+    String str;
+    ident = element.getAttribute("ident");
+    
+    str = element.getAttribute("offset");
+    try { offset = Integer.parseInt( str ); }
+    catch ( NumberFormatException nfe ) { offset =  0; }
+
+    title = element.getAttribute("title");
+
+    str = element.getAttribute("mean");
+    try { mean_score = Double.parseDouble( str ); }
+    catch ( NumberFormatException nfe ) { mean_score =  Double.NaN; }
+    
+    NodeList nl = element.getElementsByTagName( "responseanalysis" );
+    for ( int j=0; j<nl.getLength(); j++ )
+      response_analyses.add( new ResponseAnalysis( (Element)nl.item( j ) ) );
+ }
+    
+  
   public void emit( Writer writer )
           throws IOException
   {

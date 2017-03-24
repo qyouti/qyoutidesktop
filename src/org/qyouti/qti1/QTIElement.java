@@ -45,6 +45,11 @@ public abstract class QTIElement
   {
   }
 
+  public Element getDOMElement()
+  {
+    return domelement;
+  }
+  
   void setParent( QTIElement parent )
   {
     this.parent = parent;

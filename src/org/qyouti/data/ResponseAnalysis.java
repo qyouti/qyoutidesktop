@@ -28,6 +28,7 @@ package org.qyouti.data;
 
 import java.io.IOException;
 import java.io.Writer;
+import org.w3c.dom.*;
 
 /**
  *
@@ -44,6 +45,44 @@ public class ResponseAnalysis
   double median_difference_upper=Double.NaN;
   double median_difference_lower=Double.NaN;
 
+  public ResponseAnalysis()
+  {
+  }
+  
+  public ResponseAnalysis( Element element )
+  {
+    String str;
+    ident = element.getAttribute("ident");
+    
+    str = element.getAttribute("offset");
+    try { offset = Integer.parseInt( str ); }
+    catch ( NumberFormatException nfe ) { offset =  0; }
+
+    str = element.getAttribute( "correct" );
+    correct = str != null && str.toLowerCase().startsWith( "t" );
+
+    str = element.getAttribute("right");
+    try { right = Integer.parseInt( str ); }
+    catch ( NumberFormatException nfe ) { right =  0; }
+    
+    str = element.getAttribute("wrong");
+    try { wrong = Integer.parseInt( str ); }
+    catch ( NumberFormatException nfe ) { wrong =  0; }
+    
+    str = element.getAttribute("median_difference");
+    try { median_difference = Double.parseDouble( str ); }
+    catch ( NumberFormatException nfe ) { median_difference =  Double.NaN; }
+    
+    str = element.getAttribute("median_difference_upper");
+    try { median_difference_upper = Double.parseDouble( str ); }
+    catch ( NumberFormatException nfe ) { median_difference_upper =  Double.NaN; }
+    
+    str = element.getAttribute("median_difference_lower");
+    try { median_difference_lower = Double.parseDouble( str ); }
+    catch ( NumberFormatException nfe ) { median_difference_lower =  Double.NaN; }
+    
+ }
+  
   public void emit( Writer writer )
           throws IOException
   {

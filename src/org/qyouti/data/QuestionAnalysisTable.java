@@ -19,6 +19,7 @@ public class QuestionAnalysisTable extends AbstractTableModel
 {
   ExaminationData exam;
   int selection = -1;
+  String ident=null;
   List<QuestionAnalysis> analyses;
 
   static String[] columnnames = 
@@ -42,6 +43,7 @@ public class QuestionAnalysisTable extends AbstractTableModel
   
   public void setSelectedQuestion( String ident )
   {
+    this.ident = ident;
     selection = -1;
     if ( ident != null )
     {
@@ -53,6 +55,11 @@ public class QuestionAnalysisTable extends AbstractTableModel
         }
     }
     exam.processDataChanged( this );
+  }
+  
+  public String getSelectedQuestion()
+  {
+     return ident;
   }
   
   @Override
