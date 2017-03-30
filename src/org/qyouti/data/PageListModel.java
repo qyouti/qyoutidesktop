@@ -5,11 +5,8 @@
 
 package org.qyouti.data;
 
-import java.util.Hashtable;
 import java.util.Vector;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
 /**
  *
@@ -21,7 +18,7 @@ public class PageListModel
 
   private static final String[] column_headings =
   {
-    "Page ID", "Barcode", "Candidate", "Scanned", "Scan File", "Error"
+    "Page ID", "Barcode", "Paper Name", "Paper ID", "Scanned", "Error"
   };
 
   Vector<PageData> pages = new Vector<PageData>();
@@ -79,9 +76,9 @@ public class PageListModel
       case 2:
         return page.candidate_name;
       case 3:
-        return page.scanned?"yes":"no";
+        return page.candidate_number;
       case 4:
-        return page.source;
+        return page.scanned?"yes":"no";
       case 5:
         return page.error;
     }

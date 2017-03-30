@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,8 +78,13 @@ public class ExaminationData
   public ExaminationCatalogue examcatalogue = null;
   LinkedList<ExaminationDataStatusListener> listeners = new LinkedList<ExaminationDataStatusListener>();
         
+  public Hashtable<String, PersonData> persons = new Hashtable<>();
+  public ArrayList<PersonData> persons_sorted = new ArrayList<>();
+  public PersonListModel personlistmodel = new PersonListModel( this, persons_sorted );
+  
   public Hashtable<String, CandidateData> candidates = new Hashtable<String, CandidateData>();
   public Vector<CandidateData> candidates_sorted = new Vector<CandidateData>();
+  
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
@@ -405,6 +411,73 @@ public class ExaminationData
     scans.clear();
   }
   
+  
+  public void createPapers( int anoncount )
+  {
+    // N.B. CandidateData now represents a paper
+    // This create CandidateData based on PersonData
+    // One CandidateData for each named person plus anoncount
+    
+    int i, j;
+    PersonData    person;
+    CandidateData candidate;
+    ArrayList<CandidateData> newcandidates = new ArrayList<>();
+    
+    // Named first...
+    for ( i = 0; i < persons_sorted.size(); i++ )
+    {
+      person = persons_sorted.get( i );
+      if ( person.isExcluded() || person.isAnonymous() ) continue;
+      candidate = new CandidateData( this, person.getName(), person.getId(), false );
+      candidate.preferences = person.getPreferences();
+      candidate.outcomes.addTableModelListener( outcomelistener );
+      candidates.put(candidate.id, candidate);
+      candidates_sorted.add(candidate);
+      newcandidates.add( candidate );
+    }
+    
+    // Anon after...
+    DecimalFormat df = new DecimalFormat( "000" );
+    for ( i = 1; i <= anoncount; i++ )
+    {
+      candidate = new CandidateData( this, "Anon", df.format( i ), true );
+      candidate.outcomes.addTableModelListener( outcomelistener );
+      candidates.put(candidate.id, candidate);
+      candidates_sorted.add(candidate);
+      newcandidates.add( candidate );
+    }
+    
+    // Now add items to each paper
+    QTIElementItem item;
+    OutcomeDatum od;
+    for ( i=0; i<newcandidates.size(); i++ )
+    {
+      candidate = newcandidates.get( i );
+      
+      for ( j=0; j< qdefs.qti.getItems().size(); j++ )
+      {
+        item = qdefs.qti.getItems().get( j );
+        if ( item.isSupported() && item.isForCandidate( candidate.anonymous ) )
+          candidate.addQuestion( item.getIdent() );
+      }
+      
+      if ( !candidate.anonymous )
+      {
+        od = new OutcomeDatum();
+        od.name = "SID";
+        od.fixed = true;
+        od.value = candidate.id;
+        candidate.outcomes.addDatum( od );
+        od = new OutcomeDatum();
+        od.name = "NAME";
+        od.fixed = true;
+        od.value = candidate.name;
+        candidate.outcomes.addDatum( od );
+      }
+    }
+    setUnsavedChanges( true );
+    fireTableDataChanged();    
+  }
 
   public void forgetPrint()
   {
@@ -419,6 +492,9 @@ public class ExaminationData
     pages.clear();
     pagemap.clear();
     pagelistmodel.fireTableDataChanged();
+    candidates.clear();
+    candidates_sorted.clear();
+    fireTableDataChanged();
   }
   
   public int getPageCount()
@@ -645,6 +721,22 @@ public class ExaminationData
     return null; //writer.getBuffer().toString();
   }
 
+  public void importPersons(List<PersonData> list)
+  {
+    int i, j;
+    PersonData person;
+   
+    for ( i = 0; i < list.size(); i++ )
+    {
+      person = list.get( i );
+      persons.put(person.getId(), person);
+      persons_sorted.add(person);
+    }
+    sortPersons();
+    personlistmodel.fireTableDataChanged();
+  }
+  
+  
   public void importCandidates(List<CandidateData> list)
   {
     int i, j;
@@ -1912,6 +2004,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       scans.get( i ).emit( writer );
     writer.write( "</scans>\n" );
 
+    writer.write( "<persons>\n" );
+    if (persons != null)
+    {
+      for (int i = 0; i < persons.size(); i++)
+        persons_sorted.get(i).emit(writer);
+    }
+    writer.write( "</persons>\n" );
+    
+    
     // write out ahead of candidates so that candidate data
     // can reference the pages
     writer.write( "<pages>\n" );
@@ -1925,13 +2026,13 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     writer.write( "</pages>\n" );
 
 
-    writer.write("<candidates>\n");
+    writer.write("<papers>\n");
     Enumeration<CandidateData> e = candidates.elements();
     for (int i = 0; i < candidates_sorted.size(); i++)
     {
       candidates_sorted.get(i).emit(writer);
     }
-    writer.write("</candidates>\n");
+    writer.write("</papers>\n");
 
     writer.write("<analysis>\n");
     if (analyses != null)
@@ -1996,7 +2097,22 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     //Collections.sort( (Vector)candidates_sorted, new CandidateComparator() );
   }
 
+  public class PersonComparator implements Comparator
+  {
+    @Override
+    public int compare(Object o1, Object o2)
+    {
+      PersonData a = (PersonData) o1;
+      PersonData b = (PersonData) o2;
+      return a.getName().compareToIgnoreCase(b.getName());
+    }
+  }
 
+  public void sortPersons()
+  {
+    Collections.sort( (ArrayList)persons_sorted, new PersonComparator() );
+  }
+  
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -2026,6 +2142,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Element e;
     Node node;
     CandidateData candidate;
+    PersonData person;
 
     for (int i = 0; i < nl.getLength(); i++)
     {
@@ -2046,10 +2163,24 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         qdefs = new QuestionDefinitions(e);
       }
 
-
-      if ("candidates".equals(e.getNodeName()))
+      if ("persons".equals(e.getNodeName()))
       {
-        cnl = e.getElementsByTagName("candidate");
+        cnl = e.getElementsByTagName("person");
+        for (int j = 0; j < cnl.getLength(); j++)
+          person = new PersonData(this, (Element) cnl.item(j));
+        sortPersons();
+      }
+      
+      if ( "candidates".equals(e.getNodeName()) || "papers".equals(e.getNodeName()) )
+      {
+        String n;
+        
+        if ( "candidates".equals(e.getNodeName()) )
+          n = "candidate";
+        else
+          n = "paper";
+        
+        cnl = e.getElementsByTagName( n );
         for (int j = 0; j < cnl.getLength(); j++)
         {
           candidate = new CandidateData(this, (Element) cnl.item(j));

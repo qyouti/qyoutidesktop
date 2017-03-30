@@ -137,11 +137,7 @@ public class QTIItemRenderer
     this.qnumber = qnumber;
 
     if ( prefs == null )
-    {
       this.prefs = new UserRenderPreferences();
-      this.prefs.serif = false;
-      this.prefs.fontsize = getMetrics().getPropertyInches("fontsize");
-    }
     else
       this.prefs = prefs;
 
@@ -465,7 +461,7 @@ public class QTIItemRenderer
     if (e instanceof QTIElementPresentation)
     {
       state.html.append("<html>\n<body style=\"font-size: " );
-      state.html.append(getMetrics().inchesToSvg( prefs.getFontsize() ));
+      state.html.append(getMetrics().inchesToSvg( prefs.getFontsize( getMetrics().getPropertyInches("fontsize") ) ));
       state.html.append("px; font-family: " );
       state.html.append( getMetrics().getProperty( prefs.isSerif()?"fontfamily-serif":"fontfamily" ) );
       state.html.append( ";\">\n");
