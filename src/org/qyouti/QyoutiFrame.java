@@ -55,6 +55,8 @@ public class QyoutiFrame
   QuestionData currentquestiondata;
   String scanfolder = null;
 
+  boolean customisationpanelupdating=false;
+  
   TableModel emptytablemodel = new javax.swing.table.DefaultTableModel( new Object [][]{},new String []{} );
   
   // Possible Look & Feels
@@ -98,6 +100,19 @@ public class QyoutiFrame
     createLookAndFeelMenu();
     
     //ZXingCodec.setDebugImageLabel( debuglabel );
+    
+    persontable.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+    persontable.getSelectionModel().addListSelectionListener( 
+            new ListSelectionListener() {
+              
+      @Override
+      public void valueChanged( ListSelectionEvent e )
+      {
+        personSelectionChanged( e );
+      }
+              
+            }
+    );
     
     //questiontable.getColumnModel().getColumn( 0 ).
     questiontable.getSelectionModel().addListSelectionListener( 
@@ -247,7 +262,76 @@ public class QyoutiFrame
       SwingUtilities.updateComponentTreeUI(this);
     }
      
-     
+  public void personTableChanged( TableModelEvent e )
+  {
+    updatePersonCustomisePanel();
+  }
+  
+  public void personSelectionChanged( ListSelectionEvent e )
+  {
+    if ( e.getValueIsAdjusting() )
+      return;
+    updatePersonCustomisePanel();
+  }
+  
+  public void updatePersonCustomisePanel()
+  {
+    System.out.println( "updating customise panel...." );
+    
+    // fields will fire off change events so make
+    // sure that doesn't bounce back and update the table
+    customisationpanelupdating = true;
+
+    try
+    {
+      PersonData person = null;
+      int r = persontable.getSelectedRow();
+      if ( r >= 0 )
+        person = exam.persons_sorted.get( r );
+
+      if ( person == null )
+      {
+        ((CardLayout)personpanel.getLayout()).show( personpanel, "noselection" );
+        return;
+      }
+
+      if ( !person.isCustomisable() )
+      {
+        ((CardLayout)personpanel.getLayout()).show( personpanel, "noedit" );
+        return;
+      }
+
+      ((CardLayout)personpanel.getLayout()).show( personpanel, "selection" );
+      customforlabel.setText( person.getName() + " (" + person.getId() + ")" );
+      bigpinkcheckbox.setSelected( false );
+      serifcheckbox.setSelected( false );
+      fontsizelist.setSelectedIndex( 0 );
+      colourswatchlabel.setBackground( Color.WHITE );
+
+      UserRenderPreferences pref = person.getPreferences();
+      if ( pref == null )
+        return;
+      double fsz = pref.getFontsize();
+      bigpinkcheckbox.setSelected(            pref.isBigpinkbox()       );
+      serifcheckbox.setSelected(              pref.isSerif()            );
+
+      if ( fsz < 0.10  )
+        fontsizelist.setSelectedIndex( 0 );
+      else if ( fsz < 0.12  )
+        fontsizelist.setSelectedIndex( 1 );
+      else if ( fsz < 0.16  )
+        fontsizelist.setSelectedIndex( 2 );
+      else
+        fontsizelist.setSelectedIndex( 3 );      
+      colourswatchlabel.setBackground( pref.getBackground() );
+    }
+    finally
+    {
+      customisationpanelupdating = false;
+
+    }
+  }
+  
   public void questionSelectionChanged( ListSelectionEvent e )
   {
     if ( e.getValueIsAdjusting() )
@@ -340,6 +424,7 @@ public class QyoutiFrame
 
     reviewtypebuttongroup = new javax.swing.ButtonGroup();
     reviewincludebuttongroup = new javax.swing.ButtonGroup();
+    fontprefbuttongroup = new javax.swing.ButtonGroup();
     spacerlabel = new javax.swing.JLabel();
     centralpanel = new javax.swing.JPanel();
     noexamloadedpanel = new javax.swing.JPanel();
@@ -362,6 +447,34 @@ public class QyoutiFrame
     analysistable = new javax.swing.JTable();
     jScrollPane5 = new javax.swing.JScrollPane();
     jTextPane1 = new javax.swing.JTextPane();
+    perstab = new javax.swing.JPanel();
+    jSplitPane1 = new javax.swing.JSplitPane();
+    jPanel12 = new javax.swing.JPanel();
+    jPanel13 = new javax.swing.JPanel();
+    allanonbutton = new javax.swing.JButton();
+    noneanonbutton = new javax.swing.JButton();
+    jScrollPane3 = new javax.swing.JScrollPane();
+    persontable = new javax.swing.JTable();
+    jScrollPane6 = new javax.swing.JScrollPane();
+    personpanel = new javax.swing.JPanel();
+    nopersonselectedpanel = new javax.swing.JPanel();
+    jLabel1 = new javax.swing.JLabel();
+    noeditpersonpanel = new javax.swing.JPanel();
+    jLabel3 = new javax.swing.JLabel();
+    selectedpersonpanel = new javax.swing.JPanel();
+    jLabel5 = new javax.swing.JLabel();
+    customforlabel = new javax.swing.JLabel();
+    resetpreferencesbutton = new javax.swing.JButton();
+    bigpinkcheckbox = new javax.swing.JCheckBox();
+    serifcheckbox = new javax.swing.JCheckBox();
+    fontdizelabel = new javax.swing.JLabel();
+    jScrollPane7 = new javax.swing.JScrollPane();
+    fontsizelist = new javax.swing.JList<>();
+    panel1 = new javax.swing.JPanel();
+    jLabel6 = new javax.swing.JLabel();
+    jPanel11 = new javax.swing.JPanel();
+    colourswatchlabel = new javax.swing.JLabel();
+    changecolourbutton = new javax.swing.JButton();
     ctab = new javax.swing.JPanel();
     sp2 = new javax.swing.JScrollPane();
     candidatetable = new javax.swing.JTable();
@@ -553,6 +666,207 @@ public class QyoutiFrame
 
     tabs.addTab("Questions", qtab);
 
+    perstab.setLayout(new java.awt.BorderLayout());
+
+    jSplitPane1.setDividerLocation(400);
+
+    jPanel12.setLayout(new java.awt.BorderLayout());
+
+    allanonbutton.setText("All Anonymous");
+    allanonbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        allanonbuttonActionPerformed(evt);
+      }
+    });
+    jPanel13.add(allanonbutton);
+
+    noneanonbutton.setText("None Anonymous");
+    noneanonbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        noneanonbuttonActionPerformed(evt);
+      }
+    });
+    jPanel13.add(noneanonbutton);
+
+    jPanel12.add(jPanel13, java.awt.BorderLayout.NORTH);
+
+    persontable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+    jScrollPane3.setViewportView(persontable);
+
+    jPanel12.add(jScrollPane3, java.awt.BorderLayout.CENTER);
+
+    jSplitPane1.setLeftComponent(jPanel12);
+
+    personpanel.setLayout(new java.awt.CardLayout());
+
+    nopersonselectedpanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+    jLabel1.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    jLabel1.setText("Select a Person to Set Customisation Options");
+    nopersonselectedpanel.add(jLabel1);
+
+    personpanel.add(nopersonselectedpanel, "noselection");
+
+    noeditpersonpanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+    jLabel3.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    jLabel3.setText("Persons with 'Excluded' or 'Anonymous' set cannot have customisations");
+    noeditpersonpanel.add(jLabel3);
+
+    personpanel.add(noeditpersonpanel, "noedit");
+
+    selectedpersonpanel.setLayout(new java.awt.GridBagLayout());
+
+    jLabel5.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+    jLabel5.setText("Customise Printing for:");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(jLabel5, gridBagConstraints);
+
+    customforlabel.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(customforlabel, gridBagConstraints);
+
+    resetpreferencesbutton.setText("Reset Customisation");
+    resetpreferencesbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        resetpreferencesbuttonActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    selectedpersonpanel.add(resetpreferencesbutton, gridBagConstraints);
+
+    bigpinkcheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    bigpinkcheckbox.setText("Enlarge Pink Box");
+    bigpinkcheckbox.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        bigpinkcheckboxActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(bigpinkcheckbox, gridBagConstraints);
+
+    serifcheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    serifcheckbox.setText("Use Serif Font");
+    serifcheckbox.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        serifcheckboxActionPerformed(evt);
+      }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 3;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(serifcheckbox, gridBagConstraints);
+
+    fontdizelabel.setText("Font Size:");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 4;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(fontdizelabel, gridBagConstraints);
+
+    fontsizelist.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    fontsizelist.setModel(new javax.swing.AbstractListModel<String>()
+    {
+      String[] strings = { "Not Custom", "125%", "150%", "200%" };
+      public int getSize() { return strings.length; }
+      public String getElementAt(int i) { return strings[i]; }
+    });
+    fontsizelist.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+    fontsizelist.setVisibleRowCount(4);
+    fontsizelist.addListSelectionListener(new javax.swing.event.ListSelectionListener()
+    {
+      public void valueChanged(javax.swing.event.ListSelectionEvent evt)
+      {
+        fontsizelistValueChanged(evt);
+      }
+    });
+    jScrollPane7.setViewportView(fontsizelist);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 4;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(jScrollPane7, gridBagConstraints);
+
+    panel1.setLayout(new java.awt.GridBagLayout());
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 3;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(panel1, gridBagConstraints);
+
+    jLabel6.setText("Background Colour:");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 5;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(jLabel6, gridBagConstraints);
+
+    colourswatchlabel.setBackground(new java.awt.Color(255, 153, 51));
+    colourswatchlabel.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
+    colourswatchlabel.setText("Colour Swatch");
+    colourswatchlabel.setBorder(javax.swing.BorderFactory.createCompoundBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 255, 255), 10, true), javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15)));
+    colourswatchlabel.setOpaque(true);
+    jPanel11.add(colourswatchlabel);
+
+    changecolourbutton.setText("Change");
+    changecolourbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        changecolourbuttonActionPerformed(evt);
+      }
+    });
+    jPanel11.add(changecolourbutton);
+
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 5;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    selectedpersonpanel.add(jPanel11, gridBagConstraints);
+
+    personpanel.add(selectedpersonpanel, "selection");
+
+    jScrollPane6.setViewportView(personpanel);
+
+    jSplitPane1.setRightComponent(jScrollPane6);
+
+    perstab.add(jSplitPane1, java.awt.BorderLayout.CENTER);
+
+    tabs.addTab("Persons", perstab);
+
     ctab.setLayout(new java.awt.BorderLayout());
 
     candidatetable.setModel(new javax.swing.table.DefaultTableModel(
@@ -590,7 +904,7 @@ public class QyoutiFrame
 
     ctab.add(sp2, java.awt.BorderLayout.CENTER);
 
-    tabs.addTab("Candidates", ctab);
+    tabs.addTab("Papers", ctab);
 
     ptab.setLayout(new java.awt.BorderLayout());
 
@@ -954,7 +1268,7 @@ public class QyoutiFrame
 
     actionmenu.setText("Action");
 
-    pdfprintmenuitem.setText("Print to PDF");
+    pdfprintmenuitem.setText("Print to PDF...");
     pdfprintmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1259,15 +1573,15 @@ public class QyoutiFrame
       return;
     }
           
-    ImportCandidateDialog dialog = new ImportCandidateDialog( this, true );
+    ImportPersonDialog dialog = new ImportPersonDialog( this, true );
     dialog.setExam( exam );
     dialog.setVisible( true );
-    ArrayList<CandidateData> list = dialog.getCandidateList();
+    ArrayList<PersonData> list = dialog.getPersonList();
     if ( list == null || list.size() == 0 )
       return;
-    System.out.println( "Importing " + list.size() + " candidates." );
-    exam.importCandidates( list );
-    exam.save();
+    System.out.println( "Importing " + list.size() + " persons." );
+    exam.importPersons( list );
+    exam.setUnsavedChanges( true );
   }//GEN-LAST:event_importcanmenuitemActionPerformed
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
@@ -1558,6 +1872,29 @@ public class QyoutiFrame
               showMessageDialog( this, "You can't print papers - there are no questions in the exam." );
       return;
     }
+    
+    PersonData person;
+    int namedcount=0;
+    int anoncount=0;
+    for ( int i=0; i < exam.persons_sorted.size(); i++ )
+    {
+      person = exam.persons_sorted.get( i );
+      if ( person.isExcluded() ) continue;
+      if ( person.isAnonymous() ) anoncount++;
+      else namedcount++;
+    }
+    PrintDialog pd = new PrintDialog( this, true, namedcount, anoncount );
+    pd.setTitle( "Print Papers to PDF File" );
+    pd.setVisible( true );
+    if ( !pd.isConfirmed() )
+      return;
+    
+    System.out.println( "Print confirmed with total anon papers = " + pd.getAnonPlusExtra() );
+    exam.createPapers( pd.getAnonPlusExtra() );
+    
+    if ( false )
+      return;
+    
     if ( exam.candidates_sorted.isEmpty() )
     {
       JOptionPane.
@@ -1865,6 +2202,149 @@ public class QyoutiFrame
     previewsvgcanvas.setRenderingTransform( atr );
   }//GEN-LAST:event_jButton1ActionPerformed
 
+  private void updatePersonCustomizationFromForm()
+  {
+    if ( customisationpanelupdating )
+      return;
+    
+    PersonData person = null;
+    int r = persontable.getSelectedRow();
+    if ( r < 0 )
+      return;
+    
+    System.out.println( "updatePersonCustomizationFromForm" );
+    person = exam.persons_sorted.get( r );
+    // get values and work out if this is a null customisation....
+    boolean bigpink = bigpinkcheckbox.isSelected();
+    boolean serif = serifcheckbox.isSelected();
+    double fsz = 0.0;
+    switch ( fontsizelist.getSelectedIndex() )
+    {
+      case 0:
+        fsz = 0.0;
+        break;
+      case 1:
+        fsz = 0.10;
+        break;
+      case 2:
+        fsz = 0.12;
+        break;
+      case 3:
+        fsz = 0.16;
+        break;
+    }
+
+    Color c = colourswatchlabel.getBackground();
+    
+    boolean isnull = !bigpink && !serif && fsz == 0.0 && c.equals( Color.WHITE );
+    if ( isnull )
+    {
+      person.setPreferences( null );
+    }
+    else
+    {
+      UserRenderPreferences prefs = new UserRenderPreferences();
+      prefs.setBigpinkbox( bigpink );
+      prefs.setSerif( serif );
+      prefs.setFontsize( fsz );
+      prefs.setBackground( c );
+      person.setPreferences( prefs );
+    }
+    
+    persontable.repaint();
+  }
+  
+  private void bigpinkcheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_bigpinkcheckboxActionPerformed
+  {//GEN-HEADEREND:event_bigpinkcheckboxActionPerformed
+    updatePersonCustomizationFromForm();
+  }//GEN-LAST:event_bigpinkcheckboxActionPerformed
+
+  private void serifcheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_serifcheckboxActionPerformed
+  {//GEN-HEADEREND:event_serifcheckboxActionPerformed
+    updatePersonCustomizationFromForm();
+  }//GEN-LAST:event_serifcheckboxActionPerformed
+
+  private void resetpreferencesbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_resetpreferencesbuttonActionPerformed
+  {//GEN-HEADEREND:event_resetpreferencesbuttonActionPerformed
+    PersonData person = null;
+    int r = persontable.getSelectedRow();
+    if ( r < 0 )
+      return;
+    person = exam.persons_sorted.get( r );
+    person.setPreferences( null );    
+    updatePersonCustomisePanel();
+    persontable.repaint();
+  }//GEN-LAST:event_resetpreferencesbuttonActionPerformed
+
+  private void changecolourbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_changecolourbuttonActionPerformed
+  {//GEN-HEADEREND:event_changecolourbuttonActionPerformed
+    Color c = Color.WHITE;
+    
+    PersonData person = null;
+    int r = persontable.getSelectedRow();
+    if ( r < 0 )
+      return;
+
+    person = exam.persons_sorted.get( r );
+    UserRenderPreferences pref = person.getPreferences();
+    if ( pref != null )
+      c = pref.getBackground();
+    
+    Color co = JColorChooser.showDialog( this, "Background Colour", c );
+    if ( co != null && !co.equals( c ) )
+    {
+      colourswatchlabel.setBackground( co );
+      updatePersonCustomizationFromForm();
+    }
+  }//GEN-LAST:event_changecolourbuttonActionPerformed
+
+  private void fontsizelistValueChanged(javax.swing.event.ListSelectionEvent evt)//GEN-FIRST:event_fontsizelistValueChanged
+  {//GEN-HEADEREND:event_fontsizelistValueChanged
+    updatePersonCustomizationFromForm();
+  }//GEN-LAST:event_fontsizelistValueChanged
+
+  private void allanonbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_allanonbuttonActionPerformed
+  {//GEN-HEADEREND:event_allanonbuttonActionPerformed
+    String lpid = exam.getLastPrintID();
+    if ( lpid != null && lpid.length() > 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "The exam/survey has already been printed. \nYou cannot change anonymity." );
+      return;
+    }
+
+    int n;
+    PersonData person;
+    for ( n=0; n < exam.persons_sorted.size(); n++ )
+    {
+      person = exam.persons_sorted.get( n );
+      if ( person.getPreferences() == null )
+        person.setAnonymous( true );
+    }
+    persontable.repaint();
+  }//GEN-LAST:event_allanonbuttonActionPerformed
+
+  private void noneanonbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_noneanonbuttonActionPerformed
+  {//GEN-HEADEREND:event_noneanonbuttonActionPerformed
+    String lpid = exam.getLastPrintID();
+    if ( lpid != null && lpid.length() > 0 )
+    {
+      JOptionPane.
+              showMessageDialog( this, "The exam/survey has already been printed. \nYou cannot change anonymity." );
+      return;
+    }
+
+    int n;
+    PersonData person;
+    for ( n=0; n < exam.persons_sorted.size(); n++ )
+    {
+      person = exam.persons_sorted.get( n );
+      if ( person.getPreferences() == null )
+        person.setAnonymous( false );
+    }
+    persontable.repaint();
+  }//GEN-LAST:event_noneanonbuttonActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -1967,6 +2447,17 @@ public class QyoutiFrame
     {
       exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
       exam.addExaminationDataStatusListener( this );
+      persontable.setModel( exam.personlistmodel );
+      exam.personlistmodel.addTableModelListener( 
+              new TableModelListener()
+              {
+                @Override
+                public void tableChanged( TableModelEvent e )
+                {
+                  personTableChanged( e );
+                }
+              }
+      );
       pagestable.setModel( exam.pagelistmodel );
       scanfiletable.setModel( exam.scans );
       candidatetable.setModel( exam );
@@ -2070,12 +2561,17 @@ public class QyoutiFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutmenuitem;
   private javax.swing.JMenu actionmenu;
+  private javax.swing.JButton allanonbutton;
   private javax.swing.JTable analysistable;
+  private javax.swing.JCheckBox bigpinkcheckbox;
   private javax.swing.JTable candidatetable;
   private javax.swing.JPanel centralpanel;
+  private javax.swing.JButton changecolourbutton;
   private javax.swing.JMenuItem clearscanneddatamenuitem;
+  private javax.swing.JLabel colourswatchlabel;
   private javax.swing.JMenuItem configmenuitem;
   private javax.swing.JPanel ctab;
+  private javax.swing.JLabel customforlabel;
   private javax.swing.JMenuItem editallquestionsmenuitem;
   private javax.swing.JMenuItem editquestionmenuitem;
   private javax.swing.JLabel errorlabel;
@@ -2083,16 +2579,26 @@ public class QyoutiFrame
   private javax.swing.JMenuItem exprepliesmenuitem;
   private javax.swing.JMenuItem expscoresmenuitem;
   private javax.swing.JMenu filemenu;
+  private javax.swing.JLabel fontdizelabel;
+  private javax.swing.ButtonGroup fontprefbuttongroup;
+  private javax.swing.JList<String> fontsizelist;
   private javax.swing.JMenuItem forgetprintmenuitem;
   private javax.swing.JMenuItem importcanmenuitem;
   private javax.swing.JMenuItem importimagesmenuitem;
   private javax.swing.JMenuItem importqmenuitem;
   private javax.swing.JMenuItem itemanalysismenuitem;
   private javax.swing.JButton jButton1;
+  private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
+  private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel4;
+  private javax.swing.JLabel jLabel5;
+  private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel10;
+  private javax.swing.JPanel jPanel11;
+  private javax.swing.JPanel jPanel12;
+  private javax.swing.JPanel jPanel13;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
@@ -2103,10 +2609,14 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel9;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
+  private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JScrollPane jScrollPane4;
   private javax.swing.JScrollPane jScrollPane5;
+  private javax.swing.JScrollPane jScrollPane6;
+  private javax.swing.JScrollPane jScrollPane7;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JPopupMenu.Separator jSeparator2;
+  private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JSplitPane jSplitPane4;
@@ -2115,11 +2625,18 @@ public class QyoutiFrame
   private javax.swing.JMenuBar menubar;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JButton nextreviewbutton;
+  private javax.swing.JPanel noeditpersonpanel;
   private javax.swing.JLabel noexamloadedlabel;
   private javax.swing.JPanel noexamloadedpanel;
+  private javax.swing.JButton noneanonbutton;
+  private javax.swing.JPanel nopersonselectedpanel;
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
+  private javax.swing.JPanel panel1;
   private javax.swing.JMenuItem pdfprintmenuitem;
+  private javax.swing.JPanel personpanel;
+  private javax.swing.JTable persontable;
+  private javax.swing.JPanel perstab;
   private org.apache.batik.swing.JSVGCanvas previewsvgcanvas;
   private javax.swing.JButton previousreviewbutton;
   private javax.swing.JMenuItem printitemanalysismenuitem;
@@ -2136,6 +2653,7 @@ public class QyoutiFrame
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
   private javax.swing.JMenuItem recomputemenuitem;
+  private javax.swing.JButton resetpreferencesbutton;
   private javax.swing.JRadioButton reviewincludeall;
   private javax.swing.ButtonGroup reviewincludebuttongroup;
   private javax.swing.JRadioButton reviewincludenotreviewed;
@@ -2148,10 +2666,12 @@ public class QyoutiFrame
   private javax.swing.JMenuItem savemenuitem;
   private javax.swing.JLabel savestatuslabel;
   private javax.swing.JTable scanfiletable;
+  private javax.swing.JPanel selectedpersonpanel;
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
+  private javax.swing.JCheckBox serifcheckbox;
   private javax.swing.JScrollPane sp1;
   private javax.swing.JScrollPane sp2;
   private javax.swing.JScrollPane sp3;

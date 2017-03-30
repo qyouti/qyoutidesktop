@@ -48,12 +48,15 @@ public static final String textb = "    </section>\n" +
 "  </assessment>\n" +
 "</questestinterop>\n" +
 "\n" +
+"<persons>\n" +
+"</persons>\n" +
+"\n" +
 "<pages>\n" +
 "</pages>\n" +
 "\n" +
-"<candidates>\n";
+"<papers>\n";
 
-public static final String textc = "</candidates>\n" +
+public static final String textc = "</papers>\n" +
 "\n" +
 "<analysis>\n" +
 "</analysis>\n" +
@@ -1223,8 +1226,6 @@ public static final String itemmcqbT =
     optslist = new javax.swing.JList<>();
     questionslabel = new javax.swing.JLabel();
     questionsfield = new javax.swing.JTextField();
-    candidateslabel = new javax.swing.JLabel();
-    candidatesfield = new javax.swing.JTextField();
 
     setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
     setLayout(new java.awt.BorderLayout());
@@ -1364,35 +1365,8 @@ public static final String itemmcqbT =
     gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 0);
     mainpanel.add(questionsfield, gridBagConstraints);
 
-    candidateslabel.setText("Number of Anonymous:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 7;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(10, 0, 0, 0);
-    mainpanel.add(candidateslabel, gridBagConstraints);
-
-    candidatesfield.setColumns(5);
-    candidatesfield.setText("5");
-    candidatesfield.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        candidatesfieldActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 7;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 0);
-    mainpanel.add(candidatesfield, gridBagConstraints);
-
     add(mainpanel, java.awt.BorderLayout.CENTER);
   }// </editor-fold>//GEN-END:initComponents
-
-  private void candidatesfieldActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_candidatesfieldActionPerformed
-  {//GEN-HEADEREND:event_candidatesfieldActionPerformed
-    // TODO add your handling code here:
-  }//GEN-LAST:event_candidatesfieldActionPerformed
 
   private void titlefieldActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_titlefieldActionPerformed
   {//GEN-HEADEREND:event_titlefieldActionPerformed
@@ -1411,8 +1385,6 @@ public static final String itemmcqbT =
 
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  private javax.swing.JTextField candidatesfield;
-  private javax.swing.JLabel candidateslabel;
   private javax.swing.JTextField crnfield;
   private javax.swing.JLabel crnlabel;
   private javax.swing.JTextField datefield;
@@ -1436,11 +1408,10 @@ public static final String itemmcqbT =
   {
     int i, j;
     int nq = Integer.parseInt( questionsfield.getText() );
-    int nc = Integer.parseInt( candidatesfield.getText() );
     int no = Integer.parseInt( optslist.getSelectedValue() );
-    if ( nq < 0 || nc < 0 )
+    if ( nq < 0 )
       throw new IllegalArgumentException( "Invalid number." );
-    if ( nq > 1000 || nc > 1000 )
+    if ( nq > 1000 )
       throw new IllegalArgumentException( "Too many." );
 
     String cols = "1";
@@ -1481,23 +1452,23 @@ public static final String itemmcqbT =
     buffer.append( textb );
     
     DecimalFormat df = new DecimalFormat( "000" );
-    for ( i=0; i<nc; i++ )
-    {
-      buffer.append( "<candidate name=\"Anon\" id=\"" );
-      buffer.append( df.format( i+1L ) );
-      buffer.append( "\" anonymous=\"yes\">\n" );
-      buffer.append( "  <items>\n" );
-      buffer.append( "    <itemref ident=\"void\"/>\n" );
-      buffer.append( "    <itemref ident=\"sid\"/>\n" );
-      for ( j=0; j<nq; j++ )
-      {
-        buffer.append( "    <itemref ident=\"" );
-        buffer.append( Integer.toString( j+1 ) );
-        buffer.append( "\"/>\n" );
-      }
-      buffer.append( "  </items>\n" );
-      buffer.append( "</candidate>\n" );
-    }
+//    for ( i=0; i<nc; i++ )
+//    {
+//      buffer.append( "<candidate name=\"Anon\" id=\"" );
+//      buffer.append( df.format( i+1L ) );
+//      buffer.append( "\" anonymous=\"yes\">\n" );
+//      buffer.append( "  <items>\n" );
+//      buffer.append( "    <itemref ident=\"void\"/>\n" );
+//      buffer.append( "    <itemref ident=\"sid\"/>\n" );
+//      for ( j=0; j<nq; j++ )
+//      {
+//        buffer.append( "    <itemref ident=\"" );
+//        buffer.append( Integer.toString( j+1 ) );
+//        buffer.append( "\"/>\n" );
+//      }
+//      buffer.append( "  </items>\n" );
+//      buffer.append( "</candidate>\n" );
+//    }
     
     buffer.append( textc );
     return buffer.toString();

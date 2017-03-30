@@ -45,6 +45,9 @@ public class EmptyExam
 "  </assessment>\n" +
 "</questestinterop>\n" +
 "\n" +
+"<persons>\n" +
+"</persons>\n" +
+"\n" +
 "<pages>\n" +
 "</pages>\n" +
 "\n" +

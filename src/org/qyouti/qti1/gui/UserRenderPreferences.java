@@ -17,7 +17,7 @@ import org.w3c.dom.Element;
 public class UserRenderPreferences
 {
   boolean serif=false;
-  double fontsize;
+  private double fontsize = 0.0;
   boolean bigpinkbox=false;
   Color background=null;
 
@@ -39,7 +39,7 @@ public class UserRenderPreferences
     s = element.getAttribute( "background" );
     if ( s.startsWith( "0x" ) )
     {
-      int hex = Integer.parseInt( s.substring( 2 ), 16 );
+      int hex = (int)Long.parseLong( s.substring( 2 ), 16 );
       background = new Color( hex );
     }
   }
@@ -55,7 +55,7 @@ public class UserRenderPreferences
     if ( bigpinkbox )
       writer.write( " bigpinkbox=\"true\"" );
     if ( background != null )
-      writer.write( " background=\"0x" + Integer.toString( background.getRGB(), 16 ) + "\"" );
+      writer.write( " background=\"0x" + Long.toString( (long)background.getRGB() & 0xffffffffl, 16 ) + "\"" );
     writer.write( "/>\n" );
   }
 
@@ -71,6 +71,11 @@ public class UserRenderPreferences
   public double getFontsize()
   {
     return fontsize;
+  }
+
+  public double getFontsize( double def )
+  {
+    return fontsize==0?def:fontsize;
   }
 
   public void setFontsize(double fontsize)
