@@ -32,7 +32,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.Properties;
+import java.net.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +47,8 @@ public class QyoutiPreferences
         extends Properties
 {
   File file;
+  ArrayList<String> fontnamelist = new ArrayList<>();
+  HashMap<String,String> fonturltable = new HashMap<>();
 
   public QyoutiPreferences( File file )
   {
@@ -54,47 +57,65 @@ public class QyoutiPreferences
 
   public void setDefaults()
   {
-    super.setProperty( "qyouti.print.font-family", Font.SANS_SERIF );
-    super.setProperty( "qyouti.qrcode.error-correction", "M" );
-    super.setProperty( "qyouti.scan.threshold", "85" );
-    super.setProperty( "qyouti.scan.inset", "50" );
+    super.setProperty( "qyouti.print.font.count",   "8"                    );
+    super.setProperty( "qyouti.print.font.name.1",  "FreeSans"             );
+    super.setProperty( "qyouti.print.font.name.2",  "FreeSansBold"         );
+    super.setProperty( "qyouti.print.font.name.3",  "FreeSansBoldOblique"  );
+    super.setProperty( "qyouti.print.font.name.4",  "FreeSansOblique"      );
+    super.setProperty( "qyouti.print.font.name.5",  "FreeSerif"            );
+    super.setProperty( "qyouti.print.font.name.6",  "FreeSerifBold"        );
+    super.setProperty( "qyouti.print.font.name.7",  "FreeSerifBoldItalic"  );
+    super.setProperty( "qyouti.print.font.name.8",  "FreeSerifItalic"      );
+    
+    // relative URLs are relative to qyouti installation fonts folder
+    super.setProperty( "qyouti.print.font.path.1",  "FreeSans.ttf"             );
+    super.setProperty( "qyouti.print.font.path.2",  "FreeSansBold.ttf"         );
+    super.setProperty( "qyouti.print.font.path.3",  "FreeSansBoldOblique.ttf"  );
+    super.setProperty( "qyouti.print.font.path.4",  "FreeSansOblique.ttf"      );
+    super.setProperty( "qyouti.print.font.path.5",  "FreeSerif.ttf"            );
+    super.setProperty( "qyouti.print.font.path.6",  "FreeSerifBold.ttf"        );
+    super.setProperty( "qyouti.print.font.path.7",  "FreeSerifBoldItalic.ttf"  );
+    super.setProperty( "qyouti.print.font.path.8",  "FreeSerifItalic.ttf"      );
+    
+    
+    super.setProperty( "qyouti.print.font-family-sans.count",  "1"         );
+    super.setProperty( "qyouti.print.font-family-sans.1",      "FreeSans"  );
+ 
+    super.setProperty( "qyouti.print.font-family-serif.count", "1"         );
+    super.setProperty( "qyouti.print.font-family-serif.1",     "FreeSerif" );
   }
 
-  public ErrorCorrectionLevel getQRCodeErrorCorrection()
+  public String getFontURL( String name )
   {
-    String qrec = getProperty( "qyouti.qrcode.error-correction" );
-    if ( "H".equalsIgnoreCase( qrec ) )
-      return ErrorCorrectionLevel.H;
-    if ( "M".equalsIgnoreCase( qrec ) )
-      return ErrorCorrectionLevel.M;
-    if ( "L".equalsIgnoreCase( qrec ) )
-      return ErrorCorrectionLevel.L;
-    if ( "Q".equalsIgnoreCase( qrec ) )
-      return ErrorCorrectionLevel.Q;
-    return ErrorCorrectionLevel.L;
+    String url = fonturltable.get( name );
+    if ( "notfound".equals( url ) )
+      return null;
+    return url;
   }
-
+  
   public int getPropertyInt( String key )
   {
-    try
-    {
-      return Integer.parseInt( getProperty(key) );
-    }
-    catch ( Exception e )
-    {
-      return 0;
-    }
+    try { return Integer.parseInt( getProperty(key) ); }
+    catch ( Exception e ) { return 0; }
   }
 
-  @Override
-  public Object setProperty( String key, String value )
+  public void rebuild()
   {
-    Object r = super.setProperty( key, value );
-    save();
-    return r;
+    int n = getPropertyInt( "qyouti.print.font.count" );
+    int i;
+    String name, fullname;
+    
+    fontnamelist.clear();
+    fonturltable.clear();
+    for ( i=1; i<=n; i++ )
+    {
+      name = getProperty( "qyouti.print.font.name." + i );
+      fullname = getProperty( "qyouti.print.font.url." + i );
+      fontnamelist.add( name );
+      fonturltable.put( name, fullname );
+    }    
   }
-
-
+  
   public boolean load()
   {
     try
@@ -108,6 +129,7 @@ public class QyoutiPreferences
       Logger.getLogger(QyoutiPreferences.class.getName()).log(Level.SEVERE, null, ex);
       return false;
     }
+    rebuild();
     return true;
   }
 

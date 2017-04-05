@@ -476,6 +476,7 @@ public class ImportPersonDialog
     int rows = paster.getRowCount();
     PersonData cd, othercd;
     String name;
+    list.clear();
     for ( i = 0; i < rows; i++ )
     {
       if ( fullname )
@@ -483,7 +484,7 @@ public class ImportPersonDialog
       else
         name = paster.getValueAt( i, c-1 ).toString() + ", " + 
                paster.getValueAt( i, b-1 ).toString();
-      cd = new PersonData( exam, name, paster.getValueAt( i, d-1 ).toString(), false );
+      cd = new PersonData( name, paster.getValueAt( i, d-1 ).toString(), false );
       list.add( cd );
     }
 

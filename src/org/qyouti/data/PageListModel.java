@@ -18,7 +18,7 @@ public class PageListModel
 
   private static final String[] column_headings =
   {
-    "Page ID", "Barcode", "Paper Name", "Paper ID", "Scanned", "Error"
+    "Page No.", "Barcode", "Paper Name", "Paper ID", "Scanned", "Error"
   };
 
   Vector<PageData> pages = new Vector<PageData>();

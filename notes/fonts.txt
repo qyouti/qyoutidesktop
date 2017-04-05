@@ -1,0 +1,174 @@
+
+Rendering Pages - Font Processing
+=================================
+
+Text in questions is layed out using HTML in an undisplayed TextArea. The
+font names are set using CSS style attributes. Swing is responsible for
+working out font metrics and placing text appropriately. If it doesn't
+find the named fonts it will substitute them with a default font.
+
+
+That is converted to SVG. Fonts names set in the HTML will pass through
+to the SVG. Whichever process that handles the SVG for display or print
+may substitute the missing fonts in a different way and the layout will
+fail.  The conversion could be done without the use of fonts at all by
+converting all text into vector shapes but that produces massive SVG files
+uses tons of memory and is very slow.  So, better to make sure fonts are
+available in the system.
+
+Apache FOP is used to convert SVG into PDF.  The use of fonts is very 
+different - although it runs in Java it doesn't use Swing font handling.
+So, it has to be configured using an XML file. This involves FOP scanning
+font files and reading lots of data on font metrics - although it can
+cache the info in the users file space.  Only specific font formats are
+supported so some fonts that appear to be installed are not available for
+PDF output. If it encounters a font name in the SVG for which no valid font 
+is available it substitutes another font [Times] and that may go very wrong 
+if the metrics differ from those used to lay out the HTML.
+
+So, for safety and speed it may be a good idea to bundle some free fonts
+with the software and make these the default font.  Also dynamically build
+ an FOP configuration based on only the fonts that are actually in the SVG
+so it doesn't waste time parsing millions of font files.
+
+Lucida
+======
+
+Java is bundled with Lucida family - serif, non-serif, non-proportional.
+However, when FOP parses these it only finds embedded fonts in the two 
+'typewriter' variant files.
+
+
+Problems with Rendering
+=======================
+
+If the HTML has characters which are not available in the selected font these 
+work fine in the SVG preview panel [i.e. rendered to a rastered output] but 
+when rendered to PDF the missing characters are replaced with '#'.
+
+To understand look at the SVG rendering.  SVG text nodes are rendered via:
+
+org.apache.batik.bridge.TextNode
+using
+org.apache.batik.bridge.StrokingTextPainter
+
+Experimented by putting a chinese glyph in the middle of a string.
+Break point at 
+StrokingTextPainter.paint(TextNode node, Graphics2D g2d)
+The method looks for 'text runs' and usually there is only one. But the
+text node with the chinese character results in three text runs. First the
+text before the chinese, second the chinese, third the text after.
+It is the font that changes in the attributes from 
+FreeSans 48 Plain
+to
+SansSerif 48 Plain
+and back again.  So the SVG system has worked out an appropriate font for the
+glyph when rendering to a raster. How?
+
+computeTextRun()
+takes an AttributedString and finds characters that can't be handled by
+the selected font using:
+createModifiedACIForFontMatching()
+int displayUpToIndex = font.canDisplayUpTo(aci, currentIndex, end);
+
+Then finds a different font that can display using:
+fontFamily = getFontFamilyResolver().getFamilyThatCanDisplay(c);
+
+This class implements the font family resolver:
+org.apache.batik.bridge.DefaultFontFamilyResolver
+the key to it is call:
+java.awt.Font.canDisplay(char c)
+on every known font.
+
+There is a problem though - logical fonts are checked which may make use
+of a variety of physical fonts.  In the case of the chinese character the
+logical font SansSerif is the first to be checked - this uses Lucida for
+the alphabet but not for chinese. What font is really used?
+
+Hard to know - it depends on the local configuration.  The main point is
+that all Batik knows is that 'SansSerif' solved the problem.
+
+FOP can try to cope if configured to use fonts in 'qyouti/fonts' and by putting 
+a chinese font in there.  The PDF file no longer shows '#' BUT we don't know
+if the glyph used comes from the same physical font that was used to compute the
+text layout when creating the SVG. So, this could result in the string being
+the wrong length and/or position.
+
+Possible solution: process text at the earliest point to explicitly switch
+fonts if a character is not in the current physical font. So;
+
+<p style="font-family: FreeSerif;">The Chinese for nation is 国.</p>
+<p style="font-family: FreeSerif;">The Chinese for nation is <span style="font-family: WenQuanYiZenHei;">国</span>.</p>
+
+This way we can guarantee that the same fonts are used to work out the x, y
+coords of the text elements of the SVG AND to render the PDF.
+
+So, before rendering any HTML, work out all the available fonts that can be 
+embedded into the PDF and maintain a list.
+
+Then when converting the HTML and it to the TextArea and process BEFORE 
+rendering to SVG.  Check every single character. Look at the applied font - if
+it isn't available for PDF change it - if the font is available but doesn't 
+have a glyph change it to one that does have it.
+
+
+Apostrophes
+===========
+
+For some bizzare reason font names in SVG created from the HTML end up in
+apostrophes:
+font-family="'FreeSans'"
+org.apache.batik.svggen.SVGFont.familyToSVG
+does this to any font that is not one of the Java logical fonts.
+
+This buggers up the Gnome image viewer - can be fixed by stripping out the
+apostrophes. Apache FOP is not bothered. So, it mainly affects debugging.
+
+
+Exception
+=========
+
+https://issues.apache.org/jira/browse/FOP-2572
+Patch has been proposed but it hasn't reached the repository.
+
+doGlyphMapping
+ calls either
+        if (font.performsSubstitution() || font.performsPositioning()) {
+            mapping = processWordMapping(text, startIndex, endIndex, font,
+                breakOpportunityChar, endsWithHyphen, level,
+                dontOptimizeForIdentityMapping, retainAssociations, retainControls);
+        } else {
+            mapping = processWordNoMapping(text, startIndex, endIndex, font,
+                letterSpaceIPD, letterSpaceAdjustArray, precedingChar, breakOpportunityChar, endsWithHyphen, level);
+        }
+
+Gets an array index out of bounds exception with FreeSerif but not FreeSans.  Seems to be a difference with the
+kerning.  The sans version doesn't seem to want to kern but the serif version can kern and this throws up an
+error. Bug occurs when a text element has characters in that require another font - this results in a formatted
+text element with multiple runs - an array of kerning adjust values is set up which is the length of a run
+but is indexed relative to the start of the whole string. So, eventually there is a run which goes wrong.
+
+Patched FOP source code to solve this.
+
+
+More Detail on FOP font Processing
+==================================
+
+PDFTrancoder.transcode
+to
+PDFDocumentGraphics2Configurator.configure
+PDFDocumentGraphics2Configurator.createFontInfo
+DefaultFontonfigurator.configure
+etc....
+builds
+List<EmbedFontInfo> fontInfoList
+
+These are user configurable files or folders and with an autodetect option
+that looks in OS specific folders. E.g.:
+
+            System.getProperty("user.home") + "/.fonts", // user
+            "/usr/local/fonts", // local
+            "/usr/local/share/fonts", // local shared
+            "/usr/share/fonts", // system
+            "/usr/X11R6/lib/X11/fonts" // X
+

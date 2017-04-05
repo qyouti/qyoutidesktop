@@ -24,7 +24,7 @@ public class PersonData
   
   private ExaminationData exam;
   
-  public PersonData( ExaminationData exam, String name, String id, boolean anon )
+  public PersonData( String name, String id, boolean anon )
   {
     this.exam = exam;
     
@@ -32,11 +32,6 @@ public class PersonData
     this.id = id;
     this.anonymous = anon;
     this.excluded = false;
-    if ( exam != null )
-    {
-      exam.persons.put( id, this );
-      exam.persons_sorted.add( this );
-    }
   }
 
   public PersonData( ExaminationData exam, Element element )
@@ -59,6 +54,16 @@ public class PersonData
       preferences = null;
   }
 
+  public ExaminationData getExam()
+  {
+    return exam;
+  }
+
+  public void setExam( ExaminationData exam )
+  {
+    this.exam = exam;
+  }
+
   public String getName()
   {
     return name;
@@ -66,8 +71,9 @@ public class PersonData
 
   public void setName( String name )
   {
-    this.name = name;
-    exam.setUnsavedChanges( true );
+    this.name = name;  
+    if ( exam != null )
+      exam.setUnsavedChanges( true );
   }
 
   public String getId()
@@ -78,7 +84,8 @@ public class PersonData
   public void setId( String id )
   {
     this.id = id;
-    exam.setUnsavedChanges( true );
+    if ( exam != null )
+      exam.setUnsavedChanges( true );
   }
 
   public boolean isAnonymous()
@@ -89,7 +96,8 @@ public class PersonData
   public void setAnonymous( boolean anonymous )
   {
     this.anonymous = anonymous;
-    exam.setUnsavedChanges( true );
+    if ( exam != null )
+      exam.setUnsavedChanges( true );
   }
 
   public boolean isExcluded()
@@ -100,7 +108,8 @@ public class PersonData
   public void setExcluded( boolean excluded )
   {
     this.excluded = excluded;
-    exam.setUnsavedChanges( true );
+    if ( exam != null )
+      exam.setUnsavedChanges( true );
   }
 
   public UserRenderPreferences getPreferences()
@@ -111,7 +120,8 @@ public class PersonData
   public void setPreferences( UserRenderPreferences preferences )
   {
     this.preferences = preferences;
-    exam.setUnsavedChanges( true );
+    if ( exam != null )
+      exam.setUnsavedChanges( true );
   }
   
   

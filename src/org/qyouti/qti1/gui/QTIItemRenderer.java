@@ -1085,6 +1085,9 @@ public class QTIItemRenderer
 //    }
 
     org.w3c.dom.Element decorationgroup = pdoc.createElementNS( svgNS, "g");
+    decorationgroup.setAttribute( 
+            "font-family", 
+            getMetrics().getProperty( (userprefs != null && userprefs.isSerif())?"fontfamily-serif":"fontfamily" ) );
     if ( rulers )
       decorationgroup.setAttribute("transform",
            "translate( " +
