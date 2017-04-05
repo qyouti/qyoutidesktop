@@ -18,11 +18,16 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.xml.transform.*;
+import org.apache.avalon.framework.configuration.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.swing.gvt.*;
 import org.apache.batik.transcoder.*;
+import org.apache.fop.fonts.*;
+import org.apache.fop.svg.*;
+import org.apache.fop.svg.font.*;
 import org.qyouti.barcode.*;
 import org.qyouti.data.*;
+import org.qyouti.fonts.*;
 import org.qyouti.print.*;
 import org.qyouti.qti1.element.*;
 import org.qyouti.qti1.gui.*;
@@ -41,9 +46,12 @@ public class QyoutiFrame
 {
 
   QyoutiPreferences preferences;
+  QyoutiFontManager fontmanager;
+  
   File examfolder = null;
   ExaminationData exam;
   ExaminationCatalogue examcatalogue;
+  File homefolder;
   File basefolder;
   String examname = null;
 
@@ -82,16 +90,29 @@ public class QyoutiFrame
   {
     currentLookAndFeel = UIManager.getLookAndFeel().getClass().getName();
 
-    //File preferences_file = new File( appfolder, "preferences.xml" );
-    preferences = new QyoutiPreferences( null );//preferences_file);
-    //if ( preferences_file.exists() )
-    //  preferences.load();
-    //else
-    preferences.setDefaults();
+    homefolder = new File( System.getProperty( "user.home" ) );
+    homefolder = new File( homefolder, "qyouti" );
+    if ( !homefolder.exists() )
+      homefolder.mkdir();
+    basefolder = new File( homefolder, "exams" );
+    
+    File preferences_file = new File( homefolder, "preferences.xml" );
+    preferences = new QyoutiPreferences( preferences_file );
+    if ( preferences_file.exists() )
+      preferences.load();
+    else
+    {
+      preferences.setDefaults();
+      preferences.save();
+    }
+    
+    fontmanager = new QyoutiFontManager( preferences );
 
     busydialog = new BusyDialog( this, false );
     selectdialog = new ExamSelectDialog( this, true );
     selectdialog.setFrame( this );
+    selectdialog.setBaseFolder( basefolder );
+    
     initComponents();
     
     previewsvgcanvas.getInteractors().clear();
@@ -1539,19 +1560,7 @@ public class QyoutiFrame
       return;
     }
 
-    if ( basefolder == null )
-    {
-      File homefolder = new File( System.getProperty( "user.home" ) );
-      basefolder = new File( homefolder, "qyouti" );
-      if ( !basefolder.exists() )
-      {
-        basefolder.mkdir();
-      }
-    }
-    selectdialog.setBaseFolder( basefolder );
     selectdialog.setExamName( "" );
-
-    //selectdialog.setBaseFolder( );
     selectdialog.setDialogType( ExamSelectDialog.TYPE_OPEN );
     selectdialog.setVisible( true );
   }//GEN-LAST:event_openmenuitemActionPerformed
@@ -1589,17 +1598,6 @@ public class QyoutiFrame
     if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
     {
       return;
-    }
-
-    if ( basefolder == null )
-    {
-      File homefolder = new File( System.getProperty( "user.home" ) );
-      basefolder = new File( homefolder, "qyouti" );
-      if ( !basefolder.exists() )
-      {
-        basefolder.mkdir();
-      }
-      selectdialog.setBaseFolder( basefolder );
     }
 
     selectdialog.setExamName( "" );
@@ -1911,7 +1909,7 @@ public class QyoutiFrame
     progressbar.setIndeterminate( true );
 
     //busydialog.setVisible( true );
-    PrintThread thread = new PrintThread( exam, examfolder );
+    PrintThread thread = new PrintThread( exam, examfolder, fontmanager );
     thread.setQyoutiFrame( this );
     thread.start();
   }//GEN-LAST:event_pdfprintmenuitemActionPerformed
@@ -2183,7 +2181,7 @@ public class QyoutiFrame
     progressbar.setIndeterminate( true );
 
     //busydialog.setVisible( true );
-    PrintThread thread = new PrintThread( exam, examfolder );
+    PrintThread thread = new PrintThread( exam, examfolder, fontmanager );
     thread.setQyoutiFrame( this );
     thread.setType( PrintThread.TYPE_ANALYSIS );
     thread.start();    

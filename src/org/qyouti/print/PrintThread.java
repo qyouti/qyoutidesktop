@@ -5,10 +5,12 @@
  */
 package org.qyouti.print;
 
+import org.qyouti.fonts.QyoutiFontManager;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+import org.apache.avalon.framework.configuration.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.transcoder.*;
 import org.apache.fop.svg.*;
@@ -18,6 +20,8 @@ import org.apache.pdfbox.util.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
 import org.qyouti.qti1.gui.*;
+import org.qyouti.util.*;
+
 
 /**
  *
@@ -25,18 +29,31 @@ import org.qyouti.qti1.gui.*;
  */
 public class PrintThread extends Thread
 {
+  
+  public static final String CONFIGXML = 
+          "<?xml version=\"1.0\"?>" +
+          "<fop version=\"1.0\">" +
+          "  <use-cache>false</use-cache>" +
+          "  <fonts>" +
+          //"  <font embed-url=\"jar:file:/home/jon/files/projects/qyoutifonts/dist/qyoutifonts.jar!/org/qyouti/fonts/resources/FreeSans.ttf\"/>" +          
+          "    DIRECTORY" +
+          "  </fonts>" +
+          "</fop>";  
+  
   ExaminationData exam;
   File examfolder;
+  QyoutiFontManager fontmanager;
   QyoutiFrame frame;
 
   public static final int TYPE_PAPERS = 0;
   public static final int TYPE_ANALYSIS = 1;
   
   int type = TYPE_PAPERS;
-          
-  public PrintThread( ExaminationData exam, File examfolder )
+            
+  public PrintThread( ExaminationData exam, File examfolder, QyoutiFontManager fontmanager )
   {
     super();
+    this.fontmanager = fontmanager;
     this.exam = exam;
     this.examfolder = examfolder;
   }
@@ -72,7 +89,7 @@ public class PrintThread extends Thread
       PageData page;
       TranscoderInput tinput;
       TranscoderOutput transout;
-      File pagefile;
+      File pagefile, svgfile;
       ArrayList<File> pagefiles = new ArrayList<>();
       File pdffile;
       if ( type == TYPE_ANALYSIS )
@@ -93,7 +110,15 @@ public class PrintThread extends Thread
         paginationrecord = new PaginationRecord(examfolder.getName());
         printid = paginationrecord.getPrintId();
       }
+      
+      File fontfolder = new File( examfolder.getParent(), "fonts" );
+      String strconfig = CONFIGXML.replace( "DIRECTORY",  fontfolder.getPath()  );
+      //DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
+      //Configuration fopconfig = cfgBuilder.build( new ByteArrayInputStream( strconfig.getBytes( "UTF8" ) ) );
+      Configuration fopconfig;
+      fopconfig = fontmanager.getFOPConfiguration();
       PDFTranscoder pdft = new PDFTranscoder();
+      pdft.configure( fopconfig );
 
       java.util.Vector<CandidateData> candidates;
       if ( type == TYPE_ANALYSIS )
@@ -121,7 +146,10 @@ public class PrintThread extends Thread
         System.out.println( "SVG Ready" );
         for ( int i=0; i<paginated.size(); i++ )
         {
-          pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p++ + ".pdf" );
+          svgfile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".svg" );
+          QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
+          pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".pdf" );
+          p++;
           pagefiles.add( pagefile );
           System.out.println( "Transcoding page " + (i+1) + " to " + pagefile.getAbsolutePath() );
           tinput = new TranscoderInput( paginated.get( i ) );
@@ -141,8 +169,8 @@ public class PrintThread extends Thread
       pdfmerger.mergeDocuments( MemoryUsageSetting.setupMixed( 100L * 1024L * 1024L ) );
       //pdfmerger.mergeDocuments();
 
-      for ( int i=0; i<pagefiles.size(); i++ )
-        pagefiles.get( i ).delete();
+//      for ( int i=0; i<pagefiles.size(); i++ )
+//        pagefiles.get( i ).delete();
 
       if ( paginationrecord == null )
         return;

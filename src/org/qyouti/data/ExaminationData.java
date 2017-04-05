@@ -729,6 +729,7 @@ public class ExaminationData
     for ( i = 0; i < list.size(); i++ )
     {
       person = list.get( i );
+      person.setExam( this );
       persons.put(person.getId(), person);
       persons_sorted.add(person);
     }
