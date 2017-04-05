@@ -105,32 +105,48 @@ public class QyoutiFontManager
   
   private String getFOPConfigurationString( boolean search )
   {
-    String subst, name, path;
-    File d = getBuiltinFontDirectory();
-    File f;
+    String path;
+    File builtin = getBuiltinFontDirectory();
+    File f, d;
+    ArrayList<String> dirs = new ArrayList<>();
+    StringBuilder str = new StringBuilder();
     
-    if ( d == null || !d.exists() ) subst = "<!-- No directory found to add here. -->";
-    else if ( search ) subst = "<directory>" + d.getAbsolutePath() + "</directory>";
-    else
+    if ( builtin == null || !builtin.exists() )
+      str.append( "<!-- No directory found to add here. -->" );
+    else 
     {
-      StringBuilder str = new StringBuilder();
-      int n = pref.getPropertyInt( "qyouti.print.font.count" );
-      for ( int i=1; i<=n; i++ )
+      dirs.add( builtin.getAbsolutePath() )
+              ;
+      if ( search ) 
       {
-        name = pref.getProperty( "qyouti.print.font.name."+i );
-        path = pref.getProperty( "qyouti.print.font.path."+i  );
-        if ( path.startsWith( "/" ) )
-          f = new File( path );
-        else
-          f = new File( d, path );
-        str.append( "        <font embed-url=\"" );
-        str.append( f.toString() );
-        str.append( "\"/>\n" );
+        str.append( "<auto-detect/>" );
       }
-      subst = str.toString();
+      else
+      {
+        int n = pref.getPropertyInt( "qyouti.print.font.count" );
+        for ( int i=1; i<=n; i++ )
+        {
+          //name = pref.getProperty( "qyouti.print.font.name."+i );
+          path = pref.getProperty( "qyouti.print.font.path."+i  );
+          if ( path.startsWith( "/" ) )
+            f = new File( path );
+          else
+            f = new File( builtin, path );
+          d = f.getParentFile();
+          if ( !dirs.contains( d.getAbsolutePath() ) )
+            dirs.add( d.getAbsolutePath() );
+        }
+      }
+      
+      for ( String s : dirs )
+      {
+        str.append( "    <directory>" );
+        str.append( s );
+        str.append( "</directory>\n" );
+      }
     }
     
-    String c = CONFIGXML.replace( "INSERT",  subst );
+    String c = CONFIGXML.replace( "INSERT",  str.toString() );
     System.out.println( c );
     return c;
   }
