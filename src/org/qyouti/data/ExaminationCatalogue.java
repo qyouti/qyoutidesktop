@@ -26,6 +26,7 @@ public class ExaminationCatalogue
   {
     int i, j;
     File[] childfiles = appfolder.listFiles();
+    if ( childfiles == null ) return;
     Arrays.sort( childfiles );
     File examconfig;
     ExamCatEntry entry;
