@@ -37,6 +37,7 @@ import org.qyouti.print.SvgConversionResult;
 import org.qyouti.barcode.ZXingCodec;
 import org.qyouti.data.*;
 import org.qyouti.dialog.*;
+import org.qyouti.fonts.*;
 import org.qyouti.print.*;
 import org.qyouti.qti1.*;
 import org.qyouti.qti1.element.*;
@@ -44,11 +45,10 @@ import org.qyouti.qti1.ext.qyouti.QTIExtensionRendersketcharea;
 import org.qyouti.qti1.ext.webct.QTIExtensionWebctMaterialwebeq;
 import org.qyouti.svg.SVGUtils;
 import org.qyouti.util.QyoutiUtils;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.w3c.dom.svg.SVGDocument;
 import org.w3c.dom.svg.SVGSVGElement;
+import org.w3c.dom.traversal.*;
 
 /**
  *
@@ -68,6 +68,7 @@ public class QTIItemRenderer
   QTIRenderOptions options;
   QuestionMetricsRecord mrec;
   PrintThread printthread;
+  QyoutiFontManager fontmanager;
 
   int columnoverride = 0;
   String analysishtml = "";
@@ -121,6 +122,7 @@ public class QTIItemRenderer
    */
   public QTIItemRenderer(
       PrintThread printthread,
+      QyoutiFontManager fontmanager,
       int type,
       URI examfolderuri,
       QTIElementItem item,
@@ -132,6 +134,7 @@ public class QTIItemRenderer
     int i;
     this.item = item;
     this.printthread = printthread;
+    this.fontmanager = fontmanager;
     this.type = type;
     this.examfolderuri = examfolderuri;
     this.qnumber = qnumber;
@@ -196,11 +199,18 @@ public class QTIItemRenderer
     System.out.println("===============================================");
 
     // Put the HTML into the Text Pane
-    TextPaneWrapper textPane = new TextPaneWrapper();
+    //TextPaneWrapper textPane = new TextPaneWrapper();
     textPane.setSize( 0, 0 );
+    textPane.setQyoutiStyleSheet( fontmanager.getQyoutiStyleSheet( prefs==null?false:prefs.isSerif() ) );
     textPane.setText( state.html.toString() );
+    
+    // Force update to view before analysis
+    textPane.getPreferredSize();
+    MissingGlyphReport mgr = fontmanager.analyzeDocumentView( textPane.getUI().getRootView( textPane ) );
+    
     HTMLDocument htmldoc = textPane.getHtmlDoc();
-
+    //fontmanager.analyzeDocument( htmldoc );
+    
     Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
     Element docelement;
     int offset;
@@ -234,27 +244,6 @@ public class QTIItemRenderer
 //  couldn't get this bit to work so revert to outputting
 //  an HTML table.
 
-//    if ( type == PrintThread.TYPE_ANALYSIS )
-//    {
-//      docelement = htmldoc.getElement("qti_insert_analysis");
-//      if (docelement != null)
-//      {
-//        offset = docelement.getStartOffset();
-//        s = htmldoc.addStyle("qyouti_svg_icon_analysis", def);
-//        JButton b = new JButton( "Testing" );
-//        b.setFont( b.getFont().deriveFont( 200.0f ) );
-//        StyleConstants.setComponent( s, b );
-//        try
-//        {
-//          htmldoc.remove(offset, 1);
-//          htmldoc.insertString(offset, " ", s);
-//        } catch (BadLocationException ex)
-//        {
-//          Logger.getLogger(QTIItemRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//      }
-//    }
-//
     // Get the textPane to paint itself into an SVG document.
     // This will have blank rectangles whereever SVGIcon objects are.
     double width = getMetrics().getPropertyInches( "page-width" );
@@ -267,7 +256,10 @@ public class QTIItemRenderer
 
     // This call may switch into the Event Dispatcher Thread.
     svgres =  textPane.getSVG( (int)getMetrics().inchesToSvg(width) );
-        
+    svgres.addMissingGlyphReport( mgr );
+    //fontmanager.analyzeDocumentView( textPane.getUI().getRootView( textPane ) );
+    //fontmanager.analyzeDocument( htmldoc );
+    
     org.w3c.dom.Element svgroot = svgres.getDocument().getDocumentElement();
     NodeList nl = svgroot.getElementsByTagName( "defs" );
     if ( nl.getLength() > 0 )
@@ -342,11 +334,21 @@ public class QTIItemRenderer
         
     // Clear the text pane for reuse
     textPane.setText( "" );
+  
+    try
+    {
+      QyoutiUtils.dumpXMLFile( File.createTempFile( "/home/jon/temp/svg/qti", ".svg" ).getPath(), svgres.getDocument().getDocumentElement(), true );
+    }
+    catch ( IOException ex )
+    {
+      Logger.getLogger( QTIItemRenderer.class.getName() ).
+              log( Level.SEVERE, null, ex );
+    }
   }
 
-  private static GenericDocument renderSpecialPage( String name, QTIRenderOptions options )
+  private static GenericDocument renderSpecialPage( String name, QTIRenderOptions options, QyoutiStyleSheet ss )
   {
-    return renderSpecialPage( name, options, null, null, null );
+    return renderSpecialPage( name, options, null, null, null, ss );
   }
 
   private static GenericDocument renderSpecialPage(
@@ -354,7 +356,8 @@ public class QTIItemRenderer
       QTIRenderOptions options,
       String candidatename,
       String candidateid,
-      String content )
+      String content,
+      QyoutiStyleSheet ss )
   {
     int i;
 
@@ -460,10 +463,11 @@ public class QTIItemRenderer
 
     if (e instanceof QTIElementPresentation)
     {
-      state.html.append("<html>\n<body style=\"font-size: " );
+      state.html.append("<html>\n<head></head>\n" );
+      state.html.append("<body style=\"font-size: " );
       state.html.append(getMetrics().inchesToSvg( prefs.getFontsize( getMetrics().getPropertyInches("fontsize") ) ));
-      state.html.append("px; font-family: " );
-      state.html.append( getMetrics().getProperty( prefs.isSerif()?"fontfamily-serif":"fontfamily" ) );
+      state.html.append("px" );//; font-family: " );
+      //state.html.append( fontmanager.getDefaultFontFamilyName( prefs==null?false:prefs.isSerif() ) );
       state.html.append( ";\">\n");
       state.html.append( "<div>" ); // <table width=\"200\"><tr><td>" );
 
@@ -760,6 +764,8 @@ public class QTIItemRenderer
 
   public static List<GenericDocument> paginateItems( 
       PrintThread printthread,
+      QyoutiFontManager fontmanager,
+      MissingGlyphReport mgr,
       int type,
       String printid,
       URI examfolderuri,
@@ -783,6 +789,7 @@ public class QTIItemRenderer
       else
         items = candidate.getItems();
       UserRenderPreferences prefs = (candidate!=null)?candidate.preferences:null;
+      QyoutiStyleSheet ss = fontmanager.getQyoutiStyleSheet( (prefs!=null)?prefs.isSerif():false );
       
       int pwidth = (int)(getMetrics().getPropertyInches( "page-width" )*100);
       int pheight = (int)(getMetrics().getPropertyInches( "page-height" )*100);
@@ -834,13 +841,16 @@ public class QTIItemRenderer
             exam,
             (candidate!=null)?candidate.name:"---",
             (candidate!=null)?candidate.id:"---",
-            (preamble!=null)?preamble:"" );
+            (preamble!=null)?preamble:"",
+            ss
+            );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
         svghooks.add( new SVGHooks() );
         paginated.add(QTIItemRenderer.placeSVGOnPage(
                 page, 
                 false, 
                 exam, 
+                fontmanager,
                 prefs, 
                 paginationrecord, 
                 svghooks.lastElement() ) );
@@ -886,7 +896,7 @@ public class QTIItemRenderer
         }
         
         // if ( i==29 ) System.out.println( "Item 29" );
-        renderer = new QTIItemRenderer( printthread, type, examfolderuri, items.elementAt(i), i+1, 
+        renderer = new QTIItemRenderer( printthread, fontmanager, type, examfolderuri, items.elementAt(i), i+1, 
             exam, prefs );
         if ( type == PrintThread.TYPE_ANALYSIS )
         {
@@ -894,6 +904,7 @@ public class QTIItemRenderer
           renderer.setColumnOverride( 1 );
         }
         renderer.renderItem();
+        mgr.addReport( renderer.getMissingGlyphReport() );
         svgdocs[i] = renderer.getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getDocumentElement().getAttribute("height") );
@@ -913,7 +924,8 @@ public class QTIItemRenderer
           {
             // finish off the page
             svghooks.add( new SVGHooks() );
-            paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
+            paginated.add(QTIItemRenderer.placeSVGOnPage(
+                    page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
             
             // start a new page for this question
             if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
@@ -950,7 +962,7 @@ public class QTIItemRenderer
 
       // complete the last page of questions
       svghooks.add( new SVGHooks() );
-      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
+      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
 
       boolean doublesided = exam.getQTIRenderBooleanOption("double_sided");
       boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
@@ -959,7 +971,7 @@ public class QTIItemRenderer
       if ( (svghooks.size() & 1) == 1 && doublesided )
       {
         has_blank = true;
-        GenericDocument blanksvg = renderSpecialPage("org/qyouti/qti1/gui/blank.xhtml", exam );
+        GenericDocument blanksvg = renderSpecialPage("org/qyouti/qti1/gui/blank.xhtml", exam, ss );
         // start a page
         if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         {
@@ -973,7 +985,7 @@ public class QTIItemRenderer
 
         // complete page
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, prefs, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
       }
 
       String footer;
@@ -1043,6 +1055,7 @@ public class QTIItemRenderer
           Vector<SVGDocumentPlacement> itemdocs , 
           boolean rulers, 
           QTIRenderOptions options,
+          QyoutiFontManager fontmanager,
           UserRenderPreferences userprefs,
           PaginationRecord paginationrecord,
           SVGHooks hooks
@@ -1087,7 +1100,7 @@ public class QTIItemRenderer
     org.w3c.dom.Element decorationgroup = pdoc.createElementNS( svgNS, "g");
     decorationgroup.setAttribute( 
             "font-family", 
-            getMetrics().getProperty( (userprefs != null && userprefs.isSerif())?"fontfamily-serif":"fontfamily" ) );
+            fontmanager.getDefaultFontFamilyName( userprefs==null?false:userprefs.isSerif() ) );
     if ( rulers )
       decorationgroup.setAttribute("transform",
            "translate( " +
@@ -1321,7 +1334,47 @@ public class QTIItemRenderer
       decorationgroup.appendChild(itemg);
       SVGUtils.insertDocumentContents(pdoc, itemg, itemdoc.getDoc() );
     }
+    
     //pdoc.normalizeDocument();
+    // Fix font-family attributes...
+    NodeIterator iter = pdoc.createNodeIterator( 
+            pdoc.getDocumentElement(), 
+            NodeFilter.SHOW_ELEMENT, 
+            new NodeFilter()
+            {
+              @Override
+              public short acceptNode( Node n )
+              {
+                if ( n.getNodeType() == Node.ELEMENT_NODE )
+                {
+                  org.w3c.dom.Element e = (org.w3c.dom.Element)n;
+                  Attr attr = e.getAttributeNode( "font-family" );
+                  return attr==null?NodeFilter.FILTER_SKIP:NodeFilter.FILTER_ACCEPT;
+                }
+                return NodeFilter.FILTER_REJECT;
+              }
+            }, 
+            false );
+    Node node;
+    org.w3c.dom.Element e;
+    Attr attr;
+    String val;
+    while ( true )
+    {
+      node = iter.nextNode();
+      if ( node == null ) break;
+      if ( node.getNodeType() != Node.ELEMENT_NODE ) continue;
+      e = (org.w3c.dom.Element)node;
+      attr = e.getAttributeNode( "font-family" );
+      if ( attr == null ) continue;
+      val = attr.getValue();
+      if ( val.startsWith( "'" ) ) val = val.substring( 1 );
+      if ( val.endsWith( "'" ) )   val = val.substring( 0, val.length()-1 );
+      val = fontmanager.getSVGFontFamilyAttribute( val );
+
+      attr.setValue( val );
+    }
+    
     //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/page.svg", pdoc.getDocumentElement(), true );
     return pdoc;
   }
@@ -1357,7 +1410,7 @@ public class QTIItemRenderer
 
     SVGDocumentPlacement dp = new SVGDocumentPlacement((GenericDocument) svgres.getDocument().cloneNode(true), itemareinsetleft, itemareinsettop );
     v.add( dp );
-    return placeSVGOnPage( v, true, options, null, null, null );
+    return placeSVGOnPage( v, true, options, fontmanager, null, null, null );
   }
 
   public SvgConversionResult getSVGResult()
@@ -1368,6 +1421,11 @@ public class QTIItemRenderer
   public GenericDocument getSVGDocument()
   {
     return svgres.getDocument();
+  }
+
+  public MissingGlyphReport getMissingGlyphReport()
+  {
+    return svgres.getMissingGlyphReport();
   }
 
   public static QTIMetrics getMetrics()

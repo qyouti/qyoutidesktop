@@ -6,12 +6,19 @@
 package org.qyouti.dialog;
 
 import java.awt.*;
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.logging.*;
 import javax.swing.*;
-import javax.swing.text.Document;
-import javax.swing.text.html.HTMLDocument;
+import javax.swing.plaf.*;
+import javax.swing.plaf.basic.*;
+import javax.swing.text.*;
+import javax.swing.text.html.*;
+import static javax.swing.text.html.HTMLEditorKit.DEFAULT_CSS;
+import javax.swing.text.html.parser.*;
+import org.qyouti.fonts.*;
 import org.qyouti.print.*;
+import sun.awt.*;
 
 /**
  *
@@ -20,6 +27,8 @@ import org.qyouti.print.*;
 public class TextPaneWrapper
         extends JTextPane
 {
+    private QyoutiStyleSheet defstylesheet=null;
+  
     SvgConversionResult result=null;
 
     public TextPaneWrapper( /*String html*/ )
@@ -28,11 +37,33 @@ public class TextPaneWrapper
       setOpaque(false);
       // making not opaque doesn't seem to work so we set the background
       // colour with zero alpha channel to supress background drawing.
-      setBackground( new Color( 255, 255, 255, 0 ) );
-      setContentType("text/html");
-      //setText(html);
+
+      //HTMLDocument htmldoc = this.getHtmlDoc();
+      //setDocument( new HTMLDocument( defstylesheet ) );
+        //setText(html);
     }
 
+
+    public void setQyoutiStyleSheet( QyoutiStyleSheet ss )
+    {
+      this.defstylesheet = ss;
+    }
+    
+    public void setText( String text )
+    {
+      setBackground( new Color( 255, 255, 255, 0 ) );
+      setContentType("text/html");
+      
+      HTMLDocument htmlDoc = new HTMLDocument( defstylesheet );
+      setDocument( htmlDoc );
+      super.setText( text );
+    }
+    
+    public void setupStyle()
+    {
+      getHtmlDoc().getStyleSheet().addStyleSheet( defstylesheet );
+    }
+    
     /**
      * This method calls ComponentToSvg.convert.  There is some jiggery
      * pokery because that method must be called from within the Event
@@ -153,5 +184,5 @@ public class TextPaneWrapper
     {
         return true;
     }
-
+    
 }

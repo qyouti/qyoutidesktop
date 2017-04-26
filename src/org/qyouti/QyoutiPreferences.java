@@ -56,18 +56,10 @@ public class QyoutiPreferences
   }
 
   public void setDefaults()
-  {
-    super.setProperty( "qyouti.print.font.count",   "8"                    );
-    super.setProperty( "qyouti.print.font.name.1",  "FreeSans"             );
-    super.setProperty( "qyouti.print.font.name.2",  "FreeSansBold"         );
-    super.setProperty( "qyouti.print.font.name.3",  "FreeSansBoldOblique"  );
-    super.setProperty( "qyouti.print.font.name.4",  "FreeSansOblique"      );
-    super.setProperty( "qyouti.print.font.name.5",  "FreeSerif"            );
-    super.setProperty( "qyouti.print.font.name.6",  "FreeSerifBold"        );
-    super.setProperty( "qyouti.print.font.name.7",  "FreeSerifBoldItalic"  );
-    super.setProperty( "qyouti.print.font.name.8",  "FreeSerifItalic"      );
-    
+  {    
     // relative URLs are relative to qyouti installation fonts folder
+    super.clear();
+    super.setProperty( "qyouti.print.font.count",   "12"                       );
     super.setProperty( "qyouti.print.font.path.1",  "FreeSans.ttf"             );
     super.setProperty( "qyouti.print.font.path.2",  "FreeSansBold.ttf"         );
     super.setProperty( "qyouti.print.font.path.3",  "FreeSansBoldOblique.ttf"  );
@@ -76,13 +68,15 @@ public class QyoutiPreferences
     super.setProperty( "qyouti.print.font.path.6",  "FreeSerifBold.ttf"        );
     super.setProperty( "qyouti.print.font.path.7",  "FreeSerifBoldItalic.ttf"  );
     super.setProperty( "qyouti.print.font.path.8",  "FreeSerifItalic.ttf"      );
+    super.setProperty( "qyouti.print.font.path.9",  "FreeMono.ttf"             );
+    super.setProperty( "qyouti.print.font.path.10", "FreeMonoBold.ttf"         );
+    super.setProperty( "qyouti.print.font.path.11", "FreeMonoBoldOblique.ttf"  );
+    super.setProperty( "qyouti.print.font.path.12", "FreeMonoOblique.ttf"      );
     
     
-    super.setProperty( "qyouti.print.font-family-sans.count",  "1"         );
-    super.setProperty( "qyouti.print.font-family-sans.1",      "FreeSans"  );
- 
-    super.setProperty( "qyouti.print.font-family-serif.count", "1"         );
-    super.setProperty( "qyouti.print.font-family-serif.1",     "FreeSerif" );
+    super.setProperty( "qyouti.print.font-family-sans",     "FreeSans,FreeSerif"  );
+    super.setProperty( "qyouti.print.font-family-serif",    "FreeSerif" );
+    super.setProperty( "qyouti.print.font-family-monospace","FreeMono,FreeSerif" );
   }
 
   public String getFontURL( String name )
