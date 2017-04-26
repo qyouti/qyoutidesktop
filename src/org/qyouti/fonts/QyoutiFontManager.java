@@ -490,24 +490,19 @@ public class QyoutiFontManager
         for ( int i=1; i<=n; i++ )
         {
           path = pref.getProperty( "qyouti.print.font.path."+i  );
-          if ( path.startsWith( "/" ) )
-          {
-            // want to add these as individual files but the fop
-            // configuration wants font triplets for file entries
-            // This means that we end up loading fonts from the
-            // same folder as the configured ones whether we want them
-            // or not.
-            f = new File( path );
-            if ( !dirs.contains( f.getAbsolutePath() ) )
-              dirs.add( f.getAbsolutePath() );
-          }
-          else
-          {
+          f = new File( path );
+          if ( !f.isAbsolute() )
             f = new File( builtin, path );
-            d = f.getParentFile();
-            if ( !dirs.contains( d.getAbsolutePath() ) )
-              dirs.add( d.getAbsolutePath() );
-          }
+
+          // want to add system fonts as individual files but the fop
+          // configuration wants font triplets for file entries
+          // This means that we end up loading fonts from the
+          // same folder as the configured ones whether we want them
+          // or not.
+          
+          d = f.getParentFile();
+          if ( !dirs.contains( d.getAbsolutePath() ) )
+            dirs.add( d.getAbsolutePath() );
         }
       }
       
