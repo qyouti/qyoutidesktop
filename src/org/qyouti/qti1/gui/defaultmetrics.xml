@@ -53,8 +53,11 @@
   <entry key="item-title-font-height">0.15</entry>
 
   <entry key="fontsize">0.09</entry>
+  
+  <!-- Redundant - now in app configuration file 
   <entry key="fontfamily">FreeSans</entry>
   <entry key="fontfamily-serif">FreeSerif</entry>
+  -->
 
   <entry key="header-anchor">end</entry>
   <entry key="header-anchor-x">7.5</entry>

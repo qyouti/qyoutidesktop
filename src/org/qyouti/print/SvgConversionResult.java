@@ -27,8 +27,10 @@
 package org.qyouti.print;
 
 import java.awt.geom.Rectangle2D;
+import java.util.*;
 import org.apache.batik.dom.*;
 import org.apache.batik.gvt.GraphicsNode;
+import org.qyouti.fonts.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.svg.SVGDocument;
 
@@ -42,14 +44,23 @@ public class SvgConversionResult
   GenericDocument document;
   int w;
   int h;
+  
+  MissingGlyphReport missingglyphreport = new MissingGlyphReport();
+  
   //GraphicsNode gvtRoot;
-  public SvgConversionResult( GenericDocument d, int width, int height /*GraphicsNode g*/ )
+  public SvgConversionResult( GenericDocument d, int width, int height )
   {
     document = d; 
     w = width;
     h = height;
     /*gvtRoot = g;*/ 
   }
+  
+  public void addMissingGlyphReport( MissingGlyphReport mgr )
+  {
+    missingglyphreport.addReport( mgr );
+  }
+  
   public GenericDocument getDocument() { return document; }
   
   //public String getSvg() { return svg; }
@@ -65,4 +76,10 @@ public class SvgConversionResult
   {
     return h;
   }
+
+  public MissingGlyphReport getMissingGlyphReport()
+  {
+    return missingglyphreport;
+  }
+
 }

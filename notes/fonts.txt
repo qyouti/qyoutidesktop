@@ -111,6 +111,8 @@ rendering to SVG.  Check every single character. Look at the applied font - if
 it isn't available for PDF change it - if the font is available but doesn't 
 have a glyph change it to one that does have it.
 
+NO - DECIDED AGAINST THIS SOLUTION SEE BELOW.
+
 
 Apostrophes
 ===========
@@ -172,3 +174,135 @@ that looks in OS specific folders. E.g.:
             "/usr/share/fonts", // system
             "/usr/X11R6/lib/X11/fonts" // X
 
+More Detail on HTML/AWT Fonts
+=============================
+
+AWT fonts are created by StyleContext.getFont(...) at an early stage - i.e. when
+the text component is resized and the minimum size is computed.
+
+How are HTML 'style' attributes combined with CSS in style elements?  This is
+done by the 'View' part of a text component. Specifically:
+
+A ViewAttributeSet [defined in Stylesheet.java] muxes styles from the
+HTMLDocument and the Stylesheet.  The combined attribute set is stored in
+the View object.  Every node in the document model has a view and the view 
+has the full set of attributes - not the node in the document.
+
+GlyphView is the subclass of View that links to bits of actual text from the
+document.  Can we iterate through the views and fetch the font information?
+Yes, see this implementation:
+
+QyoutiFontManager.analyzeDocumentView( View rootview )
+
+So, problems can be detected but can they be prevented? The appropriate CSS
+way is to list font families, comma separated. If a glyph is not found in the
+first font then subsequent fonts are searched. However, this is not implemented
+in swing - if it finds a comma separated list it uses the first valid font
+family name and ignores all the rest. Then it makes a composite font with the
+named font first and all the other fonts in some order. The order of fonts is
+defined globally in the JRE and will include some that can't be embedded into
+a PDF file.
+
+Here's a possible plan:
+
+a. set an appropriate default CSS based on user preferences.
+
+b. subclass StyleSheet and implement 'getFont'. Create a CompositeFont which has
+   in its slots the physical fonts from the CSS in an order that matches the
+   CSS. Instantiate in TextPaneWrapper.
+
+c. make sure that when font-family goes into the SVG all font families are
+   listed separated by commas.
+
+d. How does SVG to PDF handle lists of font familly? Do we just need to 
+   provide an FOP configuration that contain every font that might be needed?
+
+
+Notes on a.
+===========
+
+Work on TestPaneWrapper so a stylesheet can be set when the HTML document
+is built.  Problem - BasicEditorPaneUI.updateCSS messes with the stylesheet
+when it 'hears' that the document property of the component has changed.
+It sets some css rules based on swing properties of the swing component.
+Solution QyoutiStyleSheet overrides addStyleSheet so it refuses to add a
+linked stylesheet after a 'read only' flag has been set.
+
+Notes on b.
+===========
+
+QyoutiStyleSheet overrides getFont so it can create a composite Font that only
+includes the right physical fonts.
+
+How to check it works?
+
+BoxView.layoutMajorAxis
+measures the various bits of text to work out the layout.  Eventually...
+
+CompositeGlyphMapper.convertToGlyph
+finds the first physical font which has a glyph for the unicode code point and
+creates a glyph code indicating the slot for the font and the glyph code in
+that font.
+[Then the PhysicalStrike can provide the width of the char with getGlyphAdvance
+which is implemented in subclass FileFontStrike]
+
+How to review font files for glyphs? Don't use Gnome character map because it
+will look for glyphs in other fonts even if Show Only Glyphs from This Font is
+selected.  So, use fntsample to create report in PDF format.  
+
+Notes on c.
+===========
+
+O.K. done. 
+QyoutiFontManager.getSVGFontFamilyAttribute
+does it.
+
+But, does the SVG viewer component pay any attention to it?
+Does FOP transcoder pay attention to it?
+
+The SVG viewer does behave as expected. With configuration of FreeSans, VLGothic
+the chinese and japanese characters display but a thai character does not - it
+is in neither of those two fonts [although the system has a thai font.] This is
+how it works;
+
+chunkACIs[i] = createModifiedACIForFontMatching(chunkACIs[i])
+
+This splits the text runs according to which font family from the style is
+needed for specific unicode characters.  The first font in the list that
+contains the glyph is assigned to the text run.  If none of the fonts have
+the character then the first font in the list is assigned so that font will
+supply the unknown glyph glyph. [oddly the thai chars are in FreeSerif 
+although not FreeSans]
+
+What about fop pdf rendering? Looks right BUT oddly pdffonts doesn't show
+all the fonts embedded as you would expect. Have they been 'stroked' or are
+they referenced only - so dependent on them being installed in the viewer?
+
+Look in the generated SVG - lines of text with mixed fonts have been stroked.
+Eh?
+
+Go back to looking at the swing component. In the ParagraphView there are
+child elements of type ParagraphView.Row for each row of text. Each chunk
+of text in there is represented by an InlineView but these can have 
+different classes of the member painter - either GlyphPainter1 or GlyphPainter2.
+The first creates an svg text element and the second produces a path element.
+Hm...
+
+It was triggered due to the insertion of a thai character which was not in any of
+the fonts in the stylesheet.  The stroking isn't done when we analyse the view,
+i.e. before painting into svg. So, it seems that swing rejigs the view tree
+in response to trying to paint it.
+
+
+
+IGNORE THIS LOT....
+
+This line in SVGAbstractTranscoder.transcode
+    gvtRoot = builder.build(ctx, svgDoc);
+....
+GVTBuilder.build
+    buildComposite(ctx, svgElement, (CompositeGraphicsNode)topNode);
+
+Turns most text into 'TextNode' items in the gvt tree but the text with unusual
+characters seems to be turned into ShapeNode. Has it worked out that it is
+more economical to stroke some text instead of embedding the glyphs?

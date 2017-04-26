@@ -19,6 +19,7 @@ import org.apache.pdfbox.multipdf.*;
 import org.apache.pdfbox.util.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
+import org.qyouti.fonts.*;
 import org.qyouti.qti1.gui.*;
 import org.qyouti.util.*;
 
@@ -44,6 +45,7 @@ public class PrintThread extends Thread
   File examfolder;
   QyoutiFontManager fontmanager;
   QyoutiFrame frame;
+  MissingGlyphReport mgr = new MissingGlyphReport();
 
   public static final int TYPE_PAPERS = 0;
   public static final int TYPE_ANALYSIS = 1;
@@ -135,6 +137,8 @@ public class PrintThread extends Thread
         System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
         paginated = QTIItemRenderer.paginateItems(
             this,
+            fontmanager,
+            mgr,
             type,
             printid,
             examfolderuri,
@@ -206,7 +210,7 @@ public class PrintThread extends Thread
     finally
     {
       if ( frame != null )
-        frame.pdfPrintComplete( error );
+        frame.pdfPrintComplete( error, mgr );
     }
     System.out.println( "Printing to PDF complete." );
   }

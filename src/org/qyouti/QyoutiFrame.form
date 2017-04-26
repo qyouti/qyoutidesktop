@@ -52,8 +52,10 @@
             <MenuItem class="javax.swing.JMenuItem" name="configmenuitem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Configure..."/>
-                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="configmenuitemActionPerformed"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="aboutmenuitem">
               <Properties>

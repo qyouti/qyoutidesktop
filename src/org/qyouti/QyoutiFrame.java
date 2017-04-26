@@ -56,7 +56,6 @@ public class QyoutiFrame
   String examname = null;
 
   ExamSelectDialog selectdialog;
-  QuestionPreviewDialog questiondialog;
   BusyDialog busydialog;
 
   String editquestionident;
@@ -373,18 +372,18 @@ public class QyoutiFrame
       item = exam.qdefs.qti.getItems().elementAt( row );
       setPreviewItem( item, row );
       exam.analysistablemodel.setSelectedQuestion( (item==null)?null:item.getIdent() );
-      try
-      {
-        exam.qdefs.emit( new PrintWriter( System.out ), item );
-      }
-      catch ( IOException ex )
-      {
-        Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
-      }
-      catch ( TransformerException ex )
-      {
-        Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
-      }
+//      try
+//      {
+//        exam.qdefs.emit( new PrintWriter( System.out ), item );
+//      }
+//      catch ( IOException ex )
+//      {
+//        Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
+//      }
+//      catch ( TransformerException ex )
+//      {
+//        Logger.getLogger( QyoutiFrame.class.getName() ).log( Level.SEVERE, null, ex );
+//      }
     }
     
 //    if ( row >= 0 )
@@ -1261,7 +1260,13 @@ public class QyoutiFrame
     filemenu.add(sep1);
 
     configmenuitem.setText("Configure...");
-    configmenuitem.setEnabled(false);
+    configmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        configmenuitemActionPerformed(evt);
+      }
+    });
     filemenu.add(configmenuitem);
 
     aboutmenuitem.setText("About...");
@@ -1628,7 +1633,7 @@ public class QyoutiFrame
           
       // TO DO - create preview in background thread
       QTIItemRenderer renderer = new QTIItemRenderer( 
-            null, PrintThread.TYPE_PAPERS, uri, item, qnumber, exam, null );
+            null, fontmanager, PrintThread.TYPE_PAPERS, uri, item, qnumber, exam, null );
       
       if ( renderer == null )
           return;
@@ -1914,7 +1919,7 @@ public class QyoutiFrame
     thread.start();
   }//GEN-LAST:event_pdfprintmenuitemActionPerformed
 
-  public void pdfPrintComplete( boolean error )
+  public void pdfPrintComplete( boolean error, MissingGlyphReport mgr )
   {
     tabs.setEnabled( true );
     filemenu.setEnabled( true );
@@ -1926,6 +1931,13 @@ public class QyoutiFrame
       JOptionPane.showMessageDialog( this, "There was a technical error while attempting to print to PDF." );
       printstatuslabel.setText( "printing error" );
     }
+    if ( mgr != null && !mgr.isEmpty() )
+    {
+      JOptionPane.showMessageDialog( this, 
+        "There were characters in the print out which are not available in the selected fonts.\n" +
+                mgr.toString() );
+      printstatuslabel.setText( "printing error" );
+    }    
   }
 
   private void propsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_propsmenuitemActionPerformed
@@ -2342,6 +2354,13 @@ public class QyoutiFrame
     }
     persontable.repaint();
   }//GEN-LAST:event_noneanonbuttonActionPerformed
+
+  private void configmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_configmenuitemActionPerformed
+  {//GEN-HEADEREND:event_configmenuitemActionPerformed
+    ConfigDialog cd = new ConfigDialog( this, this.fontmanager );
+    cd.setVisible( true );
+    
+  }//GEN-LAST:event_configmenuitemActionPerformed
 
   /**
    * Indicates that the question edit dialog stored some changes into its item
