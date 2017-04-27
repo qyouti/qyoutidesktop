@@ -408,16 +408,26 @@ public class QyoutiFontManager
       {
         searchfontinfo =  graphics.getFontInfo();
         searchfamilynames.clear();
-        Typeface tf;
-        Map<String,Typeface> map = searchfontinfo.getFonts();
+        //Typeface tf;
+        // This was the wrong way to get a list of font families:
+        // Map<String,Typeface> map = searchfontinfo.getFonts();
+        // then calling getFamilyNames() on each member.
+        // This is because getFamilyNames() causes the whole font to
+        // be loaded into memory
+        
         ArrayList<String> ffnames = new ArrayList<>();
-        for ( String key : map.keySet() )
-        {
-          tf = map.get( key );
-          for ( String ffname : tf.getFamilyNames() )
-            if ( !ffnames.contains( ffname ) )
-              ffnames.add( ffname );
-        }
+        Map<FontTriplet,String> tripmap = searchfontinfo.getFontTriplets();
+        for ( FontTriplet trip : tripmap.keySet() )
+          if ( !ffnames.contains( trip.getName() ) )
+            ffnames.add( trip.getName() );
+        
+//        for ( String key : map.keySet() )
+//        {
+//          tf = map.get( key );
+//          for ( String ffname : tf.getFamilyNames() )
+//            if ( !ffnames.contains( ffname ) )
+//              ffnames.add( ffname );
+//        }
         
         ffnames.sort( 
                 new Comparator<String>()
@@ -498,7 +508,8 @@ public class QyoutiFontManager
           // configuration wants font triplets for file entries
           // This means that we end up loading fonts from the
           // same folder as the configured ones whether we want them
-          // or not.
+          // or not.  Not good with windows where all fonts are in one
+          // directory.
           
           d = f.getParentFile();
           if ( !dirs.contains( d.getAbsolutePath() ) )
