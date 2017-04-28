@@ -36,7 +36,7 @@ public class QyoutiFontManager
   public static final String CONFIGXML = 
         "<?xml version=\"1.0\"?>\n" +
         "<fop version=\"1.0\">\n" +
-        "  <use-cache>false</use-cache>\n" +
+        "  <use-cache>true</use-cache>\n" +
         "  <fonts>\n"          +
         "    INSERT\n"         +
         "  </fonts>\n"         +
@@ -274,53 +274,78 @@ public class QyoutiFontManager
     return;
   } 
   
+  private String toCSV( java.util.List<String> list )
+  {
+    StringBuffer buffer = new StringBuffer();
+    boolean started = false;
+    for ( String s : list )
+    {
+      if ( started ) buffer.append( ',' );
+      buffer.append( s );
+      started = true;
+    }
+    return buffer.toString();
+  }
   public boolean reInitialise()
   {
-    // work out the list of font files needed to support
-    // current fontfamily names.
-    // put font lists into the preferences, update the list
-    // of loaded fonts to match all those in use, reload
-    // data into this font manager.
-    // If fails reload the old preferences from disk.
-    // otherwise save these new preferences to disk.
-    if ( this.searchfontinfo == null ) return false;
+    pref.setProperty( "qyouti.print.font-family-sans", toCSV( sansfamilynames ) );
+    pref.setProperty( "qyouti.print.font-family-serif", toCSV( seriffamilynames ) );
+    pref.setProperty( "qyouti.print.font-family-monospace", toCSV( monofamilynames ) );
     
-    ArrayList<Typeface> tflist = new ArrayList<>();
-    boolean duplicate;
-    for ( ArrayList<String> list : this.familynames )
-      for ( String ffam : list )
-        // find all the fonts with this family name
-        for ( Typeface tf : this.searchfontinfo.getFonts().values() )
-        {
-          duplicate = false;
-          for ( Typeface tfother : tflist )
-            if ( tf.getEmbedFontName().equals( tfother.getEmbedFontName() ) )
-            {
-              duplicate = true;
-              break;
-            }
-          if ( !duplicate  && tf.getFamilyNames().contains( ffam ) )
-            tflist.add( tf );
-        }
+    if ( this.searchfontinfo == null ) return false;
 
-    pref.setProperty( "qyouti.print.font.count", Integer.toString( tflist.size() ) );
+    // List of all the family names that will be used
+    ArrayList<String> familys = new ArrayList<>();
+    for ( ArrayList<String> list : this.familynames )
+      familys.addAll( list );
+    
+    // All the font key names we will use keying to their font triplets
+    HashMap<String,ArrayList<FontTriplet>> keysandtriplets = new HashMap<>();
+    String fontkey;
+
+    // iterate the triplets to decide which to put in allfontkeys
+    Map<FontTriplet, String> tripletmap = this.searchfontinfo.getFontTriplets();
+    ArrayList<FontTriplet> tripletlist;
+    for ( FontTriplet triplet : tripletmap.keySet() )
+    {
+      if ( familys.contains( triplet.getName() ) )
+      {
+        fontkey = tripletmap.get( triplet );
+        if ( !keysandtriplets.containsKey( fontkey ) )
+          keysandtriplets.put( fontkey, new ArrayList<FontTriplet>() );
+        tripletlist = keysandtriplets.get( fontkey );
+        tripletlist.add( triplet );
+      }
+    }
+    
+    StringBuffer buffer = new StringBuffer();
     Typeface tf;
     CustomFont cf;
-    File file;
-    for ( int i=0; i<tflist.size(); i++ )
+    for ( String key : keysandtriplets.keySet() )
     {
-      tf = tflist.get( i );
+      tf = searchfontinfo.getFonts().get( key );
+      tripletlist = keysandtriplets.get( key );
       if ( tf instanceof LazyFont )
         tf = ((LazyFont)tf).getRealFont();
       if ( !(tf instanceof CustomFont) )
         continue;
       cf = (CustomFont)tf;
-      if ( !cf.isEmbeddable() )
-        continue;
-
-      file = new File( cf.getEmbedFileURI() );
-      pref.setProperty( "qyouti.print.font.path."+(i+1), file.getAbsolutePath() );
+      buffer.append( "<font embed-url=\"" );
+      buffer.append( cf.getEmbedFileURI() );
+      buffer.append( "\">\n" );
+      for ( FontTriplet ft : tripletlist )
+      {
+        buffer.append( "<font-triplet name=\"" );
+        buffer.append( ft.getName() );
+        buffer.append( "\" style=\"" );
+        buffer.append( ft.getStyle() );
+        buffer.append( "\" weight=\"" );
+        buffer.append( ft.getWeight() );
+        buffer.append( "\"/>\n" );
+      }
+      buffer.append( "</font>\n" );
     }
+    pref.setProperty( "qyouti.print.font.fopconfig", CONFIGXML.replaceFirst( "INSERT", buffer.toString() ) );
     pref.save();
     load();
     return true;
@@ -408,26 +433,34 @@ public class QyoutiFontManager
       {
         searchfontinfo =  graphics.getFontInfo();
         searchfamilynames.clear();
-        //Typeface tf;
-        // This was the wrong way to get a list of font families:
-        // Map<String,Typeface> map = searchfontinfo.getFonts();
-        // then calling getFamilyNames() on each member.
-        // This is because getFamilyNames() causes the whole font to
-        // be loaded into memory
-        
+      
         ArrayList<String> ffnames = new ArrayList<>();
         Map<FontTriplet,String> tripmap = searchfontinfo.getFontTriplets();
-        for ( FontTriplet trip : tripmap.keySet() )
-          if ( !ffnames.contains( trip.getName() ) )
-            ffnames.add( trip.getName() );
+        Typeface tf;
+        CustomFont cf;
+        java.awt.Font awtfont;
+        String familyname;
         
-//        for ( String key : map.keySet() )
-//        {
-//          tf = map.get( key );
-//          for ( String ffname : tf.getFamilyNames() )
-//            if ( !ffnames.contains( ffname ) )
-//              ffnames.add( ffname );
-//        }
+        for ( FontTriplet trip : tripmap.keySet() )
+        {
+          // the triplet has a family name but what is the 'oficial'
+          // awt family name?
+          awtfont = new java.awt.Font( trip.getName(), java.awt.Font.PLAIN, 12 );
+          familyname = awtfont.getFamily();
+          
+          if ( !ffnames.contains( familyname ) )
+          {
+            tf = searchfontinfo.getFonts().get( tripmap.get( trip ) );
+            if ( tf instanceof LazyFont )
+              tf = ((LazyFont)tf).getRealFont();
+            if ( tf instanceof CustomFont )
+            {
+              cf = (CustomFont)tf;
+              if ( cf.isEmbeddable() )
+                ffnames.add( familyname );
+            }
+          }
+        }
         
         ffnames.sort( 
                 new Comparator<String>()
@@ -476,6 +509,9 @@ public class QyoutiFontManager
   
   private String getFOPConfigurationString( boolean search )
   {
+    if ( !search )
+      return pref.getProperty( "qyouti.print.font.fopconfig" );
+    
     String path;
     File builtin = getBuiltinFontDirectory();
     File f, d;
@@ -488,49 +524,13 @@ public class QyoutiFontManager
       str.append( "<!-- No directory found to add here. -->" );
     else 
     {
-      dirs.add( builtin.getAbsolutePath() )
-              ;
-      if ( search ) 
-      {
-        str.append( "<auto-detect/>" );
-      }
-      else
-      {
-        int n = pref.getPropertyInt( "qyouti.print.font.count" );
-        for ( int i=1; i<=n; i++ )
-        {
-          path = pref.getProperty( "qyouti.print.font.path."+i  );
-          f = new File( path );
-          if ( !f.isAbsolute() )
-            f = new File( builtin, path );
-
-          // want to add system fonts as individual files but the fop
-          // configuration wants font triplets for file entries
-          // This means that we end up loading fonts from the
-          // same folder as the configured ones whether we want them
-          // or not.  Not good with windows where all fonts are in one
-          // directory.
-          
-          d = f.getParentFile();
-          if ( !dirs.contains( d.getAbsolutePath() ) )
-            dirs.add( d.getAbsolutePath() );
-        }
-      }
-      
-      for ( String s : dirs )
-      {
-        str.append( "    <directory>" );
-        str.append( s );
-        str.append( "</directory>\n" );
-      }
-//      for ( String s : files )
-//      {
-//        str.append( "    <file>" );
-//        str.append( s );
-//        str.append( "</files>\n" );
-//      }
+      str.append( "    <directory>" );
+      str.append( builtin.getAbsolutePath() );
+      str.append( "</directory>\n" );
     }
-    
+ 
+    str.append( "<auto-detect/>\n" );
+         
     String c = CONFIGXML.replace( "INSERT",  str.toString() );
     System.out.println( c );
     return c;
