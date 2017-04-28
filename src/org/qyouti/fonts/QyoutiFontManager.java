@@ -345,7 +345,7 @@ public class QyoutiFontManager
       }
       buffer.append( "</font>\n" );
     }
-    pref.setProperty( "qyouti.print.font.fopconfig", CONFIGXML.replaceFirst( "INSERT", buffer.toString() ) );
+    pref.setProperty( "qyouti.print.font.fopconfig", CONFIGXML.replace( "INSERT", buffer.toString() ) );
     pref.save();
     load();
     return true;

@@ -58,7 +58,7 @@ public class QyoutiPreferences
   {    
     // relative URLs are relative to qyouti installation fonts folder
     super.clear();
-    String conf = QyoutiFontManager.CONFIGXML.replaceFirst( 
+    String conf = QyoutiFontManager.CONFIGXML.replace( 
             "INSERT", 
             "<directory>" + QyoutiFontManager.getBuiltinFontDirectory().getAbsolutePath() + "</directory>\n" );
     super.setProperty( "qyouti.print.font.fopconfig", conf );
