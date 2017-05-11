@@ -1572,7 +1572,8 @@ public class QyoutiFrame
 
   private void importcanmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importcanmenuitemActionPerformed
   {//GEN-HEADEREND:event_importcanmenuitemActionPerformed
-
+    boolean forceanon = false;
+    
     if ( exam == null )
     {
       JOptionPane.
@@ -1583,8 +1584,8 @@ public class QyoutiFrame
     String lastprintid = exam.getLastPrintID();    
     if ( lastprintid != null && lastprintid.length() != 0 )
     {
-      JOptionPane.showMessageDialog( this, "You can't add candidates after the exam/survey has been printed." );
-      return;
+      JOptionPane.showMessageDialog( this, "The exam/survey has been printed so persons you import now will all be marked as 'anonymous'." );
+      forceanon = true;
     }
           
     ImportPersonDialog dialog = new ImportPersonDialog( this, true );
@@ -1594,7 +1595,7 @@ public class QyoutiFrame
     if ( list == null || list.size() == 0 )
       return;
     System.out.println( "Importing " + list.size() + " persons." );
-    exam.importPersons( list );
+    exam.importPersons( list, forceanon );
     exam.setUnsavedChanges( true );
   }//GEN-LAST:event_importcanmenuitemActionPerformed
 
