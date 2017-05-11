@@ -2176,10 +2176,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       {
         String n;
         
-        if ( "candidates".equals(e.getNodeName()) )
+//        if ( "candidates".equals(e.getNodeName()) )
           n = "candidate";
-        else
-          n = "paper";
+//        else
+//          n = "paper";
         
         cnl = e.getElementsByTagName( n );
         for (int j = 0; j < cnl.getLength(); j++)
