@@ -26,9 +26,8 @@
 
 package org.qyouti.qti1.element;
 
-import java.util.Hashtable;
-import org.qyouti.qti1.QTIElement;
-import java.util.Vector;
+import java.util.*;
+import org.qyouti.qti1.*;
 
 /**
  *
@@ -47,6 +46,7 @@ public class QTIElementQuestestinterop
   // plus additional implicit decvars that result from individual questions
   Hashtable<String,QTIElementDecvar> decvar_table = new Hashtable<String,QTIElementDecvar>();
 
+  HashMap<String, QTIExternalMap> external_maps = new HashMap<>();
 
   QTIElementAssessment assessment=null;
 
@@ -83,6 +83,17 @@ public class QTIElementQuestestinterop
 
 
   }
+  
+  public void addExternalMap( QTIExternalMap exmap )
+  {
+    external_maps.put( exmap.getExternalMapName(), exmap );
+  }
+  
+  public QTIExternalMap getExternalMap( String name )
+  {
+    return external_maps.get( name );
+  }  
+  
 
 //  public QTIElementOutcomesprocessing getOutcomesprocessing()
 //  {
