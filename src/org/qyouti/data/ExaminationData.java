@@ -1585,7 +1585,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
     checkItemIDs( qti12doc );
 
-    qdefs = new QuestionDefinitions(qtiexamroote);
+    qdefs = new QuestionDefinitions(qtiexamroote,personlistmodel);
   }
 
   private void checkItemIDs( Document qti12doc )
@@ -2162,7 +2162,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
       if ("questestinterop".equals(e.getNodeName()))
       {
-        qdefs = new QuestionDefinitions(e);
+        qdefs = new QuestionDefinitions(e, personlistmodel );
       }
 
       if ("persons".equals(e.getNodeName()))

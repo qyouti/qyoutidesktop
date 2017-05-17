@@ -32,9 +32,8 @@ import javax.swing.table.AbstractTableModel;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
+import org.qyouti.qti1.*;
 import org.qyouti.qti1.element.QTIElementItem;
-import org.qyouti.qti1.QTIBuilder;
-import org.qyouti.qti1.QTIElement;
 import org.qyouti.qti1.element.QTIElementQuestestinterop;
 import org.qyouti.qti1.element.QTIElementResponselabel;
 import org.qyouti.statistics.HodgesLehmann;
@@ -50,7 +49,7 @@ public class QuestionDefinitions
   private final Element questestinterop;
   public QTIElementQuestestinterop qti;
 
-  public QuestionDefinitions( Element questestinterop )
+  public QuestionDefinitions( Element questestinterop, QTIExternalMap personsmap )
   {
     this.questestinterop = questestinterop;
     if ( questestinterop == null ) return;
@@ -64,6 +63,7 @@ public class QuestionDefinitions
     if ( qtielement instanceof QTIElementQuestestinterop )
     {
       qti = (QTIElementQuestestinterop)qtielement;
+      qti.addExternalMap( personsmap );
 //      Vector<QTIElementItem> items = qti.getItems();
       //System.out.println( "Item count: " + items.size() );
 //      for ( int i=0; i<items.size(); i++ )

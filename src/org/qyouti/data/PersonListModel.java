@@ -7,12 +7,13 @@ package org.qyouti.data;
 
 import java.util.*;
 import javax.swing.table.AbstractTableModel;
+import org.qyouti.qti1.*;
 
 /**
  *
  * @author jon
  */
-public class PersonListModel extends AbstractTableModel
+public class PersonListModel extends AbstractTableModel implements QTIExternalMap
 {
   ExaminationData exam;
   
@@ -108,6 +109,25 @@ public class PersonListModel extends AbstractTableModel
         return;
     }
     fireTableCellUpdated( rowIndex, columnIndex );
+  }
+
+  @Override
+  public String getExternalMapName()
+  {
+    return "persons";
+  }
+
+  @Override
+  public String getExternalMapping( String id )
+  {
+    PersonData person;
+    for ( int i=0; i<getRowCount(); i++ )
+    {
+      person = persons.get( i );
+      if ( person.getId().equals( id ) )
+        return person.getName();
+    }
+    return null;
   }
 
 }
