@@ -119,6 +119,7 @@ public class ExaminationData
   public static final int REVIEW_FILTER_ALL = 1;
   public static final int REVIEW_FILTER_UNREVIEWED = 2;
   public static final int REVIEW_FILTER_OVERRIDDEN = 3;
+  public static final int REVIEW_FILTER_CONFIRMED = 4;
     
   int reviewtype = REVIEW_ALL;
   int reviewfilter = REVIEW_FILTER_ALL;
@@ -296,6 +297,9 @@ public class ExaminationData
       return;
     if ( reviewfilter == REVIEW_FILTER_OVERRIDDEN && 
             q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE )
+      return;
+    if ( reviewfilter == REVIEW_FILTER_CONFIRMED && 
+            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_STAND )
       return;
     reviewlist.add( c, q );    
   }

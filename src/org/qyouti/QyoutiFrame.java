@@ -516,6 +516,7 @@ public class QyoutiFrame
     jPanel3 = new javax.swing.JPanel();
     reviewincludeall = new javax.swing.JRadioButton();
     reviewincludenotreviewed = new javax.swing.JRadioButton();
+    reviewincludeconfirmed = new javax.swing.JRadioButton();
     reviewincludeoverridden = new javax.swing.JRadioButton();
     jPanel6 = new javax.swing.JPanel();
     previousreviewbutton = new javax.swing.JButton();
@@ -1084,6 +1085,18 @@ public class QyoutiFrame
       }
     });
     jPanel3.add(reviewincludenotreviewed);
+
+    reviewincludebuttongroup.add(reviewincludeconfirmed);
+    reviewincludeconfirmed.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+    reviewincludeconfirmed.setText("Confirmed only");
+    reviewincludeconfirmed.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reviewincludeconfirmedActionPerformed(evt);
+      }
+    });
+    jPanel3.add(reviewincludeconfirmed);
 
     reviewincludebuttongroup.add(reviewincludeoverridden);
     reviewincludeoverridden.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
@@ -2363,6 +2376,11 @@ public class QyoutiFrame
     
   }//GEN-LAST:event_configmenuitemActionPerformed
 
+  private void reviewincludeconfirmedActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeconfirmedActionPerformed
+  {//GEN-HEADEREND:event_reviewincludeconfirmedActionPerformed
+    reviewFilterChanged( 4 );
+  }//GEN-LAST:event_reviewincludeconfirmedActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -2674,6 +2692,7 @@ public class QyoutiFrame
   private javax.swing.JButton resetpreferencesbutton;
   private javax.swing.JRadioButton reviewincludeall;
   private javax.swing.ButtonGroup reviewincludebuttongroup;
+  private javax.swing.JRadioButton reviewincludeconfirmed;
   private javax.swing.JRadioButton reviewincludenotreviewed;
   private javax.swing.JRadioButton reviewincludeoverridden;
   private javax.swing.JRadioButton reviewtype1button;

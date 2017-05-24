@@ -1096,6 +1096,20 @@
                                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reviewincludenotreviewedActionPerformed"/>
                                       </Events>
                                     </Component>
+                                    <Component class="javax.swing.JRadioButton" name="reviewincludeconfirmed">
+                                      <Properties>
+                                        <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+                                          <ComponentRef name="reviewincludebuttongroup"/>
+                                        </Property>
+                                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                                          <Font name="Dialog" size="12" style="0"/>
+                                        </Property>
+                                        <Property name="text" type="java.lang.String" value="Confirmed only"/>
+                                      </Properties>
+                                      <Events>
+                                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reviewincludeconfirmedActionPerformed"/>
+                                      </Events>
+                                    </Component>
                                     <Component class="javax.swing.JRadioButton" name="reviewincludeoverridden">
                                       <Properties>
                                         <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
