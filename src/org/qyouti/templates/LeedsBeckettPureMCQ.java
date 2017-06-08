@@ -38,10 +38,10 @@ public class LeedsBeckettPureMCQ
 "    <section ident=\"section1\" title=\"Section 1\">\n" +
 "      <outcomes_processing scoremodel=\"SumOfScores\">\n" +
 "        <outcomes>\n" +
-"          <decvar varname=\"VOID\" vartype=\"decimal\"/>\n" +
 "          <decvar varname=\"SID\" vartype=\"string\"/>\n" +
 "          <decvar varname=\"NAME\" vartype=\"string\"/>\n" +
-"          <decvar varname=\"SCORE\" vartype=\"string\"/>\n" +
+"          <decvar varname=\"VOID\" vartype=\"string\"/>\n" +
+"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\n" +
 "        </outcomes>\n" +
 "      </outcomes_processing>\n";
 
@@ -113,7 +113,7 @@ public static final String itemvoid = "    <item ident=\"void\" title=\"Void\">\
 "    </item>\n\n"; 
 
 
-public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID\" qyouti:candidatetype=\"anonymous\">\n" +
+public static final String itemsid = "    <item ident=\"sid\" qyouti:candidatetype=\"anonymous\" title=\"Student ID\">\n" +
 "    <presentation qyouti:columns=\"1\">\n" +
 "        <material>\n" +
 "          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\n" +
@@ -121,7 +121,7 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "            <tr><td><strong>Your&nbsp;Name&nbsp;</strong><br/>(Block&nbsp;Caps)</td><td>]]>\n" +
 "          </mattext>\n" +
 "        </material>\n" +        
-"        <qyouti:render_sketcharea columns=\"20\"></qyouti:render_sketcharea>" +
+"        <qyouti:render_sketcharea columns=\"20\"/>" +
 "        <material>\n" +
 "          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\n" +
 "            </td></tr><tr><td><strong>Your&nbsp;Student&nbsp;ID&nbsp;</strong></td>\n" +
@@ -1107,10 +1107,10 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "</conditionvar>\n" +
 "<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
 "      </respcondition>\n" +
-"            <qyouti:itemproc_extension>\n" +
-"              <qyouti:outcomemapping externalmap=\"persons\" invarname=\"SID\" outvarname=\"NAME\">\n" +
-"              </qyouti:outcomemapping>\n" +
-"            </qyouti:itemproc_extension>\n" +
+"<qyouti:itemproc_extension>\n" +
+"  <qyouti:outcomemapping externalmap=\"persons\" invarname=\"SID\" outvarname=\"NAME\">\n" +
+"  </qyouti:outcomemapping>\n" +
+"</qyouti:itemproc_extension>\n" +
 "    </resprocessing>\n" +
 "    </item>\n" +
 "\n" +
