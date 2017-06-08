@@ -38,7 +38,10 @@ public class LeedsBeckettPureMCQ
 "    <section ident=\"section1\" title=\"Section 1\">\n" +
 "      <outcomes_processing scoremodel=\"SumOfScores\">\n" +
 "        <outcomes>\n" +
-"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\n" +
+"          <decvar varname=\"VOID\" vartype=\"decimal\"/>\n" +
+"          <decvar varname=\"SID\" vartype=\"string\"/>\n" +
+"          <decvar varname=\"NAME\" vartype=\"string\"/>\n" +
+"          <decvar varname=\"SCORE\" vartype=\"string\"/>\n" +
 "        </outcomes>\n" +
 "      </outcomes_processing>\n";
 
@@ -622,6 +625,7 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "    <resprocessing scoremodel=\"SumofScores\">\n" +
 "      <outcomes>\n" +
 "        <decvar defaultval=\"\" varname=\"SID\" vartype=\"string\"/>\n" +
+"        <decvar defaultval=\"\" varname=\"NAME\" vartype=\"string\"/>\n" +
 "      </outcomes>\n" +
 "      <respcondition continue=\"Yes\">\n" +
 "        <conditionvar>\n" +
@@ -1103,6 +1107,10 @@ public static final String itemsid = "    <item ident=\"sid\" title=\"Student ID
 "</conditionvar>\n" +
 "<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
 "      </respcondition>\n" +
+"            <qyouti:itemproc_extension>\n" +
+"              <qyouti:outcomemapping externalmap=\"persons\" invarname=\"SID\" outvarname=\"NAME\">\n" +
+"              </qyouti:outcomemapping>\n" +
+"            </qyouti:itemproc_extension>\n" +
 "    </resprocessing>\n" +
 "    </item>\n" +
 "\n" +
@@ -1237,7 +1245,7 @@ public static final String itemmcqbT =
     descriptiontextarea.setColumns(20);
     descriptiontextarea.setLineWrap(true);
     descriptiontextarea.setRows(8);
-    descriptiontextarea.setText("This template produces an exam in which all the questions are pure multiple choice. \n\nQuestion text can be included in the response sheet or word processed separately. There can be any number of papers with student ID and name printed on them and any number of anonymous papers on which the candidate enters their ID. Anonymous papers can be used as spares or can be used for all candidates. The number of anonymous papers is entered now but identified papers are created later by importing names and IDs.");
+    descriptiontextarea.setText("This template produces an exam in which the questions are pure multiple choice. \n\nThere will be one question asking the candidate if they which to 'void' the sheet. This is used if the student chooses to start again with a fresh sheet. For 'anonymous' sheets which are handed out to students indescriminately there will be a name and student ID question. If sheets are printed with student IDs and names on them this question will be omited. The choice about named/anonymous sheets can be made later.\n\nQuestion text can be included in the response sheet or word processed separately. With this template all questions must have the same number of options.");
     descriptiontextarea.setWrapStyleWord(true);
     descriptiontextarea.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
     descriptiontextarea.setOpaque(false);
