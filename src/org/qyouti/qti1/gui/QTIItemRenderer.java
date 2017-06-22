@@ -1090,7 +1090,21 @@ public class QTIItemRenderer
     svg.setAttribute("height", ""+heightinches+"in" );
     svg.setAttribute("preserveAspectRatio", "xMinYMin meet" );
 
-
+    org.w3c.dom.Element defs = pdoc.createElementNS( svgNS, "defs" );
+    svg.appendChild( defs );
+    org.w3c.dom.Element filter = pdoc.createElementNS( svgNS, "filter" );
+    defs.appendChild( filter );
+    filter.setAttribute( "id", "yellowhighlight" );
+    filter.setAttribute( "x", "-0.025" );
+    filter.setAttribute( "y", "-0.25" );
+    filter.setAttribute( "width", "1.05" );
+    filter.setAttribute( "height", "1.5" );
+    
+    org.w3c.dom.Element filterF = pdoc.createElementNS( svgNS, "feFlood" );
+    filter.appendChild( filterF );
+    filterF.setAttribute( "flood-color", "yellow" );
+    filterF.setAttribute( "opacity", "1.0" );
+    
 //    while ( svg.getChildNodes().getLength() != 0 )
 //    {
 //      itemg.appendChild( svg.getFirstChild().cloneNode(true) );
@@ -1215,11 +1229,23 @@ public class QTIItemRenderer
     if ( options.getQTIRenderOption("header") != null )
     {
       org.w3c.dom.Element theader;
+      
+      // This just makes a yellow box the same position and size as the given text
+      theader = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text" );
+      theader.setAttribute("filter", "url(#yellowhighlight)" );
+      theader.setAttribute("text-anchor", getMetrics().getProperty("header-anchor") );
+      theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-x")) );
+      theader.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-y")) );
+      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
+      theader.setTextContent( options.getQTIRenderOption("header") );
+      decorationgroup.appendChild(theader);
+      
+      // puts the text on top of the highlight box
       theader = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
       theader.setAttribute("text-anchor", getMetrics().getProperty("header-anchor") );
       theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-x")) );
       theader.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-y")) );
-      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
+      theader.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
       theader.setTextContent( options.getQTIRenderOption("header") );
       decorationgroup.appendChild(theader);
     }

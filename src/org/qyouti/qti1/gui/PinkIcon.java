@@ -24,7 +24,7 @@ public class PinkIcon
     // and this box will become visible in the red channel
     static String bordercolor = "#ffe8ff";
     static String   fillcolor = "#ffe8ff";
-    static String  crosscolor = "#fff0ff";
+    static String  crosscolor = "#fff8ff";
 
     int borderwidth;
     int padding;
