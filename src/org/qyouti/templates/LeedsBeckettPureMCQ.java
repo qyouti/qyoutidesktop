@@ -27,7 +27,7 @@ public class LeedsBeckettPureMCQ
 "<option name=\"double_sided\">false</option>\n" +
 "<option name=\"name_in_footer\">true</option>\n" +
 "<option name=\"cover_sheet\">false</option>\n" +
-"<option name=\"header\">EXAMTITLE</option>\n" +
+"<option name=\"header\">HEADER</option>\n" +
 "<option name=\"question_metrics_qr\">false</option>\n" +
 "<option name=\"id_in_footer\">true</option>\n" +
 "</options>\n" +
@@ -76,6 +76,7 @@ public static final String itemvoid = "    <item ident=\"void\" title=\"Void\">\
 "       <flow_label class=\"Row\">\n" +
 "        <material>\n" +
 "          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[\n" +
+"<p style=\"font-size: 110%;\"><b>TITLELINE</b></p>\n" +        
 "<table><tr>\n" +        
 "<td>Use a <b>dark pencil</b> to mark the pink boxes with an X. To correct a mistake erase the X with a soft\n" +
 "pencil eraser so that it is invisible or almost invisible.  If you use a black or blue pen to indicate \n" +
@@ -135,7 +136,7 @@ public static final String itemsid = "    <item ident=\"sid\" qyouti:candidatety
 "\n" +
 "       <flow_label class=\"Row\">\n" +
 "        <material>\n" +
-"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<p><br/><br/></p><table><tr><td><span style=\"font-size: 125%;\">1st digit</span><br/>]]></mattext>\n" +
+"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<p><br/></p><table><tr><td><span style=\"font-size: 125%;\">1st digit</span><br/>]]></mattext>\n" +
 "</material>\n" +
 "        <response_lid ident=\"digit_1\" rcardinality=\"Single\">\n" +
 "          <render_choice shuffle=\"No\">\n" +
@@ -369,7 +370,7 @@ public static final String itemsid = "    <item ident=\"sid\" qyouti:candidatety
 "\n" +
 "\n" +
 "        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p><br/><br/></p>]]></mattext>\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p><br/></p>]]></mattext>\n" +
 "        </material>\n" +
 "\n" +
 "\n" +
@@ -1170,7 +1171,7 @@ public static final String itemmcqaT = "    <item ident=\"QUESTIONNUMBER\" qyout
 public static final String itemmcqoptionT = 
 "              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\n" +
 "                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">OPTIONLETTER</mattext>\n" +
+"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">OPTIONLETTER<![CDATA[&nbsp;&nbsp;]]></mattext>\n" +
 "                </material>\n" +
 "              </response_label>\n";
 
@@ -1431,16 +1432,16 @@ public static final String itemmcqbT =
     String io = textinpaper?itemmcqoption:itemmcqoptionT;
     String ib = textinpaper?itemmcqb:itemmcqbT;
     
-    String examtitle = titlefield.getText() + " - " + crnfield.getText() + " - " + datefield.getText();
+    String examtitle = titlefield.getText() + " - CRN" + crnfield.getText() + " - " + datefield.getText();
     
     Random r = new Random();
     r.setSeed( System.currentTimeMillis() );
     StringBuilder buffer = new StringBuilder(1000);
     String opt, str;
-    str = texta.replaceFirst( "EXAMTITLE", examtitle );
+    str = texta.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - ALL RESPONSE SHEETS MUST BE SCANNED" );
     
     buffer.append( str.replaceFirst( "ASSESSMENTIDENT", Long.toHexString( r.nextLong() ) ) );
-    buffer.append( itemvoid );
+    buffer.append( itemvoid.replaceFirst( "TITLELINE", examtitle ) );
     buffer.append( itemsid );
     String opttext;
     for ( i=0; i<nq; i++ )
