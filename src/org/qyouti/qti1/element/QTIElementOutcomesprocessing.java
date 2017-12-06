@@ -131,22 +131,26 @@ public class QTIElementOutcomesprocessing
       }
       
       // THIS IS DONE IN QUESTTESTINTEROP class
-//      else
-//      {
-//        for ( k=0; k<items.size(); k++ )
-//        {
-//          // Does this item have an outcome with the same name as this
-//          // top level outcomes?
-//          if ( items.get( k ).containsOutcomeName( var.getVarname() ) )
-//          {
-//            // Copy the outcome over
-//            var.setCurrentValue( items.get( k ).getOutcomeValue( var.getVarname() ) );
-//            // Stop looking if not null
-//            if ( var.getCurrentValue() != null )
-//              break;
-//          }
-//        }        
-//      }
+      // NO, IT ISN'T
+      else
+      {
+        for ( k=0; k<items.size(); k++ )
+        {
+          // Does this item have an outcome with the same name as this
+          // top level outcomes?
+          if ( items.get( k ).containsOutcomeName( var.getVarname() ) )
+          {
+            if ( items.get( k ).isReferencedByCandidate() )
+            {
+              // Copy the outcome over
+              var.setCurrentValue( items.get( k ).getOutcomeValue( var.getVarname() ) );
+              // Stop looking if not null - so first item with this outcome name has priority
+              if ( var.getCurrentValue() != null )
+                break;
+            }
+          }
+        }        
+      }
     }
   }
 
