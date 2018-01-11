@@ -17,6 +17,7 @@ import org.w3c.dom.Element;
 public class UserRenderPreferences
 {
   boolean serif=false;
+  boolean onecolumn=false;
   private double fontsize = 0.0;
   boolean bigpinkbox=false;
   Color background=null;
@@ -34,6 +35,8 @@ public class UserRenderPreferences
     fontsize = Double.parseDouble(s);
     s = element.getAttribute( "serif" );
     serif = "true".equals(s);
+    s = element.getAttribute( "onecolumn" );
+    onecolumn = "true".equals(s);
     s = element.getAttribute( "bigpinkbox" );
     bigpinkbox = "true".equals(s);
     s = element.getAttribute( "background" );
@@ -52,6 +55,8 @@ public class UserRenderPreferences
     writer.write( "\"" );
     if ( serif )
       writer.write( " serif=\"true\"" );
+    if ( onecolumn )
+      writer.write( " onecolumn=\"true\"" );
     if ( bigpinkbox )
       writer.write( " bigpinkbox=\"true\"" );
     if ( background != null )
@@ -62,7 +67,7 @@ public class UserRenderPreferences
   public String packedRepresentation()
   {
     if ( packed != null ) return packed;
-    packed = "v2_" + Double.toString(fontsize) + (serif?"_s":"") + (bigpinkbox?"_b":"");
+    packed = "v2_" + Double.toString(fontsize) + (serif?"_s":"") + (onecolumn?"_o":"") + (bigpinkbox?"_b":"");
     if ( background != null ) packed += "_c" + Integer.toString( background.getRGB(), 16 );
     hash = packed.hashCode();
     return packed;
@@ -91,6 +96,16 @@ public class UserRenderPreferences
   public void setSerif(boolean serif)
   {
     this.serif = serif;
+  }
+
+  public boolean isOneColumn()
+  {
+    return onecolumn;
+  }
+
+  public void setOneColumn(boolean onecolumn)
+  {
+    this.onecolumn = onecolumn;
   }
 
   public boolean isBigpinkbox()

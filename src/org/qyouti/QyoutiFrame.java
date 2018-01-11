@@ -324,6 +324,7 @@ public class QyoutiFrame
       ((CardLayout)personpanel.getLayout()).show( personpanel, "selection" );
       customforlabel.setText( person.getName() + " (" + person.getId() + ")" );
       bigpinkcheckbox.setSelected( false );
+      onecolumncheckbox.setSelected( false );
       serifcheckbox.setSelected( false );
       fontsizelist.setSelectedIndex( 0 );
       colourswatchlabel.setBackground( Color.WHITE );
@@ -333,6 +334,7 @@ public class QyoutiFrame
         return;
       double fsz = pref.getFontsize();
       bigpinkcheckbox.setSelected(            pref.isBigpinkbox()       );
+      onecolumncheckbox.setSelected(            pref.isOneColumn()       );
       serifcheckbox.setSelected(              pref.isSerif()            );
 
       if ( fsz < 0.10  )
@@ -438,8 +440,7 @@ public class QyoutiFrame
    */
   @SuppressWarnings("unchecked")
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-  private void initComponents()
-  {
+    private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
 
     reviewtypebuttongroup = new javax.swing.ButtonGroup();
@@ -487,10 +488,10 @@ public class QyoutiFrame
     resetpreferencesbutton = new javax.swing.JButton();
     bigpinkcheckbox = new javax.swing.JCheckBox();
     serifcheckbox = new javax.swing.JCheckBox();
+        onecolumncheckbox = new javax.swing.JCheckBox();
     fontdizelabel = new javax.swing.JLabel();
     jScrollPane7 = new javax.swing.JScrollPane();
     fontsizelist = new javax.swing.JList<>();
-    panel1 = new javax.swing.JPanel();
     jLabel6 = new javax.swing.JLabel();
     jPanel11 = new javax.swing.JPanel();
     colourswatchlabel = new javax.swing.JLabel();
@@ -588,32 +589,25 @@ public class QyoutiFrame
     jSplitPane3.setDividerLocation(400);
 
     questiontable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
         "ID", "Title"
       }
-    )
-    {
-      Class[] types = new Class []
-      {
+        ) {
+            Class[] types = new Class [] {
         java.lang.String.class, java.lang.String.class
       };
-      boolean[] canEdit = new boolean []
-      {
+            boolean[] canEdit = new boolean [] {
         false, false
       };
 
-      public Class getColumnClass(int columnIndex)
-      {
+            public Class getColumnClass(int columnIndex) {
         return types [columnIndex];
       }
 
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
         return canEdit [columnIndex];
       }
     });
@@ -625,10 +619,8 @@ public class QyoutiFrame
     jPanel8.setLayout(new java.awt.BorderLayout());
 
     jButton1.setText("Fit Width");
-    jButton1.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         jButton1ActionPerformed(evt);
       }
     });
@@ -652,15 +644,13 @@ public class QyoutiFrame
     jPanel2.add(questionanalysistoppane, java.awt.BorderLayout.NORTH);
 
     analysistable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
         {null, null, null, null},
         {null, null, null, null},
         {null, null, null, null},
         {null, null, null, null}
       },
-      new String []
-      {
+            new String [] {
         "Title 1", "Title 2", "Title 3", "Title 4"
       }
     ));
@@ -694,20 +684,16 @@ public class QyoutiFrame
     jPanel12.setLayout(new java.awt.BorderLayout());
 
     allanonbutton.setText("All Anonymous");
-    allanonbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        allanonbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         allanonbuttonActionPerformed(evt);
       }
     });
     jPanel13.add(allanonbutton);
 
     noneanonbutton.setText("None Anonymous");
-    noneanonbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        noneanonbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         noneanonbuttonActionPerformed(evt);
       }
     });
@@ -760,10 +746,8 @@ public class QyoutiFrame
     selectedpersonpanel.add(customforlabel, gridBagConstraints);
 
     resetpreferencesbutton.setText("Reset Customisation");
-    resetpreferencesbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        resetpreferencesbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         resetpreferencesbuttonActionPerformed(evt);
       }
     });
@@ -775,10 +759,8 @@ public class QyoutiFrame
 
     bigpinkcheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     bigpinkcheckbox.setText("Enlarge Pink Box");
-    bigpinkcheckbox.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        bigpinkcheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         bigpinkcheckboxActionPerformed(evt);
       }
     });
@@ -791,10 +773,8 @@ public class QyoutiFrame
 
     serifcheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     serifcheckbox.setText("Use Serif Font");
-    serifcheckbox.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        serifcheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         serifcheckboxActionPerformed(evt);
       }
     });
@@ -805,27 +785,38 @@ public class QyoutiFrame
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     selectedpersonpanel.add(serifcheckbox, gridBagConstraints);
 
+        onecolumncheckbox.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        onecolumncheckbox.setText("One Column Only");
+        onecolumncheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                onecolumncheckboxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+        selectedpersonpanel.add(onecolumncheckbox, gridBagConstraints);
+
     fontdizelabel.setText("Font Size:");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 5;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     selectedpersonpanel.add(fontdizelabel, gridBagConstraints);
 
     fontsizelist.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
-    fontsizelist.setModel(new javax.swing.AbstractListModel<String>()
-    {
+        fontsizelist.setModel(new javax.swing.AbstractListModel<String>() {
       String[] strings = { "Not Custom", "125%", "150%", "200%" };
       public int getSize() { return strings.length; }
       public String getElementAt(int i) { return strings[i]; }
     });
     fontsizelist.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
     fontsizelist.setVisibleRowCount(4);
-    fontsizelist.addListSelectionListener(new javax.swing.event.ListSelectionListener()
-    {
-      public void valueChanged(javax.swing.event.ListSelectionEvent evt)
-      {
+        fontsizelist.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
         fontsizelistValueChanged(evt);
       }
     });
@@ -833,23 +824,15 @@ public class QyoutiFrame
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 5;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     selectedpersonpanel.add(jScrollPane7, gridBagConstraints);
 
-    panel1.setLayout(new java.awt.GridBagLayout());
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    selectedpersonpanel.add(panel1, gridBagConstraints);
-
     jLabel6.setText("Background Colour:");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 6;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     selectedpersonpanel.add(jLabel6, gridBagConstraints);
@@ -862,10 +845,8 @@ public class QyoutiFrame
     jPanel11.add(colourswatchlabel);
 
     changecolourbutton.setText("Change");
-    changecolourbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        changecolourbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         changecolourbuttonActionPerformed(evt);
       }
     });
@@ -873,7 +854,7 @@ public class QyoutiFrame
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 6;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     selectedpersonpanel.add(jPanel11, gridBagConstraints);
@@ -891,32 +872,25 @@ public class QyoutiFrame
     ctab.setLayout(new java.awt.BorderLayout());
 
     candidatetable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
         "*", "Name", "ID", "Pages", "Questions", "Errors"
       }
-    )
-    {
-      Class[] types = new Class []
-      {
+        ) {
+            Class[] types = new Class [] {
         java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class
       };
-      boolean[] canEdit = new boolean []
-      {
+            boolean[] canEdit = new boolean [] {
         false, false, false, false, false, false
       };
 
-      public Class getColumnClass(int columnIndex)
-      {
+            public Class getColumnClass(int columnIndex) {
         return types [columnIndex];
       }
 
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
         return canEdit [columnIndex];
       }
     });
@@ -930,32 +904,25 @@ public class QyoutiFrame
     ptab.setLayout(new java.awt.BorderLayout());
 
     pagestable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
         "No.", "File", "Code", "Error"
       }
-    )
-    {
-      Class[] types = new Class []
-      {
+        ) {
+            Class[] types = new Class [] {
         java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
       };
-      boolean[] canEdit = new boolean []
-      {
+            boolean[] canEdit = new boolean [] {
         false, false, false, false
       };
 
-      public Class getColumnClass(int columnIndex)
-      {
+            public Class getColumnClass(int columnIndex) {
         return types [columnIndex];
       }
 
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
         return canEdit [columnIndex];
       }
     });
@@ -969,32 +936,25 @@ public class QyoutiFrame
     stab.setLayout(new java.awt.BorderLayout());
 
     scanfiletable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
         "Ident", "Source", "Imported Name", "Processed", "Errors"
       }
-    )
-    {
-      Class[] types = new Class []
-      {
+        ) {
+            Class[] types = new Class [] {
         java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class, java.lang.String.class
       };
-      boolean[] canEdit = new boolean []
-      {
+            boolean[] canEdit = new boolean [] {
         false, false, false, false, false
       };
 
-      public Class getColumnClass(int columnIndex)
-      {
+            public Class getColumnClass(int columnIndex) {
         return types [columnIndex];
       }
 
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
         return canEdit [columnIndex];
       }
     });
@@ -1023,10 +983,8 @@ public class QyoutiFrame
     reviewtype1button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewtype1button.setSelected(true);
     reviewtype1button.setText("Review Recommended");
-    reviewtype1button.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewtype1button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewtype1buttonActionPerformed(evt);
       }
     });
@@ -1035,10 +993,8 @@ public class QyoutiFrame
     reviewtypebuttongroup.add(reviewtype2button);
     reviewtype2button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewtype2button.setText("Question, candidate by candidate");
-    reviewtype2button.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewtype2button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewtype2buttonActionPerformed(evt);
       }
     });
@@ -1047,10 +1003,8 @@ public class QyoutiFrame
     reviewtypebuttongroup.add(reviewtype3button);
     reviewtype3button.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewtype3button.setText("Candidate, question by question");
-    reviewtype3button.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewtype3button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewtype3buttonActionPerformed(evt);
       }
     });
@@ -1065,10 +1019,8 @@ public class QyoutiFrame
     reviewincludeall.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewincludeall.setSelected(true);
     reviewincludeall.setText("All review statuses");
-    reviewincludeall.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewincludeall.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewincludeallActionPerformed(evt);
       }
     });
@@ -1077,10 +1029,8 @@ public class QyoutiFrame
     reviewincludebuttongroup.add(reviewincludenotreviewed);
     reviewincludenotreviewed.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewincludenotreviewed.setText("Not reviewed only");
-    reviewincludenotreviewed.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewincludenotreviewed.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewincludenotreviewedActionPerformed(evt);
       }
     });
@@ -1089,10 +1039,8 @@ public class QyoutiFrame
     reviewincludebuttongroup.add(reviewincludeconfirmed);
     reviewincludeconfirmed.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewincludeconfirmed.setText("Confirmed only");
-    reviewincludeconfirmed.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewincludeconfirmed.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewincludeconfirmedActionPerformed(evt);
       }
     });
@@ -1101,10 +1049,8 @@ public class QyoutiFrame
     reviewincludebuttongroup.add(reviewincludeoverridden);
     reviewincludeoverridden.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
     reviewincludeoverridden.setText("Overridden only");
-    reviewincludeoverridden.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        reviewincludeoverridden.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         reviewincludeoverriddenActionPerformed(evt);
       }
     });
@@ -1118,10 +1064,8 @@ public class QyoutiFrame
 
     previousreviewbutton.setMnemonic('p');
     previousreviewbutton.setText("Previous");
-    previousreviewbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        previousreviewbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         previousreviewbuttonActionPerformed(evt);
       }
     });
@@ -1129,10 +1073,8 @@ public class QyoutiFrame
 
     nextreviewbutton.setMnemonic('n');
     nextreviewbutton.setText("Next");
-    nextreviewbutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        nextreviewbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         nextreviewbuttonActionPerformed(evt);
       }
     });
@@ -1143,12 +1085,10 @@ public class QyoutiFrame
     jPanel4.add(jPanel5, java.awt.BorderLayout.NORTH);
 
     qrevlefttable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
 
       }
     ));
@@ -1159,12 +1099,10 @@ public class QyoutiFrame
     jPanel9.setLayout(new java.awt.GridBagLayout());
 
     questionreviewtable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
+            new Object [][] {
 
       },
-      new String []
-      {
+            new String [] {
         "Candidate ID", "Question ID", "Review Status"
       }
     ));
@@ -1232,40 +1170,32 @@ public class QyoutiFrame
     filemenu.setText("File");
 
     newmenuitem.setText("New Exam/Survey...");
-    newmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        newmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         newmenuitemActionPerformed(evt);
       }
     });
     filemenu.add(newmenuitem);
 
     openmenuitem.setText("Open Exam/Survey...");
-    openmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        openmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         openmenuitemActionPerformed(evt);
       }
     });
     filemenu.add(openmenuitem);
 
     savemenuitem.setText("Save Exam Data");
-    savemenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        savemenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         savemenuitemActionPerformed(evt);
       }
     });
     filemenu.add(savemenuitem);
 
     propsmenuitem.setText("Exam/Survey Properties...");
-    propsmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        propsmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         propsmenuitemActionPerformed(evt);
       }
     });
@@ -1273,20 +1203,16 @@ public class QyoutiFrame
     filemenu.add(sep1);
 
     configmenuitem.setText("Configure...");
-    configmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        configmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         configmenuitemActionPerformed(evt);
       }
     });
     filemenu.add(configmenuitem);
 
     aboutmenuitem.setText("About...");
-    aboutmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        aboutmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         aboutmenuitemActionPerformed(evt);
       }
     });
@@ -1294,10 +1220,8 @@ public class QyoutiFrame
     filemenu.add(sep1b);
 
     exitmenuitem.setText("Exit");
-    exitmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        exitmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         exitmenuitemActionPerformed(evt);
       }
     });
@@ -1308,20 +1232,16 @@ public class QyoutiFrame
     actionmenu.setText("Action");
 
     pdfprintmenuitem.setText("Print to PDF...");
-    pdfprintmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        pdfprintmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         pdfprintmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(pdfprintmenuitem);
 
     forgetprintmenuitem.setText("Forget Last Printout");
-    forgetprintmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        forgetprintmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         forgetprintmenuitemActionPerformed(evt);
       }
     });
@@ -1330,50 +1250,40 @@ public class QyoutiFrame
 
     importqmenuitem.setText("Import Questions...");
     importqmenuitem.setEnabled(false);
-    importqmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        importqmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         importqmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(importqmenuitem);
 
     editquestionmenuitem.setText("Edit Question");
-    editquestionmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        editquestionmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         editquestionmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(editquestionmenuitem);
 
     editallquestionsmenuitem.setText("Edit All Questions");
-    editallquestionsmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        editallquestionsmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         editallquestionsmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(editallquestionsmenuitem);
 
     itemanalysismenuitem.setText("Item Analysis");
-    itemanalysismenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        itemanalysismenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         itemanalysismenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(itemanalysismenuitem);
 
     printitemanalysismenuitem.setText("Print Item Analysis");
-    printitemanalysismenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        printitemanalysismenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         printitemanalysismenuitemActionPerformed(evt);
       }
     });
@@ -1381,10 +1291,8 @@ public class QyoutiFrame
     actionmenu.add(sep2);
 
     importcanmenuitem.setText("Import Candidates...");
-    importcanmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        importcanmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         importcanmenuitemActionPerformed(evt);
       }
     });
@@ -1392,40 +1300,32 @@ public class QyoutiFrame
     actionmenu.add(jSeparator2);
 
     importimagesmenuitem.setText("Import Scanned Images...");
-    importimagesmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        importimagesmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         importimagesmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(importimagesmenuitem);
 
     clearscanneddatamenuitem.setText("Clear Scanned Data");
-    clearscanneddatamenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        clearscanneddatamenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         clearscanneddatamenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(clearscanneddatamenuitem);
 
     viewscanmenuitem.setText("View Scan");
-    viewscanmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        viewscanmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         viewscanmenuitemActionPerformed(evt);
       }
     });
     actionmenu.add(viewscanmenuitem);
 
     recomputemenuitem.setText("Recompute Outcomes");
-    recomputemenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        recomputemenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         recomputemenuitemActionPerformed(evt);
       }
     });
@@ -1433,10 +1333,8 @@ public class QyoutiFrame
     actionmenu.add(sep3);
 
     expscoresmenuitem.setText("Export Outcomes...");
-    expscoresmenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
+        expscoresmenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
         expscoresmenuitemActionPerformed(evt);
       }
     });
@@ -2240,6 +2138,7 @@ public class QyoutiFrame
     person = exam.persons_sorted.get( r );
     // get values and work out if this is a null customisation....
     boolean bigpink = bigpinkcheckbox.isSelected();
+    boolean onecolumn = onecolumncheckbox.isSelected();
     boolean serif = serifcheckbox.isSelected();
     double fsz = 0.0;
     switch ( fontsizelist.getSelectedIndex() )
@@ -2260,7 +2159,7 @@ public class QyoutiFrame
 
     Color c = colourswatchlabel.getBackground();
     
-    boolean isnull = !bigpink && !serif && fsz == 0.0 && c.equals( Color.WHITE );
+    boolean isnull = !bigpink && !onecolumn && !serif && fsz == 0.0 && c.equals( Color.WHITE );
     if ( isnull )
     {
       person.setPreferences( null );
@@ -2269,6 +2168,7 @@ public class QyoutiFrame
     {
       UserRenderPreferences prefs = new UserRenderPreferences();
       prefs.setBigpinkbox( bigpink );
+      prefs.setOneColumn( onecolumn );
       prefs.setSerif( serif );
       prefs.setFontsize( fsz );
       prefs.setBackground( c );
@@ -2380,6 +2280,10 @@ public class QyoutiFrame
   {//GEN-HEADEREND:event_reviewincludeconfirmedActionPerformed
     reviewFilterChanged( 4 );
   }//GEN-LAST:event_reviewincludeconfirmedActionPerformed
+
+    private void onecolumncheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onecolumncheckboxActionPerformed
+        updatePersonCustomizationFromForm();
+    }//GEN-LAST:event_onecolumncheckboxActionPerformed
 
   /**
    * Indicates that the question edit dialog stored some changes into its item
@@ -2666,9 +2570,9 @@ public class QyoutiFrame
   private javax.swing.JPanel noexamloadedpanel;
   private javax.swing.JButton noneanonbutton;
   private javax.swing.JPanel nopersonselectedpanel;
+    private javax.swing.JCheckBox onecolumncheckbox;
   private javax.swing.JMenuItem openmenuitem;
   private javax.swing.JTable pagestable;
-  private javax.swing.JPanel panel1;
   private javax.swing.JMenuItem pdfprintmenuitem;
   private javax.swing.JPanel personpanel;
   private javax.swing.JTable persontable;
