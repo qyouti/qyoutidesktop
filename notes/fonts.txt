@@ -295,14 +295,19 @@ in response to trying to paint it.
 
 
 
-IGNORE THIS LOT....
+--------------------------------------------------
 
-This line in SVGAbstractTranscoder.transcode
-    gvtRoot = builder.build(ctx, svgDoc);
-....
-GVTBuilder.build
-    buildComposite(ctx, svgElement, (CompositeGraphicsNode)topNode);
+Configuring FOP for fonts
+-------------------------
 
-Turns most text into 'TextNode' items in the gvt tree but the text with unusual
-characters seems to be turned into ShapeNode. Has it worked out that it is
-more economical to stroke some text instead of embedding the glyphs?
+Qyouti uses preferences file to store list of font family names that will be
+used for PDF rendering. From this we need to build an FOP configuration file
+so that only the needed fonts are loaded and referenced.
+
+How does fop configuration work? Doc suggests that individual font files can
+be referenced but they seem to need triplets to be specified. Otherwise whole
+directories or directory trees can be specified and then the triplets are
+worked out automatically.  In linux it is O.K. to list directories because
+fonts are spread out everywhere but in Windows all the fonts are in one place
+so it becomes more important to list files individually.
+
