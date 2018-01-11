@@ -806,6 +806,8 @@ public class QTIItemRenderer
       int columnoverride = 0;
       if ( type == PrintThread.TYPE_ANALYSIS )
          columnoverride = 1;
+      if ( prefs != null && prefs.isOneColumn() )
+         columnoverride = 1;
       
       int columns = -1;
       int previous_columns=-1;
@@ -899,10 +901,8 @@ public class QTIItemRenderer
         renderer = new QTIItemRenderer( printthread, fontmanager, type, examfolderuri, items.elementAt(i), i+1, 
             exam, prefs );
         if ( type == PrintThread.TYPE_ANALYSIS )
-        {
           renderer.setAnalysisHTML( exam.getQuestionAnalysis( items.elementAt(i).getIdent() ).toHTML() );
-          renderer.setColumnOverride( 1 );
-        }
+        renderer.setColumnOverride( columnoverride );
         renderer.renderItem();
         mgr.addReport( renderer.getMissingGlyphReport() );
         svgdocs[i] = renderer.getSVGDocument();
