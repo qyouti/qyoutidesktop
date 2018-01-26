@@ -23,8 +23,24 @@ public class PinkBoxTableCellRenderer
   public static final int HEIGHT=32;
   
   
-  public PinkBoxTableCellRenderer() { super(); }
+  int currentcolumn;
+  boolean greyed=true;
   
+  public PinkBoxTableCellRenderer() { super(); }
+
+  public boolean isGreyed()
+  {
+    return greyed;
+  }
+
+  public void setGreyed( boolean greyed )
+  {
+    this.greyed = greyed;
+  }
+  
+  
+  
+  @Override
   public void setValue(Object value)
   {
     if ( value==null || !(value instanceof Boolean ) )
@@ -34,7 +50,22 @@ public class PinkBoxTableCellRenderer
     }
     
     Boolean b = (Boolean)value;
-    setIcon( b.booleanValue()?TrueFalseIcon.TRUEICON:TrueFalseIcon.FALSEICON );
+    if ( currentcolumn == 6 && greyed )
+      setIcon( b.booleanValue()?TrueFalseIcon.GRAYEDTRUEICON:TrueFalseIcon.GRAYEDFALSEICON );
+    else
+      setIcon( b.booleanValue()?TrueFalseIcon.TRUEICON:TrueFalseIcon.FALSEICON );
     setText("");    
   }   
+
+  @Override
+  public Component getTableCellRendererComponent( JTable table, Object value,
+                                                  boolean isSelected,
+                                                  boolean hasFocus, int row,
+                                                  int column )
+  {
+    currentcolumn = column;
+    return super.getTableCellRendererComponent( table, value, isSelected, hasFocus, row, column ); //To change body of generated methods, choose Tools | Templates.
+  }
+  
+  
 }

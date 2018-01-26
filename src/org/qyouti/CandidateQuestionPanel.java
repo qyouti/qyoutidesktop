@@ -22,6 +22,7 @@ import org.qyouti.qti1.element.*;
  */
 public class CandidateQuestionPanel
         extends javax.swing.JPanel
+        implements ExaminerOverrideListener
 {
   CandidateData candidate;
   String questionident;
@@ -30,7 +31,7 @@ public class CandidateQuestionPanel
   QTIElementItem item;
   
   BufferedImage questionimage;
-  
+  PinkBoxTableCellRenderer pinkboxrenderer = new PinkBoxTableCellRenderer();
   /**
    * Creates new form CandidateQuestionPanel
    */
@@ -61,6 +62,7 @@ public class CandidateQuestionPanel
     }
     else
     {
+      questiondata.setExaminerOverrideListener( this );
       if ( questiondata.needsreview )
       {
         switch ( questiondata.getExaminerDecision() )
@@ -92,18 +94,7 @@ public class CandidateQuestionPanel
         }
       }
 
-      switch ( questiondata.getExaminerDecision() )
-      {
-        case QuestionData.EXAMINER_DECISION_NONE:
-          decisionbuttona.setSelected( true );
-          break;
-        case QuestionData.EXAMINER_DECISION_STAND:
-          decisionbuttonb.setSelected( true );
-          break;            
-        case QuestionData.EXAMINER_DECISION_OVERRIDE:
-          decisionbuttonc.setSelected( true );
-          break;
-      }
+      updateButtons();
 
       responsetable.setModel( questiondata );
       questiondatalistener = new TableModelListener(){
@@ -139,7 +130,8 @@ public class CandidateQuestionPanel
       cb.setIcon( TrueFalseIcon.FALSEICON );
       dce = new DefaultCellEditor( cb );
       responsetable.setDefaultEditor( Boolean.class, dce);
-      responsetable.setDefaultRenderer( Boolean.class, new PinkBoxTableCellRenderer() );
+      pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE );
+      responsetable.setDefaultRenderer( Boolean.class, pinkboxrenderer );
       outcometable.setModel( questiondata.outcomes );
     }
     
@@ -150,6 +142,30 @@ public class CandidateQuestionPanel
     responsetable.setMinimumSize(new Dimension(200,responsetable.getRowHeight( 0 )*responsetable.getRowCount()));
   }
 
+  @Override
+  public void examinerOverrideChanged()
+  {
+    pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE );
+    updateButtons();
+  }
+  
+  public final void updateButtons()
+  {
+    switch ( questiondata.getExaminerDecision() )
+    {
+      case QuestionData.EXAMINER_DECISION_NONE:
+        decisionbuttona.setSelected( true );
+        break;
+      case QuestionData.EXAMINER_DECISION_STAND:
+        decisionbuttonb.setSelected( true );
+        break;            
+      case QuestionData.EXAMINER_DECISION_OVERRIDE:
+        decisionbuttonc.setSelected( true );
+        break;
+    }    
+  }
+  
+  
   @Override
   public void removeNotify()
   {
@@ -445,7 +461,7 @@ public class CandidateQuestionPanel
   }//GEN-LAST:event_viewresponsescheckboxActionPerformed
 
   
-  private void handleDecision( int n )
+  public void handleDecision( int n )
   {
     if ( n != questiondata.getExaminerDecision() )
     {
@@ -497,4 +513,6 @@ public class CandidateQuestionPanel
   private javax.swing.JCheckBox viewimagecheckbox;
   private javax.swing.JCheckBox viewresponsescheckbox;
   // End of variables declaration//GEN-END:variables
+
+
 }

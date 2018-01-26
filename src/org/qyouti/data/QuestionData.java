@@ -61,6 +61,8 @@ public class QuestionData
 
   public OutcomeData outcomes;
 
+  ExaminerOverrideListener eolistener=null;
+  
   public QuestionData( PageData page )
   {
     this.page = page;
@@ -334,9 +336,9 @@ public class QuestionData
       case 5:
         return String.class;
       case 6:
-        if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
+        //if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
           return Boolean.class;
-        return String.class;
+        //return String.class;
     }
     return null;
   }
@@ -344,7 +346,7 @@ public class QuestionData
   @Override
   public boolean isCellEditable( int rowIndex, int columnIndex )
   {
-    return columnIndex == 6 && examinerdecision == EXAMINER_DECISION_OVERRIDE;
+    return columnIndex == 6; // && examinerdecision == EXAMINER_DECISION_OVERRIDE;
   }
 
   public int getRowHeight( int rowIndex )
@@ -391,9 +393,9 @@ public class QuestionData
       case 5:
         return response.needsreview?"dubious":"";
       case 6:
-        if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
+        //if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
           return new Boolean( response.examiner_selected );
-        return "n/a";
+        //return "n/a";
     }
     return null;
   }
@@ -404,12 +406,23 @@ public class QuestionData
     if ( !isCellEditable( rowIndex, columnIndex ) )
       return;
 
+    setExaminerDecision( QuestionData.EXAMINER_DECISION_OVERRIDE );
     ResponseData response = responsedatas.get( rowIndex );
-
     response.examiner_selected = ((Boolean)aValue).booleanValue();
-
+    
+    if ( eolistener != null )
+      eolistener.examinerOverrideChanged();
+    
     //processResponses();
     page.candidate.processAllResponses();
     page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
+    page.exam.setUnsavedChanges( true );
   }
+
+  public void setExaminerOverrideListener( ExaminerOverrideListener eolistener )
+  {
+    this.eolistener = eolistener;
+  }
+  
+  
 }
