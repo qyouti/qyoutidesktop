@@ -28,15 +28,21 @@ public class TrueFalseIcon
   public static final Color PINK1 = new Color( 255, 220, 255 );
   public static final Color PINK2 = new Color( 255, 230, 255 );
   public static final Color GREY  = new Color( 80, 80, 80 );
+  public static final Color PALEGREY  = new Color( 240, 240, 240 );
+  public static final Color MIDGREY  = new Color( 200, 200, 200 );
   
-  public static final Icon TRUEICON = new TrueFalseIcon( true );
-  public static final Icon FALSEICON = new TrueFalseIcon( false );
+  public static final Icon TRUEICON = new TrueFalseIcon( true, false );
+  public static final Icon FALSEICON = new TrueFalseIcon( false, false );
+  public static final Icon GRAYEDTRUEICON = new TrueFalseIcon( true, true );
+  public static final Icon GRAYEDFALSEICON = new TrueFalseIcon( false, true );
   
-  boolean b;
+  
+  boolean b, greyed;
 
-  public TrueFalseIcon( boolean b )
+  public TrueFalseIcon( boolean b, boolean greyed )
   {
     this.b = b;
+    this.greyed = greyed;
   }
 
   @Override
@@ -46,13 +52,13 @@ public class TrueFalseIcon
 
     g2d.setColor( Color.white );
     g2d.fillRect( 0, 0, WIDTH, HEIGHT );
-    g2d.setColor( PINK1 );
+    g2d.setColor( greyed?PALEGREY:PINK1 );
     g2d.fillRect( 2, 2, WIDTH - 4, HEIGHT - 4 );
-    g2d.setColor( PINK2 );
+    g2d.setColor( greyed?PALEGREY:PINK2 );
     g2d.setStroke( PRINTSTROKE );
     g2d.drawLine( 10, 10, 22, 22 );
     g2d.drawLine( 10, 22, 22, 10 );
-    g2d.setColor( GREY );
+    g2d.setColor( greyed?MIDGREY:GREY );
     if ( b )
     {
       g2d.setStroke( PENCILSTROKE );
