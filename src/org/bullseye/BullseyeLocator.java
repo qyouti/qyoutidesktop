@@ -354,7 +354,7 @@ public class BullseyeLocator extends Thread
       for ( y=0; y<h; y++ )
       {
         failed = false;
-        if ( votemap[x][y] < (1*maxvote/2) )
+        if ( votemap[x][y] < (2*maxvote/3) )
           failed = true;
         
         if ( x<1 || y<1 || x>(w-2) || y>(h-2) )
@@ -392,7 +392,7 @@ public class BullseyeLocator extends Thread
     w = votemapimage.getWidth();
     h = votemapimage.getHeight();
     // some stats...
-    maxvote=0;
+    maxvote=1;
     for ( x=0; x<w; x++ )
       for ( y=0; y<h; y++ )
         if ( votemap[x][y] > maxvote )

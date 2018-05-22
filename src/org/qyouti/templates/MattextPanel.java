@@ -28,7 +28,7 @@ public class MattextPanel
     this.mattext = mattext;
     initComponents();
     initialcontent = mattext.getContent();
-    htmleditorpane.setComplexToolbar( false );
+    //htmleditorpane.setComplexToolbar( false );
     htmleditorpane.setText( initialcontent );
   }
   
