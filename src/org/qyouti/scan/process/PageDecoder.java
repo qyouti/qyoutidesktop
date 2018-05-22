@@ -267,7 +267,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           ifd.setError( page.error );
           return page;          
         }
-        
+//        ImageIO.write(
+//                    page.rotatedimage,
+//                    "jpg",
+//                    new File( exam.getExamFolder(), "debug_rotation_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+//              );        
       }
       ih = page.rotatedimage.getHeight();
       iw = page.rotatedimage.getWidth();
