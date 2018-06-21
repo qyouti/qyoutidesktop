@@ -1781,26 +1781,33 @@ public class QyoutiFrame
     }
 
     String filename = null;
-    if ( tabs.getSelectedComponent() == ptab )
+    if ( tabs.getSelectedComponent() == stab )
     {
-      int row = pagestable.getSelectedRow();
+      int row = scanfiletable.getSelectedRow();
       if ( row < 0 )
       {
         JOptionPane.
                 showMessageDialog( this, "Select a scan in the Scans tab to edit." );
         return;
       }
-      filename = (String) pagestable.getValueAt( row, 1 );
+      filename = (String) scanfiletable.getValueAt( row, 2 );
+      if ( !filename.endsWith(".jpg") )
+      {
+        JOptionPane.
+                showMessageDialog( this, "Select an image in the Scans tab to edit." );
+        return;
+      }
     }
     else
     {
       JOptionPane.
-              showMessageDialog( this, "Scan view is only available on the Scans and Responses tabs." );
+              showMessageDialog( this, "Scan view is only available on the Scans tab." );
       return;
     }
 
+    File file = new File( exam.getScanImageFolder(), filename );
     ImageViewDialog dialog = new ImageViewDialog( this, true );
-    dialog.setImage( filename );
+    dialog.setImage( file );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
 

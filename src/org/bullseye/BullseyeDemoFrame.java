@@ -183,16 +183,16 @@ public class BullseyeDemoFrame
   {
     Point[] points = bullseyelocator.getLocations();
     Point p;
+    Graphics2D g = bullseyelocator.getInputImage().createGraphics();
     for ( int i=0; i<points.length; i++ )
     {
       p = points[i];
-      Graphics2D g = bullseyelocator.getInputImage().createGraphics();
       g.setColor( Color.red );
       g.drawLine( p.x - 20, p.y,      p.x + 20, p.y      );
       g.drawLine( p.x,      p.y - 20, p.x,      p.y + 20 );
       this.inputimagelabel.repaint();
     }
-    
+    g.dispose();
     bullseyelocator.removeProgressListener( this );
     //JOptionPane.showMessageDialog(null, "Processing complete." );
     bullseyelocator = null;        

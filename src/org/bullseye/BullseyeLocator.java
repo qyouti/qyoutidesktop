@@ -151,6 +151,11 @@ public class BullseyeLocator extends Thread
     this.input = input;    
   }
 
+  public void setEstimatedRadius(double estimatedradius)
+  {
+    this.estimatedradius = estimatedradius;
+  }
+
   
   void reset( double r )
   {
@@ -228,6 +233,11 @@ public class BullseyeLocator extends Thread
   public BufferedImage getInputImage()
   {
     return input;
+  }
+  
+  public void setInputImage(BufferedImage image)
+  {
+    input=image;
   }
   
   public BufferedImage getPixelTypeMap()
