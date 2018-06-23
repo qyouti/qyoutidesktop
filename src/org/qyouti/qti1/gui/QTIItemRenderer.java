@@ -946,7 +946,7 @@ public class QTIItemRenderer
         xoffset = getMetrics().inchesToSvg( columnoffset * column );
         page.add( new SVGDocumentPlacement( svgdocs[i], xoffset + itemareinsetleft, yoffset + itemareinsettop ) );
         // xoffset is relative to itemareainsetleft
-        // record integer relative to top left bullseye in hundredths of inch
+        // record integer relative to top left bullseye_major in hundredths of inch
         if ( candidate != null && paginationrecord != null )
           paginationrecord.addItem( 
                   items.elementAt( i ).getIdent(), 
@@ -1011,14 +1011,12 @@ public class QTIItemRenderer
 //  static org.w3c.dom.Element calibration_tl;
 //  static org.w3c.dom.Element calibration_bl;
 //  static org.w3c.dom.Element calibration_br;
-  static org.w3c.dom.Element bullseye;
+  static org.w3c.dom.Element bullseye_major, bullseye_minor;
   
-  static void initializeCalibrationCodes()
+  static org.w3c.dom.Element initializeCalibrationCodes( int radius )
   {
-    if ( bullseye != null )
-      return;
+    org.w3c.dom.Element bullseye;
     
-    int radius = getMetrics().getPropertySvgUnitsInt("bullseye-radius");
     double[] radii = BullseyeGenerator.scaleRadii( radius );
     boolean dark = true;
 
@@ -1043,11 +1041,7 @@ public class QTIItemRenderer
       bullseye.appendChild( circle );
       bullseye.appendChild( doc.createTextNode( "\n" ) );
     }
-    
-//    calibration_tl = QRCodec.encode2DSVG( "tl", qrwidth );
-//    calibration_bl = QRCodec.encode2DSVG( "bl", qrwidth );
-//    calibration_br = QRCodec.encode2DSVG( "br", qrwidth );
-    //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/bullseye.svg", doc.getDocumentElement(), true );
+    return bullseye;
   }
   
   
@@ -1069,7 +1063,8 @@ public class QTIItemRenderer
 
     double widthinches = getMetrics().getPropertyInches("page-width") + rulerwidth;
     double heightinches = getMetrics().getPropertyInches("page-height") + rulerheight;
-    
+    int layout = options.getQTIRenderIntegerOption("layout");
+            
     String backgroundrgb = "rgb(255,255,255)";
     if ( userprefs != null && userprefs.getBackground() != null )
     {
@@ -1133,95 +1128,58 @@ public class QTIItemRenderer
     r.setAttribute( "height", "" + getMetrics().getPropertySvgUnitsInt("page-height") );
     decorationgroup.appendChild( r );
 
-
-    // panel for debugging - indicate area for items
-//    r = pdoc.createElementNS( svgNS, "rect");
-//    r.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("item-area-inset-left")) );
-//    r.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("item-area-inset-top")) );
-//    r.setAttribute( "stroke", "rgb(255,220,220)" );
-//    r.setAttribute( "stroke-width", "" + QTIMetrics.inchesToSvg( 0.005 ) );
-//    r.setAttribute( "fill", "rgb(255,255,255)" );
-//    r.setAttribute( "width",  "" + (getMetrics().getPropertySvgUnitsInt("page-width") - getMetrics().getPropertySvgUnitsInt("item-area-inset-left") - getMetrics().getPropertySvgUnitsInt("item-area-inset-right")) );
-//    r.setAttribute( "height", "" + (getMetrics().getPropertySvgUnitsInt("page-height") - getMetrics().getPropertySvgUnitsInt("item-area-inset-top") - getMetrics().getPropertySvgUnitsInt("item-area-inset-bottom")) );
-//    decorationgroup.appendChild( r );
-
     
     String pageqr = "qyouti";
     if ( paginationrecord != null )
       pageqr = pageqr + "/" + paginationrecord.getPageId();
     
-    
-//||||||| .r48
-//    //if ( pageqr != null )
-//    //{
-//      // If some text for the page qrcode was provided add that qrcode in
-//      // the bottom left and also add qrcodes for calibration at bottom right
-//      // and top left.
-//      
-//      int cw     = (int)(10.0*(getMetrics().getPropertyInches("calibration-bottomright-x") -
-//                               getMetrics().getPropertyInches("calibration-topleft-x")));
-//      int ch     = (int)(10.0*(getMetrics().getPropertyInches("calibration-bottomright-y") -
-//                               getMetrics().getPropertyInches("calibration-topleft-y")));
-      int qrwidth;
       
-//      String pageqr = "qyouti/bl";
-//      if ( paginationrecord != null )
-//        pageqr = pageqr + "/" + paginationrecord.getPageId();
-//      
-//      QRCodeIcon qricon;
-//      // bottom left corner onto calibration point
-//      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-page-width");
-//      qricon = new QRCodeIcon( 0, 0, pageqr, qrwidth );
-//      qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
-//      qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y") );
-//      qricon.y -= new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-page-width") );
-//      qricon.paintSVG(pdoc);
-//      if ( paginationrecord != null )      
-//        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );
-//              
-//      // bottom right corner onto calibration point
-//      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
-//      qricon = new QRCodeIcon( 0, 0, "qyouti/br", qrwidth );
-//      qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x") );
-//      qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y") );
-//      qricon.y -= new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
-//      qricon.paintSVG(pdoc);
-//      if ( paginationrecord != null )      
-//        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_BOTTOM_RIGHT, qricon.x/10, qricon.y/10, qrwidth/10 );
 
     // Add calibration marks - using the same SVG over and over
     // for every page.
-    initializeCalibrationCodes();
+    if ( bullseye_major == null )
+      bullseye_major = initializeCalibrationCodes( getMetrics().getPropertySvgUnitsInt("bullseye-radius") );
+    if ( layout==2 && bullseye_minor == null )
+      bullseye_minor = initializeCalibrationCodes( getMetrics().getPropertySvgUnitsInt("bullseye-minor-radius") );
+    
     int tlx, tly, brx, bry;
     int w = getMetrics().getPropertySvgUnitsInt("barcode-width");
     tlx  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-x");
     tly  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-y");
     brx  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x");
     bry  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y");
-//||||||| .r48
-//      // top left corner onto calibration point
-//      qrwidth = getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width");
-//      qricon = new QRCodeIcon( 0, 0, "qyouti/tl", qrwidth );
-//      qricon.x  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-x") );
-//      qricon.y  = new Integer( getMetrics().getPropertySvgUnitsInt("calibration-topleft-y") );
-//      qricon.y += new Integer( getMetrics().getPropertySvgUnitsInt("qrcode-calibration-width") );
-//      qricon.paintSVG(pdoc);
-//      if ( paginationrecord != null )      
-//        paginationrecord.addQRCode( PaginationRecord.QRCode.QRCODE_TOP_LEFT, qricon.x/10, qricon.y/10, qrwidth/10 );
 
-    org.w3c.dom.Element onedbarcode = ZXingCodec.encode1DSVG( pageqr, (bry-tly)*3/4, w );
-    SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 90.0, tlx, (tly+bry)/2 );
+    int minordivisions = 5;
+    
+    org.w3c.dom.Element onedbarcode;
+    if ( layout == 2 )
+    {
+      onedbarcode = ZXingCodec.encode1DSVG( pageqr, (brx-tlx)*3/4, w );
+      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 0.0, (tlx+brx)/2, bry  );
+    }
+    else
+    {
+      onedbarcode = ZXingCodec.encode1DSVG( pageqr, (bry-tly)*3/4, w );
+      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 90.0, tlx, (tly+bry)/2 );
+    }
     //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", onedbarcode, true );
 
-    SVGUtils.appendFragmentToDocument( decorationgroup, bullseye, 0.0, tlx, bry );
-    SVGUtils.appendFragmentToDocument( decorationgroup, bullseye, 0.0, brx, bry );
-    SVGUtils.appendFragmentToDocument( decorationgroup, bullseye, 0.0, tlx, tly );
+    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, bry );
+    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, brx, bry );
+    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, tly );
     if ( paginationrecord != null )
     {
       int radius = getMetrics().getPropertySvgUnitsInt("bullseye-radius");
       paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT,  tlx/10, bry/10, radius/10 );
       paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT, brx/10, bry/10, radius/10 );
       paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT,     tlx/10, tly/10, radius/10 );
+    }
+    if ( layout==2 )
+    {
+      for ( i=1; i<minordivisions; i++ )
+        SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_minor, 0.0, tlx, tly + (bry-tly)*i/minordivisions );    
+      int radius = getMetrics().getPropertySvgUnitsInt("bullseye-minor-radius");
+      paginationrecord.setVerticalBullseyeDivisions( minordivisions, radius/10 );
     }
     // Completed calibration marks
 

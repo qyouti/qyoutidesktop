@@ -37,6 +37,15 @@ public class ExamPropertiesDialog
     printtitlescheckbox.setSelected( exam.getQTIRenderBooleanOption( "question_titles" ) );
     doublesidedcheckbox.setSelected( exam.getQTIRenderBooleanOption( "double_sided" ) );
     coversheetcheckbox.setSelected( exam.getQTIRenderBooleanOption( "cover_sheet" ) );
+    int layout = exam.getQTIRenderIntegerOption("layout");
+    switch ( layout )
+    {
+      case 2:
+        layoutbuttongroup.setSelected(layout2button.getModel(), true);
+        break;
+      default:
+        layoutbuttongroup.setSelected(layout1button.getModel(), true);
+    }
   }
   
   /**
@@ -48,8 +57,8 @@ public class ExamPropertiesDialog
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents()
   {
-    java.awt.GridBagConstraints gridBagConstraints;
 
+    layoutbuttongroup = new javax.swing.ButtonGroup();
     jPanel1 = new javax.swing.JPanel();
     headerlabel = new javax.swing.JLabel();
     headerfield = new javax.swing.JTextField();
@@ -58,6 +67,9 @@ public class ExamPropertiesDialog
     printtitlescheckbox = new javax.swing.JCheckBox();
     doublesidedcheckbox = new javax.swing.JCheckBox();
     coversheetcheckbox = new javax.swing.JCheckBox();
+    jPanel3 = new javax.swing.JPanel();
+    layout1button = new javax.swing.JRadioButton();
+    layout2button = new javax.swing.JRadioButton();
     jPanel2 = new javax.swing.JPanel();
     setbutton = new javax.swing.JButton();
     cancelbutton = new javax.swing.JButton();
@@ -100,6 +112,19 @@ public class ExamPropertiesDialog
 
     coversheetcheckbox.setText("Add Cover Sheet");
     jPanel1.add(coversheetcheckbox);
+
+    jPanel3.setLayout(new javax.swing.BoxLayout(jPanel3, javax.swing.BoxLayout.PAGE_AXIS));
+
+    layoutbuttongroup.add(layout1button);
+    layout1button.setSelected(true);
+    layout1button.setText("Layout left barcode");
+    jPanel3.add(layout1button);
+
+    layoutbuttongroup.add(layout2button);
+    layout2button.setText("Layout bottom barcode");
+    jPanel3.add(layout2button);
+
+    jPanel1.add(jPanel3);
 
     getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
 
@@ -149,6 +174,10 @@ public class ExamPropertiesDialog
     exam.setOption( "question_titles", printtitlescheckbox.isSelected() );
     exam.setOption( "double_sided",    doublesidedcheckbox.isSelected() );
     exam.setOption( "cover_sheet",     coversheetcheckbox.isSelected() );
+    if ( layout2button.isSelected() )
+      exam.setOption( "layout", "2" );
+    else
+      exam.setOption( "layout", "1" );
     parent.examOptionsSaved();
     setVisible( false );
     dispose();
@@ -174,6 +203,10 @@ public class ExamPropertiesDialog
   private javax.swing.JCheckBox idinfootercheckbox;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel jPanel3;
+  private javax.swing.JRadioButton layout1button;
+  private javax.swing.JRadioButton layout2button;
+  private javax.swing.ButtonGroup layoutbuttongroup;
   private javax.swing.JCheckBox nameinfootercheckbox;
   private javax.swing.JCheckBox printtitlescheckbox;
   private javax.swing.JButton setbutton;
