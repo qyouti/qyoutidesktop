@@ -24,6 +24,7 @@
   <entry key="item-area-column-spacing">0.1</entry>
   
   <entry key="bullseye-radius">0.25</entry>
+  <entry key="bullseye-minor-radius">0.18</entry>
   <entry key="barcode-width">0.4</entry>
   <entry key="calibration-topleft-x">0.5</entry>
   <entry key="calibration-topleft-y">1.2</entry>

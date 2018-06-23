@@ -67,6 +67,7 @@ private static ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
             if ( result.getText() == null ) continue;
             if ( !result.getText().startsWith("qyouti/") ) continue;
             System.out.println( "DECODED qyouti barcode at threshold = " + threshold + " in rectangle " + i );
+            result.setImageIndex(i);
             return result;
           }
         } catch (Exception ex)
@@ -101,12 +102,14 @@ private static ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( result.barcoderesult == null )
       return null;
     
-    result.start = new Point( 
-            Math.round(result.barcoderesult.getResultPoints()[0].getX()), 
-            Math.round(result.barcoderesult.getResultPoints()[0].getY()) );
-    result.end = new Point( 
-            Math.round(result.barcoderesult.getResultPoints()[1].getX()), 
-            Math.round(result.barcoderesult.getResultPoints()[1].getY()) );
+    result.start = new Point( result.barcodesearchrect[result.barcoderesult.getImageIndex()].getLocation() );
+    result.start.x += Math.round(result.barcoderesult.getResultPoints()[0].getX());
+    result.start.y += Math.round(result.barcoderesult.getResultPoints()[0].getY());
+    
+    result.end = new Point( result.barcodesearchrect[result.barcoderesult.getImageIndex()].getLocation() );
+    result.end.x += Math.round(result.barcoderesult.getResultPoints()[1].getX()); 
+    result.end.y += Math.round(result.barcoderesult.getResultPoints()[1].getY());
+    
     String orient = result.barcoderesult.getOrientation();
     System.out.println( "Barcode orientation: " + orient );
     if ( "270".equals( orient ) )

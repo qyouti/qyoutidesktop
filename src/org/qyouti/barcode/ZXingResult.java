@@ -28,6 +28,7 @@ package org.qyouti.barcode;
 
 import com.google.zxing.*;
 import java.awt.*;
+import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -57,8 +58,10 @@ public class ZXingResult
 
   public String getOrientation()
   {
+    Map<ResultMetadataType,Object> meta = wrapped_result.getResultMetadata();
+    if ( meta == null ) return "0";
     Object o = wrapped_result.getResultMetadata().get( ResultMetadataType.ORIENTATION );
-    if ( o == null ) return null;
+    if ( o == null ) return "0";
     return o.toString();
   }
   

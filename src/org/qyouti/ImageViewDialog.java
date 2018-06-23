@@ -47,7 +47,7 @@ public class ImageViewDialog
 
   public void setImage( File file )
   {
-    int i, j, k;
+    int i, j, k, pass;
     PaginationRecord paginationrecord=null;
     PaginationRecord.Page page=null;
     PaginationRecord.Bullseye b=null;
@@ -80,17 +80,23 @@ public class ImageViewDialog
                 page.getHeight(), 
                 pointd, 
                 b.getR(), 
-                BullseyeGenerator.RADII );
+                BullseyeGenerator.RADII,
+                page.getVerticalDivisions(),
+                page.getMinorBullseyeRadius()
+        );
         bpage = bpscanner.scan(image);
-        for ( i=0; i<3; i++ )
-        {
-          JLabel label = new JLabel();
-          label.setIcon( new ImageIcon( bpage.searchimages[i] ) );
-          centrepanel.add(label);
-          label = new JLabel();
-          label.setIcon( new ImageIcon( bpage.votemapimages[i] ) );
-          centrepanel.add(label);
-        }
+        for ( pass=0; pass<2; pass++ )
+          for ( i=0; i<bpage.searchimages[pass].length; i++ )
+          {
+            if ( bpage.searchimages[pass][i] == null )
+              continue;
+            JLabel label = new JLabel();
+            label.setIcon( new ImageIcon( bpage.searchimages[pass][i] ) );
+            centrepanel.add(label);
+            label = new JLabel();
+            label.setIcon( new ImageIcon( bpage.votemapimages[pass][i] ) );
+            centrepanel.add(label);
+          }
       }
       
       Graphics2D g = image.createGraphics();
@@ -108,8 +114,10 @@ public class ImageViewDialog
       if ( bpage != null)
       {
         g.setColor( Color.BLUE );
-        for ( i=0; i<bpage.searchareas.length; i++ )
-          g.draw(bpage.searchareas[i]);
+        for ( pass=0; pass<2; pass++ )
+          for ( i=0; i<bpage.searchareas[pass].length; i++ )
+            if ( bpage.searchareas[pass][i] != null )
+              g.draw(bpage.searchareas[pass][i]);
         g.setColor( Color.RED );
         for ( i=0; i<bpage.bullseyepointsscan.length; i++ )
         {

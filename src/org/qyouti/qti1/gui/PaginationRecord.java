@@ -102,13 +102,25 @@ public class PaginationRecord
   
   public void loadPage( Element e_page )
   {
+    int vd = 0;
+    int r = 0;
+    String s;
+    s = e_page.getAttribute( "verticaldivisions" );
+    if ( s != null )
+      try { vd = Integer.parseInt(s); } catch ( Exception e ) { vd=0; }
+    s = e_page.getAttribute( "minorbullseyeradius" );
+    if ( s != null )
+      try { r = Integer.parseInt(s); } catch ( Exception e ) { r=0; }
+    
     addPage( 
             e_page.getAttribute( "id" ),
             Integer.parseInt( e_page.getAttribute( "width" ) ),
             Integer.parseInt( e_page.getAttribute( "height" ) ),
             Integer.parseInt( e_page.getAttribute( "originx" ) ),
-            Integer.parseInt( e_page.getAttribute( "originy" ) )
-            );
+            Integer.parseInt( e_page.getAttribute( "originy" ) ),
+            vd,
+            r
+           );
 
     Node node;
     NodeList nl;
@@ -171,19 +183,18 @@ public class PaginationRecord
             candidates.lastElement(), 
             Integer.toString( nextid++ ), 
             //candidates.lastElement().pages.size() + 1,
-            width, height, originx, originy );
+            width, height, originx, originy, 0, 0 );
     candidates.lastElement().pages.add( page );
     pagesbyid.put( page.id, page );
     return page.id;    
   }
 
-  public void addPage( String id, int width, int height, int originx, int originy )
+  public void addPage( String id, int width, int height, int originx, int originy, int vd, int r )
   {
     Page page = new Page( 
             candidates.lastElement(), 
             id, 
-//            p,
-            width, height, originx, originy );
+            width, height, originx, originy, vd, r );
     candidates.lastElement().pages.add( page );
     pagesbyid.put( page.id, page );
   }
@@ -210,7 +221,14 @@ public class PaginationRecord
     if ( type == PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT )
         lastpage.tl = lastpage.bullseyes.lastElement();
   }
-
+  
+  public void setVerticalBullseyeDivisions( int count, int w )
+  {
+    Page lastpage = candidates.lastElement().pages.lastElement();
+    lastpage.verticaldivisions = count;
+    lastpage.minorbullseyeradius = w;
+  }
+  
   public void emit(Writer writer) throws IOException
   {
     writer.write("<?xml version=\"1.0\"?>\n");
@@ -283,7 +301,10 @@ public class PaginationRecord
     Bullseye br;
     Bullseye tl;
     
-    public Page( Candidate parent, String id, int width, int height, int originx, int originy )
+    int verticaldivisions=1;
+    int minorbullseyeradius=0;
+    
+    public Page( Candidate parent, String id, int width, int height, int originx, int originy, int vd, int r )
     {
       this.parent  = parent;
       this.id      = id;
@@ -292,6 +313,8 @@ public class PaginationRecord
       this.height  = height;
       this.originx = originx;
       this.originy = originy;
+      this.verticaldivisions = vd;
+      this.minorbullseyeradius = r;
     }
 
     public int getWidth()
@@ -302,6 +325,16 @@ public class PaginationRecord
     public int getHeight()
     {
       return height;
+    }
+
+    public int getVerticalDivisions()
+    {
+      return verticaldivisions;
+    }
+
+    public int getMinorBullseyeRadius()
+    {
+      return minorbullseyeradius;
     }
   
     public Bullseye getBullseye( int type )
@@ -326,6 +359,10 @@ public class PaginationRecord
       writer.write( " height=\""+ height + "\"" );
       writer.write( " originx=\""+ originx + "\"" );
       writer.write( " originy=\""+ originy + "\"" );
+      if ( verticaldivisions != 0 )
+        writer.write( " verticaldivisions=\""+ verticaldivisions + "\"" );
+      if ( minorbullseyeradius != 0 )
+        writer.write( " minorbullseyeradius=\""+ minorbullseyeradius + "\"" );
       writer.write( ">\n");
       for ( i=0; i<bullseyes.size(); i++ )
         bullseyes.get( i ).emit( writer );
