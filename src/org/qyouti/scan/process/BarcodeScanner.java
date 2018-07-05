@@ -86,10 +86,11 @@ private static ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     int iw = image.getWidth();
     BarcodeResult result = new BarcodeResult();
     // Bar code must be in a region near edge of page
-    result.barcodesearchrect[0] = new Rectangle(       0,      0, iw/8, ih   );  // left
-    result.barcodesearchrect[1] = new Rectangle(  7*iw/8,      0, iw/8, ih   );  // right
-    result.barcodesearchrect[2] = new Rectangle(       0,      0, iw,   ih/8 );  // top
-    result.barcodesearchrect[3] = new Rectangle(       0, 7*ih/8, iw,   ih/8 );  // bottom
+    // Same order as values of PaginationRecord.Barcode.BARCODE_TOP etc.
+    result.barcodesearchrect[0] = new Rectangle(       0,      0, iw,   ih/8 );  // top
+    result.barcodesearchrect[1] = new Rectangle(       0,      0, iw/8, ih   );  // left
+    result.barcodesearchrect[2] = new Rectangle(       0, 7*ih/8, iw,   ih/8 );  // bottom
+    result.barcodesearchrect[3] = new Rectangle(  7*iw/8,      0, iw/8, ih   );  // right
     try
     {
       result.barcoderesult = decodeBarcode( image, result.barcodesearchrect );
@@ -110,16 +111,17 @@ private static ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     result.end.x += Math.round(result.barcoderesult.getResultPoints()[1].getX()); 
     result.end.y += Math.round(result.barcoderesult.getResultPoints()[1].getY());
     
-    String orient = result.barcoderesult.getOrientation();
-    System.out.println( "Barcode orientation: " + orient );
-    if ( "270".equals( orient ) )
-      result.successfulrect = 0;  //left
-    else if ( "90".equals( orient ) )
-      result.successfulrect = 1;  //right
-    else if ( "0".equals( orient ) )
-      result.successfulrect = 2;  //top
-    else if ( "180".equals( orient ) )
-      result.successfulrect = 3;  //bottom
+    result.location = result.barcoderesult.getImageIndex();
+//    String orient = result.barcoderesult.getOrientation();
+//    System.out.println( "Barcode orientation: " + orient );
+//    if ( "270".equals( orient ) )
+//      result.location = 0;  //left
+//    else if ( "90".equals( orient ) )
+//      result.location = 1;  //right
+//    else if ( "0".equals( orient ) )
+//      result.location = 2;  //top
+//    else if ( "180".equals( orient ) )
+//      result.location = 3;  //bottom
     
     
     System.out.println( "Barcode = {" + result.barcoderesult.getText() + "}" );

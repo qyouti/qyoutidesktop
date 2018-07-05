@@ -17,12 +17,17 @@ public class BarcodeResult
 {
   Rectangle[] barcodesearchrect = new Rectangle[4];
   ZXingResult barcoderesult;
-  int successfulrect;
+  int location;
   Point start;
   Point end;
   String printid;
   String pageid;
 
+  public int getLocation()
+  {
+    return location;
+  }
+  
   public int getBarcodeSearchRectCount()
   {
     return barcodesearchrect.length;

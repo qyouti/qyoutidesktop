@@ -1709,8 +1709,8 @@ public class QyoutiFrame
       
           
       // TO DO - create preview in background thread
-      QTIItemRenderer renderer = new QTIItemRenderer( 
-            null, fontmanager, PrintThread.TYPE_PAPERS, uri, item, qnumber, exam, null );
+      QTIItemRenderer renderer = new QTIItemRenderer(fontmanager,PrintThread.TYPE_PAPERS,uri,exam);
+      renderer.setItem(item, qnumber, null);
       
       if ( renderer == null )
           return;

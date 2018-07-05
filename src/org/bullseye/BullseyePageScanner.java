@@ -16,12 +16,22 @@ import java.awt.image.BufferedImage;
  */
 public class BullseyePageScanner
 {
+  public static final int TOPLEFT     = 0;
+  public static final int TOPRIGHT    = 1;
+  public static final int BOTTOMRIGHT = 2;
+  public static final int BOTTOMLEFT  = 3;
+  public static final int NONE        = -1;
+  
+  
   BullseyeLocator locator;
   float width, height, radius; 
   int vdiv, minorcount;
   float minradius;
   Point2D.Float[] expectedpoints;
   
+  int topi, bottomi, lefti, righti, origini;
+  
+  Point2D.Float expectedorigin;
   /**
    * 
    * @param width in hundredths of inch
@@ -46,16 +56,58 @@ public class BullseyePageScanner
     this.vdiv = vdiv;
     if ( this.vdiv < 1 ) this.vdiv = 1;
     this.minorcount = this.vdiv-1;
-    this.expectedpoints = new Point2D.Float[3+minorcount];
-    for ( int i=0; i<this.expectedpoints.length; i++ )
+    this.expectedpoints = new Point2D.Float[4+minorcount];
+    for ( int i=0; i<4; i++ )
     {
-      if ( i<3 )
+      if ( expectedpoints[i] != null )
         this.expectedpoints[i] = (Point2D.Float)expectedpoints[i].clone();
-      else  // interpolate between points 0 and 1
-      {
-        this.expectedpoints[i] = new Point2D.Float( this.expectedpoints[1].x, this.expectedpoints[1].y );
-        this.expectedpoints[i].y += (this.expectedpoints[0].y - this.expectedpoints[1].y)*(i-2)/this.vdiv;
-      }
+    }
+    
+    if ( this.expectedpoints[TOPLEFT] != null )
+    {
+      this.expectedorigin = this.expectedpoints[TOPLEFT];
+      origini = TOPLEFT;
+    }
+    else
+    {
+      if ( this.expectedpoints[TOPRIGHT] == null || this.expectedpoints[BOTTOMLEFT] == null )
+        throw new IllegalArgumentException("Unable to find origin of page.");
+      this.expectedorigin = new Point.Float(this.expectedpoints[BOTTOMLEFT].x, this.expectedpoints[TOPRIGHT].y );
+      origini= NONE;
+    }
+    
+    if ( this.expectedpoints[TOPLEFT] != null && this.expectedpoints[BOTTOMLEFT] != null )
+    {
+      topi = TOPLEFT;
+      bottomi = BOTTOMLEFT;
+    }
+    else if ( this.expectedpoints[TOPRIGHT] != null && this.expectedpoints[BOTTOMRIGHT] != null )
+    {
+      topi = TOPRIGHT;
+      bottomi = BOTTOMRIGHT;
+    }
+    else
+      throw new IllegalArgumentException("Needs a top and bottom bullseye on same side of page.");
+
+    if ( this.expectedpoints[TOPLEFT] != null && this.expectedpoints[TOPRIGHT] != null )
+    {
+      lefti  = TOPLEFT;
+      righti = TOPRIGHT;
+    }
+    else if ( this.expectedpoints[BOTTOMLEFT] != null && this.expectedpoints[BOTTOMRIGHT] != null )
+    {
+      lefti  = BOTTOMLEFT;
+      righti = BOTTOMRIGHT;
+    }
+    else
+      throw new IllegalArgumentException("Needs a left and right bullseye on same side of page.");
+      
+    float dv = this.expectedpoints[bottomi].y - this.expectedpoints[topi].y;
+    for ( int i=4; i<this.expectedpoints.length; i++ )
+    {
+      // interpolate between points top and bottom references
+        this.expectedpoints[i] = new Point2D.Float( this.expectedpoints[topi].x, this.expectedpoints[topi].y );
+        this.expectedpoints[i].y += dv*(i-3)/this.vdiv;
     }
     locator = new BullseyeLocator(null, radius, subradii);
   }
@@ -73,22 +125,28 @@ public class BullseyePageScanner
     bpage.searchareas = new Rectangle[2][expectedpoints.length];
     bpage.searchimages = new BufferedImage[2][expectedpoints.length];
     bpage.votemapimages = new BufferedImage[2][expectedpoints.length];
-    
+    bpage.topi    = topi;
+    bpage.bottomi = bottomi;
+    bpage.lefti   = lefti;
+    bpage.righti  = righti;
+    bpage.origini = origini;
     bpage.pagebounds = new Rectangle( 0, 0, image.getWidth(), image.getHeight() );
     bpage.roughscale = (((float)image.getWidth() / width) + ((float)image.getHeight() / height))/2.0f;
     for ( i=0; i<expectedpoints.length; i++ )
     {
-      bpage.bullseyepointsprint[i] = new Point( Math.round(expectedpoints[i].x), Math.round(expectedpoints[i].y) );
+      if ( expectedpoints[i] != null )
+        bpage.bullseyepointsprint[i] = new Point( Math.round(expectedpoints[i].x), Math.round(expectedpoints[i].y) );
     }
               
     Point passonepoint = new Point();
     for ( pass=0; pass<=1; pass++ )
     {
       System.out.println( "Page Scanner Pass " + pass );
-      for ( i=0; i<((pass==0)?3:expectedpoints.length); i++ )
+      for ( i=0; i<((pass==0)?4:expectedpoints.length); i++ )
       {
         System.out.println( "Page Scanner Point " + i );
-        passradius = (i<3)?radius:minradius;
+        if ( expectedpoints[i] == null ) continue;
+        passradius = (i<4)?radius:minradius;
         if ( pass == 0 )
           bpage.searchareas[pass][i] = new Rectangle( 
                 (int)Math.round(expectedpoints[i].x * bpage.roughscale), 
@@ -97,7 +155,7 @@ public class BullseyePageScanner
         else
         {
           // Use current three reference points to refine search areas
-          bpage.toImageCoordinates(expectedpoints[i].x - expectedpoints[1].x, expectedpoints[i].y - expectedpoints[1].y, passonepoint, false);
+          bpage.toImageCoordinates(expectedpoints[i].x - expectedorigin.x, expectedpoints[i].y - expectedorigin.y, passonepoint, false);
           bpage.searchareas[pass][i] = new Rectangle( passonepoint.x, passonepoint.y, 0, 0 );
         }
         bpage.searchareas[pass][i].grow( (int)Math.round(passradius*(pass==0?4f:1.5f)*bpage.roughscale), 

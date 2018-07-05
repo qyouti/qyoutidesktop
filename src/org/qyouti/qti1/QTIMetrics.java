@@ -45,11 +45,11 @@ public class QTIMetrics
     }
 
 
-    public QTIMetrics()
+    public QTIMetrics( String name )
     {
       try
       {
-        loadFromXML(getClass().getClassLoader().getResourceAsStream("org/qyouti/qti1/gui/defaultmetrics.xml"));
+        loadFromXML(getClass().getClassLoader().getResourceAsStream(name));
       } catch (Exception ex)
       {
         ex.printStackTrace();

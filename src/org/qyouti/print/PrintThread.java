@@ -131,12 +131,12 @@ public class PrintThread extends Thread
       else
         candidates = exam.candidates_sorted;
       
+      QTIItemRenderer renderer = new QTIItemRenderer(fontmanager,type,examfolderuri,exam);
       for ( int j=0; j<candidates.size(); j++ )
       {
         System.out.println( "Candidate " + (j+1) + " of " + candidates.size() );
         System.out.println( "Used memory " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() )/1000000L) );
-        paginated = QTIItemRenderer.paginateItems(
-            this,
+        paginated = renderer.paginateItems(
             fontmanager,
             mgr,
             type,
@@ -162,6 +162,7 @@ public class PrintThread extends Thread
           transout.getOutputStream().close();
           paginated.set(i, null);
           System.out.println( "Page done." );
+          //svgfile.delete();
         }
         paginated.clear();
       }
@@ -173,8 +174,8 @@ public class PrintThread extends Thread
       pdfmerger.mergeDocuments( MemoryUsageSetting.setupMixed( 100L * 1024L * 1024L ) );
       //pdfmerger.mergeDocuments();
 
-//      for ( int i=0; i<pagefiles.size(); i++ )
-//        pagefiles.get( i ).delete();
+      for ( int i=0; i<pagefiles.size(); i++ )
+        pagefiles.get( i ).delete();
 
       if ( paginationrecord == null )
         return;
