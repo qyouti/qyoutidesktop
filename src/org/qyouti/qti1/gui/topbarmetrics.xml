@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<properties>
+  <comment>All metrics are in inches because that maps better onto printer
+  dot densities - typically multiple of 100 dpi.
+  </comment>
+
+  <entry key="page-width">8.3</entry>
+  <entry key="page-height">11.7</entry>
+  
+  <entry key="item-area-inset-left">0.5</entry>
+  <entry key="item-area-inset-top">1.1</entry>
+  <entry key="item-area-inset-right">1.0</entry>
+  <entry key="item-area-inset-bottom">0.8</entry>
+  <entry key="item-area-column-spacing">0.1</entry>
+  
+  <entry key="bullseye-radius">0.25</entry>
+  <entry key="bullseye-minor-radius">0.18</entry>
+  <entry key="barcode-width">0.4</entry>
+  <entry key="barcode-offset">0.5</entry>
+  <entry key="calibration-topleft-x">0.5</entry>
+  <entry key="calibration-topleft-y">1.0</entry>
+  <entry key="calibration-bottomright-x">7.8</entry>
+  <entry key="calibration-bottomright-y">11.2</entry>
+
+  <entry key="item-title-height">0.25</entry>
+  <entry key="item-title-font-height">0.15</entry>
+
+  <entry key="fontsize">0.09</entry>
+  
+  <entry key="header-anchor">start</entry>
+  <entry key="header-anchor-x">0.5</entry>
+  <entry key="header-anchor-y">1.0</entry>
+
+  <entry key="pinkbox_width">0.27</entry>
+  <entry key="pinkbox_border">0.02</entry>
+  <entry key="pinkbox_padding">0.025</entry>
+  
+</properties>
+

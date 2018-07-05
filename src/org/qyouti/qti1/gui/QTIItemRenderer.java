@@ -27,6 +27,7 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.html.*;
+import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.dom.*;
 import org.apache.batik.util.*;
 import org.bullseye.*;
@@ -67,7 +68,6 @@ public class QTIItemRenderer
   UserRenderPreferences prefs;
   QTIRenderOptions options;
   QuestionMetricsRecord mrec;
-  PrintThread printthread;
   QyoutiFontManager fontmanager;
 
   int columnoverride = 0;
@@ -76,7 +76,7 @@ public class QTIItemRenderer
   int type = PrintThread.TYPE_PAPERS;
   
 
-  static QTIMetrics metrics = null;
+  QTIMetrics metrics = null;
 
 
 
@@ -112,7 +112,6 @@ public class QTIItemRenderer
    * These components are indexed against the IDs.  Once the HTML is in the
    * document model the positions of the placeholders are found and the <span>
    * elements replaced with the corresponding components.
-   * @param printthread
    * @param type
    * @param examfolderuri
    * @param item
@@ -121,45 +120,31 @@ public class QTIItemRenderer
    * @param prefs
    */
   public QTIItemRenderer(
-      PrintThread printthread,
       QyoutiFontManager fontmanager,
       int type,
       URI examfolderuri,
-      QTIElementItem item,
-      int qnumber,
-      QTIRenderOptions options,
-      UserRenderPreferences prefs
+      QTIRenderOptions options
       )
   {
-    int i;
-    this.item = item;
-    this.printthread = printthread;
+    this.item = null;
     this.fontmanager = fontmanager;
     this.type = type;
     this.examfolderuri = examfolderuri;
-    this.qnumber = qnumber;
+    this.qnumber = 1;
+    this.prefs = new UserRenderPreferences();
+    this.options = options;
+  }
 
+  public void setItem( QTIElementItem item, int qnumber, UserRenderPreferences prefs )
+  {
+    this.item = item;
+    this.qnumber = qnumber;
     if ( prefs == null )
       this.prefs = new UserRenderPreferences();
     else
-      this.prefs = prefs;
-
-    this.options = options;
-
-//    CacheEntry entry = getFromCache(item.getIdent(), this.prefs);
-//
-//    if ( entry == null )
-//    {
-//      renderItem( item );
-//      putIntoCache( item.getIdent(), this.prefs, new CacheEntry( mrec, svgres ) );
-//    }
-//    else
-//    {
-//      this.svgres = entry.svgres;
-//      this.mrec = entry.qmr;
-//    }
+      this.prefs = prefs;    
   }
-
+  
   public String getAnalysisHTML()
   {
     return analysishtml;
@@ -346,12 +331,12 @@ public class QTIItemRenderer
     }
   }
 
-  private static GenericDocument renderSpecialPage( String name, QTIRenderOptions options, QyoutiStyleSheet ss )
+  private  GenericDocument renderSpecialPage( String name, QTIRenderOptions options, QyoutiStyleSheet ss )
   {
     return renderSpecialPage( name, options, null, null, null, ss );
   }
 
-  private static GenericDocument renderSpecialPage(
+  private  GenericDocument renderSpecialPage(
       String name,
       QTIRenderOptions options,
       String candidatename,
@@ -762,8 +747,7 @@ public class QTIItemRenderer
 
 
 
-  public static List<GenericDocument> paginateItems( 
-      PrintThread printthread,
+  public List<GenericDocument> paginateItems( 
       QyoutiFontManager fontmanager,
       MissingGlyphReport mgr,
       int type,
@@ -848,7 +832,7 @@ public class QTIItemRenderer
             );
         page.add( new SVGDocumentPlacement( coversvg, 0.0, 0.0 ) );
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(
+        paginated.add(placeSVGOnPage(
                 page, 
                 false, 
                 exam, 
@@ -867,7 +851,6 @@ public class QTIItemRenderer
       }
 
       svgdocs = new GenericDocument[items.size()];
-      QTIItemRenderer renderer;
       for ( i=0; i<items.size(); i++ )
       {
         previous_columns = columns;
@@ -898,17 +881,16 @@ public class QTIItemRenderer
         }
         
         // if ( i==29 ) System.out.println( "Item 29" );
-        renderer = new QTIItemRenderer( printthread, fontmanager, type, examfolderuri, items.elementAt(i), i+1, 
-            exam, prefs );
+        setItem( items.elementAt(i), i+1, prefs );
         if ( type == PrintThread.TYPE_ANALYSIS )
-          renderer.setAnalysisHTML( exam.getQuestionAnalysis( items.elementAt(i).getIdent() ).toHTML() );
-        renderer.setColumnOverride( columnoverride );
-        renderer.renderItem();
-        mgr.addReport( renderer.getMissingGlyphReport() );
-        svgdocs[i] = renderer.getSVGDocument();
+          setAnalysisHTML( exam.getQuestionAnalysis( items.elementAt(i).getIdent() ).toHTML() );
+        setColumnOverride( columnoverride );
+        renderItem();
+        mgr.addReport( getMissingGlyphReport() );
+        svgdocs[i] = getSVGDocument();
         // if ( i==29 ) QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", svgdocs[i].getDocumentElement(), true );
         itemheight = Integer.parseInt( svgdocs[i].getDocumentElement().getAttribute("height") );
-        itemwidth = renderer.getSVGResult().getWidth();
+        itemwidth = getSVGResult().getWidth();
         if ( itemheight > spaceleft )
         {
 //        System.out.println( "Out of space for item height" );
@@ -924,7 +906,7 @@ public class QTIItemRenderer
           {
             // finish off the page
             svghooks.add( new SVGHooks() );
-            paginated.add(QTIItemRenderer.placeSVGOnPage(
+            paginated.add(placeSVGOnPage(
                     page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
             
             // start a new page for this question
@@ -954,7 +936,7 @@ public class QTIItemRenderer
                   (int)((yoffset+itemareinsettop - tly)/10.0),
                   (int)(itemwidth/10.0),
                   (int)(itemheight/10.0),
-                  renderer.mrec );
+                  mrec );
         spaceleft -= itemheight;
         yoffset += itemheight;
         //metricrecordset.addItem( candidate.preferences, renderer.mrec );
@@ -962,7 +944,7 @@ public class QTIItemRenderer
 
       // complete the last page of questions
       svghooks.add( new SVGHooks() );
-      paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
+      paginated.add(placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
 
       boolean doublesided = exam.getQTIRenderBooleanOption("double_sided");
       boolean multipage = (doublesided && svghooks.size() > 2) || (!doublesided && svghooks.size() > 1);
@@ -985,7 +967,7 @@ public class QTIItemRenderer
 
         // complete page
         svghooks.add( new SVGHooks() );
-        paginated.add(QTIItemRenderer.placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
+        paginated.add(placeSVGOnPage(page, false, exam, fontmanager, prefs, paginationrecord, svghooks.lastElement() ) );
       }
 
       String footer;
@@ -1007,6 +989,27 @@ public class QTIItemRenderer
       return paginated;
   }
 
+  static org.w3c.dom.Element staple;
+  void initializeStaple()
+  {
+    org.w3c.dom.Document doc;
+    try
+    {
+      InputStream in = getClass().getClassLoader().getResourceAsStream("org/qyouti/qti1/gui/staple.xml");  
+      String parser = XMLResourceDescriptor.getXMLParserClassName();
+      SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
+      String uri = "staple.svg";
+      doc = f.createSVGDocument(uri, in);
+      in.close();
+    }
+    catch (IOException ex)
+    {
+      staple = null;
+      return;
+    }  
+    NodeList nl = doc.getDocumentElement().getElementsByTagName("g");
+    staple = (org.w3c.dom.Element) nl.item(0);
+  }
   
 //  static org.w3c.dom.Element calibration_tl;
 //  static org.w3c.dom.Element calibration_bl;
@@ -1045,7 +1048,7 @@ public class QTIItemRenderer
   }
   
   
-  public static GenericDocument placeSVGOnPage( 
+  public GenericDocument placeSVGOnPage( 
           Vector<SVGDocumentPlacement> itemdocs , 
           boolean rulers, 
           QTIRenderOptions options,
@@ -1144,42 +1147,61 @@ public class QTIItemRenderer
     
     int tlx, tly, brx, bry;
     int w = getMetrics().getPropertySvgUnitsInt("barcode-width");
+    int o = getMetrics().getPropertySvgUnitsInt("barcode-offset");
     tlx  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-x");
     tly  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-y");
     brx  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x");
     bry  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y");
 
-    int minordivisions = 5;
+    int minordivisions = 10;
     
     org.w3c.dom.Element onedbarcode;
     if ( layout == 2 )
     {
       onedbarcode = ZXingCodec.encode1DSVG( pageqr, (brx-tlx)*3/4, w );
-      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 0.0, (tlx+brx)/2, bry  );
+      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 0.0, (tlx+brx)/2, o  );
     }
     else
     {
       onedbarcode = ZXingCodec.encode1DSVG( pageqr, (bry-tly)*3/4, w );
-      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 90.0, tlx, (tly+bry)/2 );
+      SVGUtils.appendFragmentToDocument( decorationgroup, onedbarcode, 90.0, o, (tly+bry)/2 );
     }
     //QyoutiUtils.dumpXMLFile( "/home/jon/Desktop/debug.svg", onedbarcode, true );
 
-    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, bry );
-    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, brx, bry );
-    SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, tly );
+    if ( layout==2 )
+    {
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, bry );
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, brx, bry );
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, brx, tly );
+      for ( i=1; i<minordivisions; i++ )
+        SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_minor, 0.0, brx, tly + (bry-tly)*i/minordivisions );    
+    }
+    else
+    {
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, bry );
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, brx, bry );
+      SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_major, 0.0, tlx, tly );      
+    }
+    
     if ( paginationrecord != null )
     {
       int radius = getMetrics().getPropertySvgUnitsInt("bullseye-radius");
-      paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT,  tlx/10, bry/10, radius/10 );
-      paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT, brx/10, bry/10, radius/10 );
-      paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT,     tlx/10, tly/10, radius/10 );
-    }
-    if ( layout==2 )
-    {
-      for ( i=1; i<minordivisions; i++ )
-        SVGUtils.appendFragmentToDocument(decorationgroup, bullseye_minor, 0.0, tlx, tly + (bry-tly)*i/minordivisions );    
-      int radius = getMetrics().getPropertySvgUnitsInt("bullseye-minor-radius");
-      paginationrecord.setVerticalBullseyeDivisions( minordivisions, radius/10 );
+      if ( layout==2 )
+      {
+        paginationrecord.addBarcode( PaginationRecord.Barcode.BARCODE_TOP, pageqr );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT,  tlx/10, bry/10, radius/10 );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT, brx/10, bry/10, radius/10 );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_TOP_RIGHT,    brx/10, tly/10, radius/10 );
+        radius = getMetrics().getPropertySvgUnitsInt("bullseye-minor-radius");
+        paginationrecord.setVerticalBullseyeDivisions( minordivisions, radius/10 );
+      }
+      else
+      {
+        paginationrecord.addBarcode( PaginationRecord.Barcode.BARCODE_LEFT, pageqr );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT,  tlx/10, bry/10, radius/10 );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT, brx/10, bry/10, radius/10 );
+        paginationrecord.addBullseye(PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT,     tlx/10, tly/10, radius/10 );
+      }
     }
     // Completed calibration marks
 
@@ -1363,27 +1385,23 @@ public class QTIItemRenderer
     return pdoc;
   }
 
-  public static void addStaple( org.w3c.dom.Element staplegroup )
+  public void addStaple( org.w3c.dom.Element staplegroup )
   {
+    if ( staple == null )
+      initializeStaple();
+    
+    SVGUtils.appendFragmentToDocument(staplegroup, staple, 0, 0, 0);
+    
     org.w3c.dom.Element line;
     line =  staplegroup.getOwnerDocument().createElementNS( SVGConstants.SVG_NAMESPACE_URI, "line");
     line.setAttribute( "x1", "" + QTIMetrics.inchesToSvg( 0.0 ) );
-    line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 0.8 ) );
-    line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( 0.8 ) );
+    line.setAttribute( "y1", "" + QTIMetrics.inchesToSvg( 1.0 ) );
+    line.setAttribute( "x2", "" + QTIMetrics.inchesToSvg( 1.0 ) );
     line.setAttribute( "y2", "" + QTIMetrics.inchesToSvg( 0.0 ) );
     line.setAttribute( "stroke-width",  "" + QTIMetrics.inchesToSvg( 0.02 ) );
     line.setAttribute( "stroke-dasharray",  "" + QTIMetrics.inchesToSvg( 0.1 ) + ", " + QTIMetrics.inchesToSvg( 0.1 ) );
     line.setAttribute( "stroke", "rgb(0,0,0)" );
     staplegroup.appendChild( line );
-
-    org.w3c.dom.Element staple;
-    staple = (org.w3c.dom.Element) staplegroup.getOwnerDocument().createElementNS(SVGConstants.SVG_NAMESPACE_URI, "text");
-    staple.setAttribute("text-anchor", "start" );
-    staple.setAttribute("x", "" + QTIMetrics.inchesToSvg(  0.20 ) );
-    staple.setAttribute("y", "" + QTIMetrics.inchesToSvg(  0.20 ) );
-    staple.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.1 ) );
-    staple.setTextContent( "staple" );
-    staplegroup.appendChild(staple);
   }
 
   public GenericDocument getPreviewSVGDocument( QTIRenderOptions options )
@@ -1412,10 +1430,15 @@ public class QTIItemRenderer
     return svgres.getMissingGlyphReport();
   }
 
-  public static QTIMetrics getMetrics()
+  public QTIMetrics getMetrics()
   {
     if ( metrics == null )
-      metrics = new QTIMetrics();
+    {
+      String name = "org/qyouti/qti1/gui/defaultmetrics.xml";
+      if ( options != null && options.getQTIRenderIntegerOption("layout") == 2 )
+        name = "org/qyouti/qti1/gui/topbarmetrics.xml";
+      metrics = new QTIMetrics(name);
+    }
     return metrics;
   }
 

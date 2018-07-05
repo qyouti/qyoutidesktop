@@ -7,6 +7,7 @@ package org.qyouti;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -34,6 +35,12 @@ public class ImageViewDialog
         extends javax.swing.JDialog
 {
   QyoutiFrame frame;
+  BufferedImage image;
+  BarcodeResult barcode;
+  BullseyePage bpage;
+  PaginationRecord paginationrecord=null;
+  PaginationRecord.Page page=null;
+  PaginationRecord.Bullseye b=null;
   
   /**
    * Creates new form ImageViewDialog
@@ -45,35 +52,17 @@ public class ImageViewDialog
     initComponents();
   }
 
-  public void setImage( File file )
+  
+  public void scan()
   {
-    int i, j, k, pass;
-    PaginationRecord paginationrecord=null;
-    PaginationRecord.Page page=null;
-    PaginationRecord.Bullseye b=null;
-    BullseyePage bpage=null;
+    int i, pass;
     
-    try
-    {
-      BufferedImage image = ImageIO.read( file );
-      
-      BarcodeResult barcode = BarcodeScanner.scan(image);
-      if ( barcode == null )
-        errormessagelabel.setText("Error attempting to read barcode");
-      else if ( barcode.getPrintID() == null)
-        errormessagelabel.setText("No print ID in barcode");
-      else if ( !barcode.getPrintID().equals(frame.exam.getLastPrintID()) )
-        errormessagelabel.setText("Print ID in barcode does not match loaded exam.");
-      else
-      {
-        paginationrecord = frame.exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
-        page = paginationrecord.getPage( barcode.getPageID() );
-        
-        Point2D.Float[] pointd = new Point2D.Float[3];
-        for ( i=0; i<3; i++ )
+        Point2D.Float[] pointd = new Point2D.Float[4];
+        for ( i=0; i<4; i++ )
         {
           b = page.getBullseye( i );
-          pointd[i] = new Point2D.Float( b.getX(), b.getY() );
+          if ( b != null )
+            pointd[i] = new Point2D.Float( b.getX(), b.getY() );
         }
         BullseyePageScanner bpscanner = new BullseyePageScanner( 
                 page.getWidth(), 
@@ -85,27 +74,70 @@ public class ImageViewDialog
                 page.getMinorBullseyeRadius()
         );
         bpage = bpscanner.scan(image);
-        for ( pass=0; pass<2; pass++ )
-          for ( i=0; i<bpage.searchimages[pass].length; i++ )
-          {
-            if ( bpage.searchimages[pass][i] == null )
-              continue;
-            JLabel label = new JLabel();
-            label.setIcon( new ImageIcon( bpage.searchimages[pass][i] ) );
-            centrepanel.add(label);
-            label = new JLabel();
-            label.setIcon( new ImageIcon( bpage.votemapimages[pass][i] ) );
-            centrepanel.add(label);
-          }
+//        for ( pass=0; pass<2; pass++ )
+//          for ( i=0; i<bpage.searchimages[pass].length; i++ )
+//          {
+//            if ( bpage.searchimages[pass][i] == null )
+//              continue;
+//            JLabel label = new JLabel();
+//            label.setIcon( new ImageIcon( bpage.searchimages[pass][i] ) );
+//            centrepanel.add(label);
+//            label = new JLabel();
+//            label.setIcon( new ImageIcon( bpage.votemapimages[pass][i] ) );
+//            centrepanel.add(label);
+//          }
+    
+  }
+  
+  public void setImage( File file )
+  {    
+    try
+    {
+      image = ImageIO.read( file );
+      
+      barcode = BarcodeScanner.scan(image);
+      if ( barcode == null )
+        errormessagelabel.setText("Error attempting to read barcode");
+      else if ( barcode.getPrintID() == null)
+        errormessagelabel.setText("No print ID in barcode");
+      else if ( !barcode.getPrintID().equals(frame.exam.getLastPrintID()) )
+        errormessagelabel.setText("Print ID in barcode does not match loaded exam.");
+      else
+      {
+        paginationrecord = frame.exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+        page = paginationrecord.getPage( barcode.getPageID() );
+        
+        if ( page.getBarcodeLocation() != barcode.getLocation() )
+          errormessagelabel.setText("Page is oriented incorrectly.");
+        else
+          scan();
       }
       
+      annotateImage();
+      
+      imagelabel.setIcon( new ImageIcon( image.getScaledInstance(image.getWidth()*2, -1, Image.SCALE_SMOOTH ) ) );
+      pack();
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( ImageViewDialog.class.getName() ).log( Level.SEVERE, null, ex );
+    }
+  }
+
+  public void annotateImage()
+  {
+    int i, j, k, pass;
+    Color beyecolour = Color.BLUE;
+    Color qcolour = new Color( 0.9f, 1.0f, 0.9f );
+    Color bcolour = Color.GREEN;
+    
       Graphics2D g = image.createGraphics();
       if ( barcode != null)
       {
         printidlabel.setText( barcode.getPrintID() );
         pageidlabel.setText( barcode.getPageID() );
         
-        g.setColor( Color.GREEN );
+        g.setColor( beyecolour );
         g.drawOval(barcode.getStartPoint().x-4, barcode.getStartPoint().y-4, 8, 8);
         g.drawOval(barcode.getEndPoint().x-4,   barcode.getEndPoint().y-4,   8, 8);
         //for ( i=0; i<barcode.getBarcodeSearchRectCount(); i++ )
@@ -113,7 +145,7 @@ public class ImageViewDialog
       }
       if ( bpage != null)
       {
-        g.setColor( Color.BLUE );
+        g.setColor( beyecolour );
         for ( pass=0; pass<2; pass++ )
           for ( i=0; i<bpage.searchareas[pass].length; i++ )
             if ( bpage.searchareas[pass][i] != null )
@@ -168,11 +200,7 @@ public class ImageViewDialog
               bounds.add(p[k]);
           }
           
-          g.setColor( Color.RED );
-//          for ( k=0; k<test.length; k++ )
-//            g.drawLine( p[k].x, p[k].y, p[(k+1)%test.length].x, p[(k+1)%test.length].y    );
-//
-//          g.setColor( Color.YELLOW );
+          g.setColor( qcolour );
           g.draw(bounds);
           
           QuestionMetricsRecord qmr = items[i].getQuestionMetricsRecord();
@@ -199,7 +227,7 @@ public class ImageViewDialog
               else
                 bounds.add(p[k]);
             }
-            g.setColor( Color.GREEN );
+            g.setColor( bcolour );
             g.draw(bounds);
 //            for ( k=0; k<test.length; k++ )
 //              g.drawLine( p[k].x, p[k].y, p[(k+1)%test.length].x, p[(k+1)%test.length].y    );
@@ -207,16 +235,9 @@ public class ImageViewDialog
         }
       }
       g.dispose();
-      
-      
-      imagelabel.setIcon( new ImageIcon( image ) );
-      pack();
-    }
-    catch ( Exception ex )
-    {
-      Logger.getLogger( ImageViewDialog.class.getName() ).log( Level.SEVERE, null, ex );
-    }
+    
   }
+
   
   /**
    * This method is called from within the constructor to initialize the form.

@@ -132,6 +132,8 @@ public class PaginationRecord
       if ( node.getNodeType() != Node.ELEMENT_NODE )
         continue;
 
+      if ( "barcode".equals( node.getNodeName() ) )
+        loadBarcode( (Element)node );
       if ( "bullseye".equals( node.getNodeName() ) )
         loadBullseye( (Element)node );
       if ( "item".equals( node.getNodeName() ) )
@@ -139,6 +141,19 @@ public class PaginationRecord
     }
   }
 
+  public void loadBarcode( Element e_be )
+  {
+    String strtype = e_be.getAttribute( "type" );
+    int type;
+    if ( "top".equals( strtype ) )         type = Barcode.BARCODE_TOP;
+    else if ( "left".equals( strtype ) )   type = Barcode.BARCODE_LEFT;
+    else if ( "bottom".equals( strtype ) ) type = Barcode.BARCODE_BOTTOM;
+    else if ( "right".equals( strtype ) )  type = Barcode.BARCODE_RIGHT;
+    else type = Bullseye.BULLSEYE_UNKNOWN;
+    
+    addBarcode( type, e_be.getAttribute( "content" ) );
+  }
+  
   public void loadBullseye( Element e_be )
   {
     String strtype = e_be.getAttribute( "type" );
@@ -146,6 +161,7 @@ public class PaginationRecord
     if ( "bottomleft".equals( strtype ) )       type = Bullseye.BULLSEYE_BOTTOM_LEFT;
     else if ( "bottomright".equals( strtype ) ) type = Bullseye.BULLSEYE_BOTTOM_RIGHT;
     else if ( "topleft".equals( strtype ) )     type = Bullseye.BULLSEYE_TOP_LEFT;
+    else if ( "topright".equals( strtype ) )    type = Bullseye.BULLSEYE_TOP_RIGHT;
     else type = Bullseye.BULLSEYE_UNKNOWN;
     
     int x = Integer.parseInt( e_be.getAttribute( "x" ) );
@@ -210,16 +226,26 @@ public class PaginationRecord
     lastpage.items.add( new Item( lastpage, ident, x, y, w, h, qmr ) );
   }
 
+  public void addBarcode( int type, String content )
+  {
+    Page lastpage = candidates.lastElement().pages.lastElement();
+    Barcode b = new Barcode( lastpage, type, content );
+    lastpage.barcode = b;
+  }
+  
   public void addBullseye( int type, int x, int y, int w )
   {
     Page lastpage = candidates.lastElement().pages.lastElement();
-    lastpage.bullseyes.add( new Bullseye( lastpage, type, x, y, w ) );
-    if ( type == PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT )
-        lastpage.bl = lastpage.bullseyes.lastElement();
-    if ( type == PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT )
-        lastpage.br = lastpage.bullseyes.lastElement();
-    if ( type == PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT )
-        lastpage.tl = lastpage.bullseyes.lastElement();
+    Bullseye b = new Bullseye( lastpage, type, x, y, w );
+    lastpage.bullseyes.add( b );
+    if ( type == Bullseye.BULLSEYE_BOTTOM_LEFT )
+        lastpage.bl = b;
+    if ( type == Bullseye.BULLSEYE_BOTTOM_RIGHT )
+        lastpage.br = b;
+    if ( type == Bullseye.BULLSEYE_TOP_LEFT )
+        lastpage.tl = b;
+    if ( type == Bullseye.BULLSEYE_TOP_RIGHT )
+        lastpage.tr = b;
   }
   
   public void setVerticalBullseyeDivisions( int count, int w )
@@ -296,10 +322,12 @@ public class PaginationRecord
     int originy;
     
     Vector<Item> items = new Vector<Item>();
+    Barcode barcode;
     Vector<Bullseye> bullseyes = new Vector<Bullseye>();
     Bullseye bl;
     Bullseye br;
     Bullseye tl;
+    Bullseye tr;
     
     int verticaldivisions=1;
     int minorbullseyeradius=0;
@@ -336,13 +364,21 @@ public class PaginationRecord
     {
       return minorbullseyeradius;
     }
+
+    public int getBarcodeLocation()
+    {
+      return barcode.type;
+    }
   
+    
     public Bullseye getBullseye( int type )
     {
       switch ( type )
       {
         case Bullseye.BULLSEYE_TOP_LEFT:
           return tl;
+        case Bullseye.BULLSEYE_TOP_RIGHT:
+          return tr;
         case Bullseye.BULLSEYE_BOTTOM_LEFT:
           return bl;
         case Bullseye.BULLSEYE_BOTTOM_RIGHT:
@@ -360,10 +396,12 @@ public class PaginationRecord
       writer.write( " originx=\""+ originx + "\"" );
       writer.write( " originy=\""+ originy + "\"" );
       if ( verticaldivisions != 0 )
-        writer.write( " verticaldivisions=\""+ verticaldivisions + "\"" );
+        writer.write( " verticaldivisions=\""   + verticaldivisions + "\"" );
       if ( minorbullseyeradius != 0 )
-        writer.write( " minorbullseyeradius=\""+ minorbullseyeradius + "\"" );
+        writer.write( " minorbullseyeradius=\"" + minorbullseyeradius + "\"" );
       writer.write( ">\n");
+      if ( barcode != null )
+        barcode.emit(writer);
       for ( i=0; i<bullseyes.size(); i++ )
         bullseyes.get( i ).emit( writer );
       for ( i=0; i<items.size(); i++ )
@@ -412,9 +450,10 @@ public class PaginationRecord
 
   public class Bullseye
   {
-    public static final int BULLSEYE_BOTTOM_LEFT  = 0;
-    public static final int BULLSEYE_TOP_LEFT     = 1;
+    public static final int BULLSEYE_TOP_LEFT     = 0;
+    public static final int BULLSEYE_TOP_RIGHT    = 1;
     public static final int BULLSEYE_BOTTOM_RIGHT = 2;
+    public static final int BULLSEYE_BOTTOM_LEFT  = 3;
     public static final int BULLSEYE_UNKNOWN      = -1;
     
     Page parent;
@@ -463,6 +502,9 @@ public class PaginationRecord
         case BULLSEYE_BOTTOM_RIGHT:
           writer.write( "bottomright" );
           break;
+        case BULLSEYE_TOP_RIGHT:
+          writer.write( "topright" );
+          break;
         default:
           writer.write( "unknown" );
           break;
@@ -473,6 +515,53 @@ public class PaginationRecord
       writer.write( Integer.toString( y ) );
       writer.write("\" radius=\"");
       writer.write(Integer.toString(r ) );
+      writer.write( "\"/>\n");
+    }
+  }
+  
+  public class Barcode
+  {
+    public static final int BARCODE_TOP     = 0;
+    public static final int BARCODE_LEFT    = 1;
+    public static final int BARCODE_BOTTOM  = 2;
+    public static final int BARCODE_RIGHT   = 3;
+    public static final int BARCODE_UNKNOWN = -1;
+    
+    Page parent;
+    int type;
+    String content;
+    
+    public Barcode( Page parent, int type, String content )
+    {
+      this.parent = parent;
+      this.type = type;
+      this.content = content;
+    }
+
+    public void emit(Writer writer) throws IOException
+    {
+      writer.write("      <barcode type=\"");
+      switch ( type )
+      {
+        case BARCODE_TOP:
+          writer.write( "top" );
+          break;
+        case BARCODE_LEFT:
+          writer.write( "left" );
+          break;
+        case BARCODE_BOTTOM:
+          writer.write( "bottom" );
+          break;
+        case BARCODE_RIGHT:
+          writer.write( "right" );
+          break;
+        default:
+          writer.write( "unknown" );
+          break;
+      }
+      writer.write( "\" content=\"");
+      if ( content != null )
+        writer.write( content );
       writer.write( "\"/>\n");
     }
   }
