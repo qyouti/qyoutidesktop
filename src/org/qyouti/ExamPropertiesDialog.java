@@ -121,7 +121,7 @@ public class ExamPropertiesDialog
     jPanel3.add(layout1button);
 
     layoutbuttongroup.add(layout2button);
-    layout2button.setText("Layout bottom barcode");
+    layout2button.setText("Layout top barcode");
     jPanel3.add(layout2button);
 
     jPanel1.add(jPanel3);

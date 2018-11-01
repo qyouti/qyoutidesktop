@@ -56,6 +56,13 @@ public class QTIMetrics
       }
     }
     
+    public int getPropertyInt( String name )
+    {
+      String s = this.getProperty(name);
+      if ( s == null ) return 0;
+      return Integer.parseInt(s);
+    }
+    
     public double getPropertyInches( String name )
     {
       if ( "item-width".equals(name) )

@@ -137,7 +137,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
  * @throws IOException 
  */  
   public PageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
-          throws IOException
   {
     int i;
     PageData page=null;
@@ -229,6 +228,12 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       }
       
       PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+      if ( paginationrecord == null )
+      {
+        ifd.setError( "Cannot find the pagination data file for this page." );
+        return null;
+      }
+      
       PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
       PaginationRecord.Page prpage = paginationrecord.getPage( page.pageid );
       double[] caldim = prpage.getCalibrationDimension();
@@ -386,9 +391,158 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
   }
 
 
-
   public PageData decode( ExaminationData exam, ImageFileData ifd, BufferedImage image )
-          throws IOException
+          throws PageDecodeException
+  {
+    int layout = exam.getQTIRenderIntegerOption("layout");
+    if ( layout == 2 )
+      return decode2( exam, ifd, image );
+    return decode1( exam, ifd, image );
+  }
+  
+  public PageData decode2( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+          throws PageDecodeException
+  {
+    PageData page=null;
+    BarcodeResult barcode;
+    BullseyePage bpage;
+    PaginationRecord paginationrecord=null;
+    PaginationRecord.Page prpage=null;
+    PaginationRecord.Bullseye b=null;
+    QuestionData question;
+    ResponseData response;
+
+    int i, j, k;    
+    Point2D.Float[] pointd = new Point2D.Float[4];
+
+    barcode = BarcodeScanner.scan(image);
+    if ( barcode == null )
+      throw new PageDecodeException( "Error attempting to read barcode" );
+
+    if ( barcode.getPrintID() == null )
+      throw new PageDecodeException( "No print ID in barcode" );
+    
+    if ( !barcode.getPrintID().equals( exam.getLastPrintID()) )
+      throw new PageDecodeException( "Print ID in barcode does not match loaded exam.");
+
+    page = exam.lookUpPage( barcode.getPageID() );
+    if ( page == null )
+      throw new PageDecodeException( "Unable to find the page in the print record " + barcode.getPageID() + "'." );
+      
+    if ( page.scanned )
+      throw new PageDecodeException( "A scan for this page ID has already been imported " + barcode.getPageID() + "'." );
+  
+    paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+    PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
+    page.candidate = exam.candidates.get( prcandidate.getId() );
+    page.candidate_number = page.candidate.id;        
+    page.candidate_name = page.candidate.name;      
+    //page.declared_calibration_width  = caldim[0];
+    //page.declared_calibration_height = caldim[1];
+    page.scanned=true;
+    page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );  
+    page.rotatedimage = image;
+    paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+    if ( paginationrecord == null )
+      throw new PageDecodeException( "Cannot load print metric record.");
+
+    prpage = paginationrecord.getPage( barcode.getPageID() );
+
+    if ( prpage.getBarcodeLocation() != barcode.getLocation() )
+      throw new PageDecodeException( "Page is oriented incorrectly.");
+    
+    for ( i=0; i<4; i++ )
+    {
+      b = prpage.getBullseye( i );
+      if ( b != null )
+        pointd[i] = new Point2D.Float( b.getX(), b.getY() );
+    }
+    BullseyePageScanner bpscanner = new BullseyePageScanner( 
+            prpage.getWidth(), 
+            prpage.getHeight(), 
+            pointd, 
+            b.getR(), 
+            BullseyeGenerator.RADII,
+            prpage.getVerticalDivisions(),
+            prpage.getMinorBullseyeRadius()
+    );
+    bpage = bpscanner.scan(image);
+    
+    page.dpi = (int)( bpage.roughscale*100.0 );  
+    System.out.println( "Scanned page DPI = " + page.dpi );
+  
+    
+    PaginationRecord.Item[] items = prpage.getItems();
+    Point[] itemcorners=new Point[4];
+    Point[] boxcorners=new Point[4];
+    Point[] p=new Point[4];
+    Rectangle itembounds = new Rectangle();
+    Rectangle boxbounds = new Rectangle();
+    for ( i=0; i < p.length; i++ )
+    {
+      itemcorners[i]=new Point();
+      boxcorners[i]=new Point();
+      p[i]=new Point();
+    }
+
+    QuestionMetricsRecord qmr;
+    QuestionMetricBox box;
+    for ( i=0; i < items.length; i++ )
+    {
+      question = new QuestionData( page );
+      question.setImagesProcessed( false );
+      question.ident = items[i].getIdent();
+
+      bpage.toImageBounds( items[i].getCorners(itemcorners), itembounds );
+
+      try
+      {
+        BufferedImage qimage = page.rotatedimage.getSubimage(itembounds.x, itembounds.y, itembounds.width, itembounds.height );
+        float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
+        ImageIO.write(
+                      ImageResizer.resize( 
+                              qimage, 
+                              Math.round( qimage.getWidth()*scale ), 
+                              Math.round( qimage.getHeight()*scale ) ),
+                      "jpg",
+                      question.getImageFile()
+                );
+      } catch (Exception ex)
+      {
+        Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        throw new PageDecodeException( "Technical error saving question image." );
+      }
+      
+      qmr = items[i].getQuestionMetricsRecord();
+      for ( j=0; j<qmr.boxes.size(); j++ )
+      {
+        box = qmr.boxes.get(j);
+        bpage.toImageBounds( box.getCorners(boxcorners, itemcorners[0].x, itemcorners[0].y ), boxbounds );
+        response = new ResponseData( question, j, box );
+        response.setImageWidth( boxbounds.width );
+        response.setImageHeight( boxbounds.height );
+        try
+        {
+          ImageIO.write(
+                        page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ),
+                        "jpg",
+                        response.getImageFile()
+                  );
+        } catch (IOException ex)
+        {
+          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
+          throw new PageDecodeException( "Technical error saving box image." );
+        }        
+      }
+    }
+    
+    
+    
+    return page;
+  }
+  
+  public PageData decode1( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+          throws PageDecodeException
   {
     int i;
     PageData page;

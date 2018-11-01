@@ -121,6 +121,29 @@ public class BullseyePage
     toImageCoordinates( (double)printxy.x, (double)printxy.y, scanxy, true );
   }
 
+  
+  private Point ptemp = new Point();
+  /**
+   * Finds a rectangle in pixel units that surrounds all the given points
+   * 
+   * @param p Positions in 100th inch relative to top left of printed page
+   * @param bounds Rectangle in pixel coords that bounds all points
+   */
+  public synchronized void toImageBounds( Point[] p, Rectangle bounds )
+  {
+    // synchronized because of ptemp
+    bounds.setLocation(0, 0);
+    bounds.setSize(0, 0);
+    for ( int k=0; k<p.length; k++ )
+    {
+      toImageCoordinates( p[k], ptemp );
+      if ( k==0 )
+        bounds.setLocation(ptemp);
+      else
+        bounds.add(ptemp);
+    }    
+  }
+  
   /**
    * 
    * @param printxy  Position in 100th inch relative to top left of printed page

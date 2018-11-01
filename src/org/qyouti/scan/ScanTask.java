@@ -56,6 +56,7 @@ import org.bouncycastle.util.encoders.*;
 import org.bullseye.*;
 import org.qyouti.*;
 import org.qyouti.data.*;
+import org.qyouti.scan.process.PageDecodeException;
 import org.qyouti.scan.process.PageDecoder;
 
 /**
@@ -289,7 +290,14 @@ public class ScanTask
       out.flush();
     }
     
-    importImage( ifd, image );
+    try
+    {
+      importImage( ifd, image );
+    } catch (PageDecodeException ex)
+    {
+      Logger.getLogger(ScanTask.class.getName()).log(Level.SEVERE, null, ex);
+      ifd.setError( "Unable to extract image from PDF. Because " + ex.getMessage() );
+    }
   }  
   
   public String fileDigest( File file )
@@ -369,7 +377,7 @@ public class ScanTask
 
   
   public void importImage( ImageFileData ifd, BufferedImage image )
-          throws IOException
+          throws PageDecodeException
   {
     // Read data from page.
     PageData page = pagedecoder.decode( exam, ifd, image );
@@ -419,7 +427,7 @@ public class ScanTask
     catch (Exception e)
     {
       e.printStackTrace();
-      ifd.setError( "Error attempting the read file." );
+      ifd.setError( "Error attempting the read file. Because " + e.getMessage() );
       return ifd;
     }
         

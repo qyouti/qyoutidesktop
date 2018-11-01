@@ -17,6 +17,8 @@
   
   <entry key="bullseye-radius">0.25</entry>
   <entry key="bullseye-minor-radius">0.18</entry>
+  <entry key="bullseye-minor-divisions">15</entry>
+  
   <entry key="barcode-width">0.4</entry>
   <entry key="barcode-offset">0.5</entry>
   <entry key="calibration-topleft-x">0.5</entry>
