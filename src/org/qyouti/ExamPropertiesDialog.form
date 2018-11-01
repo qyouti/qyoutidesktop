@@ -104,7 +104,7 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="layoutbuttongroup"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Layout bottom barcode"/>
+                <Property name="text" type="java.lang.String" value="Layout top barcode"/>
               </Properties>
             </Component>
           </SubComponents>

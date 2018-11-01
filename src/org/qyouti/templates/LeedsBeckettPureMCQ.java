@@ -1438,7 +1438,7 @@ public static final String itemmcqbT =
     r.setSeed( System.currentTimeMillis() );
     StringBuilder buffer = new StringBuilder(1000);
     String opt, str;
-    str = texta.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - ALL RESPONSE SHEETS MUST BE SCANNED" );
+    str = texta.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - THEY ALL MUST BE SCANNED" );
     
     buffer.append( str.replaceFirst( "ASSESSMENTIDENT", Long.toHexString( r.nextLong() ) ) );
     buffer.append( itemvoid.replaceFirst( "TITLELINE", examtitle ) );

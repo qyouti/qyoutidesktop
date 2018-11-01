@@ -19,11 +19,19 @@ import org.xml.sax.*;
  */
 public class ExaminationCatalogue
 {
-
+  File appfolder;
   Vector<ExamCatEntry> entries = new Vector<ExamCatEntry>();
 
   public ExaminationCatalogue( File appfolder )
   {
+    this.appfolder = appfolder;
+    scan();
+  }
+  
+  void scan()
+  {
+    entries.clear();
+    
     int i, j;
     File[] childfiles = appfolder.listFiles();
     if ( childfiles == null ) return;

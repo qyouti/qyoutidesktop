@@ -55,38 +55,25 @@ public class ImageViewDialog
   
   public void scan()
   {
-    int i, pass;
+    int i;
     
-        Point2D.Float[] pointd = new Point2D.Float[4];
-        for ( i=0; i<4; i++ )
-        {
-          b = page.getBullseye( i );
-          if ( b != null )
-            pointd[i] = new Point2D.Float( b.getX(), b.getY() );
-        }
-        BullseyePageScanner bpscanner = new BullseyePageScanner( 
-                page.getWidth(), 
-                page.getHeight(), 
-                pointd, 
-                b.getR(), 
-                BullseyeGenerator.RADII,
-                page.getVerticalDivisions(),
-                page.getMinorBullseyeRadius()
-        );
-        bpage = bpscanner.scan(image);
-//        for ( pass=0; pass<2; pass++ )
-//          for ( i=0; i<bpage.searchimages[pass].length; i++ )
-//          {
-//            if ( bpage.searchimages[pass][i] == null )
-//              continue;
-//            JLabel label = new JLabel();
-//            label.setIcon( new ImageIcon( bpage.searchimages[pass][i] ) );
-//            centrepanel.add(label);
-//            label = new JLabel();
-//            label.setIcon( new ImageIcon( bpage.votemapimages[pass][i] ) );
-//            centrepanel.add(label);
-//          }
-    
+    Point2D.Float[] pointd = new Point2D.Float[4];
+    for ( i=0; i<4; i++ )
+    {
+      b = page.getBullseye( i );
+      if ( b != null )
+        pointd[i] = new Point2D.Float( b.getX(), b.getY() );
+    }
+    BullseyePageScanner bpscanner = new BullseyePageScanner( 
+            page.getWidth(), 
+            page.getHeight(), 
+            pointd, 
+            b.getR(), 
+            BullseyeGenerator.RADII,
+            page.getVerticalDivisions(),
+            page.getMinorBullseyeRadius()
+    );
+    bpage = bpscanner.scan(image);
   }
   
   public void setImage( File file )

@@ -1142,7 +1142,8 @@ public class QTIItemRenderer
     // for every page.
     if ( bullseye_major == null )
       bullseye_major = initializeCalibrationCodes( getMetrics().getPropertySvgUnitsInt("bullseye-radius") );
-    if ( layout==2 && bullseye_minor == null )
+    int minordivisions = getMetrics().getPropertyInt("bullseye-minor-divisions");
+    if ( minordivisions > 1 && bullseye_minor == null )
       bullseye_minor = initializeCalibrationCodes( getMetrics().getPropertySvgUnitsInt("bullseye-minor-radius") );
     
     int tlx, tly, brx, bry;
@@ -1152,8 +1153,6 @@ public class QTIItemRenderer
     tly  = getMetrics().getPropertySvgUnitsInt("calibration-topleft-y");
     brx  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-x");
     bry  = getMetrics().getPropertySvgUnitsInt("calibration-bottomright-y");
-
-    int minordivisions = 10;
     
     org.w3c.dom.Element onedbarcode;
     if ( layout == 2 )
