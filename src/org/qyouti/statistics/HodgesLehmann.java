@@ -52,43 +52,44 @@ public class HodgesLehmann
             throw new ArithmeticException( "HodgesLehman requires both groups to have data points." );
         
         int i, j, x=group_a.length, y=group_b.length;
-        Vector<Double> vdiffs = new Vector<Double>();
+        int m = x*y;
+        double diffs[] = new double[m];
         for ( i=0; i<x; i++ )
             for ( j=0; j<y; j++ )
-                vdiffs.add( new Double( group_a[i].doubleValue() - group_b[j].doubleValue() ) );
-        double[] diffs = new double[vdiffs.size()];
-        for ( i=0; i<vdiffs.size(); i++ )
-            diffs[i] = ((Double)vdiffs.get( i )).doubleValue();
-        vdiffs.clear();
+                diffs[i*y+j]=group_a[i].doubleValue() - group_b[j].doubleValue();
         Arrays.sort( diffs );
-        hldelta = diffs[diffs.length/2];
-        
-        double c_alpha;
+        if ( (diffs.length & 1) == 0 )
+            hldelta = (diffs[m/2] + diffs[m/2 - 1])/2.0;  // median for even data points
+        else
+            hldelta = diffs[m/2];
+
+        int c_alpha;
         int high_ordinal;
         int low_ordinal;
 
         c_alpha = calpha( x, y, 0.05 );
-        high_ordinal = (int)c_alpha;
-        low_ordinal = (int)Math.round( (double)x*(double)y+1-c_alpha );
+        // Remember the maths assumes 1 based ranking but our arrays are 0 based.
+        high_ordinal = c_alpha - 1;
+        low_ordinal = x*y-1-high_ordinal;
         low_95_delta = diffs[low_ordinal];
         high_95_delta = diffs[high_ordinal];
 
         c_alpha = calpha( x, y, 0.1 );
-        high_ordinal = (int)c_alpha;
-        low_ordinal = (int)Math.round( (double)x*(double)y+1-c_alpha );
+        high_ordinal = c_alpha-1;
+        low_ordinal = x*y-1-high_ordinal;
         low_90_delta = diffs[low_ordinal];
         high_90_delta = diffs[high_ordinal];
     }
 
-    private double calpha( int x, int y, double p )
+    private int calpha( int x, int y, double p )
     {
-        return Math.round(
-                             (x * y / 2.0) -
+        double calphastar =  (x * y / 2.0) -
                              (
                                ZDistribution.xnormi( p / 2.0 ) *
                                Math.sqrt( x * y * (x + y +1) / 12.0 )
-                             )
                          );
+       
+        return (int)Math.round( calphastar );
     }
 
     public double getDelta()
