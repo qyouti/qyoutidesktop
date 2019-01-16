@@ -15,5 +15,5 @@ public interface XLocatorListener
 {
   public void notifyProgress( int percentage );
   public void notifyComplete( XLocatorReport report, int i );
-  public void notifyNewDebugImage( BufferedImage image, int i );
+  public void notifyDebugMessage( BufferedImage image, String message );
 }

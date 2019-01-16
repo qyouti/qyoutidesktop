@@ -21,7 +21,7 @@ public class XDemoFrame
         extends javax.swing.JFrame
         implements XLocatorListener
 {
-  XLocator xlocator = null;
+  XLocatorByVote xlocator = null;
   Random r;
   ImageComponent lastinputimg;
   JPanel[] rowpanels;
@@ -191,12 +191,13 @@ public class XDemoFrame
   }
 
   
-  public void notifyComplete( XLocatorReport report, int n )
+  public void notifyComplete( XLocatorReport r, int n )
   {
     int i;
     Point p;
     Graphics2D g;
     java.util.List<Point> plist;
+    XLocatorReportByVote report =  (XLocatorReportByVote)r;
     BufferedImage image = report.getImage();
 
     p = report.getXLocation();
@@ -208,7 +209,7 @@ public class XDemoFrame
       g.drawLine( p.x - 2, p.y + 2, p.x + 2, p.y - 2 );
       g.dispose();
 
-      plist = report.getXPointsofInterest();
+      plist = report.additionalPointsofInterest;
       for ( i=0; i<plist.size(); i++ )
       {
         p = plist.get( i );
@@ -216,7 +217,7 @@ public class XDemoFrame
       }
     }
     
-    plist = report.getAdditionalPointsofInterest();
+    plist = report.additionalPointsofInterest;
     for ( i=0; i<plist.size(); i++ )
     {
       p = plist.get( i );
@@ -229,13 +230,13 @@ public class XDemoFrame
     StringBuffer buffer = new StringBuffer();
     buffer.append( filelist[n].getName() );
     buffer.append( " " );
-    buffer.append( report.getPercentageCentreEdgePixels() < 0.5?"BLANK ":"MARK " );
+    buffer.append( (report.hasX() || report.isDubious())?"MARK ":"BLANK " );
     if ( report.hasX() )
     {
-      if ( report.getAdditionalPointsofInterest().size() == 0 )
-        buffer.append( "  CLEAR" );
-      else
+      if ( report.isDubious() )
         buffer.append( " DUBIOUS");
+      else
+        buffer.append( "  CLEAR" );
     }
     else
       buffer.append( " NO");
@@ -243,9 +244,9 @@ public class XDemoFrame
   }
 
   @Override
-  public void notifyNewDebugImage( BufferedImage image, int i )
+  public void notifyDebugMessage( BufferedImage image, String message )
   {
-    addImage( image, i );
+    addImage( image, -1 );  // bodged
   }
   
   
@@ -275,7 +276,7 @@ public class XDemoFrame
     
     try
     {
-      xlocator = new XLocator( 100, 100 );
+      xlocator = new XLocatorByVote( 100, 100 );
       xlocator.setDebugLevel( 2 );
       xlocator.addProgressListener( this );
       xlocator.setImageFiles( filelist );
@@ -301,7 +302,7 @@ public class XDemoFrame
 //      image = ImageIO.read( filelist[nextfile] );
 //      lastinputimg = addImage( image );
 //      if ( xlocator == null )
-//        xlocator = new XLocator( 50, 50 );
+//        xlocator = new XLocatorByVote( 50, 50 );
 //      xlocator.setImage( image );
 //      xlocator.addProgressListener( this );
 //      xlocator.start();

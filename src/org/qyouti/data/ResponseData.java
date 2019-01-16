@@ -52,6 +52,7 @@ public class ResponseData
   public String type;
   public String ident;
   public int index;
+  private String imagefilename;
   private int imagewidth;
   private int imageheight;
   private SoftReference<BufferedImage> box_image;
@@ -86,6 +87,9 @@ public class ResponseData
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
     candidate_selected          = "true".equalsIgnoreCase( element.getAttribute( "selected"  ) );
     examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner"  ) );
+    str = element.getAttribute( "imagefile" );
+    if ( str != null && str.length() > 0 )
+      imagefilename = str;
     ident = element.getAttribute( "ident" );
     type = element.getAttribute( "type" );
     try { imagewidth  = Integer.parseInt( element.getAttribute( "imagewidth"  ) ); }
@@ -195,9 +199,12 @@ public class ResponseData
   
   public String getImageFileName()
   {
-    return question.ident + "_" + position + "_" +
+    if ( imagefilename != null )
+      return imagefilename;    
+    imagefilename = question.ident + "_" + position + "_" +
                 question.page.candidate_number +
-                ".jpg";
+                ".png";
+    return imagefilename;
   }
 
   public String getFilteredImageFileName()
@@ -218,7 +225,7 @@ public class ResponseData
     writer.write( "needsreview=\"" + (needsreview?"yes":"no") + "\" " );
     writer.write("selected=\"" + (candidate_selected?"true":"false") + "\" " );
     writer.write( "examiner=\"" + (examiner_selected?"true":"false") + "\" " );
-    writer.write( "imagefile=\"" + getImageFileName() + "\" ");
+    writer.write( "imagefile=\"" + imagefilename + "\" ");
     writer.write( "imagewidth=\"" + imagewidth + "\" ");
     writer.write( "imageheight=\"" + imageheight + "\" ");
     if ( debug_message != null )

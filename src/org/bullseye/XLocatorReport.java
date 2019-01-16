@@ -18,18 +18,9 @@ public class XLocatorReport
 {
   BufferedImage image;
   boolean hasX;
-  
-  double xQuality;
-  double angle;
-  double lineratio;
-  double northsouthbias;
-  double eastwestbias;
-          
+  boolean dubious;
   Point xLocation;
-  double percentageCentreEdgePixels;
-  double percentageBorderEdgePixels;
-  ArrayList<Point> xPointsofInterest;
-  ArrayList<Point> additionalPointsofInterest;
+
 
   @Override
   public String toString()
@@ -37,24 +28,6 @@ public class XLocatorReport
     StringBuilder buffer = new StringBuilder();
     buffer.append( "{ hasX=" );
     buffer.append(  hasX );
-    buffer.append( ", xQuality=" );
-    buffer.append( xQuality );
-    buffer.append( ", angle=" );
-    buffer.append( angle );
-    buffer.append( ", lineratio=" );
-    buffer.append( lineratio );
-    buffer.append( ", northsouthbias=" );
-    buffer.append( northsouthbias );
-    buffer.append( ", eastwestbias=" );
-    buffer.append( eastwestbias );
-    buffer.append( ", centreedgepixs=" );
-    buffer.append( percentageCentreEdgePixels );
-    buffer.append( "%, borderedgepixs=" );
-    buffer.append( percentageBorderEdgePixels );
-    buffer.append( "%, xpoints=" );
-    buffer.append( xPointsofInterest.size() );
-    buffer.append( ", additional=" );
-    buffer.append( additionalPointsofInterest.size() );
     buffer.append( " }" );
     return buffer.toString();
   }
@@ -69,34 +42,18 @@ public class XLocatorReport
     return hasX;
   }
 
-  public double getXQuality()
+  public void setDubious( boolean b )
   {
-    return xQuality;
+    dubious = b;
+  }
+  
+  public boolean isDubious()
+  {
+    return dubious;
   }
 
   public Point getXLocation()
   {
     return xLocation;
   }
-
-  public double getPercentageCentreEdgePixels()
-  {
-    return percentageCentreEdgePixels;
-  }
-
-  public double getPercentageBorderEdgePixels()
-  {
-    return percentageBorderEdgePixels;
-  }
-
-  public List<Point> getXPointsofInterest()
-  {
-    return xPointsofInterest;
-  }
-
-  public List<Point> getAdditionalPointsofInterest()
-  {
-    return additionalPointsofInterest;
-  }
-  
 }
