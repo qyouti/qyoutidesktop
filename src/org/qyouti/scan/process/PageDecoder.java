@@ -504,7 +504,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
                               qimage, 
                               Math.round( qimage.getWidth()*scale ), 
                               Math.round( qimage.getHeight()*scale ) ),
-                      "jpg",
+                      "png",
                       question.getImageFile()
                 );
       } catch (Exception ex)
@@ -525,7 +525,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         {
           ImageIO.write(
                         page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ),
-                        "jpg",
+                        "png",
                         response.getImageFile()
                   );
         } catch (IOException ex)
@@ -761,8 +761,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       }
     }
 
-    XLocator xlocator = new XLocator( maxw, maxh );
-    xlocator.setDebugLevel( 2 );
+    XLocator xlocator = new XLocatorByCluster( maxw, maxh );
+    xlocator.setDebugLevel( 0 );
     for ( i=0; i<exam.getPageCount(); i++ )
     {
       page = exam.getPage( i );
@@ -849,14 +849,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         }
 
         @Override
-        public void notifyNewDebugImage( BufferedImage image, int i )
+        public void notifyDebugMessage( BufferedImage image, String message )
         {
           debugimages.add( image );
         }
     };
     
     xlocator.addProgressListener( listener );
-    xlocator.run();
+    xlocator.runSynchronously();
     xlocator.removeProgressListener( listener );
 
     if ( false )
@@ -888,7 +888,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       {
         count++;
         // Perhaps not a simple X
-        if ( reports[j].getAdditionalPointsofInterest().size() != 0 )
+        if ( reports[j].isDubious() )
         {
           responsedata.needsreview = true;
           questiondata.needsreview = true;        
@@ -897,7 +897,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       else
       {
         // No X but not blank either
-        if ( reports[j].getPercentageCentreEdgePixels() > 5.0 )
+        if ( reports[j].isDubious() )
         {
           responsedata.needsreview = true;
           questiondata.needsreview = true;

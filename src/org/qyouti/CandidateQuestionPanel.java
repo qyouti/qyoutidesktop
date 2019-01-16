@@ -208,6 +208,8 @@ public class CandidateQuestionPanel
     viewresponsescheckbox = new javax.swing.JCheckBox();
     responsetablepanel = new javax.swing.JPanel();
     responsetable = new javax.swing.JTable();
+    analysispanel = new javax.swing.JPanel();
+    analysisbutton = new javax.swing.JButton();
     jSeparator1 = new javax.swing.JSeparator();
 
     setBackground(java.awt.Color.white);
@@ -361,6 +363,7 @@ public class CandidateQuestionPanel
     });
     responsepanel.add(viewresponsescheckbox, java.awt.BorderLayout.NORTH);
 
+    responsetablepanel.setOpaque(false);
     responsetablepanel.setLayout(new java.awt.BorderLayout());
 
     responsetable.setModel(new javax.swing.table.DefaultTableModel(
@@ -386,6 +389,20 @@ public class CandidateQuestionPanel
     });
     responsetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
     responsetablepanel.add(responsetable, java.awt.BorderLayout.CENTER);
+
+    analysispanel.setBackground(java.awt.Color.white);
+
+    analysisbutton.setText("Analyse");
+    analysisbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        analysisbuttonActionPerformed(evt);
+      }
+    });
+    analysispanel.add(analysisbutton);
+
+    responsetablepanel.add(analysispanel, java.awt.BorderLayout.SOUTH);
 
     responsepanel.add(responsetablepanel, java.awt.BorderLayout.CENTER);
 
@@ -489,8 +506,32 @@ public class CandidateQuestionPanel
     handleDecision(1);
   }//GEN-LAST:event_decisionbuttonbActionPerformed
 
+  private void analysisbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_analysisbuttonActionPerformed
+  {//GEN-HEADEREND:event_analysisbuttonActionPerformed
+    
+    int s = responsetable.getSelectedRow();
+    if ( s < 0 )
+    {
+      return;
+    }
+    
+    ResponseData rd = questiondata.responsedatas.get( s );
+    if ( rd == null )
+      return;
+    
+    
+    ImageAnalysisDialog d = new ImageAnalysisDialog( QyoutiFrame.getFrames()[0], false );
+    d.setTitle( "Image Analysis" );
+    d.setSize( 400, 800 );
+    d.setImageFile( rd.getImageFile() );
+    d.setVisible( true );
+    d.go();
+  }//GEN-LAST:event_analysisbuttonActionPerformed
+
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JButton analysisbutton;
+  private javax.swing.JPanel analysispanel;
   private javax.swing.JPanel centrepanel;
   private javax.swing.JToggleButton decisionbuttona;
   private javax.swing.JToggleButton decisionbuttonb;
