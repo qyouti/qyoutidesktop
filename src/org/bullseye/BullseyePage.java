@@ -102,13 +102,13 @@ public class BullseyePage
               bullseyepointsprint[n].y - bullseyepointsprint[topi].y, 
               temp, false );
       vertexpected[i] = temp.y;
-      System.out.println( "=================  i = " + i + " Expected = " + vertexpected[i] + " Observed = " + vertobserved[i] );
+      // System.out.println( "=================  i = " + i + " Expected = " + vertexpected[i] + " Observed = " + vertobserved[i] );
     }
-    System.out.println( "=================" );
+    //System.out.println( "=================" );
     verticalcalibration = interpolator.interpolate( vertexpected, vertobserved );
-    for ( double expected=vertexpected[0]; expected<vertexpected[minorcount+1]; expected += 5.0 )
-      System.out.println( "================= Expected = " + expected + " Observed = " + verticalcalibration.value(expected) );
-    System.out.println( "=================" );
+    //for ( double expected=vertexpected[0]; expected<vertexpected[minorcount+1]; expected += 5.0 )
+    //  System.out.println( "================= Expected = " + expected + " Observed = " + verticalcalibration.value(expected) );
+    //System.out.println( "=================" );
   }
   
   /**

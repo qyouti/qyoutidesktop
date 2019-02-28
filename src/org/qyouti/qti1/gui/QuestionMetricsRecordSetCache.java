@@ -6,7 +6,10 @@
 package org.qyouti.qti1.gui;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Hashtable;
+import org.qyouti.data.ExaminationData;
 
 /**
  *
@@ -14,13 +17,13 @@ import java.util.Hashtable;
  */
 public class QuestionMetricsRecordSetCache
 {
-  File basefolder;
+  ExaminationData exam;
   Hashtable<String,QuestionMetricsRecordSet> cache =
       new Hashtable<String,QuestionMetricsRecordSet>();
 
-  public QuestionMetricsRecordSetCache(File basefolder)
+  public QuestionMetricsRecordSetCache( ExaminationData exam )
   {
-    this.basefolder = basefolder;
+    this.exam = exam;
   }
 
   public QuestionMetricsRecordSet getSet( String name )
@@ -28,19 +31,19 @@ public class QuestionMetricsRecordSetCache
     QuestionMetricsRecordSet set = cache.get(name);
     if ( set != null ) return set;
 
-    File file = new File( basefolder, "printmetrics_" + name + ".xml" );
-    if ( file.exists() && file.isFile() )
-      return new QuestionMetricsRecordSet( file );
+//    Path file = basefolder.resolve( "printmetrics_" + name + ".xml" );
+//    if ( Files.exists(file) && Files.isRegularFile(file) )
+//      return new QuestionMetricsRecordSet( file );
 
-    File[] flist = basefolder.listFiles();
-    for ( int i=0; i<flist.length; i++ )
-    {
-      if ( !flist[i].isDirectory() )
-        continue;
-      file = new File( flist[i], "printmetrics_" + name + ".xml" );
-      if ( file.exists() && file.isFile() )
-        return new QuestionMetricsRecordSet( file );
-    }
+//    File[] flist = basefolder.listFiles();
+//    for ( int i=0; i<flist.length; i++ )
+//    {
+//      if ( !flist[i].isDirectory() )
+//        continue;
+//      file = new File( flist[i], "printmetrics_" + name + ".xml" );
+//      if ( file.exists() && file.isFile() )
+//        return new QuestionMetricsRecordSet( file );
+//    }
     return null;
   }
 }

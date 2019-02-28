@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -30,7 +31,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
 {
   boolean running = false;
   boolean killpending = false;
-  File imagefile;
+  Path imagefile;
         
   /**
    * Creates new form ImageAnalysisDialog
@@ -41,7 +42,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
     initComponents();
   }
 
-  public void setImageFile( File imagefile )
+  public void setImageFile( Path imagefile )
   {
     this.imagefile = imagefile;
   }
@@ -70,7 +71,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
       if ( imagefile != null )
       {
         File[] files = new File[1];
-        files[0] = imagefile;
+        files[0] = imagefile.toFile();
         XLocator xlocator = new XLocatorByCluster(200, 200);
         xlocator.setDebugLevel(10);
         xlocator.setImageFiles(files);

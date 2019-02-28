@@ -112,10 +112,6 @@ public class ScanTask
     this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
     this.preprocess = preprocess;
     this.commandline = commandline;
-    if ( !preprocess && !exam.getScanImageFolder().exists() )
-      exam.getScanImageFolder().mkdir();
-    if ( !preprocess && !exam.getResponseImageFolder().exists() )
-      exam.getResponseImageFolder().mkdir();
   }
 
   public void setScanTaskListener( ScanTaskListener listener )
@@ -271,28 +267,11 @@ public class ScanTask
     // have taken place.  So digest works only to guard against re-importing
     // the whole PDF or separate image files.
 
-    File imgfile = ifd.getImportedFile();
+    Path imgfile = ifd.getImportedFile();
 
-    try ( FileOutputStream out = new FileOutputStream( imgfile ); )
-    {
-//      if ("jpg".equals(suffix))
-//      {
-//        // all JPEGs are saved unchanged
-//        InputStream data = pdImage.createInputStream(JPEG);
-//        IOUtils.copy(data, out);
-//        IOUtils.closeQuietly(data);
-//      }
-//      else 
-//      {
-        // other types are re-encoded
-        ImageIOUtil.writeImage(image, suffix, out);
-//      }
-      out.flush();
-    }
-    
     try
     {
-      importImage( ifd, image );
+      importImage( ifd, null, image );
     } catch (PageDecodeException ex)
     {
       Logger.getLogger(ScanTask.class.getName()).log(Level.SEVERE, null, ex);
@@ -363,7 +342,7 @@ public class ScanTask
         extractor.run();
       }
       
-      Files.copy( pdffile.toPath(), ifd.getImportedFile().toPath() );
+      Files.copy( pdffile.toPath(), ifd.getImportedFile() );
       ifd.setImported( true );
     }
     catch ( IOException ex )
@@ -376,7 +355,7 @@ public class ScanTask
   }
 
   
-  public void importImage( ImageFileData ifd, BufferedImage image )
+  public void importImage( ImageFileData ifd, Path source, BufferedImage image )
           throws PageDecodeException
   {
     // Read data from page.
@@ -384,10 +363,22 @@ public class ScanTask
     
     if ( page!=null )
     {
+
       page.rotatedimage=null;
       String fn = page.getPreferredFileName();
-      if ( fn != null )
-        ifd.rename( fn );
+      try
+      {
+        if ( source != null )
+          Files.copy( source, ifd.getImportedFile() );
+        else
+          ImageIOUtil.writeImage(image, "png", Files.newOutputStream(ifd.getImportedFile()) );
+      }
+      catch ( Exception e )
+      {
+        ifd.setError( "Error copy scan file into qyouti file." );
+        Logger.getLogger( ScanTask.class.getName() ).log( Level.SEVERE, null, e );
+      }
+      ifd.setImported( true );
     }    
   }
   
@@ -420,9 +411,7 @@ public class ScanTask
         return ifd;
       }
 
-      Files.copy( file.toPath(), ifd.getImportedFile().toPath() );
-      ifd.setImported( true );
-      importImage( ifd, image );
+      importImage( ifd, file.toPath(), image );
     }
     catch (Exception e)
     {
@@ -444,10 +433,24 @@ public class ScanTask
     pagedecoder = new PageDecoder( (double) th / 100.0, inset );
     try
     {
+      exam.open();
+      
+      
       if ( md == null ) return;
   
-      if ( !exam.getScanImageFolder().exists() )
-        exam.getScanImageFolder().mkdir();
+      if ( !Files.exists(exam.getScanImageFolder()) )
+        try {
+          Files.createDirectory(exam.getScanImageFolder());
+      } catch (IOException ex) {
+        Logger.getLogger(ScanTask.class.getName()).log(Level.SEVERE, null, ex);
+      }
+              
+      if ( !Files.exists(exam.getResponseImageFolder()) )
+        try {
+          Files.createDirectory(exam.getResponseImageFolder());
+      } catch (IOException ex) {
+        Logger.getLogger(ScanTask.class.getName()).log(Level.SEVERE, null, ex);
+      }
               
       for ( i = 0; i < scanfilelist.size(); i++ )
       {
@@ -468,15 +471,17 @@ public class ScanTask
       {
         // work out which boxes the candidate put
         // crosses in
-        pagedecoder.processBoxImages( exam );
+
+        //pagedecoder.processBoxImages( exam );
         // score the items and work out other outcomes
-        processPageOutcomes();
+
+        //processPageOutcomes();
         // which candidate marks are dubious?
         exam.rebuildReviewList();
         exam.save();
         exam.processDataChanged( exam.pagelistmodel );
       }
-      catch ( IOException ex )
+      catch ( Exception ex )
       {
         Logger.getLogger( ScanTask.class.getName() ).log( Level.SEVERE, null, ex );
       }
@@ -485,6 +490,7 @@ public class ScanTask
     finally
     {
       active = false;
+      exam.close();
       exam.pagelistmodel.fireTableDataChanged();
     }
   }

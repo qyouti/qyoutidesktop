@@ -6,6 +6,7 @@
 package org.qyouti;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import javax.swing.*;
 import org.qyouti.data.*;
@@ -74,11 +75,47 @@ public class ExamSelectDialog
     return this.examcatalogue;
   }
   
-  public String getExamName()
+  /*
+  public Path getSelectedExamPath()
   {
-    return namefield.getText();
+    int n  = examlist.getSelectedIndex();
+    if ( n<0 ) return null;
+    return examcatalogue.getPath( n );
+  }
+  
+  public boolean getSelectedIsZip()
+  {
+    int n  = examlist.getSelectedIndex();
+    return examcatalogue.isZip( n );    
+  }
+  */
+  
+  public File getSelectedContainer()
+  {
+    int n  = examlist.getSelectedIndex();
+    if ( n<0 ) return null;
+    return examcatalogue.getContainer(n);
   }
 
+
+  public File getNewExamZipFile()
+  {
+    String nm = namefield.getText();
+    if ( !nm.endsWith(".qyouti") )
+      nm+=".qyouti";
+    return new File( basefolder, nm );
+  }
+  
+  /*
+  public Path getNewExamPath()
+  {
+    String nm = namefield.getText();
+    if ( !nm.endsWith(".qyouti") )
+      nm+=".qyouti";
+    return examcatalogue.getNewPath( nm );
+  }
+  */
+  
   public void setExamName( String name )
   {
     this.namefield.setText( name );
