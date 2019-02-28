@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import javax.imageio.ImageIO;
 import org.qyouti.data.ResponseData;
 
@@ -91,7 +92,7 @@ public class ResponseImageProcessor
     // this method doesn't use methods in ResponseData to load/save images because
     // during scanning process we don't want to hold loads of images in memory.
     BufferedImage filtered_image, devertical_image, tempimage;
-    BufferedImage box_image = ImageIO.read( response.getImageFile() );
+    BufferedImage box_image = ImageIO.read( Files.newInputStream(response.getImageFile()) );
     lookup.resetStatistics();
     filtered_image = new BufferedImage( box_image.getWidth(), box_image.getHeight(), box_image.getType() );
     if ( monochrome )
@@ -100,15 +101,15 @@ public class ResponseImageProcessor
       float[] data = FastFourierTransform2D.toFloatArray( box_image );
       FastFourierTransform2D.fft2d( data, 2,  1 );
       tempimage = FastFourierTransform2D.toBufferedImage( data );
-      ImageIO.write( tempimage, "bmp", new File( response.getFilteredImageFile().getPath() + ".1.fft.bmp" ) );
+      ImageIO.write( tempimage, "bmp", new File( response.getFilteredImageFile() + ".1.fft.bmp" ) );
       //FastFourierTransform2D.verticalmask( data );
       FastFourierTransform2D.saltiremask( data );
       tempimage = FastFourierTransform2D.toBufferedImage( data );
-      ImageIO.write( tempimage, "bmp", new File( response.getFilteredImageFile().getPath() + ".2.fft-masked.bmp" ) );
+      ImageIO.write( tempimage, "bmp", new File( response.getFilteredImageFile() + ".2.fft-masked.bmp" ) );
       FastFourierTransform2D.fft2d( data, 2, -1 );
       tempimage = FastFourierTransform2D.toBufferedImage( data );
       devertical_image = tempimage.getSubimage( 0, 0, box_image.getWidth(), box_image.getHeight() );
-      ImageIO.write( devertical_image, "bmp", new File( response.getFilteredImageFile().getPath() + ".3.fft-reversed.jpg" ) );
+      ImageIO.write( devertical_image, "bmp", new File( response.getFilteredImageFile() + ".3.fft-reversed.jpg" ) );
       lop.filter( devertical_image, filtered_image );
     }
     else
@@ -122,7 +123,7 @@ public class ResponseImageProcessor
       darkest_dark_pixels = response.dark_pixels;
     }
 
-    ImageIO.write( filtered_image, "jpg", response.getFilteredImageFile() );
+    ImageIO.write( filtered_image, "jpg", Files.newOutputStream(response.getFilteredImageFile()) );
 
     //FastFourierTransform2D.process( box_image );
   }

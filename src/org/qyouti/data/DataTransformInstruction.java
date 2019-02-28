@@ -8,6 +8,8 @@ package org.qyouti.data;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.transform.Transformer;
@@ -45,8 +47,8 @@ public class DataTransformInstruction
     xslfilename = e.getAttribute( "xslfile" );
     outputfilename = e.getAttribute( "outputfile" );
 
-    xslfile = new File( exam.examfile.getParentFile().getParentFile(), xslfilename );
-    outputfile = new File( exam.examfile.getParentFile().getParentFile(), outputfilename );
+    xslfile = new File( exam.examcontainer, xslfilename );
+    outputfile = new File( exam.examcontainer, outputfilename );
 
     xformFactory = TransformerFactory.newInstance(
             "org.apache.xalan.processor.TransformerFactoryImpl",
@@ -80,9 +82,12 @@ public class DataTransformInstruction
     try
     {
       transformer.clearParameters();
-      transformer.transform( new StreamSource( exam.examfile ), new StreamResult( outputfile ) );
+      exam.open();
+      Path q = exam.getQyoutiFile();
+      transformer.transform( new StreamSource( Files.newInputStream( q ) ), new StreamResult( outputfile ) );
+      exam.close();
     }
-    catch ( TransformerException ex )
+    catch ( Exception ex )
     {
       Logger.getLogger( DataTransformInstruction.class.getName() ).log( Level.SEVERE, null, ex );
       return false;

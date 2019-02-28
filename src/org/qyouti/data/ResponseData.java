@@ -29,6 +29,9 @@ package org.qyouti.data;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.ref.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -149,21 +152,26 @@ public class ResponseData
       this.ident = Integer.toString( position );
   }
 
-  private File getFile( String fname )
+  private Path getFile( String fname )
   {
-    File scanfolder = question.page.exam.getResponseImageFolder();
-    return new File( scanfolder, fname );
+    Path scanfolder = question.page.exam.getResponseImageFolder();
+    return scanfolder.resolve( fname );
   }
 
   private BufferedImage loadImage( String fname )
   {
     BufferedImage img=null;
+    InputStream in=null;
     try
     {
-      File imgfile = getFile( fname );
-      if ( !imgfile.exists() )
+      question.page.exam.open();
+      Path imgfile = getFile( fname );
+      if ( !Files.exists(imgfile) )
         return null;
-      img = ImageIO.read(imgfile);
+      in = Files.newInputStream(imgfile);
+      img = ImageIO.read(in);
+      in.close();
+      question.page.exam.close();
     } catch (IOException ex)
     {
       Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
@@ -186,12 +194,12 @@ public class ResponseData
   }
 
 
-  public File getImageFile()
+  public Path getImageFile()
   {
     return getFile( getImageFileName() );
   }
 
-  public File getFilteredImageFile()
+  public Path getFilteredImageFile()
   {
     return getFile( getFilteredImageFileName() );
   }
