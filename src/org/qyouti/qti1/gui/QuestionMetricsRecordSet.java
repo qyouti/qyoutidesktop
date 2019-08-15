@@ -10,8 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -46,7 +44,7 @@ public class QuestionMetricsRecordSet
     this.printid = printid;
   }
 
-  public QuestionMetricsRecordSet(Path file)
+  public QuestionMetricsRecordSet(File file)
   {
     NodeList nli, nlb;
     Element pref;
@@ -59,7 +57,7 @@ public class QuestionMetricsRecordSet
     {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
-      Document doc = builder.parse( Files.newInputStream(file) );
+      Document doc = builder.parse( file );
       Element root = doc.getDocumentElement();
       printid = root.getAttribute("print-id");
       NodeList nl = root.getElementsByTagName( "render-option" );

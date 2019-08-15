@@ -29,7 +29,6 @@ import java.math.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.text.*;
 import java.util.*;
@@ -89,14 +88,9 @@ public class ExaminationData
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
-  
-
-
-  File examcontainer;   // the folder containing the zip or the folder
-  Path basepath;
-  boolean iszip=false;
-  FileSystem filesystem=null;
-  
+  File examfile;
+  File scanfolder;
+  File responsefolder;
   
   private Vector<PageData> pages = new Vector<PageData>();
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
@@ -139,16 +133,14 @@ public class ExaminationData
     this.examcatalogue = examcatalogue;
   }
 
-  public ExaminationData( ExaminationCatalogue examcatalogue, File container )
+  public ExaminationData(ExaminationCatalogue examcatalogue,File xmlfile)
   {
     this.examcatalogue = examcatalogue;
-    examcontainer = container;
-    iszip=examcontainer.isFile();
-//    exambase = base;
-//    examfile = base.resolve("qyouti.xml");
-//    scanfolder     = base.resolve( "scans" );
-//    responsefolder = base.resolve( "responses" );
-    qmrcache = new QuestionMetricsRecordSetCache( this );
+    examfile = xmlfile;
+    File examfolder = examfile.getParentFile();
+    scanfolder     = new File( examfolder, "scans" );
+    responsefolder = new File( examfolder, "responses" );
+    qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
     default_options.setProperty( "columns", "1" );
@@ -209,76 +201,20 @@ public class ExaminationData
     return Integer.toString( nextscanfileident++ );
   }
   
-  public File getExamContainer()
+  public File getExamFolder()
   {
-    return examcontainer;
+    return examfile.getParentFile();
   }
   
-  
-  public void open()
+  public File getScanImageFolder()
   {
-    if ( !iszip )
-    {
-      basepath = examcontainer.toPath();
-      return;
-    }
-    
-    if ( filesystem != null )
-      return;
-    URI uri = URI.create("jar:file:" + examcontainer.getAbsolutePath() );
-    Map<String, String> env = new HashMap<>(); 
-    env.put("create", "true");    
-    try
-    {
-      filesystem = FileSystems.newFileSystem(uri, env);
-      basepath = filesystem.getPath("/");
-    } catch (IOException ex)
-    {
-      filesystem=null;
-      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    return scanfolder;
   }
   
-  public Path getQyoutiFile()
+  public File getResponseImageFolder()
   {
-    return basepath.resolve("qyouti.xml");
+    return responsefolder;
   }
-  
-  public Path getPaginationFile( String name )
-  {
-    return basepath.resolve(name);
-  }
-  
-  public Path getScanImageFolder()
-  {
-    return basepath.resolve("scans");
-  }
-  
-  public Path getResponseImageFolder()
-  {
-    return basepath.resolve("responses");
-  }
-  
-  public Path getPrintMetricFile( String pid )
-  {
-    return basepath.resolve( "pagination_" + pid + ".xml" );
-  }
-  
-  public void close()
-  {
-    if ( iszip )
-    {
-      if ( filesystem!=null )
-        try {
-          filesystem.close();
-      } catch (IOException ex) {
-        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-      }
-      filesystem = null;
-    }
-    basepath = null;
-  }
-  
   
   public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
   {
@@ -435,7 +371,6 @@ public class ExaminationData
     QuestionData question;
     ResponseData response;
 
-    open();
     for ( int i = 0; i < candidates_sorted.size(); i++ )
     {
       candidate = candidates_sorted.get( i );
@@ -446,33 +381,13 @@ public class ExaminationData
         for ( int k = 0; k < page.questions.size(); k++ )
         {
           question = page.questions.get( k );
-          try
-          {
-            Files.deleteIfExists( question.getImageFile() );
-          }
-          catch (IOException ex)
-          {
-            Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-          }
           for ( int l = 0; l < question.responsedatas.size(); l++ )
           {
             response = question.responsedatas.get( l );
-            try
-            {
-              Files.deleteIfExists( response.getFilteredImageFile() );
-            }
-            catch (IOException ex)
-            {
-              Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            try
-            {
-              Files.deleteIfExists( response.getImageFile() );
-            }
-            catch (IOException ex)
-            {
-              Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            if ( response.getFilteredImageFile().exists() )
+              response.getFilteredImageFile().delete();
+            if ( response.getImageFile().exists() )
+              response.getImageFile().delete();
           }
         }
         page.questions.clear();
@@ -490,14 +405,14 @@ public class ExaminationData
     {
       try
       {
-        Files.deleteIfExists( scans.get( i ).getImportedFile() );
+        Files.deleteIfExists( scans.get( i ).getImportedFile().toPath() );
       }
       catch ( Exception e )
       {
       }
     }
+    
     scans.clear();
-    close();
   }
   
   
@@ -1204,7 +1119,6 @@ public class ExaminationData
             line.append( candidate.id );
             line.append( "<br/>" );
             line.append( "<img width=\"90%\" src=\"" );
-            /*  TODO deal with this
             line.append(
                 new File(
                 examfile.getParentFile(),
@@ -1212,7 +1126,6 @@ public class ExaminationData
                 item.getIdent() +
                 "_0_" +
                 candidate.id + ".jpg"  ).toURI() );
-            */
             line.append( "\"/>" );
             line.append( "</div>\n" );
             htmlwriter.write(line.toString());
@@ -1342,7 +1255,7 @@ public class ExaminationData
     Document doc = docBuilder.newDocument();
 
     Element root = doc.createElement("outcometable");
-    root.setAttribute("file", examcontainer.getAbsolutePath().toString() );   // TODO is this right?
+    root.setAttribute("file", examfile.getCanonicalPath() );
     doc.appendChild(root);
     Element ecandidate, eoutcome;
 
@@ -1399,7 +1312,7 @@ public class ExaminationData
     filewriter.close();
   }
 
-/*
+
   public void importQuestionsFromPackage(File imsmanifest)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1491,8 +1404,7 @@ public class ExaminationData
 
     importQuestionsFromQTI(imsmanifest.getParentFile(),qtiexamfile);
   }
-*/
-  
+
   static String top = "<?xml version=\"1.0\"?>\n" +
 "<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\">\n" +
 "  <assessment ident=\"ass{ident}\" title=\"imported\">\n" +
@@ -1543,7 +1455,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 "              </response_label>\n";
   
 
-/*
   public void importQuestionsFromPlainText(File textexamfile, File importfolder)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1637,9 +1548,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     
     importQuestionsFromQTI(tempxml.getParentFile(),tempxml);
 }  
-  */
   
-  /*
   public void importQuestionsFromQTI(File basefolder, File qtiexamfile)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1682,8 +1591,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
     qdefs = new QuestionDefinitions(qtiexamroote,personlistmodel);
   }
-  */
-  
+
   private void checkItemIDs( Document qti12doc )
   {
     NodeList nl = qti12doc.getElementsByTagName("item");
@@ -1970,11 +1878,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public boolean save()
   {
     Writer writer = null;
-    open();
-    Path q = getQyoutiFile();
     try
     {
-      writer = Files.newBufferedWriter(q, Charset.forName("UTF-8"), StandardOpenOption.CREATE);
+      writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
       emit(writer);
       writer.close();
 
@@ -1996,7 +1902,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       {
         Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
       }
-      close();
     }
     unsaved_changes = false;
     fireStatusChange();
@@ -2217,10 +2122,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
-    open();
-    Path q = getQyoutiFile();
-    load( new InputSource( Files.newInputStream(q) ) );
-    close();
+    if ( !examfile.exists() || !examfile.isFile() )
+      return;
+    load( new InputSource( examfile.toURI().toString() ) );
   }
   
   public void load( InputSource source )

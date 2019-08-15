@@ -26,15 +26,8 @@
 
 package org.qyouti.data;
 
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.ref.SoftReference;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
@@ -60,13 +53,11 @@ public class QuestionData
   
   public PageData page;
   public String ident="";
-  private String imagefilename=null;
   public boolean imagesprocessed = false;
   public boolean needsreview = false;
   private int examinerdecision = EXAMINER_DECISION_NONE;
   public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
   public Hashtable<String,ResponseData> responsedatatable = new Hashtable<String,ResponseData>();
-  private SoftReference<BufferedImage> question_image;
 
   public OutcomeData outcomes;
 
@@ -86,7 +77,6 @@ public class QuestionData
     this.page = page;
 
     ident = element.getAttribute("ident");
-    imagefilename = element.getAttribute("imagefile");
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
     str = element.getAttribute( "imagesprocessed" );
@@ -117,52 +107,22 @@ public class QuestionData
     page.exam.processDataChanged( this );
   }
 
-  public Path getImageFile()
+  private File getFile( String fname )
   {
-    Path scanfolder = page.exam.getResponseImageFolder();
-    return scanfolder.resolve( getImageFileName() );
+    File scanfolder = page.exam.getResponseImageFolder();
+    return new File( scanfolder, fname );
   }
 
-  public void setImageFileName()
-  {
-    imagefilename = ident + "_" + page.candidate_number + ".png";
-  }
-  
   public String getImageFileName()
   {
-    if ( imagefilename != null ) return imagefilename;
-    imagefilename = ident + "_" + page.candidate_number + ".jpg";
-    return imagefilename;
+    return ident + "_" + page.candidate_number + ".jpg";
   }
   
+  public File getImageFile()
+  {
+    return getFile( getImageFileName() );
+  }
 
-  private BufferedImage loadImage( String fname )
-  {
-    BufferedImage img=null;
-    InputStream in=null;
-    try
-    {
-      page.exam.open();
-      Path imgfile = getImageFile();
-      if ( !Files.exists(imgfile) )
-        return null;
-      in = Files.newInputStream(imgfile);
-      img = ImageIO.read(in);
-      in.close();
-      page.exam.close();
-    } catch (IOException ex)
-    {
-      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    return img;
-  }
-  
-  public BufferedImage getImage()
-  {
-    if ( question_image == null || question_image.get() == null )
-      question_image = new SoftReference<>( loadImage( getImageFileName() ) );
-    return question_image.get();
-  }
   
   public boolean areImagesProcessed()
   {
@@ -307,7 +267,6 @@ public class QuestionData
   {
     writer.write( "      <question ident=\"" + ident + "\"" );
     writer.write( " imagesprocessed=\"" + (imagesprocessed?"true":"false") + "\" " );
-    writer.write( " imagefile=\"" + imagefilename + "\" " );
     writer.write( " needsreview=\"" + (needsreview?"yes":"no") + "\"" );
     writer.write( " decision=\"" + examinerdecision + "\"" );
     writer.write( ">\n" );

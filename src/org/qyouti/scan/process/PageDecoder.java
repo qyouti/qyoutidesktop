@@ -41,7 +41,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
 import java.util.*;
 import javax.imageio.ImageIO;
 import org.bullseye.*;
@@ -218,16 +217,15 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page.scanned=true;
       
       // use printid and pageid to get information about the page...
-      page.examcontainer = exam.examcatalogue.getExamPathFromPrintMetric( page.printid );
-// TODO Check if this is needed
-//      page.paginationfile = page.examcontainer.resolve( "pagination_" + page.printid + ".xml" );
-//      //page.source = sourcename;
-//
-//      if ( !Files.exists(page.paginationfile) && !Files.isRegularFile(page.paginationfile) )
-//      {
-//        ifd.setError( "Cannot find the pagination data file for this page." );
-//        return null;
-//      }
+      page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
+      page.paginationfile = new File( page.examfolder, "pagination_" + page.printid + ".xml" );              
+      //page.source = sourcename;
+
+      if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
+      {
+        ifd.setError( "Cannot find the pagination data file for this page." );
+        return null;
+      }
       
       PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
       if ( paginationrecord == null )
@@ -277,7 +275,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 //        ImageIO.write(
 //                    page.rotatedimage,
 //                    "jpg",
-//                    new File( exam.getExamBase(), "debug_rotation_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+//                    new File( exam.getExamFolder(), "debug_rotation_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
 //              );        
       }
       ih = page.rotatedimage.getHeight();
@@ -326,12 +324,12 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
             ImageIO.write(
                         searchimage,
                         "jpg",
-                        new File( exam.getExamContainer(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                        new File( exam.getExamFolder(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
                   );
             ImageIO.write(
                         bloc.getVoteMapImage(),
                         "jpg",
-                        new File( exam.getExamContainer(), "debug_bullseye_votes_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                        new File( exam.getExamFolder(), "debug_bullseye_votes_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
                   );          } catch (IOException ex)
           {
             Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -434,14 +432,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( page.scanned )
       throw new PageDecodeException( "A scan for this page ID has already been imported " + barcode.getPageID() + "'." );
   
-    paginationrecord = ExaminationCatalogue.getPrintMetric( exam.getPrintMetricFile( page.printid ) );
-    if ( paginationrecord == null )
-      throw new PageDecodeException( "Cannot load print metric record.");
-    
-    prpage = paginationrecord.getPage( barcode.getPageID() );
-    if ( prpage.getBarcodeLocation() != barcode.getLocation() )
-      throw new PageDecodeException( "Page is oriented incorrectly.");
-    
+    paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
     PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
     page.candidate = exam.candidates.get( prcandidate.getId() );
     page.candidate_number = page.candidate.id;        
@@ -449,10 +440,16 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     //page.declared_calibration_width  = caldim[0];
     //page.declared_calibration_height = caldim[1];
     page.scanned=true;
-    page.examcontainer = exam.getExamContainer(); //exam.examcatalogue.getExamPathFromPrintMetric( page.printid );  
+    page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );  
     page.rotatedimage = image;
-    //paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+    paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+    if ( paginationrecord == null )
+      throw new PageDecodeException( "Cannot load print metric record.");
 
+    prpage = paginationrecord.getPage( barcode.getPageID() );
+
+    if ( prpage.getBarcodeLocation() != barcode.getLocation() )
+      throw new PageDecodeException( "Page is oriented incorrectly.");
     
     for ( i=0; i<4; i++ )
     {
@@ -502,17 +499,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       {
         BufferedImage qimage = page.rotatedimage.getSubimage(itembounds.x, itembounds.y, itembounds.width, itembounds.height );
         float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
-        question.setImageFileName();
-        OutputStream out = Files.newOutputStream( question.getImageFile() );
         ImageIO.write(
                       ImageResizer.resize( 
                               qimage, 
                               Math.round( qimage.getWidth()*scale ), 
                               Math.round( qimage.getHeight()*scale ) ),
                       "png",
-                      out
+                      question.getImageFile()
                 );
-        out.close();
       } catch (Exception ex)
       {
         Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -529,13 +523,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         response.setImageHeight( boxbounds.height );
         try
         {
-          OutputStream out = Files.newOutputStream( response.getImageFile() );
           ImageIO.write(
                         page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ),
                         "png",
-                        out
+                        response.getImageFile()
                   );
-          out.close();
         } catch (IOException ex)
         {
           Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -650,7 +642,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
                               Math.round( qimage.getWidth()*scale ), 
                               Math.round( qimage.getHeight()*scale ) ),
                       "jpg",
-                      new File(".") // question.getImageFile().toFile()  TODO sort this out.
+                      question.getImageFile()
                 );
       } catch (Exception ex)
       {
@@ -690,7 +682,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           ImageIO.write(
                         page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
                         "jpg",
-                        response.getImageFile().toFile()
+                        response.getImageFile()
                   );
         } catch (IOException ex)
         {
@@ -724,7 +716,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         ImageIO.write(
                       debug_image,
                       "jpg",
-                      new File( exam.getExamContainer(), "debug_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
+                      new File( exam.getExamFolder(), "debug_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
                 );
       } catch (IOException ex)
       {
@@ -839,7 +831,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     for ( int j=0; j<rlabels.length; j++ )
     {
       responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-      filelist[j] = responsedata.getImageFile().toFile();
+      filelist[j] = responsedata.getImageFile();
     }
 
     xlocator.setImageFiles( filelist );
@@ -867,7 +859,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     xlocator.runSynchronously();
     xlocator.removeProgressListener( listener );
 
-    /*
     if ( false )
     {
       for ( int i=0; i<debugimages.size(); i++ )
@@ -884,7 +875,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         }
       }
     }
-    */
     
     int count=0;
     for ( int j=0; j<rlabels.length; j++ )
@@ -950,7 +940,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       for ( int j=0; j<rlabels.length; j++ )
       {
         responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-        responseimageprocessor.filter( responsedata, questiondata.page.exam.getResponseImageFolder().toFile() );
+        responseimageprocessor.filter( responsedata, questiondata.page.exam.getResponseImageFolder() );
       }
 
 

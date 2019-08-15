@@ -58,7 +58,7 @@ public class ImageFileData
   String source;
   String error=null;    
   String importedname=null;
-  //Path importedfile=null;
+  File importedfile=null;
   boolean imported=false;
   boolean processed=false;
   long importeddate;
@@ -73,6 +73,7 @@ public class ImageFileData
     this.source = source;
     this.importedname = ident + "." + suffix;
     this.ident = ident;
+    setImportedFile();
   }
 
 
@@ -83,6 +84,7 @@ public class ImageFileData
     this.ident        = element.getAttribute( "ident" );
     this.source       = element.getAttribute( "source" );
     this.importedname = element.getAttribute( "importedname" );
+    setImportedFile();
     this.importeddate = new Long( element.getAttribute( "importeddate" ) ).longValue();
     this.digest       = element.getAttribute( "digest" );
     this.imported    = "true".equalsIgnoreCase( element.getAttribute( "imported" ) );
@@ -95,25 +97,31 @@ public class ImageFileData
   public void rename( String name )
   {
     String oldname = importedname;
-    Path oldfile = getImportedFile();
+    File oldfile = importedfile;
     importedname = name;
-    Path newfile = getImportedFile();
+    setImportedFile();
     
     try
     {
-      Files.move( oldfile, newfile );
+      Files.move( oldfile.toPath(), importedfile.toPath() );
     }
     catch ( Exception e )
     {
       this.setError( "Warning - unable to rename imported image." );
       importedname = oldname;
+      importedfile = oldfile;
     }
   }
   
-  public Path getImportedFile()
+  private void setImportedFile()
   {
-    if ( importedname == null ) return null;
-    return exam.getScanImageFolder().resolve( importedname );
+    if ( importedname == null ) return;
+    importedfile = new File( exam.getScanImageFolder(), importedname );
+  }
+  
+  public File getImportedFile()
+  {
+    return importedfile;
   }
   
   public String getError()
@@ -189,6 +197,7 @@ public class ImageFileData
   public void setImportedname( String importedname )
   {
     this.importedname = importedname;
+    setImportedFile();
   }
 
   
