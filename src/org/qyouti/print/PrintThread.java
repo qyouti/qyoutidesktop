@@ -42,7 +42,7 @@ public class PrintThread extends Thread
           "</fop>";  
   
   ExaminationData exam;
-  File examcontainer;
+  File examfolder;
   QyoutiFontManager fontmanager;
   QyoutiFrame frame;
   MissingGlyphReport mgr = new MissingGlyphReport();
@@ -52,12 +52,12 @@ public class PrintThread extends Thread
   
   int type = TYPE_PAPERS;
             
-  public PrintThread( ExaminationData exam, File examcontainer, QyoutiFontManager fontmanager )
+  public PrintThread( ExaminationData exam, File examfolder, QyoutiFontManager fontmanager )
   {
     super();
     this.fontmanager = fontmanager;
     this.exam = exam;
-    this.examcontainer = examcontainer;
+    this.examfolder = examfolder;
   }
 
   public int getType()
@@ -86,7 +86,7 @@ public class PrintThread extends Thread
     
     try
     {
-      URI examfolderuri = exam.getExamContainer().getParentFile().toURI();
+      URI examfolderuri = exam.getExamFolder().getCanonicalFile().toURI();
       List<GenericDocument> paginated;
       PageData page;
       TranscoderInput tinput;
@@ -95,9 +95,9 @@ public class PrintThread extends Thread
       ArrayList<File> pagefiles = new ArrayList<>();
       File pdffile;
       if ( type == TYPE_ANALYSIS )
-        pdffile = new File( examcontainer.getParentFile(), examcontainer.getName() + "_analysis.pdf" );
+        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + "_analysis.pdf" );
       else
-        pdffile = new File( examcontainer.getParentFile(), examcontainer.getName() + ".pdf" );
+        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
       PDFMergerUtility pdfmerger = new PDFMergerUtility();
       pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );        
       PaginationRecord paginationrecord;
@@ -109,11 +109,11 @@ public class PrintThread extends Thread
       }
       else
       {
-        paginationrecord = new PaginationRecord(examcontainer.getName());
+        paginationrecord = new PaginationRecord(examfolder.getName());
         printid = paginationrecord.getPrintId();
       }
       
-      File fontfolder = new File( examcontainer.getParent(), "fonts" );
+      File fontfolder = new File( examfolder.getParent(), "fonts" );
       String strconfig = CONFIGXML.replace( "DIRECTORY",  fontfolder.getPath()  );
       //DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
       //Configuration fopconfig = cfgBuilder.build( new ByteArrayInputStream( strconfig.getBytes( "UTF8" ) ) );
@@ -150,9 +150,9 @@ public class PrintThread extends Thread
         System.out.println( "SVG Ready" );
         for ( int i=0; i<paginated.size(); i++ )
         {
-          svgfile = new File( examcontainer.getParentFile(), examcontainer.getName() + "_" + p + ".svg" );
+          svgfile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".svg" );
           QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
-          pagefile = new File( examcontainer.getParentFile(), examcontainer.getName() + "_" + p + ".pdf" );
+          pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".pdf" );
           p++;
           pagefiles.add( pagefile );
           System.out.println( "Transcoding page " + (i+1) + " to " + pagefile.getAbsolutePath() );
@@ -187,7 +187,7 @@ public class PrintThread extends Thread
       System.out.println( "Recording pagination data." );
 
       FileWriter writer;
-      File pagrecfile = new File(examcontainer, "pagination_" + printid + ".xml");
+      File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
       if ( pagrecfile.exists() )
         throw new IllegalArgumentException( "Unable to save pagination record." );
       // This helps with dodgy file systems

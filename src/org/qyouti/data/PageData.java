@@ -31,7 +31,6 @@ import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Vector;
@@ -74,8 +73,8 @@ public class PageData implements Comparable<PageData>
 
   public ResponseImageProcessor responseimageprocessor = null;
 
-  public File examcontainer;
-  public Path paginationfile;
+  public File examfolder;
+  public File paginationfile;
   public CandidateData candidate;
   public String candidate_number;
   public String candidate_name;
@@ -157,16 +156,16 @@ public class PageData implements Comparable<PageData>
       return "bad_scans";
     if ( printid == null || printid.length() == 0 )
       return "bad_scans";
-    if ( examcontainer == null )
+    if ( examfolder == null )
       return "unidentified_scans_" + printid;
-    return "scans_for_" + examcontainer.getName();
+    return "scans_for_" + examfolder.getName();
   }
 
   public String getPreferredFileExtension()
   {
     int dot = source.lastIndexOf( '.' );
     if ( dot < 0 )
-      return ".png";
+      return ".jpg";
     return source.substring( dot );
   }
 
