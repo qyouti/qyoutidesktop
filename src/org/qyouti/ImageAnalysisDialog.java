@@ -31,7 +31,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
 {
   boolean running = false;
   boolean killpending = false;
-  Path imagefile;
+  File imagefile;
         
   /**
    * Creates new form ImageAnalysisDialog
@@ -42,7 +42,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
     initComponents();
   }
 
-  public void setImageFile( Path imagefile )
+  public void setImageFile( File imagefile )
   {
     this.imagefile = imagefile;
   }
@@ -71,7 +71,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
       if ( imagefile != null )
       {
         File[] files = new File[1];
-        files[0] = imagefile.toFile();
+        files[0] = imagefile;
         XLocator xlocator = new XLocatorByCluster(200, 200);
         xlocator.setDebugLevel(10);
         xlocator.setImageFiles(files);

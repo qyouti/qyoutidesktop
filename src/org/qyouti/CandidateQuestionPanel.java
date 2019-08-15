@@ -433,21 +433,23 @@ public class CandidateQuestionPanel
 
   private void loadQuestionImage()
   {
-    if ( questiondata == null )
+    try
     {
-      imagelabel.setText( "Not Scanned" );
-    }
-    else
-    {
-      questionimage = questiondata.getImage();
-      if ( questionimage != null)
+      if ( questiondata == null || !questiondata.getImageFile().exists() )
       {
+        imagelabel.setText( "Not Scanned" );
+      }
+      else
+      {
+        questionimage = ImageIO.read( questiondata.getImageFile() );
         imagelabel.setIcon( new ImageIcon( questionimage ) );        
         imagelabel.setText( "" );
       }
-      else
-        imagelabel.setText( "Cannot load image" );
     }
+    catch ( IOException ioe )
+    {
+      imagelabel.setText( "Unable to Load" );
+    }    
   }
   
   private void viewimagecheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewimagecheckboxActionPerformed

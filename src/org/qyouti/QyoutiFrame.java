@@ -11,14 +11,6 @@ import java.awt.event.*;
 import java.awt.geom.*;
 import java.io.*;
 import java.net.*;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.logging.*;
 import javax.swing.*;
@@ -56,13 +48,11 @@ public class QyoutiFrame
   QyoutiPreferences preferences;
   QyoutiFontManager fontmanager;
   
-  File homefolder;  // user qyouti home folder, e.g. /home/fred/qyouti
-  File examfolder;  // folder for exams, e.g. /home/fred/qyouti/exams
-  File examcontainer = null;  // absolute path name of folder or zip file containing loaded exam
-  
+  File examfolder = null;
   ExaminationData exam;
   ExaminationCatalogue examcatalogue;
-  
+  File homefolder;
+  File basefolder;
   String examname = null;
 
   ExamSelectDialog selectdialog;
@@ -103,7 +93,7 @@ public class QyoutiFrame
     homefolder = new File( homefolder, "qyouti" );
     if ( !homefolder.exists() )
       homefolder.mkdir();
-    examfolder = new File( homefolder, "exams" );
+    basefolder = new File( homefolder, "exams" );
     
     File preferences_file = new File( homefolder, "preferences.xml" );
     preferences = new QyoutiPreferences( preferences_file );
@@ -120,7 +110,7 @@ public class QyoutiFrame
     busydialog = new BusyDialog( this, false );
     selectdialog = new ExamSelectDialog( this, true );
     selectdialog.setFrame( this );
-    selectdialog.setBaseFolder( examfolder );
+    selectdialog.setBaseFolder( basefolder );
     
     initComponents();
     
@@ -1693,6 +1683,8 @@ public class QyoutiFrame
     }
 
     selectdialog.setExamName( "" );
+
+    //selectdialog.setBaseFolder( );
     selectdialog.setDialogType( ExamSelectDialog.TYPE_NEW );
     selectdialog.setVisible( true );
 
@@ -1701,10 +1693,21 @@ public class QyoutiFrame
   
     public void setPreviewItem( QTIElementItem item, int qnumber )
     {
+      URI uri;
+      
       previewsvgcanvas.setSVGDocument(null);
       if ( item == null ) return;
       
-      URI uri = exam.getExamContainer().toURI();
+      try
+      {
+        uri = exam.getExamFolder().getCanonicalFile().toURI();
+      }
+      catch ( IOException ioe )
+      {
+        return;
+      }
+      
+          
       // TO DO - create preview in background thread
       QTIItemRenderer renderer = new QTIItemRenderer(fontmanager,PrintThread.TYPE_PAPERS,uri,exam);
       renderer.setItem(item, qnumber, null);
@@ -1802,9 +1805,9 @@ public class QyoutiFrame
       return;
     }
 
-    Path file = exam.getScanImageFolder().resolve( filename );
+    File file = new File( exam.getScanImageFolder(), filename );
     ImageViewDialog dialog = new ImageViewDialog( this, true );
-    dialog.setImage( file.toFile() );
+    dialog.setImage( file );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
 
@@ -1995,7 +1998,7 @@ public class QyoutiFrame
     progressbar.setIndeterminate( true );
 
     //busydialog.setVisible( true );
-    PrintThread thread = new PrintThread( exam, exam.getExamContainer(), fontmanager );
+    PrintThread thread = new PrintThread( exam, examfolder, fontmanager );
     thread.setQyoutiFrame( this );
     thread.start();
   }//GEN-LAST:event_pdfprintmenuitemActionPerformed
@@ -2274,7 +2277,7 @@ public class QyoutiFrame
     progressbar.setIndeterminate( true );
 
     //busydialog.setVisible( true );
-    PrintThread thread = new PrintThread( exam, exam.getExamContainer(), fontmanager );
+    PrintThread thread = new PrintThread( exam, examfolder, fontmanager );
     thread.setQyoutiFrame( this );
     thread.setType( PrintThread.TYPE_ANALYSIS );
     thread.start();    
@@ -2511,76 +2514,70 @@ public class QyoutiFrame
    * Indicates that the template system created a string representation
    * of a new exam. It is ready to be saved to file.
    */
-  void examinationBuilt( File zip, ExamTemplate template )
+  void examinationBuilt( File folder, ExamTemplate template )
   {
-    Map<String, String> env = new HashMap<>(); 
-    env.put("create", "true");
-    // locate file system by using the syntax 
-    // defined in java.net.JarURLConnection
-    URI uri = URI.create("jar:file:" + zip.getAbsolutePath() );
-
-    File tmp=null;
+    File file = new File( folder, "qyouti.xml" );
+    FileWriter writer = null;
     try
     {
-      tmp = File.createTempFile("qyoutitemp", ".xml");
-    } catch (IOException ex)
-    {
-      Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
-      return;
+      writer = new FileWriter( file );
+      writer.write( template.getDocumentAsString() );
     }
-    
-    try ( Writer writer=new FileWriter( tmp, false ) )
-    {
-      writer.write( template.getDocumentAsString() );      
-    } catch (IOException ex)
-    {
-      Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
-      return;
-    }
-    
-    try (FileSystem zipfs = FileSystems.newFileSystem(uri, env))
-    {
-      Path externalTxtFile = tmp.toPath();
-      Path pathInZipfile = zipfs.getPath("/qyouti.xml");          
-      // copy a file into the zip file
-      Files.copy( externalTxtFile,pathInZipfile, 
-              StandardCopyOption.REPLACE_EXISTING ); 
-    }     
-    catch ( Exception e)
+    catch ( Exception ex )
     {
       Logger.getLogger( QyoutiFrame.class.getName() ).
-      log( Level.SEVERE, null, e );     
+              log( Level.SEVERE, null, ex );
     }
-        
-    loadExam( zip );
+    finally
+    {
+      if ( writer != null )
+      {
+        try
+        {
+          writer.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( QyoutiFrame.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
+      }
+    }
+    loadExam( folder );
   }
 
   boolean examSelectDialogDone()
   {
-    examfolder = selectdialog.getBaseFolder();
+    basefolder = selectdialog.getBaseFolder();
     examcatalogue = selectdialog.getExaminationCatalogue();
 
+    File fold = new File( basefolder, selectdialog.getExamName() );
 
     if ( selectdialog.getDialogType() == ExamSelectDialog.TYPE_NEW )
     {
-      File zip = selectdialog.getNewExamZipFile();
-      System.out.println( "Make new exam/survey: " + zip.getAbsolutePath() );
-      if ( zip.exists() )
+      System.out.
+              println( "Make new exam/survey: " + selectdialog.getExamName() );
+      if ( fold.exists() )
       {
         JOptionPane.
                 showMessageDialog( this, "There is already a folder with that name - choose a different name." );
         return false;
       }
+      if ( !fold.mkdir() )
+      {
+        JOptionPane.
+                showMessageDialog( this, "Unable to create a folder with that name - perhaps you lack access rights." );
+        return false;
+      }
       ExamCreateDialog dialog = new ExamCreateDialog( this, true );
-      dialog.setContainer( zip );
+      dialog.setFolder( fold );
       dialog.setVisible( true );
     }
 
     if ( selectdialog.getDialogType() == ExamSelectDialog.TYPE_OPEN )
     {
-      File container = selectdialog.getSelectedContainer();
-      System.out.println( "Open exam/survey: " + container );
-      loadExam( container );
+      System.out.println( "Open exam/survey: " + selectdialog.getExamName() );
+      loadExam( fold );
     }
 
     return true;
@@ -2591,15 +2588,14 @@ public class QyoutiFrame
     exam.setUnsavedChanges( true );
   }
 
-  private void loadExam( File examcontainer )
+  private void loadExam( File examfolder )
   {
-    this.examcontainer = examcontainer;
-    boolean iszip = this.examcontainer.isFile();
+    this.examfolder = examfolder;
 
     noexamloadedlabel.setText( "No exam/survey loaded." );
     try
     {
-      exam = new ExaminationData( examcatalogue, examcontainer );
+      exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
       exam.addExaminationDataStatusListener( this );
       persontable.setModel( exam.personlistmodel );
       exam.personlistmodel.addTableModelListener( 
@@ -2618,7 +2614,7 @@ public class QyoutiFrame
       questionreviewtable.setModel( exam.reviewlist );
       updateLeftList();
       exam.load();
-      setTitle("Qyouti - " + examcontainer.getName() );
+      setTitle( "Qyouti - " + examfolder.getName() );
       if ( exam.qdefs != null )
       {
         questiontable.setModel( exam.qdefs );

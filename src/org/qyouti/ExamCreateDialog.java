@@ -7,7 +7,6 @@ package org.qyouti;
 
 import java.awt.*;
 import java.io.*;
-import java.nio.file.Path;
 import java.util.logging.*;
 import javax.swing.*;
 import org.qyouti.templates.*;
@@ -19,7 +18,7 @@ import org.qyouti.templates.*;
 public class ExamCreateDialog
         extends javax.swing.JDialog
 {
-  File container;
+  File folder;
   ExamTemplate template;
   QyoutiFrame parent;
 
@@ -61,9 +60,9 @@ public class ExamCreateDialog
     setTemplate( instances[index] );
   }
   
-  public void setContainer( File container )
+  public void setFolder( File folder )
   {
-    this.container = container;
+    this.folder = folder;
   }
   
   public void setTemplate( ExamTemplate template )
@@ -152,7 +151,7 @@ public class ExamCreateDialog
 
   private void createbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_createbuttonActionPerformed
   {//GEN-HEADEREND:event_createbuttonActionPerformed
-    parent.examinationBuilt( container, template );
+    parent.examinationBuilt( folder, template );
     this.setVisible( false );
     this.dispose();
   }//GEN-LAST:event_createbuttonActionPerformed
