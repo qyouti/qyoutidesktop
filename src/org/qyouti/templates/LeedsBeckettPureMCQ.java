@@ -28,6 +28,7 @@ public class LeedsBeckettPureMCQ
 "<option name=\"name_in_footer\">true</option>\n" +
 "<option name=\"cover_sheet\">false</option>\n" +
 "<option name=\"header\">HEADER</option>\n" +
+"<option name=\"layout\">2</option>\n" +
 "<option name=\"question_metrics_qr\">false</option>\n" +
 "<option name=\"id_in_footer\">true</option>\n" +
 "</options>\n" +
