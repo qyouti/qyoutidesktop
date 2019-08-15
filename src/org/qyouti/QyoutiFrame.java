@@ -2479,7 +2479,7 @@ public class QyoutiFrame
     if ( !(c instanceof CandidateQuestionPanel) ) return;
     cqp = (CandidateQuestionPanel)c;
     cqp.handleDecision( 1 );
-    
+    cqp.updateButtons();    
   }//GEN-LAST:event_confirmreviewmenuitemActionPerformed
 
   private void overridereviewmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_overridereviewmenuitemActionPerformed

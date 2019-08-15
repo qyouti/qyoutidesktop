@@ -425,6 +425,13 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( !barcode.getPrintID().equals( exam.getLastPrintID()) )
       throw new PageDecodeException( "Print ID in barcode does not match loaded exam.");
 
+    paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+    if ( paginationrecord == null )
+      throw new PageDecodeException( "Cannot load print metric record.");
+    prpage = paginationrecord.getPage( barcode.getPageID() );
+    if ( prpage.getBarcodeLocation() != barcode.getLocation() )
+      throw new PageDecodeException( "Page is oriented incorrectly.");
+    
     page = exam.lookUpPage( barcode.getPageID() );
     if ( page == null )
       throw new PageDecodeException( "Unable to find the page in the print record " + barcode.getPageID() + "'." );
@@ -432,7 +439,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( page.scanned )
       throw new PageDecodeException( "A scan for this page ID has already been imported " + barcode.getPageID() + "'." );
   
-    paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+    //paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
     PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
     page.candidate = exam.candidates.get( prcandidate.getId() );
     page.candidate_number = page.candidate.id;        
@@ -442,15 +449,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     page.scanned=true;
     page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );  
     page.rotatedimage = image;
-    paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
-    if ( paginationrecord == null )
-      throw new PageDecodeException( "Cannot load print metric record.");
 
-    prpage = paginationrecord.getPage( barcode.getPageID() );
-
-    if ( prpage.getBarcodeLocation() != barcode.getLocation() )
-      throw new PageDecodeException( "Page is oriented incorrectly.");
-    
     for ( i=0; i<4; i++ )
     {
       b = prpage.getBullseye( i );
