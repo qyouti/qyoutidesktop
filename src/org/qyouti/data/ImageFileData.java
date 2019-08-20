@@ -31,15 +31,6 @@ import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
-import java.nio.file.*;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.*;
-import javax.swing.table.*;
-import org.qyouti.scan.image.IdentityLookupTable;
-import org.qyouti.scan.image.ResponseBoxColourLookupTable;
-import org.qyouti.scan.image.ResponseImageProcessor;
-import org.qyouti.scan.process.*;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -58,7 +49,7 @@ public class ImageFileData
   String source;
   String error=null;    
   String importedname=null;
-  File importedfile=null;
+  //File importedfile=null;
   boolean imported=false;
   boolean processed=false;
   long importeddate;
@@ -73,7 +64,6 @@ public class ImageFileData
     this.source = source;
     this.importedname = ident + "." + suffix;
     this.ident = ident;
-    setImportedFile();
   }
 
 
@@ -84,7 +74,6 @@ public class ImageFileData
     this.ident        = element.getAttribute( "ident" );
     this.source       = element.getAttribute( "source" );
     this.importedname = element.getAttribute( "importedname" );
-    setImportedFile();
     this.importeddate = new Long( element.getAttribute( "importeddate" ) ).longValue();
     this.digest       = element.getAttribute( "digest" );
     this.imported    = "true".equalsIgnoreCase( element.getAttribute( "imported" ) );
@@ -94,36 +83,6 @@ public class ImageFileData
       this.error = nl.item( 0 ).getTextContent();    
   }
 
-  public void rename( String name )
-  {
-    String oldname = importedname;
-    File oldfile = importedfile;
-    importedname = name;
-    setImportedFile();
-    
-    try
-    {
-      Files.move( oldfile.toPath(), importedfile.toPath() );
-    }
-    catch ( Exception e )
-    {
-      this.setError( "Warning - unable to rename imported image." );
-      importedname = oldname;
-      importedfile = oldfile;
-    }
-  }
-  
-  private void setImportedFile()
-  {
-    if ( importedname == null ) return;
-    importedfile = new File( exam.getScanImageFolder(), importedname );
-  }
-  
-  public File getImportedFile()
-  {
-    return importedfile;
-  }
-  
   public String getError()
   {
     return error;
@@ -197,7 +156,6 @@ public class ImageFileData
   public void setImportedname( String importedname )
   {
     this.importedname = importedname;
-    setImportedFile();
   }
 
   

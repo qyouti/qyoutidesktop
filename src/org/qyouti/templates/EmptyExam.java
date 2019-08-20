@@ -31,20 +31,6 @@ public class EmptyExam
 "<option name=\"id_in_footer\">true</option>\n" +
 "</options>\n" +
 "\n" +
-"\n" +
-"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\">\n" +
-"  <assessment ident=\"assessmentident\" title=\"imported\">\n" +
-"    <section ident=\"section1\" title=\"Section 1\">\n" +
-"      <outcomes_processing scoremodel=\"SumOfScores\">\n" +
-"        <outcomes>\n" +
-"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\n" +
-"        </outcomes>\n" +
-"      </outcomes_processing>\n" +
-"    </section>\n" +
-"\n" +
-"  </assessment>\n" +
-"</questestinterop>\n" +
-"\n" +
 "<persons>\n" +
 "</persons>\n" +
 "\n" +
@@ -63,6 +49,19 @@ public class EmptyExam
 "</examination>";
   
 
+  public static final String interop = "<?xml version=\"1.0\"?>\n" +
+"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\">\n" +
+"  <assessment ident=\"assessmentident\" title=\"imported\">\n" +
+"    <section ident=\"section1\" title=\"Section 1\">\n" +
+"      <outcomes_processing scoremodel=\"SumOfScores\">\n" +
+"        <outcomes>\n" +
+"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\n" +
+"        </outcomes>\n" +
+"      </outcomes_processing>\n" +
+"    </section>\n" +
+"\n" +
+"  </assessment>\n" +
+"</questestinterop>\n";
 
   /**
    * Creates new form EmptyExam
@@ -73,11 +72,17 @@ public class EmptyExam
   }
 
   @Override
-  public String getDocumentAsString()
+  public String getMainDocumentAsString()
   {
     Random r = new Random();
     r.setSeed( System.currentTimeMillis() );
     return text.replaceFirst( "assessmentident", Long.toHexString( r.nextLong() ) );
+  }
+
+  @Override
+  public String getQuestionDocumentAsString()
+  {
+    return interop;
   }
 
 

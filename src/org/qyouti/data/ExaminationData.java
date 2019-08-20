@@ -52,6 +52,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.fop.apps.*;
 import org.qyouti.clipboard.*;
+import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -88,9 +89,11 @@ public class ExaminationData
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
+  File examfolder;
   File examfile;
-  File scanfolder;
-  File responsefolder;
+  File questionfile;
+  CompositeFile scanarchive;
+  CompositeFile responsearchive;
   
   private Vector<PageData> pages = new Vector<PageData>();
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
@@ -128,24 +131,27 @@ public class ExaminationData
   
   int nextscanfileident = 10000;
   
-  public ExaminationData( ExaminationCatalogue examcatalogue )
+  public ExaminationData(ExaminationCatalogue examcatalogue,File examfolder)
+          throws IOException
   {
     this.examcatalogue = examcatalogue;
-  }
-
-  public ExaminationData(ExaminationCatalogue examcatalogue,File xmlfile)
-  {
-    this.examcatalogue = examcatalogue;
-    examfile = xmlfile;
-    File examfolder = examfile.getParentFile();
-    scanfolder     = new File( examfolder, "scans" );
-    responsefolder = new File( examfolder, "responses" );
-    qmrcache = new QuestionMetricsRecordSetCache( xmlfile.getParentFile() );
+    this.examfolder = examfolder;
+    examfile        = new File( examfolder, "qyouti.xml" );
+    questionfile    = new File( examfolder, "questions.xml" );
+    scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+    responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));
+    qmrcache = new QuestionMetricsRecordSetCache( examfolder );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
     default_options.setProperty( "columns", "1" );
   }
 
+  public void close() throws IOException
+  {
+    scanarchive.close();
+    responsearchive.close();
+  }
+  
   // Gather all use of "fireTable***" to methods here to make it hard to
   // forget that changes in one table may involve changes in others...
   public void processRowsInserted( ImageFileTable model, int first, int last )
@@ -206,14 +212,14 @@ public class ExaminationData
     return examfile.getParentFile();
   }
   
-  public File getScanImageFolder()
+  public CompositeFile getScanImageArchive()
   {
-    return scanfolder;
+    return scanarchive;
   }
   
-  public File getResponseImageFolder()
+  public CompositeFile getResponseImageArchive()
   {
-    return responsefolder;
+    return responsearchive;
   }
   
   public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
@@ -378,18 +384,6 @@ public class ExaminationData
       for ( int j = 0; j < candidate.pages.size(); j++ )
       {
         page = candidate.pages.get( j );
-        for ( int k = 0; k < page.questions.size(); k++ )
-        {
-          question = page.questions.get( k );
-          for ( int l = 0; l < question.responsedatas.size(); l++ )
-          {
-            response = question.responsedatas.get( l );
-            if ( response.getFilteredImageFile().exists() )
-              response.getFilteredImageFile().delete();
-            if ( response.getImageFile().exists() )
-              response.getImageFile().delete();
-          }
-        }
         page.questions.clear();
         page.scanned = false;
         page.processed = false;
@@ -401,15 +395,19 @@ public class ExaminationData
     
     pagelistmodel.fireTableDataChanged();
         
-    for ( int i=0; i<scans.size(); i++ )
+    try
     {
-      try
-      {
-        Files.deleteIfExists( scans.get( i ).getImportedFile().toPath() );
-      }
-      catch ( Exception e )
-      {
-      }
+      scanarchive.close();
+      Files.deleteIfExists( new File(scanarchive.getCanonicalPath()).toPath() );
+
+      responsearchive.close();
+      Files.deleteIfExists( new File(responsearchive.getCanonicalPath()).toPath() );
+      
+      scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+      responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));      
+    }
+    catch ( Exception e )
+    {
     }
     
     scans.clear();
@@ -479,7 +477,7 @@ public class ExaminationData
         candidate.outcomes.addDatum( od );
       }
     }
-    setUnsavedChanges( true );
+    setUnsavedChangesInMain( true );
     fireTableDataChanged();    
   }
 
@@ -643,7 +641,7 @@ public class ExaminationData
     analyses.clear();
     qdefs.itemAnalysis(candidates_sorted, analyses);
     analysistablemodel.setSelectedQuestion( ident );
-    setUnsavedChanges( true );
+    setUnsavedChangesInMain( true );
     
 //    ResponseAnalysis ranal;
 //    StringWriter writer = new StringWriter();
@@ -1880,14 +1878,26 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Writer writer = null;
     try
     {
-      writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
-      emit(writer);
-      writer.close();
-
-      for ( int i=0; i<datatransforminstructions.size(); i++ )
+      if ( qdefs != null && qdefs.areThereUnsavedChanges() )
       {
-        datatransforminstructions.get( i ).transform();
+        writer = new OutputStreamWriter(new FileOutputStream(questionfile), "utf8");
+        qdefs.emit( writer );
+        writer.close();
+        writer = null;
       }
+      
+      if ( this.unsaved_changes )
+      {
+        writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
+        emit(writer);
+        writer.close();
+        writer = null;
+        for ( int i=0; i<datatransforminstructions.size(); i++ )
+        {
+          datatransforminstructions.get( i ).transform();
+        }
+      }
+      
     } catch (Exception ex)
     {
       Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
@@ -1908,16 +1918,25 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     return true;
   }
 
-  public boolean areUnsavedChanges()
+  public boolean areThereUnsavedChanges()
   {
-    return unsaved_changes;
+    return unsaved_changes || qdefs.areThereUnsavedChanges();
   }
   
-  public void setUnsavedChanges( boolean b )
+  public void setUnsavedChangesInMain( boolean b )
   {
     if ( unsaved_changes != b )
     {
       unsaved_changes = b;
+      fireStatusChange();
+    }
+  }
+
+  public void setUnsavedChangesInQuestions( boolean b )
+  {
+    if ( qdefs.areThereUnsavedChanges() != b )
+    {
+      qdefs.setUnsavedChanges( b );
       fireStatusChange();
     }
   }
@@ -1990,20 +2009,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
 
     emitOptions( writer );
-
-    if (qdefs != null)
-    {
-      try
-      {
-        qdefs.emit(writer);
-      } catch (TransformerConfigurationException ex)
-      {
-        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (TransformerException ex)
-      {
-        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
-      }
-    }
 
     writer.write( "<scans nextscanfileident=\"" + nextscanfileident + "\">\n" );
     for ( int i=0; i<scans.size(); i++ )
@@ -2124,10 +2129,28 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   {
     if ( !examfile.exists() || !examfile.isFile() )
       return;
-    load( new InputSource( examfile.toURI().toString() ) );
+    loadQuestions( new InputSource( new FileInputStream( questionfile ) ) );
+    load( new InputSource( new FileInputStream( examfile ) ) );
+  }
+
+  private void loadQuestions( InputSource source )
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+  
+    
+    Document document = builder.parse( source );
+
+    Element roote = document.getDocumentElement();
+
+    qdefs=null;
+    if ("questestinterop".equals(roote.getNodeName()))
+      qdefs = new QuestionDefinitions(roote, personlistmodel );
   }
   
-  public void load( InputSource source )
+  private void load( InputSource source )
           throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -2162,11 +2185,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       if ("options".equals(e.getNodeName()))
       {
         loadOptions( e );
-      }
-
-      if ("questestinterop".equals(e.getNodeName()))
-      {
-        qdefs = new QuestionDefinitions(e, personlistmodel );
       }
 
       if ("persons".equals(e.getNodeName()))

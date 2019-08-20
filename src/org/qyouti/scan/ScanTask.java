@@ -55,6 +55,7 @@ import org.apache.pdfbox.tools.imageio.*;
 import org.bouncycastle.util.encoders.*;
 import org.bullseye.*;
 import org.qyouti.*;
+import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecodeException;
 import org.qyouti.scan.process.PageDecoder;
@@ -85,6 +86,8 @@ public class ScanTask
   boolean commandline = false;
   int exitCode = 0;
 
+  CompositeFile pageimagearchive;
+  CompositeFile responseimagearchive;
   int imageCounter = 0;
   Path tempfolderpath;
   ArrayList<File> tempfiles=new ArrayList<File>();
@@ -112,10 +115,8 @@ public class ScanTask
     this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
     this.preprocess = preprocess;
     this.commandline = commandline;
-    if ( !preprocess && !exam.getScanImageFolder().exists() )
-      exam.getScanImageFolder().mkdir();
-    if ( !preprocess && !exam.getResponseImageFolder().exists() )
-      exam.getResponseImageFolder().mkdir();
+    pageimagearchive = exam.getScanImageArchive();
+    responseimagearchive = exam.getResponseImageArchive();
   }
 
   public void setScanTaskListener( ScanTaskListener listener )
@@ -271,25 +272,7 @@ public class ScanTask
     // have taken place.  So digest works only to guard against re-importing
     // the whole PDF or separate image files.
 
-    File imgfile = ifd.getImportedFile();
 
-    try ( FileOutputStream out = new FileOutputStream( imgfile ); )
-    {
-//      if ("jpg".equals(suffix))
-//      {
-//        // all JPEGs are saved unchanged
-//        InputStream data = pdImage.createInputStream(JPEG);
-//        IOUtils.copy(data, out);
-//        IOUtils.closeQuietly(data);
-//      }
-//      else 
-//      {
-        // other types are re-encoded
-        ImageIOUtil.writeImage(image, suffix, out);
-//      }
-      out.flush();
-    }
-    
     try
     {
       importImage( ifd, image );
@@ -363,7 +346,11 @@ public class ScanTask
         extractor.run();
       }
       
-      Files.copy( pdffile.toPath(), ifd.getImportedFile().toPath() );
+      OutputStream out = pageimagearchive.getOutputStream( ifd.getImportedname(), true );
+      InputStream in = new FileInputStream( pdffile );
+      IOUtils.copy(in, out);
+      in.close();
+      out.close();
       ifd.setImported( true );
     }
     catch ( IOException ex )
@@ -376,8 +363,8 @@ public class ScanTask
   }
 
   
-  public void importImage( ImageFileData ifd, BufferedImage image )
-          throws PageDecodeException
+  private void importImage( ImageFileData ifd, BufferedImage image )
+          throws PageDecodeException, FileNotFoundException, IOException
   {
     // Read data from page.
     PageData page = pagedecoder.decode( exam, ifd, image );
@@ -387,7 +374,11 @@ public class ScanTask
       page.rotatedimage=null;
       String fn = page.getPreferredFileName();
       if ( fn != null )
-        ifd.rename( fn );
+        ifd.setImportedname(fn);
+      OutputStream out = pageimagearchive.getOutputStream( ifd.getImportedname(), true );
+      ImageIO.write( image, "PNG", out );
+      out.close();
+      ifd.setImported( true );
     }    
   }
   
@@ -420,8 +411,6 @@ public class ScanTask
         return ifd;
       }
 
-      Files.copy( file.toPath(), ifd.getImportedFile().toPath() );
-      ifd.setImported( true );
       importImage( ifd, image );
     }
     catch (Exception e)
@@ -446,9 +435,6 @@ public class ScanTask
     {
       if ( md == null ) return;
   
-      if ( !exam.getScanImageFolder().exists() )
-        exam.getScanImageFolder().mkdir();
-              
       for ( i = 0; i < scanfilelist.size(); i++ )
       {
         if ( scanfilelist.get( i ).getName().endsWith( ".png" ) ||

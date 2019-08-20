@@ -433,23 +433,16 @@ public class CandidateQuestionPanel
 
   private void loadQuestionImage()
   {
-    try
+    if ( questiondata == null || questiondata.getImage() == null )
     {
-      if ( questiondata == null || !questiondata.getImageFile().exists() )
-      {
-        imagelabel.setText( "Not Scanned" );
-      }
-      else
-      {
-        questionimage = ImageIO.read( questiondata.getImageFile() );
-        imagelabel.setIcon( new ImageIcon( questionimage ) );        
-        imagelabel.setText( "" );
-      }
+      imagelabel.setText( "Not Scanned" );
     }
-    catch ( IOException ioe )
+    else
     {
-      imagelabel.setText( "Unable to Load" );
-    }    
+      questionimage = questiondata.getImage();
+      imagelabel.setIcon( new ImageIcon( questionimage ) );        
+      imagelabel.setText( "" );
+    }
   }
   
   private void viewimagecheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_viewimagecheckboxActionPerformed
@@ -485,7 +478,7 @@ public class CandidateQuestionPanel
     {
       System.out.println( "examiner decision change." );
       questiondata.setExaminerDecision( n );
-      candidate.exam.setUnsavedChanges( true );
+      candidate.exam.setUnsavedChangesInMain( true );
     }    
   }
   
@@ -524,7 +517,7 @@ public class CandidateQuestionPanel
     ImageAnalysisDialog d = new ImageAnalysisDialog( QyoutiFrame.getFrames()[0], false );
     d.setTitle( "Image Analysis" );
     d.setSize( 400, 800 );
-    d.setImageFile( rd.getImageFile() );
+    d.setImage( rd.getImage() );
     d.setVisible( true );
     d.go();
   }//GEN-LAST:event_analysisbuttonActionPerformed

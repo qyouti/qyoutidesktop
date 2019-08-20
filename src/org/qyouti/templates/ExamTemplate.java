@@ -16,5 +16,6 @@ public abstract class ExamTemplate extends javax.swing.JPanel
 {
   public ExamTemplate(){super();}
   public String getTemplateTitle() {return "Unknown Template Title";}
-  public abstract String getDocumentAsString();  
+  public abstract String getMainDocumentAsString();  
+  public abstract String getQuestionDocumentAsString();  
 }

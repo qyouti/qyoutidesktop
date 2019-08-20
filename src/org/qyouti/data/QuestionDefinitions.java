@@ -48,6 +48,7 @@ public class QuestionDefinitions
 {
   private final Element questestinterop;
   public QTIElementQuestestinterop qti;
+  public boolean unsavedchanges=false;
 
   public QuestionDefinitions( Element questestinterop, QTIExternalMap personsmap )
   {
@@ -200,13 +201,13 @@ public class QuestionDefinitions
     return null;
   }
 
-  public void emit( Writer writer, QTIElement element  )
+  private void emit( Writer writer, QTIElement element  )
           throws IOException, TransformerConfigurationException, TransformerException
   {
     emit( writer, element.getDOMElement() );
   }
   
-  public void emit( Writer writer, Element element  )
+  private void emit( Writer writer, Element element  )
           throws IOException, TransformerConfigurationException, TransformerException
   {
     TransformerFactory transfac = TransformerFactory.newInstance();
@@ -222,6 +223,19 @@ public class QuestionDefinitions
           throws IOException, TransformerConfigurationException, TransformerException
   {
     emit( writer, questestinterop );
+    unsavedchanges = false;
   }
 
+  boolean areThereUnsavedChanges()
+  {
+    return unsavedchanges;
+  }
+
+  void setUnsavedChanges(boolean unsavedchanges)
+  {
+    this.unsavedchanges = unsavedchanges;
+  }
+
+  
+  
 }

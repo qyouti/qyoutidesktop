@@ -73,7 +73,7 @@ public class PersonData
   {
     this.name = name;  
     if ( exam != null )
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
   }
 
   public String getId()
@@ -85,7 +85,7 @@ public class PersonData
   {
     this.id = id;
     if ( exam != null )
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
   }
 
   public boolean isAnonymous()
@@ -97,7 +97,7 @@ public class PersonData
   {
     this.anonymous = anonymous;
     if ( exam != null )
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
   }
 
   public boolean isExcluded()
@@ -109,7 +109,7 @@ public class PersonData
   {
     this.excluded = excluded;
     if ( exam != null )
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
   }
 
   public UserRenderPreferences getPreferences()
@@ -121,7 +121,7 @@ public class PersonData
   {
     this.preferences = preferences;
     if ( exam != null )
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
   }
   
   

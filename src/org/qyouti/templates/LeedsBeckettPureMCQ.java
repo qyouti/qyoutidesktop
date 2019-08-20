@@ -17,7 +17,7 @@ public class LeedsBeckettPureMCQ
 {
   public String getTemplateTitle() {return "Leeds Beckett Pure Multiple Choice Questions. (One right answer per question.)";}
 
-  public static final String texta = "<?xml version=\"1.0\"?>\n" +
+  public static final String main = "<?xml version=\"1.0\"?>\n" +
 "<examination>\n" +
 "\n" +
 "\n" +
@@ -33,7 +33,24 @@ public class LeedsBeckettPureMCQ
 "<option name=\"id_in_footer\">true</option>\n" +
 "</options>\n" +
 "\n" +
+"<persons>\n" +
+"</persons>\n" +
 "\n" +
+"<pages>\n" +
+"</pages>\n" +
+"\n" +
+"<papers>\n</papers>\n" +
+"\n" +
+"<analysis>\n" +
+"</analysis>\n" +
+"\n" +
+"<transforms>\n" +
+"</transforms>\n" +
+"\n" +
+"</examination>";
+
+
+  public static final String interop_top = "<?xml version=\"1.0\"?>\n" +
 "<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\">\n" +
 "  <assessment ident=\"ASSESSMENTIDENT\" title=\"Untitled\">\n" +
 "    <section ident=\"section1\" title=\"Section 1\">\n" +
@@ -46,29 +63,11 @@ public class LeedsBeckettPureMCQ
 "        </outcomes>\n" +
 "      </outcomes_processing>\n";
 
-
-public static final String textb = "    </section>\n" +
+public static final String interop_tail = "    </section>\n" +
 "\n" +
 "  </assessment>\n" +
 "</questestinterop>\n" +
-"\n" +
-"<persons>\n" +
-"</persons>\n" +
-"\n" +
-"<pages>\n" +
-"</pages>\n" +
-"\n" +
-"<papers>\n";
-
-public static final String textc = "</papers>\n" +
-"\n" +
-"<analysis>\n" +
-"</analysis>\n" +
-"\n" +
-"<transforms>\n" +
-"</transforms>\n" +
-"\n" +
-"</examination>";
+"\n";
   
 
 public static final String itemvoid = "    <item ident=\"void\" title=\"Void\">\n" +
@@ -1414,7 +1413,32 @@ public static final String itemmcqbT =
   // End of variables declaration//GEN-END:variables
 
   @Override
-  public String getDocumentAsString()
+  public String getMainDocumentAsString()
+  {
+//    DecimalFormat df = new DecimalFormat( "000" );
+//    for ( i=0; i<nc; i++ )
+//    {
+//      buffer.append( "<candidate name=\"Anon\" id=\"" );
+//      buffer.append( df.format( i+1L ) );
+//      buffer.append( "\" anonymous=\"yes\">\n" );
+//      buffer.append( "  <items>\n" );
+//      buffer.append( "    <itemref ident=\"void\"/>\n" );
+//      buffer.append( "    <itemref ident=\"sid\"/>\n" );
+//      for ( j=0; j<nq; j++ )
+//      {
+//        buffer.append( "    <itemref ident=\"" );
+//        buffer.append( Integer.toString( j+1 ) );
+//        buffer.append( "\"/>\n" );
+//      }
+//      buffer.append( "  </items>\n" );
+//      buffer.append( "</candidate>\n" );
+//    }
+    
+    return main.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - THEY ALL MUST BE SCANNED" );
+  }
+  
+  @Override
+  public String getQuestionDocumentAsString()
   {
     int i, j;
     int nq = Integer.parseInt( questionsfield.getText() );
@@ -1432,14 +1456,13 @@ public static final String itemmcqbT =
     String ia = textinpaper?itemmcqa:itemmcqaT;
     String io = textinpaper?itemmcqoption:itemmcqoptionT;
     String ib = textinpaper?itemmcqb:itemmcqbT;
-    
-    String examtitle = titlefield.getText() + " - CRN" + crnfield.getText() + " - " + datefield.getText();
-    
+
+    StringBuilder buffer = new StringBuilder(1000);
+    String opt, str = interop_top;
     Random r = new Random();
     r.setSeed( System.currentTimeMillis() );
-    StringBuilder buffer = new StringBuilder(1000);
-    String opt, str;
-    str = texta.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - THEY ALL MUST BE SCANNED" );
+
+    String examtitle = titlefield.getText() + " - CRN" + crnfield.getText() + " - " + datefield.getText();
     
     buffer.append( str.replaceFirst( "ASSESSMENTIDENT", Long.toHexString( r.nextLong() ) ) );
     buffer.append( itemvoid.replaceFirst( "TITLELINE", examtitle ) );
@@ -1459,28 +1482,8 @@ public static final String itemmcqbT =
       }
       buffer.append( ib );
     }
-    buffer.append( textb );
-    
-    DecimalFormat df = new DecimalFormat( "000" );
-//    for ( i=0; i<nc; i++ )
-//    {
-//      buffer.append( "<candidate name=\"Anon\" id=\"" );
-//      buffer.append( df.format( i+1L ) );
-//      buffer.append( "\" anonymous=\"yes\">\n" );
-//      buffer.append( "  <items>\n" );
-//      buffer.append( "    <itemref ident=\"void\"/>\n" );
-//      buffer.append( "    <itemref ident=\"sid\"/>\n" );
-//      for ( j=0; j<nq; j++ )
-//      {
-//        buffer.append( "    <itemref ident=\"" );
-//        buffer.append( Integer.toString( j+1 ) );
-//        buffer.append( "\"/>\n" );
-//      }
-//      buffer.append( "  </items>\n" );
-//      buffer.append( "</candidate>\n" );
-//    }
-    
-    buffer.append( textc );
+  
+    buffer.append( interop_tail );
     return buffer.toString();
   }
 }

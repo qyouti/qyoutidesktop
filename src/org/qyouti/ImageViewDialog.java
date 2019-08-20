@@ -14,6 +14,7 @@ import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import java.net.*;
 import java.util.logging.*;
 import javax.imageio.ImageIO;
@@ -21,6 +22,7 @@ import javax.swing.*;
 import org.bullseye.BullseyeGenerator;
 import org.bullseye.BullseyePage;
 import org.bullseye.BullseyePageScanner;
+import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QuestionMetricBox;
 import org.qyouti.qti1.gui.QuestionMetricsRecord;
@@ -76,11 +78,12 @@ public class ImageViewDialog
     bpage = bpscanner.scan(image);
   }
   
-  public void setImage( File file )
+  public void setImage( CompositeFile archivefile, String filename )
   {    
     try
     {
-      image = ImageIO.read( file );
+      InputStream in = archivefile.getInputStream(filename);
+      image = ImageIO.read(in); 
       
       barcode = BarcodeScanner.scan(image);
       if ( barcode == null )

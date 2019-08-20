@@ -93,7 +93,11 @@ public class QyoutiFrame
     homefolder = new File( homefolder, "qyouti" );
     if ( !homefolder.exists() )
       homefolder.mkdir();
-    basefolder = new File( homefolder, "exams" );
+    String strbasefolder = System.getProperty( "qyouti.exambase" );
+    if ( strbasefolder != null && strbasefolder.length() > 0 )
+      basefolder = new File( strbasefolder );
+    else
+      basefolder = new File( homefolder, "exams" );
     
     File preferences_file = new File( homefolder, "preferences.xml" );
     preferences = new QyoutiPreferences( preferences_file );
@@ -412,12 +416,20 @@ public class QyoutiFrame
     
   boolean confirmDataLoss( String message )
   {
-    if ( exam != null && exam.areUnsavedChanges() )
+    if ( exam != null && exam.areThereUnsavedChanges() )
     {
       if ( JOptionPane.
               showConfirmDialog( this, "There is unsaved data.\n" + message, "Confirmation", JOptionPane.YES_NO_OPTION ) != JOptionPane.YES_OPTION )
       {
         return false;
+      }
+      try      
+      {
+        exam.close();
+      }
+      catch (IOException ex)
+      {
+        Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
     return true;
@@ -1672,7 +1684,7 @@ public class QyoutiFrame
       return;
     System.out.println( "Importing " + list.size() + " persons." );
     exam.importPersons( list, forceanon );
-    exam.setUnsavedChanges( true );
+    exam.setUnsavedChangesInMain( true );
   }//GEN-LAST:event_importcanmenuitemActionPerformed
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
@@ -1805,9 +1817,8 @@ public class QyoutiFrame
       return;
     }
 
-    File file = new File( exam.getScanImageFolder(), filename );
     ImageViewDialog dialog = new ImageViewDialog( this, true );
-    dialog.setImage( file );
+    dialog.setImage( exam.getScanImageArchive(), filename );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
 
@@ -1993,7 +2004,7 @@ public class QyoutiFrame
     tabs.setEnabled( false );
     filemenu.setEnabled( false );
     actionmenu.setEnabled( false );
-    exam.setUnsavedChanges( true );
+    exam.setUnsavedChangesInMain( true );
     printstatuslabel.setText( "Printing..." );
     progressbar.setIndeterminate( true );
 
@@ -2102,7 +2113,7 @@ public class QyoutiFrame
       //tabs.setEnabled( false );
       filemenu.setEnabled( false );
       actionmenu.setEnabled( false );
-      exam.setUnsavedChanges( true );
+      exam.setUnsavedChangesInMain( true );
       progressbar.setIndeterminate( true );
       ScanTask scantask = new ScanTask( preferences, exam, files, false, false );
       scantask.setScanTaskListener( this );
@@ -2224,7 +2235,7 @@ public class QyoutiFrame
   {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
     exam.invalidateAllOutcomes();
     exam.updateOutcomes();
-    exam.setUnsavedChanges( true );
+    exam.setUnsavedChangesInMain( true );
     exam.processDataChanged( exam.qdefs );
   }//GEN-LAST:event_recomputemenuitemActionPerformed
 
@@ -2506,7 +2517,7 @@ public class QyoutiFrame
       exam.invalidateOutcomes( editquestionident );
       exam.updateOutcomes();
     }
-    exam.setUnsavedChanges( true );
+    exam.setUnsavedChangesInQuestions( true );
     exam.processDataChanged( exam.qdefs );
   }
 
@@ -2516,12 +2527,15 @@ public class QyoutiFrame
    */
   void examinationBuilt( File folder, ExamTemplate template )
   {
-    File file = new File( folder, "qyouti.xml" );
-    FileWriter writer = null;
+    File file;
+    FileWriter writer;
+    
+    file = new File( folder, "qyouti.xml" );
+    writer = null;
     try
     {
       writer = new FileWriter( file );
-      writer.write( template.getDocumentAsString() );
+      writer.write( template.getMainDocumentAsString() );
     }
     catch ( Exception ex )
     {
@@ -2543,6 +2557,34 @@ public class QyoutiFrame
         }
       }
     }
+    file = new File( folder, "questions.xml" );
+    writer = null;
+    try
+    {
+      writer = new FileWriter( file );
+      writer.write( template.getQuestionDocumentAsString() );
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( QyoutiFrame.class.getName() ).
+              log( Level.SEVERE, null, ex );
+    }
+    finally
+    {
+      if ( writer != null )
+      {
+        try
+        {
+          writer.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( QyoutiFrame.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
+      }
+    }
+
     loadExam( folder );
   }
 
@@ -2585,7 +2627,7 @@ public class QyoutiFrame
 
   void examOptionsSaved()
   {
-    exam.setUnsavedChanges( true );
+    exam.setUnsavedChangesInMain( true );
   }
 
   private void loadExam( File examfolder )
@@ -2595,7 +2637,10 @@ public class QyoutiFrame
     noexamloadedlabel.setText( "No exam/survey loaded." );
     try
     {
-      exam = new ExaminationData( examcatalogue, new File( examfolder, "qyouti.xml" ) );
+      if ( exam!= null )
+        exam.close();
+      
+      exam = new ExaminationData( examcatalogue, examfolder );
       exam.addExaminationDataStatusListener( this );
       persontable.setModel( exam.personlistmodel );
       exam.personlistmodel.addTableModelListener( 
@@ -2882,7 +2927,7 @@ public class QyoutiFrame
   @Override
   public void examinationDataStatusChanged( ExaminationData exam )
   {
-    savestatuslabel.setText( exam.areUnsavedChanges() ? "Unsaved Data" : " " );
+    savestatuslabel.setText( exam.areThereUnsavedChanges() ? "Unsaved Data" : " " );
     String lpid = exam.getLastPrintID();
     if ( lpid == null || lpid.length() == 0 )
     {

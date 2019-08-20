@@ -26,11 +26,17 @@
 
 package org.qyouti.data;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
+import java.lang.ref.SoftReference;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
+import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
@@ -62,6 +68,8 @@ public class QuestionData
   public OutcomeData outcomes;
 
   ExaminerOverrideListener eolistener=null;
+
+  private SoftReference<BufferedImage> q_image;
   
   public QuestionData( PageData page )
   {
@@ -107,22 +115,48 @@ public class QuestionData
     page.exam.processDataChanged( this );
   }
 
-  private File getFile( String fname )
-  {
-    File scanfolder = page.exam.getResponseImageFolder();
-    return new File( scanfolder, fname );
-  }
-
   public String getImageFileName()
   {
-    return ident + "_" + page.candidate_number + ".jpg";
+    return ident + "_" + page.candidate_number + ".png";
   }
   
-  public File getImageFile()
+  private BufferedImage loadImage( String fname )
   {
-    return getFile( getImageFileName() );
+    BufferedImage img=null;
+    CompositeFile archive = page.exam.responsearchive;
+    try
+    {
+      InputStream in = archive.getInputStream(fname);
+      img = ImageIO.read(in);
+      in.close();
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return img;
   }
 
+  public BufferedImage getImage()
+  {
+    if ( q_image == null || q_image.get() == null )
+      q_image = new SoftReference<>( loadImage( getImageFileName() ) );
+    return q_image.get();
+  }
+  
+  public void setImage( BufferedImage image )
+  {
+    CompositeFile archive = page.exam.responsearchive;
+    try
+    {
+      OutputStream out = archive.getOutputStream( getImageFileName(), true );
+      ImageIO.write(image, "png", out );
+      out.close();
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }    
+  }
+  
   
   public boolean areImagesProcessed()
   {
@@ -416,7 +450,7 @@ public class QuestionData
     //processResponses();
     page.candidate.processAllResponses();
     page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
-    page.exam.setUnsavedChanges( true );
+    page.exam.setUnsavedChangesInMain( true );
   }
 
   public void setExaminerOverrideListener( ExaminerOverrideListener eolistener )

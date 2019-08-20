@@ -32,6 +32,7 @@ import java.lang.ref.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
@@ -149,26 +150,37 @@ public class ResponseData
       this.ident = Integer.toString( position );
   }
 
-  private File getFile( String fname )
-  {
-    File scanfolder = question.page.exam.getResponseImageFolder();
-    return new File( scanfolder, fname );
-  }
-
   private BufferedImage loadImage( String fname )
   {
     BufferedImage img=null;
+    CompositeFile archive = question.page.exam.responsearchive;
+    if ( !archive.exists( fname ) )
+      return null;
+    
     try
     {
-      File imgfile = getFile( fname );
-      if ( !imgfile.exists() )
-        return null;
-      img = ImageIO.read(imgfile);
+      InputStream in = archive.getInputStream(fname);
+      img = ImageIO.read(in);
+      in.close();
     } catch (IOException ex)
     {
       Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }
     return img;
+  }
+
+  public void setImage( BufferedImage image )
+  {
+    CompositeFile archive = question.page.exam.responsearchive;
+    try
+    {
+      OutputStream out = archive.getOutputStream( getImageFileName(), true );
+      ImageIO.write(image, "png", out );
+      out.close();
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }    
   }
 
   public BufferedImage getImage()
@@ -185,18 +197,6 @@ public class ResponseData
     return filtered_image.get();
   }
 
-
-  public File getImageFile()
-  {
-    return getFile( getImageFileName() );
-  }
-
-  public File getFilteredImageFile()
-  {
-    return getFile( getFilteredImageFileName() );
-  }
-
-  
   public String getImageFileName()
   {
     if ( imagefilename != null )

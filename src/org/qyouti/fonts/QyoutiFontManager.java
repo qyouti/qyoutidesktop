@@ -551,13 +551,17 @@ public class QyoutiFontManager
       try {
         JarURLConnection juc = (JarURLConnection)url.openConnection();
         // switch to the url of the jar file
-        url = juc.getJarFileURL();
-        here = new File( url.getPath() );
+        URI uri = juc.getJarFileURL().toURI();
+        here = new File( uri.getPath() );
         here = here.getParentFile();
         return new File( here, "fonts" );
       }
       catch ( IOException ex ) {
         Logger.getLogger(QyoutiFontManager.class.getName() ).log( Level.SEVERE, null, ex );
+      }
+      catch (URISyntaxException ex)
+      {
+        Logger.getLogger(QyoutiFontManager.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
     

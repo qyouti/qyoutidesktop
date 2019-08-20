@@ -498,14 +498,10 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       {
         BufferedImage qimage = page.rotatedimage.getSubimage(itembounds.x, itembounds.y, itembounds.width, itembounds.height );
         float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
-        ImageIO.write(
-                      ImageResizer.resize( 
+        question.setImage( ImageResizer.resize( 
                               qimage, 
                               Math.round( qimage.getWidth()*scale ), 
-                              Math.round( qimage.getHeight()*scale ) ),
-                      "png",
-                      question.getImageFile()
-                );
+                              Math.round( qimage.getHeight()*scale ) ) );
       } catch (Exception ex)
       {
         Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -520,18 +516,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         response = new ResponseData( question, j, box );
         response.setImageWidth( boxbounds.width );
         response.setImageHeight( boxbounds.height );
-        try
-        {
-          ImageIO.write(
-                        page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ),
-                        "png",
-                        response.getImageFile()
-                  );
-        } catch (IOException ex)
-        {
-          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-          throw new PageDecodeException( "Technical error saving box image." );
-        }        
+        response.setImage( page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ) );
       }
     }
     
@@ -635,14 +620,10 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       {
         BufferedImage qimage = page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h );
         float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
-        ImageIO.write(
-                      ImageResizer.resize( 
+        question.setImage( ImageResizer.resize( 
                               qimage, 
                               Math.round( qimage.getWidth()*scale ), 
-                              Math.round( qimage.getHeight()*scale ) ),
-                      "jpg",
-                      question.getImageFile()
-                );
+                              Math.round( qimage.getHeight()*scale ) ) );
       } catch (Exception ex)
       {
         Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -676,19 +657,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 //          page.error = "Scanned same page twice?";
 //          return page;
 //        }
-        try
-        {
-          ImageIO.write(
-                        page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ),
-                        "jpg",
-                        response.getImageFile()
-                  );
-        } catch (IOException ex)
-        {
-          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-          page.error = "Technical error saving box image.";
-          return page;
-        }
+        response.setImage( page.rotatedimage.getSubimage(subimage_topleft.x, subimage_topleft.y, w, h ) );
       }
     }
    
@@ -823,17 +792,17 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     ResponseData responsedata;
 
     QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
-    File[] filelist = new File[rlabels.length];
+    BufferedImage[] imagelist = new BufferedImage[rlabels.length];
     XLocatorReport[] reports = new XLocatorReport[rlabels.length];
     ArrayList<BufferedImage> debugimages = new ArrayList<BufferedImage>();
     
     for ( int j=0; j<rlabels.length; j++ )
     {
       responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-      filelist[j] = responsedata.getImageFile();
+      imagelist[j] = responsedata.getImage();
     }
 
-    xlocator.setImageFiles( filelist );
+    xlocator.setImages( imagelist );
     XLocatorListener listener = new XLocatorListener()
       {
         @Override
@@ -858,23 +827,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     xlocator.runSynchronously();
     xlocator.removeProgressListener( listener );
 
-    if ( false )
-    {
-      for ( int i=0; i<debugimages.size(); i++ )
-      {
-        try
-        {
-          ImageIO.write(
-                        debugimages.get( i ),
-                        "jpg",
-                        new File( questiondata.getImageFile().getParentFile(), questiondata.ident + "_debug_" + i + ".jpg" ) );
-        } catch (IOException ex)
-        {
-          Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        }
-      }
-    }
-    
     int count=0;
     for ( int j=0; j<rlabels.length; j++ )
     {
@@ -918,79 +870,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
   }
   
   
-  private void processBoxImagesForResponselid( QTIElementResponselid responselid, QuestionData questiondata ) throws IOException
-  {
-    ResponseData responsedata;
-    BufferedImage temp;
-    String next_darkest_ident;
-    double darkest_dark_pixels, next_darkest_dark_pixels;
-    double redmean;
-
-    CannyEdgeDetector detector;
-
-    ResponseImageProcessor responseimageprocessor = questiondata.page.responseimageprocessor;
-
-      // reset question stats
-      responseimageprocessor.startQuestion();
-      // filter the images
-      // Iterate the response labels in this responselid and each time
-      // process the corresponding user input image
-      QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
-      for ( int j=0; j<rlabels.length; j++ )
-      {
-        responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-        responseimageprocessor.filter( responsedata, questiondata.page.exam.getResponseImageFolder() );
-      }
-
-
-      // now look at image statistics to decide what the user's intended
-      // response was.
-      if ( responselid.isSingleChoice() )
-      {
-        // now processing single available option
-        // low threshold for accepting a mark
-        if ( responseimageprocessor.darkest_ident != null &&
-                responseimageprocessor.darkest_dark_pixels > 0.01 )
-        {
-          // find next darkest selection
-          next_darkest_ident = null;
-          next_darkest_dark_pixels = 0.0;
-          for ( int j=0; j<rlabels.length; j++ )
-          {
-            responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-            if ( responsedata.ident.equals( responseimageprocessor.darkest_ident ) )
-              continue;
-            if ( responsedata.dark_pixels > next_darkest_dark_pixels )
-            {
-              next_darkest_ident = responsedata.ident;
-              next_darkest_dark_pixels = responsedata.dark_pixels;
-            }
-          }
-
-          // Only a clear distinct selection if no other dark box or
-          // the next darkest
-          // is less than 80% of the darkest
-          if ( next_darkest_ident == null || (next_darkest_dark_pixels / responseimageprocessor.darkest_dark_pixels) < 0.8 )
-          {
-            responsedata = questiondata.getResponseData( responseimageprocessor.darkest_ident );
-            responsedata.candidate_selected = true;
-            //responsedata.examiner_selected = true;
-          }
-        }
-      }
-      else
-      {
-        // processing question which can have multiple true statements
-        // use simple threshold.
-        for ( int j=0; j<rlabels.length; j++ )
-        {
-          responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
-          responsedata.candidate_selected = responsedata.dark_pixels > 0.05;
-          //responsedata.examiner_selected = responsedata.candidate_selected;
-        }
-      }
-
-  }
 
   /**
    * 
