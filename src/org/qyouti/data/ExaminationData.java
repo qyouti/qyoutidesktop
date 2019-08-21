@@ -92,6 +92,7 @@ public class ExaminationData
   File examfolder;
   File examfile;
   File questionfile;
+  File examinerfile;
   CompositeFile scanarchive;
   CompositeFile responsearchive;
   
@@ -99,6 +100,8 @@ public class ExaminationData
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
+  ExaminerData examinerdata = null;
+  
   public ImageFileTable scans = new ImageFileTable( this );
   
   Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
@@ -138,6 +141,7 @@ public class ExaminationData
     this.examfolder = examfolder;
     examfile        = new File( examfolder, "qyouti.xml" );
     questionfile    = new File( examfolder, "questions.xml" );
+    examinerfile    = new File( examfolder, "examiner.xml" );
     scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
     responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
@@ -294,18 +298,111 @@ public class ExaminationData
     // question...
     rebuildReviewList();
   }  
-  
 
+
+
+
+
+  public ExaminerCandidateData getExaminerCandidateData( String candidateident, boolean create )
+  {
+    ExaminerCandidateData ecd = examinerdata.cmap.get( candidateident );
+    if ( ecd != null ) return ecd;
+    if ( create)
+    {
+      ecd = new ExaminerCandidateData( candidateident );
+      this.examinerdata.cmap.put(candidateident, ecd);
+    }
+    return ecd;
+  }
+  
+  public ExaminerQuestionData getExaminerQuestionData( String candidateident, String questionident, boolean create )
+  {
+    ExaminerCandidateData ecd = getExaminerCandidateData( candidateident, create );
+    if ( ecd == null ) return null;
+    ExaminerQuestionData eqd = ecd.qmap.get(questionident);
+    if ( eqd != null) return eqd;
+    if ( create )
+    {
+      eqd = new ExaminerQuestionData( questionident );
+      ecd.qmap.put(questionident, eqd);
+    }
+    return eqd;
+  }
+
+  public ExaminerResponseData getExaminerResponseData( String candidateident, String questionident, String responseident, boolean create )
+  {
+    ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, create );
+    if ( eqd == null ) return null;
+    ExaminerResponseData erd = eqd.rmap.get(responseident);
+    if ( erd != null) return erd;
+    if ( create )
+    {
+      erd = new ExaminerResponseData( responseident );
+      eqd.rmap.put(responseident, erd);
+    }
+    return erd;
+  }  
+  
+  public OutcomeData getCandidateOutcomes( String candidateident )
+  {
+    ExaminerCandidateData ecd = getExaminerCandidateData( candidateident, true );
+    if ( ecd == null ) return null;
+    if ( ecd.outcomes == null )
+      ecd.outcomes = new OutcomeData( this );
+    return ecd.outcomes;
+  }
+  
+  public OutcomeData getQuestionOutcomes( String candidateident, String questionident )
+  {
+    ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, true );
+    if ( eqd == null ) return null;
+    if ( eqd.outcomes == null )
+      eqd.outcomes = new OutcomeData( this );
+    return eqd.outcomes;
+  }
+ 
+  public int getExaminerDecision( String candidateident, String questionident )
+  {
+    ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, false );
+    if ( eqd == null ) return QuestionData.EXAMINER_DECISION_NONE;
+    return eqd.getExaminerdecision();
+  }
+
+  public void setExaminerDecision( String candidateident, String questionident, int n )
+  {
+    ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, true );
+    eqd.setExaminerdecision(n);
+    examinerdata.setUnsavedChanges(true);
+  }
+  
+  public void setExaminerSelected( String candidateident, String questionident, String responseident, boolean b )
+  {
+    ExaminerResponseData erd = getExaminerResponseData( candidateident, questionident, responseident, true );
+    erd.examiner_selected = b;
+    examinerdata.setUnsavedChanges(true);
+  }
+  
+  public boolean isExaminerSelected( String candidateident, String questionident, String responseident )
+  {
+    ExaminerResponseData erd = getExaminerResponseData( candidateident, questionident, responseident, true );
+    if ( erd == null ) return false;
+    return erd.examiner_selected;
+  }
+
+
+  
+  
+  
   public void addToReviewList( CandidateData c, QuestionData q )
   {
     if ( reviewfilter == REVIEW_FILTER_UNREVIEWED && 
-            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_NONE )
+            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_NONE )
       return;
     if ( reviewfilter == REVIEW_FILTER_OVERRIDDEN && 
-            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE )
+            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_OVERRIDE )
       return;
     if ( reviewfilter == REVIEW_FILTER_CONFIRMED && 
-            q.getExaminerDecision() != QuestionData.EXAMINER_DECISION_STAND )
+            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_STAND )
       return;
     reviewlist.add( c, q );    
   }
@@ -339,7 +436,7 @@ public class ExaminationData
         for ( j=0; j<c.itemidents.size(); j++ )
         {
           q = c.getQuestionData( c.itemidents.get( j ) );
-          if ( q!=null && q.ident.equals( reviewquestionident ) )
+          if ( q!=null && q.getIdent().equals( reviewquestionident ) )
             addToReviewList( c, q );
         }
       }
@@ -432,7 +529,6 @@ public class ExaminationData
       if ( person.isExcluded() || person.isAnonymous() ) continue;
       candidate = new CandidateData( this, person.getName(), person.getId(), false );
       candidate.preferences = person.getPreferences();
-      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       newcandidates.add( candidate );
@@ -443,7 +539,6 @@ public class ExaminationData
     for ( i = 1; i <= anoncount; i++ )
     {
       candidate = new CandidateData( this, "Anon", df.format( i ), true );
-      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       newcandidates.add( candidate );
@@ -469,12 +564,12 @@ public class ExaminationData
         od.name = "SID";
         od.fixed = true;
         od.value = candidate.id;
-        candidate.outcomes.addDatum( od );
+        candidate.getOutcomes().addDatum( od );
         od = new OutcomeDatum();
         od.name = "NAME";
         od.fixed = true;
         od.value = candidate.name;
-        candidate.outcomes.addDatum( od );
+        candidate.getOutcomes().addDatum( od );
       }
     }
     setUnsavedChangesInMain( true );
@@ -752,7 +847,6 @@ public class ExaminationData
     for ( i = 0; i < list.size(); i++ )
     {
       candidate = list.get( i );
-      candidate.outcomes.addTableModelListener( outcomelistener );
       for ( j=0; j<allitems.size(); j++ )
       {
         item = allitems.get( j );
@@ -765,7 +859,7 @@ public class ExaminationData
         outcome.fixed = true;
         outcome.name = "SID";
         outcome.value = candidate.id;
-        candidate.outcomes.addDatum( outcome );
+        candidate.getOutcomes().addDatum( outcome );
       }
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
@@ -792,7 +886,6 @@ public class ExaminationData
     {
       ecandidate = (Element) nl.item(i);
       candidate = new CandidateData(this, ecandidate.getAttribute("name"), ecandidate.getAttribute("id"), false );
-      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -835,7 +928,6 @@ public class ExaminationData
         System.out.println(line[j]);
       }
       candidate = new CandidateData(this, line[firstnamecolumn] + " " + line[lastnamecolumn], line[idcolumn], false );
-      candidate.outcomes.addTableModelListener( outcomelistener );
       candidates.put(candidate.id, candidate);
       candidates_sorted.add(candidate);
       fireTableDataChanged();
@@ -860,9 +952,9 @@ public class ExaminationData
     for (i = 0; i < candidates_sorted.size(); i++)
     {
       candidate = candidates_sorted.get(i);
-      for ( j=0; j<candidate.outcomes.getRowCount(); j++ )
+      for ( j=0; j<candidate.getOutcomes().getRowCount(); j++ )
       {
-        datum = candidate.outcomes.getDatumAt( j );
+        datum = candidate.getOutcomes().getDatumAt( j );
         if ( "SCORE".equals( datum.name ) )
           continue;
         if ( !outcomenames.contains( datum.name ) )
@@ -891,7 +983,7 @@ public class ExaminationData
         list.add( "" );
       for ( j=0; j<outcomenames.size(); j++ )
       {
-        datum = candidate.outcomes.getDatum( outcomenames.get( j ) );
+        datum = candidate.getOutcomes().getDatum( outcomenames.get( j ) );
         if ( datum.value != null)
           list.add( datum.value.toString() );
         else
@@ -915,400 +1007,6 @@ public class ExaminationData
     "#008800"
   };
 
-  public void exportReport(File pdffile)
-          throws ParserConfigurationException, SAXException, IOException
-  {
-    int i, j, k;
-    String likertoutcome;
-    CandidateData candidate;
-
-    Vector<QTIElementItem> items = qdefs.qti.getItems();
-    QTIElementItem item;
-    QuestionData qd;
-    OutcomeDatum iod;
-    String[] outcomenames;
-
-    File htmlfile = File.createTempFile( "temp", ".html" );
-    BufferedWriter htmlwriter = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( htmlfile ), "UTF-8" ) );
-    htmlwriter.write( "<?xml version=\"1.0\"?>\n" );
-    htmlwriter.write( "<!DOCTYPE html [<!ENTITY nbsp             \"&#x000A0;\" >]>\n" );
-    htmlwriter.write( "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" );
-    htmlwriter.write( "<body style=\"font-family: Helvetica; font-size: 75%;\">\n" );
-
-
-    htmlwriter.write("<h1>Survey Report</h1>\n");
-    htmlwriter.write("<h2>Likert scale histograms</h2>\n");
-    Histogram histogram;
-    for ( j=0; j<items.size(); j++ )
-    {
-      htmlwriter.write("<div style=\"page-break-inside: avoid;\">" );
-      htmlwriter.write("<h3 style=\"margin-bottom: 0em;\">Question " + (j+1) + "</h3>\n");
-      item = items.get(j);
-      Vector<QTIElementMattext> mattexts = item.getPresentation().findElements( QTIElementMattext.class, true );
-      htmlwriter.write("<div style=\"margin-left: 4em; color: #000044; " +
-          "border: 1px dotted #000044; padding: 0.5em 0.5em 0.5em 0.5em;\">");
-      htmlwriter.write( StringProcessor.cleanXmlString( mattexts.get(0).getContent() ));
-      htmlwriter.write("</div>");
-
-      outcomenames = item.getOutcomeNames();
-      likertoutcome = null;
-      boolean bodge=false;
-      for ( i=0; i<outcomenames.length; i++ )
-      {
-        if ( bodge )
-        {
-          if ( j>=3 && j!=14 && !"SCORE".equals( outcomenames[i]) )
-          {
-            likertoutcome = outcomenames[i];
-            break;
-          }
-        }
-        else
-        {
-          if ( item.isOutcomeLikert( outcomenames[i] ) )
-          {
-            likertoutcome = outcomenames[i];
-            break;
-          }
-        }
-
-      }
-      if ( likertoutcome == null )
-      {
-        htmlwriter.write("<p style=\"text-align: right;\"><em>Not a likert scale question - please see table of data below.</em></p></div>\n");
-        continue;
-      }
-
-      histogram = new Histogram();
-      item = items.get(j);
-      for (i = 0; i < candidates_sorted.size(); i++)
-      {
-        candidate = candidates_sorted.get(i);
-        if ( candidate.pages.size() == 0 )
-          continue;
-        qd = candidate.getQuestionData( item.getIdent() );
-        if ( qd == null )
-          continue;
-        // another bodge
-        iod = qd.outcomes.getDatum( likertoutcome );
-        if ( iod == null )
-          continue;
-        histogram.add( iod.value.toString() );
-      }
-
-      htmlwriter.write("<table align=\"center\" style=\"margin-left: 2in; margin-top: 1em; height: 0.2in;\">\n");
-      htmlwriter.write("<tr>\n");
-      String[] labels = histogram.getHeadings();
-      String colour;
-      for ( k=1; k <= 5; k++ )
-      {
-        htmlwriter.write("<td style=\"background-color: " );
-        htmlwriter.write( likertcolour[k-1] );
-        htmlwriter.write( "; width: " + (histogram.getProportion( Integer.toString(k)) * 5) + "in;\">" );
-        htmlwriter.write( ".</td>\n");
-      }
-
-      htmlwriter.write("</tr></table>\n");
-
-      htmlwriter.write("<table style=\"width: 5in; margin-left: 2in; margin-top: 1em; font-size: 85%;\">\n");
-      htmlwriter.write("<tr><td align=\"center\">Strongly Disagree</td>\n");
-      htmlwriter.write("<td align=\"center\">Disagree</td>\n");
-      htmlwriter.write("<td align=\"center\">Neutral</td>\n");
-      htmlwriter.write("<td align=\"center\">Agree</td>\n");
-      htmlwriter.write("<td align=\"center\">Strongly Agree</td></tr>\n");
-      htmlwriter.write("<tr><td align=\"center\">" + histogram.getCount("1") + "</td>\n");
-      htmlwriter.write("<td align=\"center\">" + histogram.getCount("2") + "</td>\n");
-      htmlwriter.write("<td align=\"center\">" + histogram.getCount("3") + "</td>\n");
-      htmlwriter.write("<td align=\"center\">" + histogram.getCount("4") + "</td>\n");
-      htmlwriter.write("<td align=\"center\">" + histogram.getCount("5") + "</td>\n</tr>\n");
-      htmlwriter.write("</table></div>\n");
-    }
-
-
-    htmlwriter.write("<h2 style=\"page-break-before: always;\">Raw Multiple Choice Data</h2>\n");
-    htmlwriter.write( "<table>\n" );
-    StringBuffer line = new StringBuffer();
-    StringBuffer header = new StringBuffer();
-    header.append("<tr><th>id</th>\n" ); //<th>name</th>\n" );
-    for ( j=0; j<items.size(); j++ )
-    {
-      item = items.get(j);
-      outcomenames = item.getOutcomeNames();
-      for ( k=0; k<outcomenames.length; k++ )
-      {
-        if ( "score".equalsIgnoreCase( outcomenames[k] ) )
-          continue;
-        if ( "Reply".equalsIgnoreCase(outcomenames[k]))
-        {
-          header.append( "<th>" );
-          header.append( "Q" + (j+1) );
-        }
-        else
-        {
-          header.append( "<th style=\"font-size: 50%;\">" );
-          header.append( outcomenames[k] );
-        }
-        header.append( "</th>\n" );
-      }
-    }
-    header.append("</tr>\n");
-    htmlwriter.write(header.toString());
-
-    
-    for (i = 0; i < candidates_sorted.size(); i++)
-    {
-      line.setLength(0);
-      candidate = candidates_sorted.get(i);
-      if ( candidate.pages.size() == 0 )
-        continue;
-      line.append( "<tr>\n<td style=\"font-size: 90%;\">" );
-      line.append( candidate.id );
-      line.append( "</td>\n" );
-//      line.append( "<td>" );
-//      line.append( candidate.name );
-//      line.append( "</td>\n" );
-
-
-      for ( j=0; j<items.size(); j++ )
-      {
-        item = items.get(j);
-        qd = candidate.getQuestionData( item.getIdent() );
-
-        outcomenames = item.getOutcomeNames();
-        for ( k=0; k<outcomenames.length; k++ )
-        {
-          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
-          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
-          {
-            line.append( "<td style=\"text-align: center; font-size: 90%;\">" );
-            if ( iod != null )
-              line.append( iod.value.toString() );
-            line.append( "</td>\n" );
-          }
-        }
-      }
-      line.append( "</tr>\n" );
-      htmlwriter.write(line.toString());
-    }
-    htmlwriter.write( "</table>\n" );
-
-
-    htmlwriter.write("<h2>Written Comments</h2>\n");
-    for (i = 0; i < candidates_sorted.size(); i++)
-    {
-      line.setLength(0);
-      candidate = candidates_sorted.get(i);
-      if ( candidate.pages.size() == 0 )
-        continue;
-
-
-      for ( j=0; j<items.size(); j++ )
-      {
-        item = items.get(j);
-        qd = candidate.getQuestionData( item.getIdent() );
-
-        outcomenames = item.getOutcomeNames();
-        for ( k=0; k<outcomenames.length; k++ )
-        {
-          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
-          if ( iod !=null && "Image".equalsIgnoreCase( iod.value.toString() ) )
-          {
-            line.append("<div style=\"page-break-inside: avoid;\">" );
-            line.append( candidate.id );
-            line.append( "<br/>" );
-            line.append( "<img width=\"90%\" src=\"" );
-            line.append(
-                new File(
-                examfile.getParentFile(),
-                "scans/" +
-                item.getIdent() +
-                "_0_" +
-                candidate.id + ".jpg"  ).toURI() );
-            line.append( "\"/>" );
-            line.append( "</div>\n" );
-            htmlwriter.write(line.toString());
-          }
-        }
-      }
-    }
-
-
-
-    htmlwriter.write( "</body>\n</html>\n" );
-    htmlwriter.close();
-
-
-    //File xsltfile = new File( "qyouti/xhtml2fo.xsl" );
-    FopFactory fopFactory = FopFactory.newInstance( new File(".").toURI() );
-    FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-    // configure foUserAgent as desired
-
-    // Setup output
-    OutputStream out = new java.io.FileOutputStream(pdffile);
-    out = new java.io.BufferedOutputStream(out);
-
-    try
-    {
-      // Construct fop with desired output format
-      Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, out);
-
-      // Setup XSLT
-      TransformerFactory factory = TransformerFactory.newInstance();
-      Transformer transformer = factory.newTransformer(
-          new StreamSource(
-          getClass().getResourceAsStream("/resources/xhtml2fo.xsl")));
-
-      // Set the value of a <param> in the stylesheet
-      transformer.setParameter("page-width", "210mm");
-
-      transformer.setParameter("page-height", "297mm");
-
-      // Setup input for XSLT transformation
-      Source src = new StreamSource(htmlfile);
-
-      // Resulting SAX events (the generated FO) must be piped through to FOP
-      Result res = new SAXResult(fop.getDefaultHandler());
-
-      // Start XSLT transformation and FOP processing
-      transformer.transform(src, res);
-    }
-    catch ( Exception e )
-    {
-      e.printStackTrace();
-    }
-    finally
-    {
-      out.close();
-    }
-  }
-
-  public void exportCsvReplies(File csvfile)
-          throws ParserConfigurationException, SAXException, IOException
-  {
-    int i, j, k;
-    CandidateData candidate;
-    CSVWriter csvwriter = new CSVWriter(new FileWriter(csvfile));
-
-    Vector<QTIElementItem> items = qdefs.qti.getItems();
-    String[] line= new String[0];
-    QuestionData qd;
-    QTIElementItem item;
-    OutcomeDatum iod;
-    Vector<String> lines = new Vector<String>();
-    String[] outcomenames;
-
-    for (i = 0; i < candidates_sorted.size(); i++)
-    {
-      candidate = candidates_sorted.get(i);
-      if ( candidate.pages.isEmpty() )
-        continue;
-      lines.clear();
-      lines.add( candidate.id );
-      //lines.add( candidate.name );
-//      qd = candidate.firstQuestion();
-//      for ( j=0; qd!=null; j++ )
-//      {
-//        for ( k=0; k<qd.outcomes.data.size(); k++ )
-//        {
-//          iod = qd.outcomes.data.get(k);
-//          if ( !"score".equalsIgnoreCase( iod.name ) )
-//            lines.add( iod.value.toString() );
-//        }
-//        qd = qd.nextQuestionData();
-//      }
-
-      for ( j=0; j<items.size(); j++ )
-      {
-        item = items.get(j);
-        qd = candidate.getQuestionData( item.getIdent() );
-
-        outcomenames = item.getOutcomeNames();
-        for ( k=0; k<outcomenames.length; k++ )
-        {
-          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
-          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
-          {
-            lines.add( (iod == null)?"NA":iod.value.toString() );
-          }
-        }
-      }
-      line= new String[0];
-      line = lines.toArray(line);
-      csvwriter.writeNext(line);
-    }
-    csvwriter.close();
-  }
-
-
-  public void exportXmlReplies(File xmlfile)
-          throws ParserConfigurationException, SAXException, IOException, TransformerConfigurationException, TransformerException
-  {
-    int i, j, k;
-    CandidateData candidate;
-    FileWriter filewriter = new FileWriter(xmlfile);
-
-
-    DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-    Document doc = docBuilder.newDocument();
-
-    Element root = doc.createElement("outcometable");
-    root.setAttribute("file", examfile.getCanonicalPath() );
-    doc.appendChild(root);
-    Element ecandidate, eoutcome;
-
-
-
-    Vector<QTIElementItem> items = qdefs.qti.getItems();
-    QuestionData qd;
-    QTIElementItem item;
-    OutcomeDatum iod;
-    String[] outcomenames;
-
-    for (i = 0; i < candidates_sorted.size(); i++)
-    {
-      candidate = candidates_sorted.get(i);
-      if ( candidate.pages.isEmpty() )
-        continue;
-      ecandidate = doc.createElement("candidate");
-      ecandidate.setAttribute("id", candidate.id );
-      root.appendChild(ecandidate);
-
-      for ( j=0; j<items.size(); j++ )
-      {
-        item = items.get(j);
-        qd = candidate.getQuestionData( item.getIdent() );
-
-        outcomenames = item.getOutcomeNames();
-        for ( k=0; k<outcomenames.length; k++ )
-        {
-          iod = ( qd == null )?null:qd.outcomes.getDatum( outcomenames[k] );
-          if ( !"score".equalsIgnoreCase( outcomenames[k] ) )
-          {
-            eoutcome = doc.createElement("outcome");
-            eoutcome.setAttribute("item", item.getIdent() );
-            eoutcome.setAttribute("id", outcomenames[k] );
-            eoutcome.setAttribute("answered", (iod == null)?"false":"true");
-            ecandidate.appendChild(eoutcome);
-            if ( iod != null )
-              eoutcome.setTextContent( iod.value.toString() );
-          }
-        }
-      }
-    }
-
-    TransformerFactory transfac = TransformerFactory.newInstance();
-    //transfac.setAttribute("indent-number", 2);
-    Transformer trans = transfac.newTransformer();
-    trans.setOutputProperty(OutputKeys.INDENT, "yes");
-    trans.setOutputProperty(OutputKeys.METHOD, "xml");
-
-    StreamResult result = new StreamResult(filewriter);
-    DOMSource source = new DOMSource(doc);
-    trans.transform(source, result);
-
-    filewriter.close();
-  }
 
 
   public void importQuestionsFromPackage(File imsmanifest)
@@ -1403,54 +1101,54 @@ public class ExaminationData
     importQuestionsFromQTI(imsmanifest.getParentFile(),qtiexamfile);
   }
 
-  static String top = "<?xml version=\"1.0\"?>\n" +
-"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\">\n" +
-"  <assessment ident=\"ass{ident}\" title=\"imported\">\n" +
+  static String top = "<?xml version=\"1.0\"?>\r\n" +
+"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\">\r\n" +
+"  <assessment ident=\"ass{ident}\" title=\"imported\">\r\n" +
 "    <section ident=\"sec{ident}\" title=\"imported\">";
   
-  static String tail = "    </section>\n" +
-"  </assessment>\n" +
+  static String tail = "    </section>\r\n" +
+"  </assessment>\r\n" +
 "</questestinterop>";
   
-  static String itemtop = "    <item ident=\"{itemident}\" title=\"Question {seq}\">\n" +
-"    <presentation>\n" +
-"      <flow>\n" +
-"        <material>\n" +
+  static String itemtop = "    <item ident=\"{itemident}\" title=\"Question {seq}\">\r\n" +
+"    <presentation>\r\n" +
+"      <flow>\r\n" +
+"        <material>\r\n" +
 "          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">" +
 "{stem}" +
-"          </mattext>\n" +
-"          <matbreak/>\n" +
-"        </material>\n" +
-"        <response_lid ident=\"resp_{itemident}\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <flow_label class=\"Row\">\n";
+"          </mattext>\r\n" +
+"          <matbreak/>\r\n" +
+"        </material>\r\n" +
+"        <response_lid ident=\"resp_{itemident}\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <flow_label class=\"Row\">\r\n";
           
-static String itemtail = "            </flow_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"      </flow>\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\n" +
-"      </outcomes>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"          <varequal case=\"Yes\" respident=\"resp_{itemident}\">{correctident}</varequal>\n" +
-"        </conditionvar>\n" +
-"        <setvar action=\"Add\" varname=\"SCORE\">100.0</setvar>\n" +
-"      </respcondition>\n" +
-"    </resprocessing>\n" +
-"    </item>\n";
+static String itemtail = "            </flow_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"      </flow>\r\n" +
+"    </presentation>\r\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\r\n" +
+"      <outcomes>\r\n" +
+"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\r\n" +
+"      </outcomes>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"          <varequal case=\"Yes\" respident=\"resp_{itemident}\">{correctident}</varequal>\r\n" +
+"        </conditionvar>\r\n" +
+"        <setvar action=\"Add\" varname=\"SCORE\">100.0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"    </resprocessing>\r\n" +
+"    </item>\r\n";
 
-static String option = "              <response_label xmlns:qyouti=\"http://www.qyouti.org/qtiext\" ident=\"{labelident}\">\n" +
-"                <material>\n" +
+static String option = "              <response_label xmlns:qyouti=\"http://www.qyouti.org/qtiext\" ident=\"{labelident}\">\r\n" +
+"                <material>\r\n" +
 "                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">" +
 "{option}" +
-"                  </mattext>\n" +
-"                  <matbreak/>\n" +
-"                </material>\n" +
-"              </response_label>\n";
+"                  </mattext>\r\n" +
+"                  <matbreak/>\r\n" +
+"                </material>\r\n" +
+"              </response_label>\r\n";
   
 
   public void importQuestionsFromPlainText(File textexamfile, File importfolder)
@@ -1878,6 +1576,14 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Writer writer = null;
     try
     {
+      if ( examinerdata != null && examinerdata.areThereUnsavedChanges() )
+      {
+        writer = new OutputStreamWriter(new FileOutputStream(examinerfile), "utf8");
+        examinerdata.emit( writer );
+        writer.close();
+        writer = null;        
+      }
+      
       if ( qdefs != null && qdefs.areThereUnsavedChanges() )
       {
         writer = new OutputStreamWriter(new FileOutputStream(questionfile), "utf8");
@@ -1941,6 +1647,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
   }
 
+  public void setUnsavedChangesInExaminer( boolean b )
+  {
+    if ( examinerdata.areThereUnsavedChanges() != b )
+    {
+      examinerdata.setUnsavedChanges( b );
+      fireStatusChange();
+    }
+  }
+  
   public String getLastPrintID()
   {
     return lastprintid;
@@ -2001,32 +1716,32 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public void emit(Writer writer)
           throws IOException
   {
-    writer.write("<?xml version=\"1.0\"?>\n");
+    writer.write("<?xml version=\"1.0\"?>\r\n");
     writer.write("<examination" );
     if ( lastprintid != null)
       writer.write( " lastprintid=\"" + lastprintid + "\"" );
-    writer.write( ">\n");
+    writer.write( ">\r\n");
 
 
     emitOptions( writer );
 
-    writer.write( "<scans nextscanfileident=\"" + nextscanfileident + "\">\n" );
+    writer.write( "<scans nextscanfileident=\"" + nextscanfileident + "\">\r\n" );
     for ( int i=0; i<scans.size(); i++ )
       scans.get( i ).emit( writer );
-    writer.write( "</scans>\n" );
+    writer.write( "</scans>\r\n" );
 
-    writer.write( "<persons>\n" );
+    writer.write( "<persons>\r\n" );
     if (persons != null)
     {
       for (int i = 0; i < persons.size(); i++)
         persons_sorted.get(i).emit(writer);
     }
-    writer.write( "</persons>\n" );
+    writer.write( "</persons>\r\n" );
     
     
     // write out ahead of candidates so that candidate data
     // can reference the pages
-    writer.write( "<pages>\n" );
+    writer.write( "<pages>\r\n" );
     if (pages != null)
     {
       for (int i = 0; i < pages.size(); i++)
@@ -2034,18 +1749,18 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         pages.get(i).emit(writer);
       }
     }
-    writer.write( "</pages>\n" );
+    writer.write( "</pages>\r\n" );
 
 
-    writer.write("<papers>\n");
+    writer.write("<papers>\r\n");
     Enumeration<CandidateData> e = candidates.elements();
     for (int i = 0; i < candidates_sorted.size(); i++)
     {
       candidates_sorted.get(i).emit(writer);
     }
-    writer.write("</papers>\n");
+    writer.write("</papers>\r\n");
 
-    writer.write("<analysis>\n");
+    writer.write("<analysis>\r\n");
     if (analyses != null)
     {
       for (int i = 0; i < analyses.size(); i++)
@@ -2053,9 +1768,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         analyses.get(i).emit(writer);
       }
     }
-    writer.write("</analysis>\n");
+    writer.write("</analysis>\r\n");
 
-    writer.write("<transforms>\n");
+    writer.write("<transforms>\r\n");
     if (datatransforminstructions != null)
     {
       for (int i = 0; i < datatransforminstructions.size(); i++)
@@ -2063,9 +1778,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         datatransforminstructions.get(i).emit(writer);
       }
     }
-    writer.write("</transforms>\n");
+    writer.write("</transforms>\r\n");
 
-    writer.write("</examination>\n");
+    writer.write("</examination>\r\n");
   }
 
   public void loadOptions( Element e )
@@ -2131,8 +1846,32 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       return;
     loadQuestions( new InputSource( new FileInputStream( questionfile ) ) );
     load( new InputSource( new FileInputStream( examfile ) ) );
+    try
+    {
+      loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
+    }
+    catch ( FileNotFoundException e )
+    {
+      System.out.println( "No examiner data yet" );
+      examinerdata = new ExaminerData();
+    }
   }
 
+  private void loadExaminerData( InputSource source )
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    Document document = builder.parse( source );
+    Element roote = document.getDocumentElement();
+    examinerdata=null;
+    if ("examinerdata".equals(roote.getNodeName()))
+      examinerdata = new ExaminerData( this, roote );
+    else
+      examinerdata = new ExaminerData();
+  }
+  
   private void loadQuestions( InputSource source )
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -2208,7 +1947,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         for (int j = 0; j < cnl.getLength(); j++)
         {
           candidate = new CandidateData(this, (Element) cnl.item(j));
-          candidate.outcomes.addTableModelListener( outcomelistener );
         }
         sortCandidates();
       }
@@ -2342,8 +2080,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     int on = columnIndex-4;
     if ( on>=0 && on<outcomenames.size() )
     {
-      if ( candidate.outcomes == null ) return null;
-      OutcomeDatum d = candidate.outcomes.getDatum( outcomenames.get( on ) );
+      if ( candidate.getOutcomes() == null ) return null;
+      OutcomeDatum d = candidate.getOutcomes().getDatum( outcomenames.get( on ) );
       if ( d == null || d.value == null ) return null;
       return d.value.toString();
     }

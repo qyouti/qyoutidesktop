@@ -61,10 +61,11 @@ public class ResponseData
   public double dark_pixels=-1;
   public boolean needsreview=false;
   public boolean candidate_selected=false;
-  public boolean examiner_selected=false;
 
   public String debug_message=null;
 
+  ExaminerResponseData erd = null;
+  
   public ResponseData( QuestionData question, int position, QuestionMetricBox box )
   {
     this.question = question;
@@ -87,7 +88,6 @@ public class ResponseData
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
     candidate_selected          = "true".equalsIgnoreCase( element.getAttribute( "selected"  ) );
-    examiner_selected = "true".equalsIgnoreCase( element.getAttribute( "examiner"  ) );
     str = element.getAttribute( "imagefile" );
     if ( str != null && str.length() > 0 )
       imagefilename = str;
@@ -114,7 +114,7 @@ public class ResponseData
   public boolean isSelected()
   {
     if ( question.getExaminerDecision() == QuestionData.EXAMINER_DECISION_OVERRIDE )
-      return examiner_selected;
+      return question.page.exam.isExaminerSelected(question.page.candidate_number, question.getIdent(), ident);
     return candidate_selected;
   }
   
@@ -142,7 +142,7 @@ public class ResponseData
 
   private void setIdentFromIndex()
   {
-    QTIElementItem qtiitem = question.page.exam.getAssessmentItem( question.ident );
+    QTIElementItem qtiitem = question.page.exam.getAssessmentItem( question.getIdent() );
     QTIElementResponselabel label = qtiitem.getResponselabelByOffset( index );
     if ( label != null )
       ident = label.getIdent();
@@ -201,7 +201,7 @@ public class ResponseData
   {
     if ( imagefilename != null )
       return imagefilename;    
-    imagefilename = question.ident + "_" + position + "_" +
+    imagefilename = question.getIdent() + "_" + position + "_" +
                 question.page.candidate_number +
                 ".png";
     return imagefilename;
@@ -209,7 +209,7 @@ public class ResponseData
 
   public String getFilteredImageFileName()
   {
-    return question.ident + "_" + position + "_" +
+    return question.getIdent() + "_" + position + "_" +
                 question.page.candidate_number +
                 "_filt.jpg";
   }
@@ -224,7 +224,6 @@ public class ResponseData
     writer.write( "type=\"" + type + "\" " );
     writer.write( "needsreview=\"" + (needsreview?"yes":"no") + "\" " );
     writer.write("selected=\"" + (candidate_selected?"true":"false") + "\" " );
-    writer.write( "examiner=\"" + (examiner_selected?"true":"false") + "\" " );
     writer.write( "imagefile=\"" + imagefilename + "\" ");
     writer.write( "imagewidth=\"" + imagewidth + "\" ");
     writer.write( "imageheight=\"" + imageheight + "\" ");
@@ -232,10 +231,10 @@ public class ResponseData
     {
       writer.write( ">" );
       writer.write( debug_message );
-      writer.write( "</response>\n" );
+      writer.write( "</response>\r\n" );
     }
     else
-      writer.write( "/>\n" );
+      writer.write( "/>\r\n" );
 
   }
 

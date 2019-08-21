@@ -75,12 +75,12 @@ public class QuestionAnalysis
       writer.write( "\" offset=\"" + offset );
       writer.write( "\" mean=\"" );
       writer.write( Double.toString(mean_score) );
-      writer.write( "\">\n" );
+      writer.write( "\">\r\n" );
       for ( int i=0; i<response_analyses.size(); i++ )
       {
         response_analyses.get(i).emit( writer );
       }
-      writer.write( "    </itemanalysis>\n" );
+      writer.write( "    </itemanalysis>\r\n" );
   }
   
   public String toHTML()
@@ -113,30 +113,30 @@ public class QuestionAnalysis
       buffer.append( "<tr>" );
       buffer.append( tdstylea );
       buffer.append( ra.ident );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstylea );
       buffer.append( ra.correct?"T":"F" );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstylea );
       buffer.append( ra.correct?ra.right:ra.wrong );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstylea );
       buffer.append( ra.correct?ra.wrong:ra.right );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstylea );
       buffer.append( Integer.toString( Math.round( 100.0f * (float)ra.right / (float)(ra.right + ra.wrong) ) ) + "%" );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstyleb );
       buffer.append( Double.toString( ra.median_difference ) );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstyleb );
       buffer.append( Double.toString( ra.median_difference_lower ) );
-      buffer.append( "</td>\n" );
+      buffer.append( "</td>\r\n" );
       buffer.append( tdstyleb );
       buffer.append( Double.toString( ra.median_difference_upper ) );
-      buffer.append( "</td></tr>\n" );
+      buffer.append( "</td></tr>\r\n" );
     }
-    buffer.append( "<tr></tr><tr></tr></table>\n" );
+    buffer.append( "<tr></tr><tr></tr></table>\r\n" );
     return buffer.toString();
   }
 }

@@ -74,7 +74,7 @@ public class DataTransformInstruction
       writer.write( "\" title=\"" + title );
       writer.write( "\" xslfile=\"" + xslfilename );
       writer.write( "\" outputfile=\"" + outputfilename );
-      writer.write( "\"/>\n" );
+      writer.write( "\"/>\r\n" );
   }
 
   public boolean transform()

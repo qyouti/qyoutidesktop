@@ -133,7 +133,7 @@ public class CandidateQuestionPanel
       responsetable.setDefaultEditor( Boolean.class, dce);
       pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE );
       responsetable.setDefaultRenderer( Boolean.class, pinkboxrenderer );
-      outcometable.setModel( questiondata.outcomes );
+      outcometable.setModel( questiondata.getOutcomes() );
     }
     
     imagescrollpanel.setVisible( true );
@@ -478,7 +478,7 @@ public class CandidateQuestionPanel
     {
       System.out.println( "examiner decision change." );
       questiondata.setExaminerDecision( n );
-      candidate.exam.setUnsavedChangesInMain( true );
+      candidate.exam.setUnsavedChangesInExaminer( true );
     }    
   }
   

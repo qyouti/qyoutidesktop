@@ -2235,7 +2235,7 @@ public class QyoutiFrame
   {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
     exam.invalidateAllOutcomes();
     exam.updateOutcomes();
-    exam.setUnsavedChangesInMain( true );
+    exam.setUnsavedChangesInExaminer( true );
     exam.processDataChanged( exam.qdefs );
   }//GEN-LAST:event_recomputemenuitemActionPerformed
 
@@ -2974,7 +2974,7 @@ public class QyoutiFrame
       {
         c = exam.reviewlist.getCandidateData( i );
         q = exam.reviewlist.getQuestionData( i );
-        cqp = new CandidateQuestionPanel( c, q.ident );
+        cqp = new CandidateQuestionPanel( c, q.getIdent() );
         questionreviewpanel.add( cqp, gbc );
         n++;
       }

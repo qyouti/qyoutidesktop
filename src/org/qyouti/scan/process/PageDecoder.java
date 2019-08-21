@@ -488,9 +488,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     QuestionMetricBox box;
     for ( i=0; i < items.length; i++ )
     {
-      question = new QuestionData( page );
+      question = new QuestionData( items[i].getIdent(), page );
       question.setImagesProcessed( false );
-      question.ident = items[i].getIdent();
 
       bpage.toImageBounds( items[i].getCorners(itemcorners), itembounds );
 
@@ -598,9 +597,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     
     for ( int q=0; q<items.length; q++ )
     {
-      question = new QuestionData( page );
+      question = new QuestionData( items[q].getIdent(), page );
       question.setImagesProcessed( false );
-      question.ident = items[q].getIdent();
       questionmetrics = items[q].getQuestionMetricsRecord();
 
       // Save an image of the whole question
@@ -750,11 +748,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     for ( int i=0; i<page.questions.size(); i++ )
     {
       questiondata = page.questions.get( i );
-      if ( questiondata == null || questiondata.ident == null || questiondata.areImagesProcessed() )
+      if ( questiondata == null || questiondata.getIdent() == null || questiondata.areImagesProcessed() )
         continue;
       questiondata.setImagesProcessed( true );
       
-      qti_item = page.exam.qdefs.qti.getItem( questiondata.ident );
+      qti_item = page.exam.qdefs.qti.getItem( questiondata.getIdent() );
 
       // skip questions that aren't supported
       if ( !qti_item.isSupported() )
@@ -833,7 +831,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       responsedata = questiondata.getResponseData( rlabels[j].getIdent() );
       responsedata.debug_message = reports[j].toString();
       responsedata.candidate_selected = reports[j].hasX();
-      responsedata.examiner_selected = false;
       
       if ( responsedata.candidate_selected )
       {

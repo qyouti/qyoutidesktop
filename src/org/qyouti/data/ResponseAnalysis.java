@@ -106,6 +106,6 @@ public class ResponseAnalysis
       writer.write( Double.toString(median_difference_upper) );
       writer.write( "\"" );
 
-      writer.write( "/>\n" );
+      writer.write( "/>\r\n" );
   }
 }

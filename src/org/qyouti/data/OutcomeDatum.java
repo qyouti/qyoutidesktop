@@ -80,7 +80,7 @@ public class OutcomeDatum
       writer.write( " type=\"string\"" );
     if ( fixed )
       writer.write( " fixed=\"yes\"" );
-    writer.write( "/>\n" );
+    writer.write( "/>\r\n" );
   }
 
 }

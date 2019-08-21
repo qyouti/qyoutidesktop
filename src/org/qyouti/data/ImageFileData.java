@@ -175,13 +175,13 @@ public class ImageFileData
     writer.write( "\" processed=\"" );
     writer.write( processed?"true":"false" );
     writer.write( "\" " );
-    writer.write( ">\n" );
+    writer.write( ">\r\n" );
     if ( error != null )
     {
       writer.write( "      <error>" );
       writer.write( error );
-      writer.write( "</error>\n" );
+      writer.write( "</error>\r\n" );
     }
-    writer.write( "    </file>\n" );
+    writer.write( "    </file>\r\n" );
   }
 }

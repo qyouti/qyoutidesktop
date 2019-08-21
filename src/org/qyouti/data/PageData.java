@@ -209,19 +209,19 @@ public class PageData implements Comparable<PageData>
     writer.write( processed?"true":"false" );
     writer.write( "\" " );
 
-    writer.write( ">\n" );
+    writer.write( ">\r\n" );
 
     if ( error != null )
     {
       writer.write( "      <error>" );
       writer.write( error );
-      writer.write( "</error>\n" );
+      writer.write( "</error>\r\n" );
     }
 
     for ( int i=0; i<questions.size(); i++ )
       questions.get( i ).emit( writer );
 
-    writer.write( "    </page>\n" );
+    writer.write( "    </page>\r\n" );
   }
 
 //  @Override

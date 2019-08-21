@@ -52,7 +52,6 @@ public class CandidateData
   public boolean anonymous;
 
   public Double score = null;
-  public OutcomeData outcomes = null;
 
   public UserRenderPreferences preferences = null;
 
@@ -68,7 +67,6 @@ public class CandidateData
     this.anonymous = anonymous;
     this.score = null;
     this.preferences = null;
-    outcomes = new OutcomeData( exam );
   }
 
 
@@ -123,14 +121,6 @@ public class CandidateData
       }
     }
 
-    outcomes = new OutcomeData( exam );
-    nl = element.getElementsByTagName( "outcome" );
-    OutcomeDatum outcome;
-    for ( int j=0; j<nl.getLength(); j++ )
-    {
-      outcome = new OutcomeDatum( (Element)nl.item(j) );
-      outcomes.addDatum( outcome );
-    }
     nl = element.getElementsByTagName( "preferences" );
     if ( nl.getLength() > 0 )
       preferences = new UserRenderPreferences( (Element)nl.item( 0 ) );
@@ -216,7 +206,7 @@ public class CandidateData
       for ( j=0; j<page.questions.size(); j++ )
       {
         question = page.questions.get(j);
-        if ( qid.equals( question.ident ) )
+        if ( qid.equals( question.getIdent() ) )
         {
           //System.out.println( "found q " );
           if ( resp_offset>=0 && resp_offset < question.responsedatas.size() )
@@ -240,7 +230,7 @@ public class CandidateData
       for ( j=0; j<page.questions.size(); j++ )
       {
         question = page.questions.get(j);
-        if ( qid.equals( question.ident ) )
+        if ( qid.equals( question.getIdent() ) )
           return question;
       }
     }
@@ -285,16 +275,16 @@ public class CandidateData
       writer.write( " score=\"" + score + "\"" );
     if ( anonymous )
       writer.write( " anonymous=\"yes\"" );
-    writer.write( ">\n" );
+    writer.write( ">\r\n" );
     if ( itemidents != null )
     {
       writer.write( "    <items" );
       if ( fixeditems )
         writer.write( " fixed=\"yes\"" );
-      writer.write( ">\n" );
+      writer.write( ">\r\n" );
       for ( int i=0; i<itemidents.size(); i++ )
-        writer.write( "      <itemref ident=\"" + itemidents.elementAt( i ) + "\"/>\n" );
-      writer.write( "    </items>\n" );
+        writer.write( "      <itemref ident=\"" + itemidents.elementAt( i ) + "\"/>\r\n" );
+      writer.write( "    </items>\r\n" );
     }
     if ( preferences != null )
       preferences.emit(writer);
@@ -302,11 +292,9 @@ public class CandidateData
     {
       writer.write( "    <page pageid=\"" );
       writer.write( pages.get( i ).pageid );
-      writer.write( "\"/>\n" );
+      writer.write( "\"/>\r\n" );
     }
-    for ( int i=0; i<outcomes.getRowCount(); i++ )
-      outcomes.getDatumAt( i ).emit( writer );
-    writer.write( "  </candidate>\n" );
+    writer.write( "  </candidate>\r\n" );
   }
 
   public CandidateData nextCandidateData( boolean not_empty )
@@ -434,9 +422,14 @@ public class CandidateData
     return v;
   }
 
+  public OutcomeData getOutcomes()
+  {
+    return exam.getCandidateOutcomes(id);
+  }
 
   public void processAllResponses()
   {
+    OutcomeData outcomes = getOutcomes();
     // all questions need to be processed to ensure that
     // QTI structure is fully populated with this candidate's
     // responses and item outcomes.

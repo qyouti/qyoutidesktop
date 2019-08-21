@@ -43,6 +43,7 @@ public class OutcomeData
   public OutcomeData( ExaminationData exam )
   {
     this.exam = exam;
+    addTableModelListener( exam.outcomelistener );
   }
   
   public int getRowCount()

@@ -95,7 +95,7 @@ public class QuestionReviewTable
       case 0:
         return item.candidatedata.id;
       case 1:
-        return item.questiondata.ident;
+        return item.questiondata.getIdent();
       case 2:
         switch ( item.questiondata.getExaminerDecision() )
         {
