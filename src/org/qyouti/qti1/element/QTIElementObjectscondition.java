@@ -83,6 +83,9 @@ public class QTIElementObjectscondition
   public void initialize()
   {
     supported = false;
+    conditiontest = null;
+    objectsparameters.clear();
+    
     super.initialize();
 
     Vector<QTIObjectsTest> conditiontests = findElements( QTIObjectsTest.class, false );

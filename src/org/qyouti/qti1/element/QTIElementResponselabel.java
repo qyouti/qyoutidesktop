@@ -125,22 +125,18 @@ public class QTIElementResponselabel
   @Override
   public void initialize()
   {
+    supported = false;
+    correct = false;
+    incorrect = false;
+    lid = null;
     super.initialize();
     
     lid = findAncestorElement( QTIElementResponselid.class );
-
-    supported = false;
-
     if ( getMatchgroup().length > 0 )
       return;
-
     if ( getMatchmax() != -1 )
       return;
 
-    supported = true;
-
-    correct = false;
-    incorrect = false;
     String correctattribute = domelement.getAttribute( "qyouti:correct" );
     correct = "true".equals( correctattribute );
     incorrect = "false".equals( correctattribute );

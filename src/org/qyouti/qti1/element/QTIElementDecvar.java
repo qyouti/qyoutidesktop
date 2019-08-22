@@ -155,9 +155,9 @@ public class QTIElementDecvar
   @Override
   public void initialize()
   {
+    supported = false;
     super.initialize();
 
-    supported = false;
     String vartype = getVartype();
     if ( !"string".equals( vartype ) &&
             !"integer".equals( vartype ) &&

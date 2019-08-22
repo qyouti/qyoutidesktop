@@ -58,6 +58,8 @@ public class QTIElementAndobjects
   public void initialize()
   {
     supported = false;
+    nested_a = null;
+    nested_b = null;
     super.initialize();
 
     Vector<QTIObjectsTest> conditiontests = findElements( QTIObjectsTest.class, false );

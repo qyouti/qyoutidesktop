@@ -41,6 +41,7 @@ public class QTIElementAssessment
   @Override
   public void initialize()
   {
+    material = null;
     super.initialize();
 
     Vector<QTIElementPresentationmaterial> pms = findElements( QTIElementPresentationmaterial.class, true );

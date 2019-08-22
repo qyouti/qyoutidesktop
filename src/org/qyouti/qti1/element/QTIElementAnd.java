@@ -49,9 +49,12 @@ public class QTIElementAnd
   @Override
   public void initialize()
   {
+    supported=false;
+    nested_condition_a=null;
+    nested_condition_b=null;
+    
     super.initialize();
 
-    supported=false;
 
     Vector<QTICondition> list = this.findElements( QTICondition.class, false );
     if ( list.size() != 2 )

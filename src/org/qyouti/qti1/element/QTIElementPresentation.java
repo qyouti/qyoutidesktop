@@ -102,6 +102,11 @@ public class QTIElementPresentation
   @Override
   public void initialize()
   {
+    material = null;
+    responselids.clear();
+    responsestr = null;
+    item=null;
+  
     super.initialize();
     
     String columnsattribute = domelement.getAttribute( "qyouti:columns" );

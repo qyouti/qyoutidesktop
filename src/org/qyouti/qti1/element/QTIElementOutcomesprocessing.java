@@ -163,6 +163,10 @@ public class QTIElementOutcomesprocessing
   public void initialize()
   {
     supported = false;
+    root = null;
+    outcomes = null;
+    conditions = null;
+    
     super.initialize();
 
     root = null;

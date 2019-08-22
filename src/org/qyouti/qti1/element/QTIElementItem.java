@@ -27,9 +27,7 @@
 package org.qyouti.qti1.element;
 
 import java.util.*;
-import java.util.logging.*;
 import org.qyouti.qti1.*;
-import org.qyouti.templates.*;
 import org.qyouti.util.*;
 
 /**
@@ -91,27 +89,6 @@ public class QTIElementItem
     return domelement.getAttribute( "qyouti:template" );
   }
 
-  public ItemTemplate getTemplate()
-  {
-    String cn = getTemplateClassName();
-    if ( cn == null || cn.length() == 0 )
-      cn = "org.qyouti.templates.NoTemplate";
-    
-    try
-    {
-      Class c = Class.forName( cn );
-      if ( !ItemTemplate.class.isAssignableFrom( c ) )
-        return null;
-      ItemTemplate it = (ItemTemplate)c.newInstance();
-      it.setItem( this );
-      return it;
-    }
-    catch ( Exception ex )
-    {
-      Logger.getLogger( QTIElementItem.class.getName() ).log( Level.SEVERE, null, ex );
-    }
-    return null;
-  }
 
   private void initCandidateType()
   {
@@ -402,12 +379,19 @@ public class QTIElementItem
   @Override
   public void initialize()
   {
+    presentation=null;
+    resprocessing=null;
+    response_table.clear();
+    response_list = null;
+    supported = false;
+    highest_possible_score_known=false;
+    highest_possible_score=0.0;
+    
     super.initialize();
     // Let presentation and respprocessing elements check what responses
     // are supports.
     //int rlids=0, rstrs=0;
 
-    supported = false;
     
     initCandidateType();
     

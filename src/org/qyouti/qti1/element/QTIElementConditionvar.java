@@ -48,6 +48,8 @@ public class QTIElementConditionvar
   @Override
   public void initialize()
   {
+    supported=false;
+    condition=null;
     super.initialize();
 
     supported=false;

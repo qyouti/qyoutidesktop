@@ -57,6 +57,9 @@ public class QTIElementOutcomes
   public void initialize()
   {
     supported = false;
+    decvar_vector = null;
+    decvar_table.clear();
+    
     super.initialize();
 
     decvar_vector = findElements( QTIElementDecvar.class, true );

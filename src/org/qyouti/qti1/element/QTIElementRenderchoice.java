@@ -66,6 +66,9 @@ public class QTIElementRenderchoice
   @Override
   public void initialize()
   {
+    responselabels = null;
+    responselabel_table.clear();
+    
     super.initialize();
 
     responselabels = findElements( QTIElementResponselabel.class, true );

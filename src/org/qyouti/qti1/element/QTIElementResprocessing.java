@@ -140,6 +140,10 @@ public class QTIElementResprocessing
   public void initialize()
   {
     supported = false;
+    outcomes = null;
+    conditions = null;
+    itemprocs = null;
+    
     super.initialize();
 
     Vector<QTIElementOutcomes> outcomeses = findElements( QTIElementOutcomes.class, false );

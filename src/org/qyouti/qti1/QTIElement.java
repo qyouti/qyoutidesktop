@@ -60,6 +60,12 @@ public abstract class QTIElement
     children.add( child );
   }
 
+  void remove()
+  {
+    if ( parent != null )
+      parent.children.remove(this);
+  }
+
   public final String getName()
   {
     Class c = getClass();

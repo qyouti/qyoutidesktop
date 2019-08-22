@@ -53,8 +53,10 @@ public class QTIElementQuestestinterop
   @Override
   public void initialize()
   {
+    item_table.clear();
+    outcomesprocessings=null;
+    decvar_table.clear();
     super.initialize();
-
 
     Vector<QTIElementAssessment> assessments = findElements( QTIElementAssessment.class, false );
     if ( assessments !=null && assessments.size() != 0 )

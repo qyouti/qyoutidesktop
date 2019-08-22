@@ -57,6 +57,7 @@ public class QTIElementNotobjects
   public void initialize()
   {
     supported = false;
+    nested = null;
     super.initialize();
 
     Vector<QTIObjectsTest> conditiontests = findElements( QTIObjectsTest.class, false );

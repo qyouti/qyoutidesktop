@@ -256,9 +256,11 @@ public class QTIElementResponselid
   @Override
   public void initialize()
   {
+    supported = false;
+    renderchoice = null;
+    
     super.initialize();
 
-    supported = false;
     if ( "ordered".equals( getCardinality() ) )
       return;
 

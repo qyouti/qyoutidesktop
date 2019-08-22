@@ -60,6 +60,11 @@ public class QTIElementRespcondition
   @Override
   public void initialize()
   {
+    supported=false;
+    conditionvar = null;
+    setvars = null;
+    displayfeedbacks = null;
+    
     super.initialize();
     
     supported=false;

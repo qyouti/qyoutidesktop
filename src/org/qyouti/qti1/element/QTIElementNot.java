@@ -48,6 +48,9 @@ public class QTIElementNot
   @Override
   public void initialize()
   {
+    supported=false;
+    nested_condition=null;
+    
     super.initialize();
 
     supported=false;

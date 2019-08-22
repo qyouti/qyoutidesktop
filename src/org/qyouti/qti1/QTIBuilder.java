@@ -108,20 +108,18 @@ public class QTIBuilder
     
     qtielement.domelement = element;
     qtielement.setParent(parent);
+    if ( parent != null )
+      parent.appendChild(qtielement);
     return qtielement;
   }
 
-  QTIElement build(Element element, QTIElement parent)
+  public QTIElement build(Element element, QTIElement parent)
   {
     QTIElement qtielement = buildOne(element, parent);
     NodeList nl = element.getChildNodes();
     for (int i = 0; i < nl.getLength(); i++)
-    {
       if (nl.item(i) instanceof Element)
-      {
-        qtielement.appendChild(build((Element) nl.item(i), qtielement));
-      }
-    }
+        build( (Element) nl.item(i), qtielement );
     return qtielement;
   }
 
@@ -132,5 +130,8 @@ public class QTIBuilder
     return root;
   }
 
-
+  public static void remove( QTIElement q )
+  {
+    q.remove();
+  }
 }

@@ -81,14 +81,14 @@ public class QTIElementResponsestr
     @Override
   public void initialize()
   {
-    super.initialize();
-
     supported = false;
-
+    renderfib = null;
+    
+    super.initialize();
+    
     Vector<QTIElementRenderfib> fibs = findElements( QTIElementRenderfib.class, true );
     if ( fibs.size() != 1 )
       return;
-
     renderfib = fibs.get(0);
 
     supported = true;
