@@ -9,6 +9,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
+import org.qyouti.data.QuestionDefinitions;
 import org.qyouti.qti1.element.*;
 
 /**
@@ -42,9 +43,10 @@ public class NoTemplate
   }
 
   @Override
-  public void store()
+  public void store( boolean override )
   {
-    item.setTitle( titlefield.getText() );    
+    if ( !override )
+      item.setTitle( titlefield.getText() );    
   }
 
   
@@ -74,7 +76,7 @@ public class NoTemplate
     return item;
   }
 
-  public void setItem( QTIElementItem item )
+  public void setItem( QTIElementItem item, QuestionDefinitions overrides )
   {
     this.item = item;
     this.changed = false;
@@ -87,6 +89,11 @@ public class NoTemplate
   {
     evaluateChange();
     return changed;
+  }
+
+  public boolean isOverrideChanged()
+  {
+    return false;
   }
 
   void evaluateChange()

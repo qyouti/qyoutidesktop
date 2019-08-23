@@ -66,7 +66,7 @@
       <SubComponents>
         <Component class="javax.swing.JButton" name="savebutton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Save"/>
+            <Property name="text" type="java.lang.String" value="O.K."/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="savebuttonActionPerformed"/>

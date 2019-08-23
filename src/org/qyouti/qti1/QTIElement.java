@@ -27,6 +27,7 @@
 package org.qyouti.qti1;
 
 import java.util.Vector;
+import org.qyouti.qti1.element.QTIElementQuestestinterop;
 import org.w3c.dom.*;
 
 
@@ -39,6 +40,7 @@ public abstract class QTIElement
   protected Element domelement;
   protected Vector<QTIElement> children = new Vector<QTIElement>();
   public QTIElement parent = null;
+  public QTIElementQuestestinterop qti = null;
 
   // Only package classes can instantiate
   public QTIElement()
@@ -53,6 +55,11 @@ public abstract class QTIElement
   void setParent( QTIElement parent )
   {
     this.parent = parent;
+    QTIElement e = parent;
+    while ( e != null && !(e instanceof QTIElementQuestestinterop) )
+      e = e.parent;
+    if ( e != null )
+      qti = (QTIElementQuestestinterop)e;
   }
 
   void appendChild( QTIElement child )

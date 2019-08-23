@@ -28,6 +28,8 @@ package org.qyouti.data;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.table.AbstractTableModel;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.*;
@@ -64,7 +66,8 @@ public class QuestionDefinitions
     if ( qtielement instanceof QTIElementQuestestinterop )
     {
       qti = (QTIElementQuestestinterop)qtielement;
-      qti.addExternalMap( personsmap );
+      if ( personsmap != null )
+        qti.addExternalMap( personsmap );
 //      Vector<QTIElementItem> items = qti.getItems();
       //System.out.println( "Item count: " + items.size() );
 //      for ( int i=0; i<items.size(); i++ )
@@ -156,14 +159,37 @@ public class QuestionDefinitions
           ranal.median_difference_lower = hodges_lehmann.getLower90Delta();
           ranal.median_difference_upper = hodges_lehmann.getUpper90Delta();
           System.out.println( "Median difference " + hodges_lehmann.getDelta() );
-          System.out.println( "lower 95% limit  " + hodges_lehmann.getLower95Delta() );
-          System.out.println( "upper 95% limit  " + hodges_lehmann.getUpper95Delta() );
+          System.out.println( "lower 95% limit " + hodges_lehmann.getLower95Delta() );
+          System.out.println( "upper 95% limit " + hodges_lehmann.getUpper95Delta() );
         }
       }
     }
   }
 
+  public QTIElementItem copyItem( QTIElementItem item )
+  {
+    Element duplicate = (Element)item.getDOMElement().cloneNode(true);
+    questestinterop.getOwnerDocument().adoptNode(duplicate);
+    questestinterop.appendChild(duplicate);
+    questestinterop.appendChild(questestinterop.getOwnerDocument().createTextNode("\n"));
+    QTIBuilder builder = new QTIBuilder();
+    QTIElementItem copy = (QTIElementItem)builder.build( duplicate, qti );
+    // re-initialize the whole tree
+    qti.initialize();
+    return copy;
+  }
 
+  public void removeItem( QTIElementItem item )
+  {
+    QTIBuilder.remove( item );
+    Element e = item.getDOMElement();
+    Element p = (Element)e.getParentNode();
+    if ( p != null )
+      p.removeChild( e );
+    // re-initialize the whole tree
+    qti.initialize();
+  }
+  
   public int getRowCount()
   {
     return qti.getItems().size();
@@ -171,17 +197,18 @@ public class QuestionDefinitions
 
   public int getColumnCount()
   {
-    return 3;
+    return 4;
   }
 
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    if ( rowIndex<0 || rowIndex >= getRowCount() || columnIndex<0 || columnIndex > 2 )
+    if ( rowIndex<0 || rowIndex >= getRowCount() || columnIndex<0 || columnIndex > 3 )
       return null;
 
     QTIElementItem item = qti.getItems().get( rowIndex );
     if ( columnIndex == 0 ) return item.getIdent();
     if ( columnIndex == 2 ) return item.isSupported()?"yes":"no";
+    if ( columnIndex == 3 ) return item.isOverriden()?"yes":"no";
     return item.getTitle();
   }
 
@@ -197,6 +224,8 @@ public class QuestionDefinitions
         return "Title";
       case 2:
         return "Supported";
+      case 3:
+        return "Examiner Override";
     }
     return null;
   }

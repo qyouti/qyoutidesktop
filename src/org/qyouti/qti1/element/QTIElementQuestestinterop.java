@@ -50,6 +50,8 @@ public class QTIElementQuestestinterop
 
   QTIElementAssessment assessment=null;
 
+  QTIElementQuestestinterop override=null;
+  
   @Override
   public void initialize()
   {
@@ -110,6 +112,18 @@ public class QTIElementQuestestinterop
   public QTIElementItem getItem( String ident )
   {
     return item_table.get( ident );
+  }
+
+  public void setOverride( QTIElementQuestestinterop override )
+  {
+    this.override = override;
+  }
+  
+  public QTIElementItem getOverrideItem( String ident )
+  {
+    if ( override == null )
+      return null;
+    return override.getItem( ident );
   }
 
   public QTIElementMaterial getAssessmentMaterial()

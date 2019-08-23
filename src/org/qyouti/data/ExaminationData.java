@@ -59,6 +59,7 @@ import org.qyouti.qti1.element.QTIElementMattext;
 import org.qyouti.qti1.gui.QTIRenderOptions;
 import org.qyouti.qti1.gui.QuestionMetricsRecordSetCache;
 import org.qyouti.statistics.Histogram;
+import org.qyouti.templates.ItemTemplate;
 import org.qyouti.util.QyoutiUtils;
 import org.qyouti.xml.QyoutiDocBuilderFactory;
 import org.qyouti.xml.StringProcessor;
@@ -100,7 +101,7 @@ public class ExaminationData
   public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
   public PageListModel pagelistmodel = new PageListModel( pages );
 
-  ExaminerData examinerdata = null;
+  public ExaminerData examinerdata = null;
   
   public ImageFileTable scans = new ImageFileTable( this );
   
@@ -300,7 +301,28 @@ public class ExaminationData
   }  
 
 
-
+  public ItemTemplate getItemTemplate( QTIElementItem item )
+  {
+    String cn = item.getTemplateClassName();
+    if ( cn == null || cn.length() == 0 )
+      cn = "org.qyouti.templates.NoTemplate";
+    
+    try
+    {
+      Class c = Class.forName( cn );
+      if ( !ItemTemplate.class.isAssignableFrom( c ) )
+        return null;
+      ItemTemplate it = (ItemTemplate)c.newInstance();
+      it.setItem( item, examinerdata.examinerqdefs );
+      return it;
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( QTIElementItem.class.getName() ).log( Level.SEVERE, null, ex );
+    }
+    return null;    
+  }
+    
 
 
   public ExaminerCandidateData getExaminerCandidateData( String candidateident, boolean create )
@@ -1626,7 +1648,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public boolean areThereUnsavedChanges()
   {
-    return unsaved_changes || qdefs.areThereUnsavedChanges();
+    return unsaved_changes || qdefs.areThereUnsavedChanges() || (examinerdata != null && examinerdata.areThereUnsavedChanges());
   }
   
   public void setUnsavedChangesInMain( boolean b )
@@ -1849,6 +1871,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     try
     {
       loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
+      qdefs.qti.setOverride( examinerdata.examinerqdefs.qti );
     }
     catch ( FileNotFoundException e )
     {
@@ -1878,12 +1901,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
-  
-    
     Document document = builder.parse( source );
-
     Element roote = document.getDocumentElement();
-
     qdefs=null;
     if ("questestinterop".equals(roote.getNodeName()))
       qdefs = new QuestionDefinitions(roote, personlistmodel );

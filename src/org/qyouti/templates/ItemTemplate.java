@@ -7,6 +7,7 @@ package org.qyouti.templates;
 
 import java.awt.*;
 import javax.swing.*;
+import org.qyouti.data.QuestionDefinitions;
 import org.qyouti.qti1.element.*;
 
 /**
@@ -21,10 +22,11 @@ public interface ItemTemplate
   public boolean isProcessingeditenabled();
   public void setProcessingeditenabled( boolean processingeditenabled );
   public QTIElementItem getItem();
-  public void setItem( QTIElementItem item );
+  public void setItem( QTIElementItem item, QuestionDefinitions overrides );
   public boolean isChanged();
+  public boolean isOverrideChanged();
   /**
    * Store edited fields back into the item. Does not save to disk.
   */
-  public void store();
+  public void store( boolean override );
 }

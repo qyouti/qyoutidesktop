@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.GroupLayout.ParallelGroup;
+import org.qyouti.data.QuestionDefinitions;
 import org.qyouti.qti1.element.*;
 
 /**
@@ -49,8 +50,11 @@ public class PureMCQ
   }
 
   @Override
-  public void store()
+  public void store( boolean override )
   {
+    if ( override )
+      return;
+    
     int i;
     String correctident=null;
     
@@ -125,7 +129,7 @@ public class PureMCQ
     return item;
   }
 
-  public void setItem( QTIElementItem item )
+  public void setItem( QTIElementItem item, QuestionDefinitions overrides )
   {
     javax.swing.GroupLayout gl;
     GroupLayout.SequentialGroup sgh;
@@ -224,6 +228,12 @@ public class PureMCQ
   {
     evaluateChange();
     return changed;
+  }
+
+  @Override
+  public boolean isOverrideChanged()
+  {
+    return false;
   }
 
   void evaluateChange()

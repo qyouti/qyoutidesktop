@@ -588,6 +588,8 @@ public class QyoutiFrame
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
     setTitle("Qyouti Exam/Survey Processor");
+    setMaximumSize(new java.awt.Dimension(1000, 1000));
+    setPreferredSize(new java.awt.Dimension(1000, 648));
 
     spacerlabel.setText(" ");
     getContentPane().add(spacerlabel, java.awt.BorderLayout.PAGE_START);
@@ -1734,6 +1736,7 @@ public class QyoutiFrame
       // how to set zoom factor so page fits to width?
     }
   
+
   private void editquestionmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editquestionmenuitemActionPerformed
   {//GEN-HEADEREND:event_editquestionmenuitemActionPerformed
 
@@ -1764,7 +1767,7 @@ public class QyoutiFrame
     }
 
     editquestionident = item.getIdent();
-    ItemTemplate template = item.getTemplate();
+    ItemTemplate template = exam.getItemTemplate(item);
     if ( template == null )
     {
       JOptionPane.
@@ -1773,9 +1776,8 @@ public class QyoutiFrame
     }
 
     String lastprintid = exam.getLastPrintID();
-    template.setPresentationeditenabled( lastprintid == null || lastprintid.
-            length() == 0 );
-    template.setProcessingeditenabled( true );
+    template.setPresentationeditenabled( lastprintid == null || lastprintid.length() == 0 );
+    template.setProcessingeditenabled( exam.scans.size() == 0 );
 
     QuestionEditDialog dialog = new QuestionEditDialog( this, true );
     dialog.setTemplate( template );
@@ -1868,7 +1870,7 @@ public class QyoutiFrame
     {
       item = exam.qdefs.qti.getItems().elementAt( row );
 
-      ItemTemplate template = item.getTemplate();
+      ItemTemplate template = exam.getItemTemplate(item);
       if ( template == null )
       {
         continue;
@@ -1877,9 +1879,8 @@ public class QyoutiFrame
       }
 
       String lastprintid = exam.getLastPrintID();
-      template.setPresentationeditenabled( lastprintid == null || lastprintid.
-              length() == 0 );
-      template.setProcessingeditenabled( true );
+      template.setPresentationeditenabled( lastprintid == null || lastprintid.length() == 0 );
+      template.setProcessingeditenabled( exam.scans.size() == 0 );
 
       dialog.addTemplate( template );
     }
@@ -2510,14 +2511,16 @@ public class QyoutiFrame
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
    */
-  void questionEditStored()
+  void questionEditStored( boolean override )
   {
     if ( exam.pagelistmodel.getRowCount() > 0 )
     {
-      exam.invalidateOutcomes( editquestionident );
+      exam.invalidateOutcomes( editquestionident );  // null question ident means invalidate all
       exam.updateOutcomes();
     }
-    exam.setUnsavedChangesInQuestions( true );
+    exam.setUnsavedChangesInExaminer( true );
+    if ( !override )
+      exam.setUnsavedChangesInQuestions( true );
     exam.processDataChanged( exam.qdefs );
   }
 

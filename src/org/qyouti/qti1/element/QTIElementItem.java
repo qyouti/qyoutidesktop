@@ -57,9 +57,18 @@ public class QTIElementItem
   public void reset()
   {
     referenced_by_candidate = false;
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      qtiitemoverride.reset();
     super.reset();
   }
 
+  public boolean isOverriden()
+  {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    return qtiitemoverride != null;
+  }
+  
   public boolean isReferencedByCandidate()
   {
     return referenced_by_candidate;
@@ -67,6 +76,9 @@ public class QTIElementItem
   public void setReferencedByCandidate()
   {
     referenced_by_candidate = true;
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      qtiitemoverride.setReferencedByCandidate();
   }
 
   public String getTitle()
@@ -108,22 +120,12 @@ public class QTIElementItem
   {
     return anonymous?foranonymouscandidate:foridentifiedcandidate;
   }
-  
-  /**
-   * Sets value of response specified by ident
-   * @param respident The ident of the response
-   * @param respvalue The new value to set
-   */
-  public void setResponseValue( String respident, Object respvalue )
-  {
-    QTIResponse response = response_table.get( respident );
-    if ( response == null )
-      throw new IllegalArgumentException( "Unknown response ident " + respident + " in assessment item " + getIdent() + "." );
-    response.setCurrentValue( respvalue );
-  }
 
   public QTIResponse[] getResponses()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getResponses();
     return response_list;
   }
 
@@ -134,6 +136,10 @@ public class QTIElementItem
    */
   public Object getResponseValue( String respident )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getResponseValue( respident );
+    
     QTIResponse response = response_table.get( respident );
     if ( response == null )
       throw new IllegalArgumentException( "Unknown response ident " + respident + " in assessment item " + getIdent() + "." );
@@ -163,6 +169,10 @@ public class QTIElementItem
 
   public List<QTIElementResponselabel> getResponselabels()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getResponselabels();
+
     if ( presentation == null )
       return null;
     // a deep search so this works with multiple responselids
@@ -172,6 +182,10 @@ public class QTIElementItem
 
   public QTIElementResponselabel getResponselabelByOffset( int offset )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getResponselabelByOffset( offset );
+    
     if ( presentation == null )
       return null;
     // a deep search so this works with multiple responselids
@@ -184,6 +198,10 @@ public class QTIElementItem
 
   public List<QTIElementResponselid> getResponselids()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getResponselids();
+    
     if ( presentation == null )
       return null;
     // a deep search so this works with multiple responselids
@@ -194,12 +212,20 @@ public class QTIElementItem
 
   public boolean containsOutcomeName( String name )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.containsOutcomeName( name );
+    
     return resprocessing.outcomes.decvar_table.containsKey( name );
   }
 
 
   public String[] getOutcomeNames()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getOutcomeNames();
+    
     String[] names = new String[resprocessing.outcomes.decvar_vector.size()];
     for ( int i=0; i< names.length; i++ )
       names[i] = resprocessing.outcomes.decvar_vector.get( i ).getVarname();
@@ -208,6 +234,10 @@ public class QTIElementItem
 
   public boolean isOutcomeLikert( String ident )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.isOutcomeLikert( ident );
+    
     QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
     if ( decvar == null )
       return false;
@@ -216,6 +246,10 @@ public class QTIElementItem
 
   public Object getOutcomeValue( String ident )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getOutcomeValue( ident );
+    
     if ( !supported )
     {
       if ( "SCORE".equalsIgnoreCase( ident ) )
@@ -230,6 +264,10 @@ public class QTIElementItem
 
   public String getOutcomeMaximum( String ident )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+      return qtiitemoverride.getOutcomeMaximum( ident );
+    
     if ( !supported )
       throw new IllegalArgumentException( "Can't calculate outcome maximum in unsupported assessment item " + getIdent() + "." );
     QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
@@ -240,6 +278,13 @@ public class QTIElementItem
 
   public void setOutcome( String ident, Object value )
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+    {
+      qtiitemoverride.setOutcome( ident, value );
+      return;
+    }
+
     if ( !supported )
       throw new IllegalArgumentException( "Can't calculate outcome in unsupported assessment item " + getIdent() + "." );
     QTIElementDecvar decvar = resprocessing.outcomes.decvar_table.get( ident );
@@ -250,6 +295,13 @@ public class QTIElementItem
 
   public void computeOutcomes()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+    {
+      qtiitemoverride.computeOutcomes();
+      return;
+    }
+    
     // Check that candidate responses are allowed
     Enumeration<QTIResponse> en = response_table.elements();
     QTIResponse response;
@@ -274,6 +326,13 @@ public class QTIElementItem
    */
   public void computeCorrectResponses()
   {
+    QTIElementItem qtiitemoverride = qti.getOverrideItem(getIdent());
+    if ( qtiitemoverride != null )
+    {
+      qtiitemoverride.computeCorrectResponses();
+      return;
+    }
+    
     int i, j, k;
     MultiBaseInteger permutations;
     int permcount;

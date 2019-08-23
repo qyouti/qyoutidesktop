@@ -58,7 +58,7 @@ public class QuestionEditDialog
     setTitle("Question Edit");
     getContentPane().add(centrepanel, java.awt.BorderLayout.CENTER);
 
-    savebutton.setText("Save");
+    savebutton.setText("O.K.");
     savebutton.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -105,8 +105,13 @@ public class QuestionEditDialog
   {//GEN-HEADEREND:event_savebuttonActionPerformed
     if ( template.isChanged() )
     {
-      template.store();
-      parent.questionEditStored();
+      template.store( false );
+      parent.questionEditStored( false );
+    }
+    if ( template.isOverrideChanged() )
+    {
+      template.store( true );
+      parent.questionEditStored( true );
     }
     this.setVisible( false );
     this.dispose();

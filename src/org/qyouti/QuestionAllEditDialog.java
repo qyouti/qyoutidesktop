@@ -37,6 +37,8 @@ public class QuestionAllEditDialog
     templates.add( template );
     centrepanel.add( template.getComponent(), gbc );
     this.pack();
+    if ( this.getHeight() > 600 )
+      this.setSize( this.getWidth(), 600 );
   }
   
   /**
@@ -66,7 +68,7 @@ public class QuestionAllEditDialog
 
     getContentPane().add(scrollpane, java.awt.BorderLayout.CENTER);
 
-    savebutton.setText("Save");
+    savebutton.setText("O.K.");
     savebutton.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -101,15 +103,23 @@ public class QuestionAllEditDialog
   private void savebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_savebuttonActionPerformed
   {//GEN-HEADEREND:event_savebuttonActionPerformed
     ItemTemplate template;
+    boolean s=false, os=false;
     for ( int i=0; i< templates.size(); i++ )
     {
       template = templates.get( i );
       if ( template.isChanged() )
       {
-        template.store();
+        template.store(false);
+        s = true;
+      }
+      if ( template.isOverrideChanged() )
+      {
+        template.store(true);
+        os = true;
       }
     }
-    parent.questionEditStored();
+    if ( s ) parent.questionEditStored( false );
+    if ( os ) parent.questionEditStored( true );
     this.setVisible( false );
     this.dispose();
   }//GEN-LAST:event_savebuttonActionPerformed
