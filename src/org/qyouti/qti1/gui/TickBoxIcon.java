@@ -36,10 +36,10 @@ public class TickBoxIcon
         DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
         String svgNS = SVGConstants.SVG_NAMESPACE_URI;
         Document doc = impl.createDocument(svgNS, "svg", null);
-        org.w3c.dom.Element g  = (org.w3c.dom.Element) doc.createElementNS(svgNS,"g");
+        org.w3c.dom.Element g  = doc.createElementNS(svgNS,"g");
 //        org.w3c.dom.Element rw = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
 //        org.w3c.dom.Element r1 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
-        org.w3c.dom.Element r2 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"rect");
+        org.w3c.dom.Element r2 = doc.createElementNS(svgNS,"rect");
         org.w3c.dom.Element ln1 = null;
         org.w3c.dom.Element ln2 = null;
 //        rw.setAttribute("x", "0" );
@@ -69,8 +69,8 @@ public class TickBoxIcon
         g.appendChild(r2);
 
 
-          ln1 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"line");
-          ln2 = (org.w3c.dom.Element) doc.createElementNS(svgNS,"line");
+          ln1 = doc.createElementNS(svgNS,"line");
+          ln2 = doc.createElementNS(svgNS,"line");
           ln1.setAttribute("x1", Integer.toString( inset ) );
           ln1.setAttribute("y1", Integer.toString( inset ) );
           ln1.setAttribute("x2", Integer.toString( width-inset ) );

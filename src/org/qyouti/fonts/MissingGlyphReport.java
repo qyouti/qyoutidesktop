@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class MissingGlyphReport
 {
-  private HashMap<Character,Boolean> charmap = new HashMap();
+  private HashMap<Character,Boolean> charmap = new HashMap<>();
   private ArrayList<Character> charlist = new ArrayList<>();
   
   public void addCharacter( char c )
@@ -39,13 +39,11 @@ public class MissingGlyphReport
   void sort()
   {
     charlist.sort( 
-            new Comparator()
+            new Comparator<Character>()
             {  
               @Override
-              public int compare( Object o1, Object o2 )
+              public int compare( Character c1, Character c2 )
               {
-                Character c1 = (Character)o1;
-                Character c2 = (Character)o2;
                 if ( c1.equals( c2 ) )
                   return 0;
                 if ( c1.charValue() < c2.charValue() )

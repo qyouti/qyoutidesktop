@@ -33,7 +33,7 @@ public class SVGImageIcon
         DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
         String svgNS = SVGConstants.SVG_NAMESPACE_URI;
         Document doc = impl.createDocument(svgNS, "svg", null);
-        org.w3c.dom.Element e = (org.w3c.dom.Element) doc.createElementNS(svgNS,"image");
+        org.w3c.dom.Element e = doc.createElementNS(svgNS,"image");
         // put image at origin - it will be moved to right location when
         // it is wrapped in a group and translated.
         e.setAttribute("x", "0" );

@@ -187,7 +187,7 @@ public class QyoutiFrame
 
 
         // ***** create laf switcher menu
-        lafMenu = (JMenu) this.menubar.add(new JMenu("Look/Feel"));
+        lafMenu = this.menubar.add(new JMenu("Look/Feel"));
         ButtonGroup group = new ButtonGroup();
         mi = createLafMenuItem(lafMenu, "Metal",group, metal);
         mi.setSelected(true); // this is the default l&f
@@ -242,7 +242,7 @@ public class QyoutiFrame
      */
      protected boolean isAvailableLookAndFeel(String laf) {
          try {
-             Class lnfClass = Class.forName(laf);
+             Class<?> lnfClass = Class.forName(laf);
              LookAndFeel newLAF = (LookAndFeel)(lnfClass.newInstance());
              return newLAF.isSupportedLookAndFeel();
          } catch(Exception e) { // If ANYTHING weird happens, return false
@@ -608,36 +608,6 @@ public class QyoutiFrame
 
     jSplitPane3.setDividerLocation(400);
 
-    questiontable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-
-      },
-      new String []
-      {
-        "ID", "Title"
-      }
-    )
-    {
-      Class[] types = new Class []
-      {
-        java.lang.String.class, java.lang.String.class
-      };
-      boolean[] canEdit = new boolean []
-      {
-        false, false
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types [columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit [columnIndex];
-      }
-    });
     questiontable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp1.setViewportView(questiontable);
 
@@ -919,36 +889,6 @@ public class QyoutiFrame
 
     ctab.setLayout(new java.awt.BorderLayout());
 
-    candidatetable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-
-      },
-      new String []
-      {
-        "*", "Name", "ID", "Pages", "Questions", "Errors"
-      }
-    )
-    {
-      Class[] types = new Class []
-      {
-        java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class
-      };
-      boolean[] canEdit = new boolean []
-      {
-        false, false, false, false, false, false
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types [columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit [columnIndex];
-      }
-    });
     candidatetable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp2.setViewportView(candidatetable);
 
@@ -958,36 +898,6 @@ public class QyoutiFrame
 
     ptab.setLayout(new java.awt.BorderLayout());
 
-    pagestable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-
-      },
-      new String []
-      {
-        "No.", "File", "Code", "Error"
-      }
-    )
-    {
-      Class[] types = new Class []
-      {
-        java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
-      };
-      boolean[] canEdit = new boolean []
-      {
-        false, false, false, false
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types [columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit [columnIndex];
-      }
-    });
     pagestable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp3.setViewportView(pagestable);
 
@@ -997,36 +907,6 @@ public class QyoutiFrame
 
     stab.setLayout(new java.awt.BorderLayout());
 
-    scanfiletable.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-
-      },
-      new String []
-      {
-        "Ident", "Source", "Imported Name", "Processed", "Errors"
-      }
-    )
-    {
-      Class[] types = new Class []
-      {
-        java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class, java.lang.String.class
-      };
-      boolean[] canEdit = new boolean []
-      {
-        false, false, false, false, false
-      };
-
-      public Class getColumnClass(int columnIndex)
-      {
-        return types [columnIndex];
-      }
-
-      public boolean isCellEditable(int rowIndex, int columnIndex)
-      {
-        return canEdit [columnIndex];
-      }
-    });
     scanfiletable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
     sp4.setViewportView(scanfiletable);
 
@@ -1730,7 +1610,7 @@ public class QyoutiFrame
           return;
       renderer.renderItem();
 
-      GenericDocument svg = (GenericDocument) renderer.getPreviewSVGDocument( exam );
+      GenericDocument svg = renderer.getPreviewSVGDocument( exam );
       previewsvgcanvas.setDocument( svg );
       qprevscrollpane.getViewport().setViewSize( new Dimension(1000,2000) );
       // how to set zoom factor so page fits to width?

@@ -22,7 +22,7 @@ public class ExamCreateDialog
   ExamTemplate template;
   QyoutiFrame parent;
 
-  Class[] classes =
+  Class<?>[] classes =
   {
     EmptyExam.class, LeedsBeckettPureMCQ.class
   };

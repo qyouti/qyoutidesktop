@@ -345,7 +345,7 @@ public class QuestionData
   }
 
   @Override
-  public Class getColumnClass(int columnIndex)
+  public Class<?> getColumnClass(int columnIndex)
   {
     switch ( columnIndex )
     {

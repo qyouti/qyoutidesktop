@@ -58,7 +58,7 @@ public class QTIBuilder
     return buffer.toString();
   }
 
-  static Class getElementClass( Element element )
+  static Class<?> getElementClass( Element element )
   {
     String nodename = element.getNodeName();
     String namespaceprefix = element.getPrefix();
@@ -94,7 +94,7 @@ public class QTIBuilder
   {
 
     QTIElement qtielement=new UnrecognisedQTIElement();
-    Class c = getElementClass( element );
+    Class<?> c = getElementClass( element );
     if ( c != null )
     {
       try

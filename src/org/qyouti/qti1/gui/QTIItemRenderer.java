@@ -240,7 +240,7 @@ public class QTIItemRenderer
     width = width / (double)columns;
 
     // This call may switch into the Event Dispatcher Thread.
-    svgres =  textPane.getSVG( (int)getMetrics().inchesToSvg(width) );
+    svgres =  textPane.getSVG( (int)QTIMetrics.inchesToSvg(width) );
     svgres.addMissingGlyphReport( mgr );
     //fontmanager.analyzeDocumentView( textPane.getUI().getRootView( textPane ) );
     //fontmanager.analyzeDocument( htmldoc );
@@ -450,7 +450,7 @@ public class QTIItemRenderer
     {
       state.html.append("<html>\n<head></head>\n" );
       state.html.append("<body style=\"font-size: " );
-      state.html.append(getMetrics().inchesToSvg( prefs.getFontsize( getMetrics().getPropertyInches("fontsize") ) ));
+      state.html.append(QTIMetrics.inchesToSvg( prefs.getFontsize( getMetrics().getPropertyInches("fontsize") ) ));
       state.html.append("px" );//; font-family: " );
       //state.html.append( fontmanager.getDefaultFontFamilyName( prefs==null?false:prefs.isSerif() ) );
       state.html.append( ";\">\n");
@@ -925,7 +925,7 @@ public class QTIItemRenderer
           }
         }
         
-        xoffset = getMetrics().inchesToSvg( columnoffset * column );
+        xoffset = QTIMetrics.inchesToSvg( columnoffset * column );
         page.add( new SVGDocumentPlacement( svgdocs[i], xoffset + itemareinsetleft, yoffset + itemareinsettop ) );
         // xoffset is relative to itemareainsetleft
         // record integer relative to top left bullseye_major in hundredths of inch
@@ -1210,7 +1210,7 @@ public class QTIItemRenderer
       org.w3c.dom.Element theader;
       
       // This just makes a yellow box the same position and size as the given text
-      theader = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text" );
+      theader = pdoc.createElementNS(svgNS, "text" );
       theader.setAttribute("filter", "url(#yellowhighlight)" );
       theader.setAttribute("text-anchor", getMetrics().getProperty("header-anchor") );
       theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-x")) );
@@ -1220,7 +1220,7 @@ public class QTIItemRenderer
       decorationgroup.appendChild(theader);
       
       // puts the text on top of the highlight box
-      theader = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+      theader = pdoc.createElementNS(svgNS, "text");
       theader.setAttribute("text-anchor", getMetrics().getProperty("header-anchor") );
       theader.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-x")) );
       theader.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("header-anchor-y")) );
@@ -1230,10 +1230,10 @@ public class QTIItemRenderer
     }
 
     org.w3c.dom.Element tfooter;
-    tfooter = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+    tfooter = pdoc.createElementNS(svgNS, "text");
     tfooter.setAttribute("text-anchor", "middle" );
     tfooter.setAttribute("x", "" + (getMetrics().getPropertySvgUnitsInt("page-width")/2) );
-    tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(getMetrics().inchesToSvg(0.6))) );
+    tfooter.setAttribute("y", "" + (getMetrics().getPropertySvgUnitsInt("page-height")-(QTIMetrics.inchesToSvg(0.6))) );
     tfooter.setAttribute("font-size", "" + QTIMetrics.inchesToSvg( 0.15 ) );
     decorationgroup.appendChild(tfooter);
 
@@ -1280,7 +1280,7 @@ public class QTIItemRenderer
         rulergroup.appendChild(line);
         if ( (i%5)==0 && i>0 )
         {
-          t = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+          t = pdoc.createElementNS(svgNS, "text");
           t.setAttribute("text-anchor", "middle" );
           t.setAttribute("x", "" + (x + QTIMetrics.inchesToSvg( 0.5 ) ) );
           t.setAttribute("y", "" + QTIMetrics.inchesToSvg( 0.3 ) );
@@ -1313,7 +1313,7 @@ public class QTIItemRenderer
         rulergroup.appendChild(line);
         if ( (i%5)==0 && i>0 )
         {
-          t = (org.w3c.dom.Element) pdoc.createElementNS(svgNS, "text");
+          t = pdoc.createElementNS(svgNS, "text");
           t.setAttribute("text-anchor", "end" );
           t.setAttribute("x", "" + QTIMetrics.inchesToSvg( 0.4 ) );
           t.setAttribute("y", "" + (y + QTIMetrics.inchesToSvg( 0.55 ) ) );

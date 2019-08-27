@@ -73,7 +73,7 @@ public class XLocatorByVote extends Thread implements XLocator
   int[][][] cornervotemap;
   int[][][] smoothvotemap;
   int maxvote;
-  ArrayList<LocalMaximum>[] localmaxima;
+  ArrayList<ArrayList<LocalMaximum>> localmaxima;
 
 
   
@@ -113,9 +113,9 @@ public class XLocatorByVote extends Thread implements XLocator
       for ( j=0; j<maxheight; j++ )
         sobeldata[i][j] = new SobelPixelResult();
     
-    this.localmaxima = new ArrayList[4];
+    this.localmaxima = new ArrayList<>();
     for ( i=0; i<4; i++ )
-      this.localmaxima[i] = new ArrayList<>();
+      this.localmaxima.add( new ArrayList<>() );
     
     createVotePatterns();
 
@@ -268,11 +268,11 @@ public class XLocatorByVote extends Thread implements XLocator
   
   public Point[] getCornerLocations( int corner )
   {
-    Point[] points = new Point[localmaxima[corner].size()];
+    Point[] points = new Point[localmaxima.get(corner).size()];
     LocalMaximum lm;
     for ( int i=0; i<points.length; i++ )
     {
-      lm = localmaxima[corner].get( i );
+      lm = localmaxima.get(corner).get( i );
       points[i] = new Point( lm.x, lm.y );
     }
     return points;
@@ -434,7 +434,7 @@ public class XLocatorByVote extends Thread implements XLocator
     int nextgroupid=1, groupid;
     LocalMaximum other;
     
-    localmaxima[corner].clear();
+    localmaxima.get(corner).clear();
     if ( maxvote == 0 )
       return;
     
@@ -475,16 +475,16 @@ public class XLocatorByVote extends Thread implements XLocator
           // this may be a local maximum but there might have been a neighbour with
           // an equal vote - a 'plateau'.  If so, try identifying it
           groupid = nextgroupid++;
-          for ( i=0; i<localmaxima[corner].size(); i++ )
+          for ( i=0; i<localmaxima.get(corner).size(); i++ )
           {
-            other = localmaxima[corner].get( i );
+            other = localmaxima.get(corner).get( i );
             if ( x>=(other.x-1) && x<=(other.x+1) && y>=(other.y-1) && y<=(other.y+1) )
             {
               groupid = other.groupid;
               break;
             }
           }
-          localmaxima[corner].add( new LocalMaximum( x, y, smoothvotemap[corner][x][y], groupid ) );
+          localmaxima.get(corner).add( new LocalMaximum( x, y, smoothvotemap[corner][x][y], groupid ) );
         }
       }
     }
@@ -498,9 +498,9 @@ public class XLocatorByVote extends Thread implements XLocator
       sumx=0; 
       sumy=0;
       first=null;
-      for ( i=0; i<localmaxima[corner].size(); i++ )
+      for ( i=0; i<localmaxima.get(corner).size(); i++ )
       {
-        other = localmaxima[corner].get( i );        
+        other = localmaxima.get(corner).get( i );        
         if ( other.groupid != j )
           continue;
         n++;
@@ -523,16 +523,16 @@ public class XLocatorByVote extends Thread implements XLocator
     {
       n=0; 
       first=null;
-      for ( i=0; i<localmaxima[corner].size(); i++ )
+      for ( i=0; i<localmaxima.get(corner).size(); i++ )
       {
-        other = localmaxima[corner].get( i );        
+        other = localmaxima.get(corner).get( i );        
         if ( other.groupid != j )
           continue;
         n++;
         if ( n==1 )
           first = other;
         else
-          localmaxima[corner].remove( i-- );
+          localmaxima.get(corner).remove( i-- );
       }
     }
   }
@@ -596,15 +596,15 @@ public class XLocatorByVote extends Thread implements XLocator
     
     voteStats( smoothvotemap[corner] );
     findLocalMaximaVotes( corner );
-    //System.out.println( "local maxima " + localmaxima[corner].size() );
+    //System.out.println( "local maxima " + localmaxima.get(corner).size() );
 
     if ( debuglevel >= 3 )
     {
       BufferedImage smoothvotemapimage = votesToImage( smoothvotemap[corner], maxvote );
       LocalMaximum max;
-      for ( i=0; i<localmaxima[corner].size(); i++ )
+      for ( i=0; i<localmaxima.get(corner).size(); i++ )
       {
-        max = localmaxima[corner].get( i );
+        max = localmaxima.get(corner).get( i );
         System.out.println( max );
         smoothvotemapimage.setRGB( max.x, max.y, 0x0000ff );
       }
@@ -626,15 +626,15 @@ public class XLocatorByVote extends Thread implements XLocator
     double xQuality = -1.0;
     currentreport.xLocation = null;
     
-    for ( isouth=0; isouth<localmaxima[0].size(); isouth++ )
-      for (  iwest=0;  iwest<localmaxima[1].size();  iwest++ )
-        for ( inorth=0; inorth<localmaxima[2].size(); inorth++ )
-          for (  ieast=0;  ieast<localmaxima[3].size();  ieast++ )
+    for ( isouth=0; isouth<localmaxima.get(0).size(); isouth++ )
+      for (  iwest=0;  iwest<localmaxima.get(1).size();  iwest++ )
+        for ( inorth=0; inorth<localmaxima.get(2).size(); inorth++ )
+          for (  ieast=0;  ieast<localmaxima.get(3).size();  ieast++ )
           {
-            south = localmaxima[0].get( isouth );
-            west  = localmaxima[1].get( iwest );
-            north = localmaxima[2].get( inorth );
-            east  = localmaxima[3].get( ieast );
+            south = localmaxima.get(0).get( isouth );
+            west  = localmaxima.get(1).get( iwest );
+            north = localmaxima.get(2).get( inorth );
+            east  = localmaxima.get(3).get( ieast );
             
             ps.setLocation( south.x, south.y );
             pw.setLocation( west.x,  west.y );
@@ -735,7 +735,7 @@ public class XLocatorByVote extends Thread implements XLocator
               sumy = 0.0;
               for ( i=0; i<4; i++ )
               {
-                loc = localmaxima[i].get( bestperm[i] );
+                loc = localmaxima.get(i).get( bestperm[i] );
                 sumx += loc.x;
                 sumy += loc.y;
               }
@@ -747,9 +747,9 @@ public class XLocatorByVote extends Thread implements XLocator
     currentreport.xPointsofInterest = new ArrayList<>();
     Point p;
     for ( int map=0; map<4; map++ )
-      for ( i=0; i<localmaxima[map].size(); i++ )
+      for ( i=0; i<localmaxima.get(map).size(); i++ )
       {
-        loc = localmaxima[map].get( i );
+        loc = localmaxima.get(map).get( i );
         p = new Point( loc.x, loc.y );
         if ( i == bestperm[map] )
           currentreport.xPointsofInterest.add( p );

@@ -309,7 +309,7 @@ public class ExaminationData
     
     try
     {
-      Class c = Class.forName( cn );
+      Class<?> c = Class.forName( cn );
       if ( !ItemTemplate.class.isAssignableFrom( c ) )
         return null;
       ItemTemplate it = (ItemTemplate)c.newInstance();
@@ -1829,13 +1829,11 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   }
 
 
-  public class CandidateComparator implements Comparator
+  public class CandidateComparator implements Comparator<CandidateData>
   {
     @Override
-    public int compare(Object o1, Object o2)
+    public int compare(CandidateData a, CandidateData b)
     {
-      CandidateData a = (CandidateData) o1;
-      CandidateData b = (CandidateData) o2;
       return a.id.compareToIgnoreCase(b.id);
     }
   }
@@ -1845,20 +1843,18 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     //Collections.sort( (Vector)candidates_sorted, new CandidateComparator() );
   }
 
-  public class PersonComparator implements Comparator
+  public class PersonComparator implements Comparator<PersonData>
   {
     @Override
-    public int compare(Object o1, Object o2)
+    public int compare(PersonData a, PersonData b)
     {
-      PersonData a = (PersonData) o1;
-      PersonData b = (PersonData) o2;
       return a.getName().compareToIgnoreCase(b.getName());
     }
   }
 
   public void sortPersons()
   {
-    Collections.sort( (ArrayList)persons_sorted, new PersonComparator() );
+    Collections.sort( persons_sorted, new PersonComparator() );
   }
   
   public void load()
@@ -2056,7 +2052,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   }
 
   @Override
-  public Class getColumnClass(int columnIndex)
+  public Class<?> getColumnClass(int columnIndex)
   {
     switch (columnIndex)
     {

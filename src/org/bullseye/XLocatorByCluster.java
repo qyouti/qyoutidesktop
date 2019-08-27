@@ -51,7 +51,7 @@ public class XLocatorByCluster extends Thread implements XLocator
   double[] angles = { 45.0, -135.0, -45.0, 135.0 };
   double range = 60.0;  
   //BufferedImage angleimage[] = new BufferedImage[angles.length];
-  DBSCANClusterer<DoublePoint>[] clusterers;
+  ArrayList<DBSCANClusterer<DoublePoint>> clusterers;
   
   LinkedList<XLocatorListener> listeners;
 
@@ -83,9 +83,9 @@ public class XLocatorByCluster extends Thread implements XLocator
       for ( j=0; j<maxheight; j++ )
         sobeldata[i][j] = new SobelPixelResult();
 
-    this.clusterers = new DBSCANClusterer[angles.length];
+    this.clusterers = new ArrayList<DBSCANClusterer<DoublePoint>>();
     for ( i=0; i<angles.length; i++ )
-      this.clusterers[i] = new DBSCANClusterer( 3.0, 12, new AngleBiasedDistanceMeasure(angles[i]) );
+      this.clusterers.add( new DBSCANClusterer<>( 3.0, 12, new AngleBiasedDistanceMeasure(angles[i]) ) );
         
     listeners = new LinkedList<>();    
   }
@@ -239,7 +239,7 @@ public class XLocatorByCluster extends Thread implements XLocator
       if ( debuglevel >= 2 )
         notifyListeners( -1, false, this.clusterablesToImage( list, input.getWidth(), input.getHeight() ), "Angle " + angles[a] );
       
-      clusters = clusterers[a].cluster(list);
+      clusters = clusterers.get(a).cluster(list);
       clustcount[a] = clusters.size();
       count+=clustcount[a];
       clusterdata[a] = new ClusterData[clustcount[a]];

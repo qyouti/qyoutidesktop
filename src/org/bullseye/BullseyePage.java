@@ -52,10 +52,10 @@ public class BullseyePage
   {
     vvectx = bullseyepointsscan[bottomi].x - bullseyepointsscan[topi].x;
     vvecty = bullseyepointsscan[bottomi].y - bullseyepointsscan[topi].y;
-    vvectlen = (double) Math.sqrt( vvectx*vvectx + vvecty*vvecty );
+    vvectlen = Math.sqrt( vvectx*vvectx + vvecty*vvecty );
     hvectx = bullseyepointsscan[righti].x - bullseyepointsscan[lefti].x;
     hvecty = bullseyepointsscan[righti].y - bullseyepointsscan[lefti].y;
-    hvectlen = (double) Math.sqrt( hvectx*hvectx + hvecty*hvecty );
+    hvectlen = Math.sqrt( hvectx*hvectx + hvecty*hvecty );
 
     hl = bullseyepointsprint[righti].x - bullseyepointsprint[lefti].x;
     vl = bullseyepointsprint[bottomi].y - bullseyepointsprint[topi].y;

@@ -378,12 +378,6 @@
                       <SubComponents>
                         <Component class="javax.swing.JTable" name="questiontable">
                           <Properties>
-                            <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                              <Table columnCount="2" rowCount="0">
-                                <Column editable="false" title="ID" type="java.lang.String"/>
-                                <Column editable="false" title="Title" type="java.lang.String"/>
-                              </Table>
-                            </Property>
                             <Property name="autoResizeMode" type="int" value="0"/>
                           </Properties>
                         </Component>
@@ -903,16 +897,6 @@
                   <SubComponents>
                     <Component class="javax.swing.JTable" name="candidatetable">
                       <Properties>
-                        <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="6" rowCount="0">
-                            <Column editable="false" title="*" type="java.lang.String"/>
-                            <Column editable="false" title="Name" type="java.lang.String"/>
-                            <Column editable="false" title="ID" type="java.lang.String"/>
-                            <Column editable="false" title="Pages" type="java.lang.Integer"/>
-                            <Column editable="false" title="Questions" type="java.lang.Integer"/>
-                            <Column editable="false" title="Errors" type="java.lang.String"/>
-                          </Table>
-                        </Property>
                         <Property name="autoResizeMode" type="int" value="0"/>
                       </Properties>
                     </Component>
@@ -945,14 +929,6 @@
                   <SubComponents>
                     <Component class="javax.swing.JTable" name="pagestable">
                       <Properties>
-                        <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="4" rowCount="0">
-                            <Column editable="false" title="No." type="java.lang.Integer"/>
-                            <Column editable="false" title="File" type="java.lang.String"/>
-                            <Column editable="false" title="Code" type="java.lang.String"/>
-                            <Column editable="false" title="Error" type="java.lang.String"/>
-                          </Table>
-                        </Property>
                         <Property name="autoResizeMode" type="int" value="0"/>
                       </Properties>
                     </Component>
@@ -982,15 +958,6 @@
                   <SubComponents>
                     <Component class="javax.swing.JTable" name="scanfiletable">
                       <Properties>
-                        <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="5" rowCount="0">
-                            <Column editable="false" title="Ident" type="java.lang.String"/>
-                            <Column editable="false" title="Source" type="java.lang.String"/>
-                            <Column editable="false" title="Imported Name" type="java.lang.String"/>
-                            <Column editable="false" title="Processed" type="java.lang.Boolean"/>
-                            <Column editable="false" title="Errors" type="java.lang.String"/>
-                          </Table>
-                        </Property>
                         <Property name="autoResizeMode" type="int" value="0"/>
                       </Properties>
                     </Component>

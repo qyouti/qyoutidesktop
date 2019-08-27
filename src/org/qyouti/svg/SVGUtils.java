@@ -43,7 +43,7 @@ public class SVGUtils
   {
       String svgNS = SVGConstants.SVG_NAMESPACE_URI;
       Document doc = dest.getOwnerDocument();
-      org.w3c.dom.Element g = (org.w3c.dom.Element) doc.createElementNS(svgNS,"g");
+      org.w3c.dom.Element g = doc.createElementNS(svgNS,"g");
       String t = "";
       if ( x!=0 || y!=0 )
         t += "translate("+x+","+y+")";

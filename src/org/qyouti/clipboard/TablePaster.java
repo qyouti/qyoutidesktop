@@ -114,8 +114,8 @@ public class TablePaster
     }
     
     for ( i=0; i<rowlist.size(); i++ )
-      if ( ((String[])rowlist.get( i )).length > cols )
-        cols = ((String[])rowlist.get( i )).length;
+      if ( rowlist.get( i ).length > cols )
+        cols = rowlist.get( i ).length;
     
     for ( j=0; j<cols; j++ )
     {
@@ -170,7 +170,7 @@ public class TablePaster
     String[] row;
     if ( rowIndex<0 || rowIndex>= rowlist.size() )
       return null;
-    row = (String[])rowlist.get( rowIndex );
+    row = rowlist.get( rowIndex );
     if ( columnIndex<0 || columnIndex>=row.length )
       return null;
     return row[columnIndex];

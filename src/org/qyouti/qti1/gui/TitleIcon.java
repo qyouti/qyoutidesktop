@@ -31,8 +31,8 @@ public class TitleIcon
     DOMImplementation impl = GenericDOMImplementation.getDOMImplementation();
     String svgNS = SVGConstants.SVG_NAMESPACE_URI;
     Document doc = impl.createDocument(svgNS, "svg", null);
-    org.w3c.dom.Element g = (org.w3c.dom.Element) doc.createElementNS(svgNS, "g");
-    org.w3c.dom.Element t = (org.w3c.dom.Element) doc.createElementNS(svgNS, "text");
+    org.w3c.dom.Element g = doc.createElementNS(svgNS, "g");
+    org.w3c.dom.Element t = doc.createElementNS(svgNS, "text");
     t.setAttribute( "class", "qyouti-question-title" );
     t.setAttribute("x", "0");
     t.setAttribute("y", Integer.toString(  fs + ((h-fs)/2)  )  );

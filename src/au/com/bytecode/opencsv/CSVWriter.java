@@ -183,12 +183,12 @@ public class CSVWriter {
      *            a List of String[], with each String[] representing a line of
      *            the file.
      */
-    public void writeAll(List allLines)  {
+    public void writeAll(List<String[]> allLines)  {
 
-        for (Iterator iter = allLines.iterator(); iter.hasNext();) {
-            String[] nextLine = (String[]) iter.next();
-            writeNext(nextLine);
-        }
+      for (String[] nextLine : allLines)
+      {
+        writeNext(nextLine);
+      }
 
     }
 

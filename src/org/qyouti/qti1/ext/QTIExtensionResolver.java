@@ -15,7 +15,7 @@ import org.qyouti.qti1.ext.webct.*;
  */
 public class QTIExtensionResolver
 {
-    public static Class resolve( String namespace, String name )
+    public static Class<?> resolve( String namespace, String name )
     {
         //System.out.println( "Resolving " + namespace + "  " + name );
 

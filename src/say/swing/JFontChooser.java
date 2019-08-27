@@ -113,9 +113,9 @@ public class JFontChooser extends JComponent
 	private JTextField fontFamilyTextField = null;
 	private JTextField fontStyleTextField = null;
 	private JTextField fontSizeTextField = null;
-	private JList fontNameList = null;
-	private JList fontStyleList = null;
-	private JList fontSizeList = null;
+	private JList<String> fontNameList = null;
+	private JList<String> fontStyleList = null;
+	private JList<String> fontSizeList = null;
 	private JPanel fontNamePanel = null;
 	private JPanel fontStylePanel = null;
 	private JPanel fontSizePanel = null;
@@ -208,14 +208,13 @@ public class JFontChooser extends JComponent
 		return fontSizeTextField;
 	}
 
-	public JList getFontFamilyList()
+	public JList<String> getFontFamilyList()
 	{
 		if (fontNameList == null)
 		{
 			fontNameList = new JList<String>(getFontFamilies());
 			fontNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			fontNameList.addListSelectionListener(
-				new ListSelectionHandler(getFontFamilyTextField()));
+			fontNameList.addListSelectionListener(new ListSelectionHandler(fontNameList,getFontFamilyTextField()));
 			fontNameList.setSelectedIndex(0);
 			fontNameList.setFont(DEFAULT_FONT);
 			fontNameList.setFocusable(false);
@@ -223,14 +222,13 @@ public class JFontChooser extends JComponent
 		return fontNameList;
 	}
 
-	public JList getFontStyleList()
+	public JList<String> getFontStyleList()
 	{
 		if (fontStyleList == null)
 		{
 			fontStyleList = new JList<String>(getFontStyleNames());
 			fontStyleList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			fontStyleList.addListSelectionListener(
-				new ListSelectionHandler(getFontStyleTextField()));
+			fontStyleList.addListSelectionListener(new ListSelectionHandler(fontNameList,getFontStyleTextField()));
 			fontStyleList.setSelectedIndex(0);
 			fontStyleList.setFont(DEFAULT_FONT);
 			fontStyleList.setFocusable(false);
@@ -238,14 +236,13 @@ public class JFontChooser extends JComponent
 		return fontStyleList;
 	}
 
-	public JList getFontSizeList()
+	public JList<String> getFontSizeList()
 	{
 		if (fontSizeList == null)
 		{
 			fontSizeList = new JList<String>(this.fontSizeStrings);
 			fontSizeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			fontSizeList.addListSelectionListener(
-				new ListSelectionHandler(getFontSizeTextField()));
+			fontSizeList.addListSelectionListener(new ListSelectionHandler(fontNameList,getFontSizeTextField()));
 			fontSizeList.setSelectedIndex(0);
 			fontSizeList.setFont(DEFAULT_FONT);
 			fontSizeList.setFocusable(false);
@@ -261,7 +258,7 @@ public class JFontChooser extends JComponent
 	 **/
 	public String getSelectedFontFamily()
 	{
-		String fontName = (String) getFontFamilyList().getSelectedValue();
+		String fontName = getFontFamilyList().getSelectedValue();
 		return fontName;
 	}
 
@@ -301,7 +298,7 @@ public class JFontChooser extends JComponent
 			}
 			catch (NumberFormatException e)
 			{
-				fontSizeString = (String) getFontSizeList().getSelectedValue();
+				fontSizeString = getFontSizeList().getSelectedValue();
 				getFontSizeTextField().setText(fontSizeString);
 			}
 		}
@@ -438,10 +435,12 @@ public class JFontChooser extends JComponent
 
 	protected class ListSelectionHandler implements ListSelectionListener
 	{
+    private JList<String> list;
 		private JTextComponent textComponent;
 
-		ListSelectionHandler(JTextComponent textComponent)
+		ListSelectionHandler(JList<String> list, JTextComponent textComponent)
 		{
+      this.list = list;
 			this.textComponent = textComponent;
 		}
 
@@ -449,9 +448,7 @@ public class JFontChooser extends JComponent
 		{
 			if (e.getValueIsAdjusting() == false)
 			{
-				JList list = (JList) e.getSource();
-				String selectedValue = (String) list.getSelectedValue();
-
+				String selectedValue = list.getSelectedValue();
 				String oldValue = textComponent.getText();
 				textComponent.setText(selectedValue);
 				if (!oldValue.equalsIgnoreCase(selectedValue))
@@ -459,7 +456,6 @@ public class JFontChooser extends JComponent
 					textComponent.selectAll();
 					textComponent.requestFocus();
 				}
-
 				updateSampleFont();
 			}
 		}
@@ -488,9 +484,9 @@ public class JFontChooser extends JComponent
 
 	protected class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter
 	{
-		private JList targetList;
+		private JList<String> targetList;
 
-		public TextFieldKeyHandlerForListSelectionUpDown(JList list)
+		public TextFieldKeyHandlerForListSelectionUpDown(JList<String> list)
 		{
 			this.targetList = list;
 		}
@@ -525,9 +521,9 @@ public class JFontChooser extends JComponent
 
 	protected class ListSearchTextFieldDocumentHandler implements DocumentListener
 	{
-		JList targetList;
+		JList<String> targetList;
 
-		public ListSearchTextFieldDocumentHandler(JList targetList)
+		public ListSearchTextFieldDocumentHandler(JList<String> targetList)
 		{
 			this.targetList = targetList;
 		}

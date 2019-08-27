@@ -118,7 +118,7 @@ public class ZXingResult
 
   public byte[] getBytes()
   {
-    Vector segments = (Vector)wrapped_result.getResultMetadata().get( ResultMetadataType.BYTE_SEGMENTS );
+    Vector<?> segments = (Vector<?>)wrapped_result.getResultMetadata().get( ResultMetadataType.BYTE_SEGMENTS );
     if ( segments == null ) return null;
     Object o = segments.get( 0 );
     if ( o==null || !(o instanceof byte[]) ) return null;

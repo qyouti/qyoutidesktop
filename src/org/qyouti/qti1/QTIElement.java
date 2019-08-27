@@ -75,7 +75,7 @@ public abstract class QTIElement
 
   public final String getName()
   {
-    Class c = getClass();
+    Class<?> c = getClass();
     String cn = c.getName();
     return cn.substring( cn.lastIndexOf( ".QTIElement" )+11 );
   }

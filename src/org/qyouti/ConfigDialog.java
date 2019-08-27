@@ -354,7 +354,7 @@ public class ConfigDialog
   private int getSelection()
   {
     int t = fontchaintabbedpane.getSelectedIndex();
-    JList list  = sanslist;
+    JList<String> list  = sanslist;
     switch ( t )
     {
       case 0:
@@ -373,7 +373,7 @@ public class ConfigDialog
   private void setSelection( int n)
   {
     int t = fontchaintabbedpane.getSelectedIndex();
-    JList list  = sanslist;
+    JList<String> list  = sanslist;
     switch ( t )
     {
       case 0:
@@ -427,7 +427,7 @@ public class ConfigDialog
     dispose();
   }//GEN-LAST:event_resetbuttonActionPerformed
 
-  class FontListModel extends AbstractListModel
+  class FontListModel extends AbstractListModel<String>
   {
     ArrayList<String> list;
     
@@ -450,7 +450,7 @@ public class ConfigDialog
     }
 
     @Override
-    public Object getElementAt( int index )
+    public String getElementAt( int index )
     {
       return list.get( index );
     }

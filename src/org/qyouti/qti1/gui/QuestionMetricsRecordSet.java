@@ -10,7 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
@@ -33,11 +35,11 @@ public class QuestionMetricsRecordSet
 {
   boolean loaded = false;
   String printid;
-  Hashtable<String,Hashtable<String,QuestionMetricsRecord>> items =
-      new Hashtable<String,Hashtable<String,QuestionMetricsRecord>>();
-  Vector<String> prefseq = new Vector<String>();
+  HashMap<String,HashMap<String,QuestionMetricsRecord>> items =
+      new HashMap<String,HashMap<String,QuestionMetricsRecord>>();
+  ArrayList<String> prefseq = new ArrayList<String>();
 
-  Hashtable<String,String> render_options = new Hashtable<String,String>();
+  HashMap<String,String> render_options = new HashMap<String,String>();
 
   public QuestionMetricsRecordSet(String printid)
   {
@@ -69,13 +71,13 @@ public class QuestionMetricsRecordSet
       }
 
       nl = root.getElementsByTagName( "preferences" );
-      Hashtable<String,QuestionMetricsRecord> records;
+      HashMap<String,QuestionMetricsRecord> records;
       Vector<QuestionMetricBox> boxes;
       QuestionMetricBox r;
       for ( i=0; i<nl.getLength(); i++ )
       {
         pref = (Element)nl.item(i);
-        records = new Hashtable<String,QuestionMetricsRecord>();
+        records = new HashMap<String,QuestionMetricsRecord>();
         items.put( pref.getAttribute("key"), records );
         prefseq.add(pref.getAttribute("key"));
         nli = pref.getElementsByTagName("item");
@@ -159,10 +161,10 @@ public class QuestionMetricsRecordSet
     {
       throw new IllegalArgumentException("Can't add items to a record that was previously saved.");
     }
-    Hashtable<String,QuestionMetricsRecord> list = items.get( packed );
+    HashMap<String,QuestionMetricsRecord> list = items.get( packed );
     if ( list == null )
     {
-      list = new Hashtable<String,QuestionMetricsRecord>();
+      list = new HashMap<String,QuestionMetricsRecord>();
       items.put(packed, list);
       prefseq.add(packed);
     }
@@ -174,7 +176,7 @@ public class QuestionMetricsRecordSet
     if ( pref<0 || pref >= prefseq.size() ) return null;
     String key = prefseq.get(pref);
     if ( key == null ) return null;
-    Hashtable<String,QuestionMetricsRecord> list = items.get(key);
+    HashMap<String,QuestionMetricsRecord> list = items.get(key);
     if ( list == null ) return null;
     return list.get(qid);
   }
@@ -187,7 +189,7 @@ public class QuestionMetricsRecordSet
 
   public void emit(Writer writer) throws IOException
   {
-    Hashtable<String,QuestionMetricsRecord> list;
+    HashMap<String,QuestionMetricsRecord> list;
 
     if (loaded)
     {
@@ -208,16 +210,14 @@ public class QuestionMetricsRecordSet
     }
     writer.write( "</render-options>\n");
 
-    Enumeration qids;
     for (int i = 0; i <prefseq.size(); i++)
     {
       writer.write("  <preferences key=\"");
       writer.write( prefseq.get(i) );
       writer.write("\">\n");
       list = items.get( prefseq.get(i) );
-      qids = list.keys();
-      while ( qids.hasMoreElements() )
-        list.get(qids.nextElement()).emit(writer);
+      for ( String qid : list.keySet() )
+        list.get(qid).emit(writer);
       writer.write("  </preferences>\n");
     }
     writer.write("</question-metrics>\n");

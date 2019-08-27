@@ -38,7 +38,7 @@ public class MathMLIcon
             Dimension d = svgdoc.getDimension();
             Document domdoc = svgdoc.getDocument();
             Element root = domdoc.getDocumentElement();
-            Element g = (Element) domdoc.createElementNS(SVGConstants.SVG_NAMESPACE_URI,"g");
+            Element g = domdoc.createElementNS(SVGConstants.SVG_NAMESPACE_URI,"g");
             g.setAttribute("transform", "scale( " +
                     (int)(width/d.getWidth()) + " " +
                     (int)(height/d.getHeight()) + ")"
