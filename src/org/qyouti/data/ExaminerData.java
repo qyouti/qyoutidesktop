@@ -20,11 +20,7 @@ public class ExaminerData
 {
   HashMap<String,ExaminerCandidateData> cmap = new HashMap<>();
   boolean unsaved = false;
-  public QuestionDefinitions examinerqdefs;
-  
-  public ExaminerData()
-  { 
-  }  
+  public QuestionDefinitions examinerqdefs=null;
   
   public ExaminerData( ExaminationData exam, Element element )
   {
@@ -61,7 +57,7 @@ public class ExaminerData
   {
     writer.write( "<examinerdata>\r\n" );
     examinerqdefs.emit(writer);
-    writer.write("<candidates>\r\n");    
+    writer.write("\r\n\r\n<candidates>\r\n");    
     for ( ExaminerCandidateData c : cmap.values() )
       c.emit(writer);
     writer.write("</candidates>\r\n");

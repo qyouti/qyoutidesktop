@@ -2114,10 +2114,7 @@ public class QyoutiFrame
 
   private void recomputemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_recomputemenuitemActionPerformed
   {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
-    exam.invalidateAllOutcomes();
-    exam.updateOutcomes();
-    exam.setUnsavedChangesInExaminer( true );
-    exam.processDataChanged( exam.qdefs );
+    exam.recomputeOutcomes();
   }//GEN-LAST:event_recomputemenuitemActionPerformed
 
   private void reviewincludeallActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeallActionPerformed

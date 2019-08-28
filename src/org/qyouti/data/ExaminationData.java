@@ -90,10 +90,13 @@ public class ExaminationData
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
+
   File examfolder;
   File examfile;
   File questionfile;
   File examinerfile;
+  File outcomefile;
+  
   CompositeFile scanarchive;
   CompositeFile responsearchive;
   
@@ -102,6 +105,7 @@ public class ExaminationData
   public PageListModel pagelistmodel = new PageListModel( pages );
 
   public ExaminerData examinerdata = null;
+  public OutcomeTables outcometables = null;
   
   public ImageFileTable scans = new ImageFileTable( this );
   
@@ -143,6 +147,7 @@ public class ExaminationData
     examfile        = new File( examfolder, "qyouti.xml" );
     questionfile    = new File( examfolder, "questions.xml" );
     examinerfile    = new File( examfolder, "examiner.xml" );
+    outcomefile     = new File( examfolder, "outcomes.xml" );
     scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
     responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
@@ -170,6 +175,10 @@ public class ExaminationData
   public void processRowsDeleted( OutcomeData model, int first, int last )
   {
     model.fireTableRowsDeleted( first, last );
+  }
+  public void processDataChanged()
+  {
+    fireTableDataChanged();
   }
   public void processDataChanged( OutcomeData model )
   {
@@ -364,23 +373,43 @@ public class ExaminationData
     }
     return erd;
   }  
+
+  public OutcomeCandidateData getOutcomeCandidateData( String candidateident, boolean create )
+  {
+    OutcomeCandidateData ocd = outcometables.cmap.get( candidateident );
+    if ( ocd != null ) return ocd;
+    if ( create)
+    {
+      ocd = new OutcomeCandidateData( this, candidateident );
+      this.outcometables.cmap.put(candidateident, ocd);
+    }
+    return ocd;
+  }
+  
+  public OutcomeData getOutcomeData( String candidateident, String questionident, boolean create )
+  {
+    OutcomeCandidateData ocd = getOutcomeCandidateData( candidateident, create );
+    if ( ocd == null ) return null;
+    OutcomeData oqd = ocd.qmap.get(questionident);
+    if ( oqd != null) return oqd;
+    if ( create )
+    {
+      oqd = new OutcomeData( this );
+      ocd.qmap.put(questionident, oqd);
+    }
+    return oqd;
+  }
+
   
   public OutcomeData getCandidateOutcomes( String candidateident )
   {
-    ExaminerCandidateData ecd = getExaminerCandidateData( candidateident, true );
-    if ( ecd == null ) return null;
-    if ( ecd.outcomes == null )
-      ecd.outcomes = new OutcomeData( this );
-    return ecd.outcomes;
+    return getOutcomeCandidateData( candidateident, true );
   }
   
   public OutcomeData getQuestionOutcomes( String candidateident, String questionident )
   {
-    ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, true );
-    if ( eqd == null ) return null;
-    if ( eqd.outcomes == null )
-      eqd.outcomes = new OutcomeData( this );
-    return eqd.outcomes;
+    OutcomeData oqd = getOutcomeData( candidateident, questionident, true );
+    return oqd;
   }
  
   public int getExaminerDecision( String candidateident, String questionident )
@@ -394,14 +423,14 @@ public class ExaminationData
   {
     ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, true );
     eqd.setExaminerdecision(n);
-    examinerdata.setUnsavedChanges(true);
+    setUnsavedChangesInExaminer(true);
   }
   
   public void setExaminerSelected( String candidateident, String questionident, String responseident, boolean b )
   {
     ExaminerResponseData erd = getExaminerResponseData( candidateident, questionident, responseident, true );
     erd.examiner_selected = b;
-    examinerdata.setUnsavedChanges(true);
+    setUnsavedChangesInExaminer(true);
   }
   
   public boolean isExaminerSelected( String candidateident, String questionident, String responseident )
@@ -496,6 +525,12 @@ public class ExaminationData
     QuestionData question;
     ResponseData response;
 
+    outcometables.cmap.clear();
+    outcometables.setUnsavedChanges( true );
+    
+    examinerdata.cmap.clear();
+    examinerdata.setUnsavedChanges( true );
+    
     for ( int i = 0; i < candidates_sorted.size(); i++ )
     {
       candidate = candidates_sorted.get( i );
@@ -530,6 +565,7 @@ public class ExaminationData
     }
     
     scans.clear();
+    setUnsavedChangesInMain( true );
   }
   
   
@@ -1556,6 +1592,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }    
   }
   
+  public void recomputeOutcomes()
+  {
+    invalidateAllOutcomes();
+    updateOutcomes();
+    setUnsavedChangesInOutcome( true );
+    processDataChanged();    
+  }
+  
+  
   public void updateOutcomes()
   {
     PageData page;
@@ -1606,6 +1651,14 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         writer = null;        
       }
       
+      if ( outcometables != null && outcometables.areThereUnsavedChanges() )
+      {
+        writer = new OutputStreamWriter(new FileOutputStream(outcomefile), "utf8");
+        outcometables.emit( writer );
+        writer.close();
+        writer = null;                
+      }
+      
       if ( qdefs != null && qdefs.areThereUnsavedChanges() )
       {
         writer = new OutputStreamWriter(new FileOutputStream(questionfile), "utf8");
@@ -1648,7 +1701,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public boolean areThereUnsavedChanges()
   {
-    return unsaved_changes || qdefs.areThereUnsavedChanges() || (examinerdata != null && examinerdata.areThereUnsavedChanges());
+    return unsaved_changes || 
+            qdefs.areThereUnsavedChanges() || 
+            ( examinerdata != null && examinerdata.areThereUnsavedChanges() ) || 
+            (outcometables != null && outcometables.areThereUnsavedChanges())      ;
   }
   
   public void setUnsavedChangesInMain( boolean b )
@@ -1674,6 +1730,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     if ( examinerdata.areThereUnsavedChanges() != b )
     {
       examinerdata.setUnsavedChanges( b );
+      fireStatusChange();
+    }
+  }
+  
+  public void setUnsavedChangesInOutcome( boolean b )
+  {
+    if ( outcometables.areThereUnsavedChanges() != b )
+    {
+      outcometables.setUnsavedChanges( b );
       fireStatusChange();
     }
   }
@@ -1864,19 +1929,33 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       return;
     loadQuestions( new InputSource( new FileInputStream( questionfile ) ) );
     load( new InputSource( new FileInputStream( examfile ) ) );
+    if ( examinerfile.exists() )
+      loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
+    else
+      loadBlankExaminerData();
+    qdefs.qti.setOverride( examinerdata.examinerqdefs.qti );
+
     try
     {
-      loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
-      qdefs.qti.setOverride( examinerdata.examinerqdefs.qti );
+      loadOutcomeData( new InputSource( new FileInputStream( outcomefile ) ) );
     }
     catch ( FileNotFoundException e )
     {
-      System.out.println( "No examiner data yet" );
-      examinerdata = new ExaminerData();
+      System.out.println( "No outcome data yet" );
+      outcometables = new OutcomeTables();
     }
   }
 
-  private void loadExaminerData( InputSource source )
+  private void loadBlankExaminerData()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    String strempty = "<?xml version=\"1.0\"?><examinerdata><questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\"/></examinerdata>";
+    ByteArrayInputStream in = new ByteArrayInputStream(strempty.getBytes("UTF-8"));
+    InputSource ins = new InputSource( in );
+    loadExaminerData( ins );
+  }
+  
+  private ExaminerData loadExaminerData( InputSource source )
           throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -1887,8 +1966,22 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     examinerdata=null;
     if ("examinerdata".equals(roote.getNodeName()))
       examinerdata = new ExaminerData( this, roote );
+    return examinerdata;
+  }
+  
+  private void loadOutcomeData( InputSource source )
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    Document document = builder.parse( source );
+    Element roote = document.getDocumentElement();
+    outcometables=null;
+    if ("outcomes".equals(roote.getNodeName()))
+      outcometables = new OutcomeTables( this, roote );
     else
-      examinerdata = new ExaminerData();
+      outcometables = new OutcomeTables();
   }
   
   private void loadQuestions( InputSource source )

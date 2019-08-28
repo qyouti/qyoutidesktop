@@ -443,6 +443,7 @@ public class QuestionData
     page.candidate.processAllResponses();
     page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
     page.exam.setUnsavedChangesInExaminer( true );
+    page.exam.setUnsavedChangesInOutcome( true );
   }
 
   public void setExaminerOverrideListener( ExaminerOverrideListener eolistener )

@@ -24,8 +24,6 @@ public class ExaminerQuestionData
   private String ident;
 
   public HashMap<String,ExaminerResponseData> rmap = new HashMap<>();
-
-  OutcomeData outcomes;
   
   public ExaminerQuestionData(ExaminationData exam, Element element)
   {
@@ -51,18 +49,6 @@ public class ExaminerQuestionData
         {
           response = new ExaminerResponseData( (Element)nl.item( j ) );
           rmap.put(response.ident, response);
-        }
-      }
-
-      if ( "outcomes".equals( child.getLocalName() ) )
-      {
-        outcomes = new OutcomeData( exam );
-        nl = child.getElementsByTagName( "outcome" );
-        OutcomeDatum outcome;
-        for ( int j=0; j<nl.getLength(); j++ )
-        {
-          outcome = new OutcomeDatum( (Element)nl.item(j) );
-          outcomes.addDatum( outcome );
         }
       }
     }
@@ -104,12 +90,6 @@ public class ExaminerQuestionData
         erd.emit(writer);
       writer.write( "      </overrides>\r\n" );
     }
-
-    writer.write( "      <outcomes>\r\n" );
-    for ( int i=0; i<outcomes.getRowCount(); i++ )
-      outcomes.getDatumAt( i ).emit( writer );
-    writer.write( "      </outcomes>\r\n" );
-    
     writer.write( "    </question>\r\n" );
   }
   

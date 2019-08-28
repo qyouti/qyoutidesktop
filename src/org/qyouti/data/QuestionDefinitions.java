@@ -208,7 +208,7 @@ public class QuestionDefinitions
     QTIElementItem item = qti.getItems().get( rowIndex );
     if ( columnIndex == 0 ) return item.getIdent();
     if ( columnIndex == 2 ) return item.isSupported()?"yes":"no";
-    if ( columnIndex == 3 ) return item.isOverriden()?"yes":"no";
+    if ( columnIndex == 3 ) return item.isOverriden()?"yes":"";
     return item.getTitle();
   }
 

@@ -20,7 +20,6 @@ public class ExaminerCandidateData
 {
   HashMap<String,ExaminerQuestionData> qmap = new HashMap<>();
   String ident;
-  OutcomeData outcomes;
 
   public ExaminerCandidateData( String ident )
   { 
@@ -53,17 +52,6 @@ public class ExaminerCandidateData
         }
       }
       
-      if ( "outcomes".equals( child.getLocalName() ) )
-      {
-        outcomes = new OutcomeData( exam );
-        nl = child.getElementsByTagName( "outcome" );
-        OutcomeDatum outcome;
-        for ( int j=0; j<nl.getLength(); j++ )
-        {
-          outcome = new OutcomeDatum( (Element)nl.item(j) );
-          outcomes.addDatum( outcome );
-        }
-      }
     }
   }
 
@@ -79,12 +67,7 @@ public class ExaminerCandidateData
     writer.write( "    <questions>\r\n" );
     for ( ExaminerQuestionData q : qmap.values() )
       q.emit(writer);
-    writer.write( "    </questions>\r\n" );
-    
-    writer.write( "    <outcomes>\r\n" );
-    for ( int i=0; i<outcomes.getRowCount(); i++ )
-      outcomes.getDatumAt( i ).emit( writer );
-    writer.write( "    </outcomes>\r\n" );
+    writer.write( "    </questions>\r\n" );    
     writer.write( "  </candidate>\r\n" );
   }  
   

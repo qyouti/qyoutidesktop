@@ -456,7 +456,7 @@ public class ScanTask
         // crosses in
         pagedecoder.processBoxImages( exam );
         // score the items and work out other outcomes
-        processPageOutcomes();
+        exam.recomputeOutcomes();
         // which candidate marks are dubious?
         exam.rebuildReviewList();
         exam.save();
@@ -475,6 +475,7 @@ public class ScanTask
     }
   }
   
+/*  
   private void processPageOutcomes()
   {
     int i;
@@ -518,7 +519,8 @@ public class ScanTask
     }
     page.processed = true;
   }
-
+*/
+  
   @Override
   public boolean imageUpdate( Image img, int infoflags, int x, int y, int width,
                               int height )

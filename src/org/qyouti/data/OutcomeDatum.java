@@ -67,7 +67,7 @@ public class OutcomeDatum
   public void emit( Writer writer )
           throws IOException
   {
-    writer.write( "        <outcome" );
+    writer.write( "<outcome" );
     writer.write( " ident=\"" + name  + "\"" );
     writer.write( " value=\"" + value + "\"" );
     if ( value == null )

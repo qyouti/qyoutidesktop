@@ -37,13 +37,14 @@ import javax.swing.table.AbstractTableModel;
 public class OutcomeData
           extends AbstractTableModel
 {
-  private ExaminationData exam;
+  private ExaminationData exam=null;
   private Vector<OutcomeDatum> data = new Vector<OutcomeDatum>();
 
   public OutcomeData( ExaminationData exam )
   {
     this.exam = exam;
-    addTableModelListener( exam.outcomelistener );
+    if ( exam != null && exam.outcomelistener != null )
+      addTableModelListener( exam.outcomelistener );
   }
   
   public int getRowCount()
@@ -81,14 +82,15 @@ public class OutcomeData
     for ( int i=0; i<data.size(); i++ )
       if ( !data.get(i).fixed )
         data.remove( i-- );
-    if ( n > 0 )    
+    if ( n > 0 && exam != null )    
       exam.processRowsDeleted( this, 0, n );
   }
   
   public void addDatum( OutcomeDatum datum )
   {
     data.add( datum );
-    exam.processRowsInserted( this, data.size()-1, data.size()-1 );
+    if( exam != null )
+      exam.processRowsInserted( this, data.size()-1, data.size()-1 );
   }
 
   public OutcomeDatum getDatumAt(int rowIndex )
