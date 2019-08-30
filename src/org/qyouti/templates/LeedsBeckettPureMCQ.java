@@ -17,1185 +17,1185 @@ public class LeedsBeckettPureMCQ
 {
   public String getTemplateTitle() {return "Leeds Beckett Pure Multiple Choice Questions. (One right answer per question.)";}
 
-  public static final String main = "<?xml version=\"1.0\"?>\n" +
-"<examination>\n" +
-"\n" +
-"\n" +
-"<options>\n" +
-"<option name=\"ignore_flow\">false</option>\n" +
-"<option name=\"question_titles\">false</option>\n" +
-"<option name=\"double_sided\">false</option>\n" +
-"<option name=\"name_in_footer\">true</option>\n" +
-"<option name=\"cover_sheet\">false</option>\n" +
-"<option name=\"header\">HEADER</option>\n" +
-"<option name=\"layout\">2</option>\n" +
-"<option name=\"question_metrics_qr\">false</option>\n" +
-"<option name=\"id_in_footer\">true</option>\n" +
-"</options>\n" +
-"\n" +
-"<persons>\n" +
-"</persons>\n" +
-"\n" +
-"<pages>\n" +
-"</pages>\n" +
-"\n" +
-"<papers>\n</papers>\n" +
-"\n" +
-"<analysis>\n" +
-"</analysis>\n" +
-"\n" +
-"<transforms>\n" +
-"</transforms>\n" +
-"\n" +
+  public static final String main = "<?xml version=\"1.0\"?>\r\n" +
+"<examination>\r\n" +
+"\r\n" +
+"\r\n" +
+"<options>\r\n" +
+"<option name=\"ignore_flow\">false</option>\r\n" +
+"<option name=\"question_titles\">false</option>\r\n" +
+"<option name=\"double_sided\">false</option>\r\n" +
+"<option name=\"name_in_footer\">true</option>\r\n" +
+"<option name=\"cover_sheet\">false</option>\r\n" +
+"<option name=\"header\">HEADER</option>\r\n" +
+"<option name=\"layout\">2</option>\r\n" +
+"<option name=\"question_metrics_qr\">false</option>\r\n" +
+"<option name=\"id_in_footer\">true</option>\r\n" +
+"</options>\r\n" +
+"\r\n" +
+"<persons>\r\n" +
+"</persons>\r\n" +
+"\r\n" +
+"<pages>\r\n" +
+"</pages>\r\n" +
+"\r\n" +
+"<papers>\r\n</papers>\r\n" +
+"\r\n" +
+"<analysis>\r\n" +
+"</analysis>\r\n" +
+"\r\n" +
+"<transforms>\r\n" +
+"</transforms>\r\n" +
+"\r\n" +
 "</examination>";
 
 
-  public static final String interop_top = "<?xml version=\"1.0\"?>\n" +
-"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\">\n" +
-"  <assessment ident=\"ASSESSMENTIDENT\" title=\"Untitled\">\n" +
-"    <section ident=\"section1\" title=\"Section 1\">\n" +
-"      <outcomes_processing scoremodel=\"SumOfScores\">\n" +
-"        <outcomes>\n" +
-"          <decvar varname=\"SID\" vartype=\"string\"/>\n" +
-"          <decvar varname=\"NAME\" vartype=\"string\"/>\n" +
-"          <decvar varname=\"VOID\" vartype=\"string\"/>\n" +
-"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\n" +
-"        </outcomes>\n" +
-"      </outcomes_processing>\n";
+  public static final String interop_top = "<?xml version=\"1.0\"?>\r\n" +
+"<questestinterop xmlns=\"http://www.imsglobal.org/xsd/ims_qtiasiv1p2\" xmlns:qyouti=\"http://www.qyouti.org/qtiext\">\r\n" +
+"  <assessment ident=\"ASSESSMENTIDENT\" title=\"Untitled\">\r\n" +
+"    <section ident=\"section1\" title=\"Section 1\">\r\n" +
+"      <outcomes_processing scoremodel=\"SumOfScores\">\r\n" +
+"        <outcomes>\r\n" +
+"          <decvar varname=\"SID\" vartype=\"string\"/>\r\n" +
+"          <decvar varname=\"NAME\" vartype=\"string\"/>\r\n" +
+"          <decvar varname=\"VOID\" vartype=\"string\"/>\r\n" +
+"          <decvar varname=\"SCORE\" vartype=\"decimal\"/>\r\n" +
+"        </outcomes>\r\n" +
+"      </outcomes_processing>\r\n";
 
-public static final String interop_tail = "    </section>\n" +
-"\n" +
-"  </assessment>\n" +
-"</questestinterop>\n" +
-"\n";
+public static final String interop_tail = "    </section>\r\n" +
+"\r\n" +
+"  </assessment>\r\n" +
+"</questestinterop>\r\n" +
+"\r\n";
   
 
-public static final String itemvoid = "    <item ident=\"void\" title=\"Void\">\n" +
-"    <presentation qyouti:columns=\"1\">\n" +
-"      <flow>\n" +
-"       <flow_label class=\"Row\">\n" +
-"        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[\n" +
-"<p style=\"font-size: 110%;\"><b>TITLELINE</b></p>\n" +        
-"<table><tr>\n" +        
-"<td>Use a <b>dark pencil</b> to mark the pink boxes with an X. To correct a mistake erase the X with a soft\n" +
-"pencil eraser so that it is invisible or almost invisible.  If you use a black or blue pen to indicate \n" +
-"your answers they will still be recognised but you will not be able to correct mistakes.\n" +
-"If you completed another sheet and this one is not to be marked put an X in the void box.</td>\n" +
+public static final String itemvoid = "    <item ident=\"void\" title=\"Void\">\r\n" +
+"    <presentation qyouti:columns=\"1\">\r\n" +
+"      <flow>\r\n" +
+"       <flow_label class=\"Row\">\r\n" +
+"        <material>\r\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[\r\n" +
+"<p style=\"font-size: 110%;\"><b>TITLELINE</b></p>\r\n" +        
+"<table><tr>\r\n" +        
+"<td>Use a <b>dark pencil</b> to mark the pink boxes with an X. To correct a mistake erase the X with a soft\r\n" +
+"pencil eraser so that it is invisible or almost invisible.  If you use a black or blue pen to indicate \r\n" +
+"your answers they will still be recognised but you will not be able to correct mistakes.\r\n" +
+"If you completed another sheet and this one is not to be marked put an X in the void box.</td>\r\n" +
         
-"<td style=\"text-align: right;\"> ]]></mattext>\n" +
-"        </material>\n" +
-"        <response_lid ident=\"resp_yes\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"              <response_label ident=\"yes\">\n" +
-"                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[Void? ]]></mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table>]]></mattext>\n" +
-"        </material>\n" +
-"       </flow_label>\n" +
-"      </flow>\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"        <decvar defaultval=\"no\" varname=\"VOID\" vartype=\"String\"/>\n" +
-"      </outcomes>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"          <varequal case=\"Yes\" respident=\"resp_yes\">yes</varequal>\n" +
-"        </conditionvar>\n" +
-"        <setvar action=\"Set\" varname=\"VOID\">yes</setvar>\n" +
-"      </respcondition>\n" +
-"    </resprocessing>\n" +
-"    </item>\n\n"; 
+"<td style=\"text-align: right;\"> ]]></mattext>\r\n" +
+"        </material>\r\n" +
+"        <response_lid ident=\"resp_yes\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"              <response_label ident=\"yes\">\r\n" +
+"                <material>\r\n" +
+"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[Void? ]]></mattext>\r\n" +
+"                </material>\r\n" +
+"              </response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"        <material>\r\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table>]]></mattext>\r\n" +
+"        </material>\r\n" +
+"       </flow_label>\r\n" +
+"      </flow>\r\n" +
+"    </presentation>\r\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\r\n" +
+"      <outcomes>\r\n" +
+"        <decvar defaultval=\"no\" varname=\"VOID\" vartype=\"String\"/>\r\n" +
+"      </outcomes>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"          <varequal case=\"Yes\" respident=\"resp_yes\">yes</varequal>\r\n" +
+"        </conditionvar>\r\n" +
+"        <setvar action=\"Set\" varname=\"VOID\">yes</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"    </resprocessing>\r\n" +
+"    </item>\r\n\r\n"; 
 
 
-public static final String itemsid = "    <item ident=\"sid\" qyouti:candidatetype=\"anonymous\" title=\"Student ID\">\n" +
-"    <presentation qyouti:columns=\"1\">\n" +
-"        <material>\n" +
-"          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\n" +
+public static final String itemsid = "    <item ident=\"sid\" qyouti:candidatetype=\"anonymous\" title=\"Student ID\">\r\n" +
+"    <presentation qyouti:columns=\"1\">\r\n" +
+"        <material>\r\n" +
+"          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\r\n" +
 "           <table>" +
-"            <tr><td><strong>Your&nbsp;Name&nbsp;</strong><br/>(Block&nbsp;Caps)</td><td>]]>\n" +
-"          </mattext>\n" +
-"        </material>\n" +        
+"            <tr><td><strong>Your&nbsp;Name&nbsp;</strong><br/>(Block&nbsp;Caps)</td><td>]]>\r\n" +
+"          </mattext>\r\n" +
+"        </material>\r\n" +        
 "        <qyouti:render_sketcharea columns=\"20\"/>" +
-"        <material>\n" +
-"          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\n" +
-"            </td></tr><tr><td><strong>Your&nbsp;Student&nbsp;ID&nbsp;</strong></td>\n" +
-"            <td>Your student ID is the eight digit number printed on your student ID card.\n" +
-"            (NOT your computer login which starts with a letter.)  In each block below select one\n" +
-"            digit with a cross to enter your ID digit by digit.\n" +
-"            </td></tr></table>\n" +
-"            ]]></mattext>\n" +
-"        </material>\n" +
-"      <flow>\n" +
-"\n" +
-"       <flow_label class=\"Row\">\n" +
-"        <material>\n" +
-"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<p><br/></p><table><tr><td><span style=\"font-size: 125%;\">1st digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_1\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"a1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"a0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">2nd digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_2\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"b1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"b0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td><span style=\"font-size: 125%;\">3rd digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_3\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"c1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"c0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">4th digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_4\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"d1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"d0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"\n" +
-"\n" +
-"        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p><br/></p>]]></mattext>\n" +
-"        </material>\n" +
-"\n" +
-"\n" +
-"       </flow_label>\n" +
-"\n" +
-"\n" +
-"       <flow_label class=\"Row\">\n" +
-"        <material>\n" +
-"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">5th digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_5\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"e1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"e0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td><span style=\"font-size: 125%;\">6th digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_6\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"f1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"f0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">7th digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_7\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"g1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"g0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"        <material>\n" +
-"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;</td><td><span style=\"font-size: 125%;\">8th digit</span><br/>]]></mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"digit_8\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n" +
-"            <response_label ident=\"h1\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h2\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h3\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[3<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h4\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h5\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h6\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[6<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h7\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h8\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h9\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[9<br/>]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"            <response_label ident=\"h0\">\n" +
-"<material>\n" +
-"<mattext><![CDATA[0]]></mattext>\n" +
-"</material>\n" +
-"</response_label>\n" +
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"\n" +
-"\n" +
-"\n" +
-"        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p>&nbsp;</p>]]></mattext>\n" +
-"        </material>\n" +
-"\n" +
-"\n" +
-"       </flow_label>\n" +
-"\n" +
-"\n" +
-"      </flow>\n" +
-"\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"        <decvar defaultval=\"\" varname=\"SID\" vartype=\"string\"/>\n" +
-"        <decvar defaultval=\"\" varname=\"NAME\" vartype=\"string\"/>\n" +
-"      </outcomes>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_1\">a9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_2\">b9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_3\">c9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_4\">d9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_5\">e9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_6\">f9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_7\">g9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h0</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">0</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h1</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">1</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h2</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">2</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h3</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">3</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h4</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">4</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h5</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">5</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h6</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">6</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h7</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">7</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h8</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">8</setvar>\n" +
-"      </respcondition>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"<varequal case=\"Yes\" respident=\"digit_8\">h9</varequal>\n" +
-"</conditionvar>\n" +
-"<setvar action=\"Add\" varname=\"SID\">9</setvar>\n" +
-"      </respcondition>\n" +
-"<qyouti:itemproc_extension>\n" +
-"  <qyouti:outcomemapping externalmap=\"persons\" invarname=\"SID\" outvarname=\"NAME\">\n" +
-"  </qyouti:outcomemapping>\n" +
-"</qyouti:itemproc_extension>\n" +
-"    </resprocessing>\n" +
-"    </item>\n" +
-"\n" +
-"\n" +
-"\n" +
-"\n" +
-"\n";
+"        <material>\r\n" +
+"          <mattext texttype=\"TEXT/HTML\" xml:space=\"preserve\"><![CDATA[\r\n" +
+"            </td></tr><tr><td><strong>Your&nbsp;Student&nbsp;ID&nbsp;</strong></td>\r\n" +
+"            <td>Your student ID is the eight digit number printed on your student ID card.\r\n" +
+"            (NOT your computer login which starts with a letter.)  In each block below select one\r\n" +
+"            digit with a cross to enter your ID digit by digit.\r\n" +
+"            </td></tr></table>\r\n" +
+"            ]]></mattext>\r\n" +
+"        </material>\r\n" +
+"      <flow>\r\n" +
+"\r\n" +
+"       <flow_label class=\"Row\">\r\n" +
+"        <material>\r\n" +
+"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<p><br/></p><table><tr><td><span style=\"font-size: 125%;\">1st digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_1\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"a1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"a0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">2nd digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_2\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"b1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"b0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td><span style=\"font-size: 125%;\">3rd digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_3\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"c1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"c0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">4th digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_4\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"d1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"d0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p><br/></p>]]></mattext>\r\n" +
+"        </material>\r\n" +
+"\r\n" +
+"\r\n" +
+"       </flow_label>\r\n" +
+"\r\n" +
+"\r\n" +
+"       <flow_label class=\"Row\">\r\n" +
+"        <material>\r\n" +
+"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">5th digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_5\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"e1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"e0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td><span style=\"font-size: 125%;\">6th digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_6\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"f1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"f0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td style=\"background: rgb(230,230,230)\"><span style=\"font-size: 125%;\">7th digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_7\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"g1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"g0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"<mattext xml:space=\"preserve\"><![CDATA[</td><td>&nbsp;</td><td><span style=\"font-size: 125%;\">8th digit</span><br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"digit_8\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n" +
+"            <response_label ident=\"h1\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[1&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h2\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[2&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h3\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[3<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h4\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[4&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h5\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[5&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h6\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[6<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h7\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[7&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h8\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[8&nbsp;&nbsp;&nbsp;]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h9\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[9<br/>]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"            <response_label ident=\"h0\">\r\n" +
+"<material>\r\n" +
+"<mattext><![CDATA[0]]></mattext>\r\n" +
+"</material>\r\n" +
+"</response_label>\r\n" +
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"\r\n" +
+"\r\n" +
+"\r\n" +
+"        <material>\r\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</td></tr></table><p>&nbsp;</p>]]></mattext>\r\n" +
+"        </material>\r\n" +
+"\r\n" +
+"\r\n" +
+"       </flow_label>\r\n" +
+"\r\n" +
+"\r\n" +
+"      </flow>\r\n" +
+"\r\n" +
+"    </presentation>\r\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\r\n" +
+"      <outcomes>\r\n" +
+"        <decvar defaultval=\"\" varname=\"SID\" vartype=\"string\"/>\r\n" +
+"        <decvar defaultval=\"\" varname=\"NAME\" vartype=\"string\"/>\r\n" +
+"      </outcomes>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_1\">a9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_2\">b9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_3\">c9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_4\">d9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_5\">e9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_6\">f9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_7\">g9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h0</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">0</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h1</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h2</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">2</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h3</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">3</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h4</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">4</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h5</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">5</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h6</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">6</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h7</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">7</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h8</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">8</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"<varequal case=\"Yes\" respident=\"digit_8\">h9</varequal>\r\n" +
+"</conditionvar>\r\n" +
+"<setvar action=\"Add\" varname=\"SID\">9</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"<qyouti:itemproc_extension>\r\n" +
+"  <qyouti:outcomemapping externalmap=\"persons\" invarname=\"SID\" outvarname=\"NAME\">\r\n" +
+"  </qyouti:outcomemapping>\r\n" +
+"</qyouti:itemproc_extension>\r\n" +
+"    </resprocessing>\r\n" +
+"    </item>\r\n" +
+"\r\n" +
+"\r\n" +
+"\r\n" +
+"\r\n" +
+"\r\n";
 
 
 
-public static final String itemmcqa = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.PureMCQ\" title=\"Question QUESTIONNUMBER\">\n" +
-"    <presentation qyouti:columns=\"COLUMNS\">\n" +
-"      <material>\n" +
-"<mattext texttype=\"text/html\" xml:space=\"preserve\">Replace this stem text.</mattext>\n" +
-"</material>\n" +
-"        <response_lid ident=\"resp_abcd\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n";
+public static final String itemmcqa = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.PureMCQ\" title=\"Question QUESTIONNUMBER\">\r\n" +
+"    <presentation qyouti:columns=\"COLUMNS\">\r\n" +
+"      <material>\r\n" +
+"<mattext texttype=\"text/html\" xml:space=\"preserve\">Replace this stem text.</mattext>\r\n" +
+"</material>\r\n" +
+"        <response_lid ident=\"resp_abcd\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n";
 
 public static final String itemmcqoption = 
-"              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\n" +
-"                <material>\n" +
-"                  <mattext texttype=\"text/html\" xml:space=\"preserve\">Replace this option text.</mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n";
+"              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\r\n" +
+"                <material>\r\n" +
+"                  <mattext texttype=\"text/html\" xml:space=\"preserve\">Replace this option text.</mattext>\r\n" +
+"                </material>\r\n" +
+"              </response_label>\r\n";
 
 public static final String itemmcqb = 
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\n" +
-"      </outcomes>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"          <varequal case=\"Yes\" respident=\"resp_abcd\">a</varequal>\n" +
-"        </conditionvar>\n" +
-"        <setvar action=\"Add\" varname=\"SCORE\">1</setvar>\n" +
-"      </respcondition>\n" +
-"    </resprocessing>\n" +
-"    </item>\n\n";
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"    </presentation>\r\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\r\n" +
+"      <outcomes>\r\n" +
+"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\r\n" +
+"      </outcomes>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"          <varequal case=\"Yes\" respident=\"resp_abcd\">a</varequal>\r\n" +
+"        </conditionvar>\r\n" +
+"        <setvar action=\"Add\" varname=\"SCORE\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"    </resprocessing>\r\n" +
+"    </item>\r\n\r\n";
 
 
-public static final String itemmcqaT = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.PureMCQNoText\" title=\"Question QUESTIONNUMBER\">\n" +
-"    <presentation qyouti:columns=\"COLUMNS\">\n" +
-"      <material>\n" +
-"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<div style=\"text-align: right;\">]]></mattext>\n" +
-"</material>\n" +
-"      <flow>\n" +
-"       <flow_label class=\"Row\">\n" +
-"        <material>\n" +
-"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<span style=\"font-size: 110%;\">QQUESTIONNUMBER&nbsp;&nbsp;</span>]]></mattext>\n" +
-"        </material>\n" +
-"        <response_lid ident=\"resp_abcd\" rcardinality=\"Single\">\n" +
-"          <render_choice shuffle=\"No\">\n";
+public static final String itemmcqaT = "    <item ident=\"QUESTIONNUMBER\" qyouti:template=\"org.qyouti.templates.PureMCQNoText\" title=\"Question QUESTIONNUMBER\">\r\n" +
+"    <presentation qyouti:columns=\"COLUMNS\">\r\n" +
+"      <material>\r\n" +
+"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<div style=\"text-align: right;\">]]></mattext>\r\n" +
+"</material>\r\n" +
+"      <flow>\r\n" +
+"       <flow_label class=\"Row\">\r\n" +
+"        <material>\r\n" +
+"          <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[<span style=\"font-size: 110%;\">QQUESTIONNUMBER&nbsp;&nbsp;</span>]]></mattext>\r\n" +
+"        </material>\r\n" +
+"        <response_lid ident=\"resp_abcd\" rcardinality=\"Single\">\r\n" +
+"          <render_choice shuffle=\"No\">\r\n";
 
 public static final String itemmcqoptionT = 
-"              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\n" +
-"                <material>\n" +
-"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">OPTIONLETTER<![CDATA[&nbsp;&nbsp;]]></mattext>\n" +
-"                </material>\n" +
-"              </response_label>\n";
+"              <response_label ident=\"OPTIONIDENT\" qyouti:correct=\"TRUEFALSE\">\r\n" +
+"                <material>\r\n" +
+"                  <mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\">OPTIONLETTER<![CDATA[&nbsp;&nbsp;]]></mattext>\r\n" +
+"                </material>\r\n" +
+"              </response_label>\r\n";
 
 public static final String itemmcqbT = 
-"          </render_choice>\n" +
-"        </response_lid>\n" +
-"       </flow_label>\n" +
-"      </flow>\n" +
-"      <material>\n" +
-"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</div>]]></mattext>\n" +
-"</material>\n" +
-"    </presentation>\n" +
-"    <resprocessing scoremodel=\"SumofScores\">\n" +
-"      <outcomes>\n" +
-"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\n" +
-"      </outcomes>\n" +
-"      <respcondition continue=\"Yes\">\n" +
-"        <conditionvar>\n" +
-"          <varequal case=\"Yes\" respident=\"resp_abcd\">a</varequal>\n" +
-"        </conditionvar>\n" +
-"        <setvar action=\"Add\" varname=\"SCORE\">1</setvar>\n" +
-"      </respcondition>\n" +
-"    </resprocessing>\n" +
-"    </item>\n\n";
+"          </render_choice>\r\n" +
+"        </response_lid>\r\n" +
+"       </flow_label>\r\n" +
+"      </flow>\r\n" +
+"      <material>\r\n" +
+"<mattext charset=\"US-ASCII\" texttype=\"TEXT/PLAIN\" xml:space=\"preserve\"><![CDATA[</div>]]></mattext>\r\n" +
+"</material>\r\n" +
+"    </presentation>\r\n" +
+"    <resprocessing scoremodel=\"SumofScores\">\r\n" +
+"      <outcomes>\r\n" +
+"        <decvar defaultval=\"0.0\" minvalue=\"0.0\" varname=\"SCORE\" vartype=\"Decimal\"/>\r\n" +
+"      </outcomes>\r\n" +
+"      <respcondition continue=\"Yes\">\r\n" +
+"        <conditionvar>\r\n" +
+"          <varequal case=\"Yes\" respident=\"resp_abcd\">a</varequal>\r\n" +
+"        </conditionvar>\r\n" +
+"        <setvar action=\"Add\" varname=\"SCORE\">1</setvar>\r\n" +
+"      </respcondition>\r\n" +
+"    </resprocessing>\r\n" +
+"    </item>\r\n\r\n";
 
 
 
@@ -1414,26 +1414,7 @@ public static final String itemmcqbT =
 
   @Override
   public String getMainDocumentAsString()
-  {
-//    DecimalFormat df = new DecimalFormat( "000" );
-//    for ( i=0; i<nc; i++ )
-//    {
-//      buffer.append( "<candidate name=\"Anon\" id=\"" );
-//      buffer.append( df.format( i+1L ) );
-//      buffer.append( "\" anonymous=\"yes\">\n" );
-//      buffer.append( "  <items>\n" );
-//      buffer.append( "    <itemref ident=\"void\"/>\n" );
-//      buffer.append( "    <itemref ident=\"sid\"/>\n" );
-//      for ( j=0; j<nq; j++ )
-//      {
-//        buffer.append( "    <itemref ident=\"" );
-//        buffer.append( Integer.toString( j+1 ) );
-//        buffer.append( "\"/>\n" );
-//      }
-//      buffer.append( "  </items>\n" );
-//      buffer.append( "</candidate>\n" );
-//    }
-    
+  { 
     return main.replaceFirst( "HEADER",  "DO NOT DISCARD UNUSED OR VOIDED SHEETS - THEY ALL MUST BE SCANNED" );
   }
   

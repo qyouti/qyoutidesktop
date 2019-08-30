@@ -2408,64 +2408,7 @@ public class QyoutiFrame
    */
   void examinationBuilt( File folder, ExamTemplate template )
   {
-    File file;
-    FileWriter writer;
-    
-    file = new File( folder, "qyouti.xml" );
-    writer = null;
-    try
-    {
-      writer = new FileWriter( file );
-      writer.write( template.getMainDocumentAsString() );
-    }
-    catch ( Exception ex )
-    {
-      Logger.getLogger( QyoutiFrame.class.getName() ).
-              log( Level.SEVERE, null, ex );
-    }
-    finally
-    {
-      if ( writer != null )
-      {
-        try
-        {
-          writer.close();
-        }
-        catch ( IOException ex )
-        {
-          Logger.getLogger( QyoutiFrame.class.getName() ).
-                  log( Level.SEVERE, null, ex );
-        }
-      }
-    }
-    file = new File( folder, "questions.xml" );
-    writer = null;
-    try
-    {
-      writer = new FileWriter( file );
-      writer.write( template.getQuestionDocumentAsString() );
-    }
-    catch ( Exception ex )
-    {
-      Logger.getLogger( QyoutiFrame.class.getName() ).
-              log( Level.SEVERE, null, ex );
-    }
-    finally
-    {
-      if ( writer != null )
-      {
-        try
-        {
-          writer.close();
-        }
-        catch ( IOException ex )
-        {
-          Logger.getLogger( QyoutiFrame.class.getName() ).
-                  log( Level.SEVERE, null, ex );
-        }
-      }
-    }
-
+    ExaminationData.saveNewExamination( folder, template.getMainDocumentAsString(), template.getQuestionDocumentAsString() );
     loadExam( folder );
   }
 

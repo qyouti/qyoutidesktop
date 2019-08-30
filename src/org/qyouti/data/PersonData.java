@@ -139,10 +139,14 @@ public class PersonData
       writer.write( " excluded=\"yes\"" );
     if ( anonymous )
       writer.write( " anonymous=\"yes\"" );
-    writer.write( ">\r\n" );
     if ( preferences != null )
+    {
+      writer.write( ">\r\n    " );
       preferences.emit(writer);
-    writer.write( "  </person>\r\n" );
+      writer.write( "\r\n  </person>\r\n" );
+    }
+    else
+      writer.write( "/>\r\n" );
   }
   
 }

@@ -44,7 +44,7 @@ public class ExaminationCatalogue
     {
       if ( childfiles[i].isDirectory() )
       {
-        examconfig = new File( childfiles[i], "qyouti.xml" );
+        examconfig = new File( childfiles[i], ExaminationData.mainarchivename );
         if ( examconfig.exists() && examconfig.isFile() )
         {
           entry = new ExamCatEntry();

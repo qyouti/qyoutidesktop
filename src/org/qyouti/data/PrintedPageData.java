@@ -54,8 +54,8 @@ public class PrintedPageData implements Comparable<PrintedPageData>
 
   // fields that are saved to disk
   public String code;
-  private boolean scanned=false;
-  private boolean processed=false;
+  //private boolean scanned=false;
+  //private boolean processed=false;
   public String printid;
   public String pageid;
 //  public int page_number;
@@ -119,8 +119,6 @@ public class PrintedPageData implements Comparable<PrintedPageData>
     this.candidate_name = element.getAttribute( "name" );
     this.candidate_number = element.getAttribute( "id" );
     this.code = element.getAttribute( "code" );
-    this.scanned = "true".equalsIgnoreCase( element.getAttribute( "scanned" ) );
-    this.processed = "true".equalsIgnoreCase( element.getAttribute( "processed" ) );
     this.pageid = element.getAttribute( "pageid" );
     this.printid = element.getAttribute( "printid" );
     NodeList nl = element.getElementsByTagName( "error" );
@@ -183,22 +181,15 @@ public class PrintedPageData implements Comparable<PrintedPageData>
     writer.write( "pageid=\"" + pageid           + "\" " );
     if ( code != null )
       writer.write( "code=\""   + code             + "\" " );
-    writer.write( "scanned=\"" );
-    writer.write( scanned?"true":"false" );
-    writer.write( "\" processed=\"" );
-    writer.write( processed?"true":"false" );
-    writer.write( "\" " );
-
-    writer.write( ">\r\n" );
 
     if ( error != null )
     {
-      writer.write( "      <error>" );
+      writer.write( ">\r\n      <error>" );
       writer.write( error );
-      writer.write( "</error>\r\n" );
+      writer.write( "</error>\r\n</page>\r\n" );
     }
-
-    writer.write( "    </page>\r\n" );
+    else
+      writer.write( "/>\r\n" );
   }
 
 

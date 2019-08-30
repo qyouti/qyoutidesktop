@@ -303,7 +303,11 @@ public class CandidateData
       writer.write( "    </items>\r\n" );
     }
     if ( preferences != null )
+    {
+      writer.write( "    " );
       preferences.emit(writer);
+      writer.write( "\r\n" );
+    }
     for ( int i=0; i<pages.size(); i++ )
     {
       writer.write( "    <page pageid=\"" );

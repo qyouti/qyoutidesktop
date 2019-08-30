@@ -50,7 +50,7 @@ public class UserRenderPreferences
   public void emit( Writer writer )
           throws IOException
   {
-    writer.write( "  <preferences fontsize=\"" );
+    writer.write( "<preferences fontsize=\"" );
     writer.write( Double.toString(fontsize) );
     writer.write( "\"" );
     if ( serif )
@@ -61,7 +61,7 @@ public class UserRenderPreferences
       writer.write( " bigpinkbox=\"true\"" );
     if ( background != null )
       writer.write( " background=\"0x" + Long.toString( (long)background.getRGB() & 0xffffffffl, 16 ) + "\"" );
-    writer.write( "/>\n" );
+    writer.write( "/>" );
   }
 
   public String packedRepresentation()

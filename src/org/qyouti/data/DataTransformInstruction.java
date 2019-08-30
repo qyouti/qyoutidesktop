@@ -33,8 +33,8 @@ public class DataTransformInstruction
   String xslfilename;
   String outputfilename;
 
-  File xslfile;
-  File outputfile;
+  //File xslfile;
+  //File outputfile;
 
   TransformerFactory xformFactory;
   Transformer transformer;
@@ -47,9 +47,10 @@ public class DataTransformInstruction
     xslfilename = e.getAttribute( "xslfile" );
     outputfilename = e.getAttribute( "outputfile" );
 
-    xslfile = new File( exam.examfile.getParentFile().getParentFile(), xslfilename );
-    outputfile = new File( exam.examfile.getParentFile().getParentFile(), outputfilename );
+    //xslfile = new File( exam.examfile.getParentFile().getParentFile(), xslfilename );
+    //outputfile = new File( exam.examfile.getParentFile().getParentFile(), outputfilename );
 
+    /*
     xformFactory = TransformerFactory.newInstance(
             "org.apache.xalan.processor.TransformerFactoryImpl",
             getClass().getClassLoader());
@@ -64,6 +65,7 @@ public class DataTransformInstruction
       transformer = null;
       Logger.getLogger( DataTransformInstruction.class.getName() ).log( Level.SEVERE, null, ex );
     }
+    */
 }
 
   public void emit( Writer writer )
@@ -77,6 +79,7 @@ public class DataTransformInstruction
       writer.write( "\"/>\r\n" );
   }
 
+  /*
   public boolean transform()
   {
     try
@@ -92,4 +95,5 @@ public class DataTransformInstruction
     
     return true;
   }
+  */
 }

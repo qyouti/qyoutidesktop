@@ -91,12 +91,19 @@ public class ExaminationData
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
 
-  File examfolder;
-  File examfile;
-  File questionfile;
-  File examinerfile;
-  File outcomefile;
+  private File examfolder;
   
+  public static final String mainarchivename = "qyouti.tar";
+  public static final String mainfilename = "qyouti.xml";
+  
+  public static final String questionarchivename = "questions.tar";
+  public static final String questionfilename = "questions.xml";
+  
+  private File examinerfile;
+  private File outcomefile;
+  
+  CompositeFile mainarchive;
+  CompositeFile questionarchive;
   CompositeFile scanarchive;
   
   private Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
@@ -143,11 +150,13 @@ public class ExaminationData
   {
     this.examcatalogue = examcatalogue;
     this.examfolder = examfolder;
-    examfile        = new File( examfolder, "qyouti.xml"    );
-    questionfile    = new File( examfolder, "questions.xml" );
+    
+    mainarchive     = CompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
+    questionarchive = CompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
+    scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+    
     examinerfile    = new File( examfolder, "examiner.xml"  );
     outcomefile     = new File( examfolder, "outcomes.xml"  );
-    scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
@@ -156,6 +165,8 @@ public class ExaminationData
 
   public void close() throws IOException
   {
+    mainarchive.close();
+    questionarchive.close();
     scanarchive.close();
   }
   
@@ -220,7 +231,7 @@ public class ExaminationData
   
   public File getExamFolder()
   {
-    return examfile.getParentFile();
+    return examfolder;
   }
   
   public CompositeFile getScanImageArchive()
@@ -1294,6 +1305,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     importQuestionsFromQTI(tempxml.getParentFile(),tempxml);
 }  
   
+  
   public void importQuestionsFromQTI(File basefolder, File qtiexamfile)
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1330,7 +1342,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       resolveItemReferences( qtiexamfile.getParentFile(), qti12doc, itemrefs );
 
     nl = qtiexamroote.getElementsByTagName("matimage");
-    resolveMediaReferences( examfile.getParentFile(), basefolder, qtiexamfile.getParentFile(), nl );
+    resolveMediaReferences( examfolder, basefolder, qtiexamfile.getParentFile(), nl );
 
     checkItemIDs( qti12doc );
 
@@ -1668,7 +1680,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( qdefs != null && qdefs.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter(new FileOutputStream(questionfile), "utf8");
+        writer = new OutputStreamWriter( questionarchive.getOutputStream(questionfilename, true), "utf8");
         qdefs.emit( writer );
         writer.close();
         writer = null;
@@ -1676,19 +1688,19 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( this.unsaved_changes )
       {
-        writer = new OutputStreamWriter(new FileOutputStream(examfile), "utf8");
+        writer = new OutputStreamWriter( mainarchive.getOutputStream(mainfilename, true), "utf8");
         emit(writer);
         writer.close();
         writer = null;
-        for ( int i=0; i<datatransforminstructions.size(); i++ )
-        {
-          datatransforminstructions.get( i ).transform();
-        }
+//        for ( int i=0; i<datatransforminstructions.size(); i++ )
+//        {
+//          datatransforminstructions.get( i ).transform();
+//        }
       }
       
       if ( this.scans.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter( this.scanarchive.getOutputStream("scans.xml",true), "utf8");
+        writer = new OutputStreamWriter( scanarchive.getOutputStream("scans.xml",true), "utf8");
         writer.write("<?xml version=\"1.0\"?>\r\n<scans nextscanfileident=\"" );
         writer.write( Integer.toString(nextscanfileident) );
         writer.write("\">\r\n");
@@ -1847,11 +1859,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
     emitOptions( writer );
 
-    writer.write( "<scans nextscanfileident=\"" + nextscanfileident + "\">\r\n" );
-    for ( int i=0; i<scans.size(); i++ )
-      scans.get( i ).emit( writer );
-    writer.write( "</scans>\r\n" );
-
     writer.write( "<persons>\r\n" );
     if (persons != null)
     {
@@ -1960,10 +1967,13 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
-    if ( !examfile.exists() || !examfile.isFile() )
+    if ( !mainarchive.exists(mainfilename) )
       return;
-    loadQuestions( new InputSource( new FileInputStream( questionfile ) ) );
-    load( new InputSource( new FileInputStream( examfile ) ) );
+    
+    loadQuestions();
+    
+    loadMain();
+    
     if ( examinerfile.exists() )
       loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
     else
@@ -2078,9 +2088,11 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       outcometables = new OutcomeTables();
   }
   
-  private void loadQuestions( InputSource source )
+  private void loadQuestions()
           throws ParserConfigurationException, SAXException, IOException
   {
+    InputStream in = questionarchive.getInputStream(questionfilename);
+    InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
@@ -2091,9 +2103,11 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       qdefs = new QuestionDefinitions(roote, personlistmodel );
   }
   
-  private void load( InputSource source )
+  private void loadMain()
           throws ParserConfigurationException, SAXException, IOException
   {
+    InputStream in = mainarchive.getInputStream(mainfilename);
+    InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
@@ -2187,9 +2201,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         }
       }
     }
-
-      for ( int p=0; p<getPageCount(); p++ )
-        getPage( p ).postLoad();
+    in.close();
+    
+    for ( int p=0; p<getPageCount(); p++ )
+      getPage( p ).postLoad();
   
     //rebuildOutcomeNameList();
     rebuildReviewList();
@@ -2300,5 +2315,70 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
     
   }
+  
+  
+  
+  public static void saveNewExamination( File examfolder, String strmain, String strquestions )
+  {
+    Writer writer=null;
+    
+    try
+    {
+      CompositeFile mainarchive = CompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
+      writer = new OutputStreamWriter( mainarchive.getOutputStream(mainfilename, true), "utf8");
+      writer.write( strmain );
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( ExaminationData.class.getName() ).
+              log( Level.SEVERE, null, ex );
+    }
+    finally
+    {
+      if ( writer != null )
+      {
+        try
+        {
+          writer.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( ExaminationData.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
+      }
+    }
+    
+    writer = null;
+    try
+    {
+      CompositeFile questionarchive = CompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
+      writer = new OutputStreamWriter( questionarchive.getOutputStream(questionfilename, true), "utf8");
+      writer.write( strquestions );
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger( ExaminationData.class.getName() ).
+              log( Level.SEVERE, null, ex );
+    }
+    finally
+    {
+      if ( writer != null )
+      {
+        try
+        {
+          writer.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( ExaminationData.class.getName() ).
+                  log( Level.SEVERE, null, ex );
+        }
+      }
+    }
+
+    
+  }
+  
 }
 
