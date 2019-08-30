@@ -33,6 +33,9 @@ import java.awt.image.LookupOp;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import org.qyouti.scan.image.IdentityLookupTable;
 import org.qyouti.scan.image.ResponseBoxColourLookupTable;
@@ -45,15 +48,14 @@ import org.w3c.dom.NodeList;
  *
  * @author jon
  */
-public class PageData implements Comparable<PageData>
+public class PrintedPageData implements Comparable<PrintedPageData>
 {
   public ExaminationData exam;
 
   // fields that are saved to disk
   public String code;
-  public String source;
-  public boolean scanned=false;
-  public boolean processed=false;
+  private boolean scanned=false;
+  private boolean processed=false;
   public String printid;
   public String pageid;
 //  public int page_number;
@@ -85,7 +87,6 @@ public class PageData implements Comparable<PageData>
   
 //  public String candidate_name;
 //  public String candidate_number;
-  public Vector<QuestionData> questions = new Vector<QuestionData>();
 
   public static final DecimalFormat pagenumberformat = new DecimalFormat("000");
 
@@ -97,7 +98,7 @@ public class PageData implements Comparable<PageData>
 //    this.source = source;
 //  }
 
-  public PageData( ExaminationData exam,
+  public PrintedPageData( ExaminationData exam,
                     String printid,
                     String pageid,
                     CandidateData candidate )
@@ -112,43 +113,29 @@ public class PageData implements Comparable<PageData>
   }
 
 
-  public PageData( ExaminationData exam,
+  public PrintedPageData( ExaminationData exam,
                     Element element )
   {
     this.candidate_name = element.getAttribute( "name" );
     this.candidate_number = element.getAttribute( "id" );
-    this.source = element.getAttribute( "source" );
     this.code = element.getAttribute( "code" );
     this.scanned = "true".equalsIgnoreCase( element.getAttribute( "scanned" ) );
     this.processed = "true".equalsIgnoreCase( element.getAttribute( "processed" ) );
     this.pageid = element.getAttribute( "pageid" );
     this.printid = element.getAttribute( "printid" );
-//    try
-//    {
-//      this.page_number = Integer.parseInt( element.getAttribute( "page" ) );
-//    }
-//    catch ( NumberFormatException numberFormatException )
-//    {
-//      this.page_number = 0;
-//    }
     NodeList nl = element.getElementsByTagName( "error" );
     if ( nl.getLength() == 1 )
       this.error = nl.item( 0 ).getTextContent();
     
     this.exam = exam;
-//    blackness = Double.parseDouble( element.getAttribute( "black" ) );
-//    lightestredmean = Double.parseDouble( element.getAttribute( "pink" ) );
-    nl = element.getElementsByTagName( "question" );
-    QuestionData question;
-    for ( int j=0; j<nl.getLength(); j++ )
-      question = new QuestionData( this, (Element)nl.item( j ) );
-
   }
 
   public void postLoad()
   {
     this.candidate = exam.linkPageToCandidate( this );
   }
+
+
 
   public String getPreferredFolderName()
   {
@@ -163,15 +150,12 @@ public class PageData implements Comparable<PageData>
 
   public String getPreferredFileExtension()
   {
-    int dot = source.lastIndexOf( '.' );
-    if ( dot < 0 )
-      return ".jpg";
-    return source.substring( dot );
+    return ".png";
   }
 
   public String getPreferredFileName()
   {
-    if ( source == null || candidate_name==null || candidate_number== null || pageid == null )
+    if ( candidate_name==null || candidate_number== null || pageid == null )
       return null;
     StringBuffer b = new StringBuffer();
     b.append( "imported_" );
@@ -199,10 +183,6 @@ public class PageData implements Comparable<PageData>
     writer.write( "pageid=\"" + pageid           + "\" " );
     if ( code != null )
       writer.write( "code=\""   + code             + "\" " );
-//    writer.write( "black=\""  + blackness        + "\" " );
-//    writer.write( "pink=\""   + lightestredmean  + "\" " );
-    if ( source != null )
-      writer.write( "source=\"" + source           + "\" " );
     writer.write( "scanned=\"" );
     writer.write( scanned?"true":"false" );
     writer.write( "\" processed=\"" );
@@ -218,24 +198,12 @@ public class PageData implements Comparable<PageData>
       writer.write( "</error>\r\n" );
     }
 
-    for ( int i=0; i<questions.size(); i++ )
-      questions.get( i ).emit( writer );
-
     writer.write( "    </page>\r\n" );
   }
 
-//  @Override
-//  public int compareTo( Object o )
-//  {
-//    if ( !(o instanceof PageData) ) return -1;
-//    PageData other = (PageData)o;
-//    if ( this.page_number > other.page_number ) return 1;
-//    if ( this.page_number < other.page_number ) return -1;
-//    return 0;
-//  }
 
   @Override
-  public int compareTo( PageData other )
+  public int compareTo( PrintedPageData other )
   {
     String t, o;
     t = this.pageid;

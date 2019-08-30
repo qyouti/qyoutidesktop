@@ -15,20 +15,22 @@ import javax.swing.table.AbstractTableModel;
 public class PageListModel
         extends AbstractTableModel
 {
-
+  ExaminationData exam;
+  
   private static final String[] column_headings =
   {
     "Page No.", "Barcode", "Paper Name", "Paper ID", "Scanned", "Error"
   };
 
-  Vector<PageData> pages = new Vector<PageData>();
+  Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
   //Vector<PageData> unprocessedpages = new Vector<PageData>();
   //Hashtable<String,Vector<PageData>> candidatelookup = new Hashtable<String,Vector<PageData>>();
 
 
 
-  public PageListModel( Vector<PageData> data )
+  public PageListModel( ExaminationData exam, Vector<PrintedPageData> data )
   {
+    this.exam = exam;
     this.pages = data;
   }
   
@@ -66,7 +68,7 @@ public class PageListModel
   @Override
   public Object getValueAt( int rowIndex, int columnIndex )
   {
-    PageData page = pages.elementAt( rowIndex );
+    PrintedPageData page = pages.elementAt( rowIndex );
     switch( columnIndex )
     {
       case 0:
@@ -78,7 +80,7 @@ public class PageListModel
       case 3:
         return page.candidate_number;
       case 4:
-        return page.scanned?"yes":"no";
+        return (exam.getScannedPageData(page.pageid) != null)?"yes":"no";
       case 5:
         return page.error;
     }

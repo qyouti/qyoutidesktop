@@ -95,6 +95,13 @@ public class OutcomeTables
     unsaved = b;
   }
   
+  
+  public void clearNonFixedOutcomes()
+  {
+    for ( OutcomeCandidateData ocd : cmap.values() )
+      ocd.clearNonFixedOutcomes();
+  }
+  
   public void emit( Writer writer )
           throws IOException, TransformerException
   {

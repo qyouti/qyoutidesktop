@@ -12,16 +12,30 @@ import javax.swing.table.*;
  *
  * @author jon
  */
-public class ImageFileTable extends AbstractTableModel
+public class ScanData extends AbstractTableModel
 {
-  private ExaminationData exam;
-  private ArrayList<ImageFileData> scans = new ArrayList<ImageFileData>();
+  private final ExaminationData exam;
+  private final ArrayList<ImageFileData> scans = new ArrayList<>();
+  private final ArrayList<ScannedPageData> pages = new ArrayList<>();
+  private final HashMap<String,ScannedPageData> pagesbyid = new HashMap<>();
 
-  public ImageFileTable( ExaminationData exam )
+  boolean unsaved=false;
+  
+  public ScanData( ExaminationData exam )
   {
     this.exam = exam;
   }
-
+  
+  public boolean areThereUnsavedChanges()
+  {
+    return unsaved;
+  }
+  
+  public void setUnsavedChanges( boolean b )
+  {
+    unsaved = b;
+  }  
+  
   public void add( ImageFileData data )
   {
     scans.add( data );
@@ -38,12 +52,36 @@ public class ImageFileTable extends AbstractTableModel
     return scans.get( i );
   }
   
-  public void clear()
+  public void clearScanFileData()
   {
     int size = scans.size();
     scans.clear();
     exam.processRowsInserted( this, 0, size );
   }
+
+  
+  public void clearScannedPageData()
+  {
+    pages.clear();
+    pagesbyid.clear();
+  }
+  
+  public void addScannedPageData( ScannedPageData page )
+  {
+    pages.add(page);
+    pagesbyid.put( page.getIdent(), page );
+  }
+  
+  public List<ScannedPageData> getScannedPageDataList()
+  {
+    return pages;
+  }
+  
+  public ScannedPageData getScannedPageData( String pageident )
+  {
+    return pagesbyid.get( pageident );
+  }
+  
   
   @Override
   public int getRowCount()

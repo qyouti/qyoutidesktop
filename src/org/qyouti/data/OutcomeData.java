@@ -76,7 +76,7 @@ public class OutcomeData
   /**
    * Clears non-fixed outcomes ready for (re)calculation.
    */
-  public void clear()
+  public void clearNonFixedOutcomes()
   {
     int n = data.size()-1;
     for ( int i=0; i<data.size(); i++ )

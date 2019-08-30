@@ -846,7 +846,7 @@ public class QTIItemRenderer
         if ( candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         {
           pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
-          exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+          exam.addPage( new PrintedPageData( exam, printid, pageid, candidate ) );
         }
       }
 
@@ -913,7 +913,7 @@ public class QTIItemRenderer
             if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
             {
               pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
-              exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+              exam.addPage( new PrintedPageData( exam, printid, pageid, candidate ) );
             }
             
             page = new Vector<SVGDocumentPlacement>();
@@ -958,7 +958,7 @@ public class QTIItemRenderer
         if (  candidate != null && paginationrecord != null ) //paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
         {
           pageid = paginationrecord.addPage( pwidth, pheight, pinsetl, pinsett );
-          exam.addPage( new PageData( exam, printid, pageid, candidate ) );
+          exam.addPage( new PrintedPageData( exam, printid, pageid, candidate ) );
         }
         page = new Vector<SVGDocumentPlacement>();
         

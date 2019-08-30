@@ -98,16 +98,15 @@ public class ExaminationData
   File outcomefile;
   
   CompositeFile scanarchive;
-  CompositeFile responsearchive;
   
-  private Vector<PageData> pages = new Vector<PageData>();
-  public HashMap<String,PageData> pagemap = new HashMap<String,PageData>();
-  public PageListModel pagelistmodel = new PageListModel( pages );
+  private Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
+  public HashMap<String,PrintedPageData> pagemap = new HashMap<String,PrintedPageData>();
+  public PageListModel pagelistmodel = new PageListModel( this, pages );
 
   public ExaminerData examinerdata = null;
   public OutcomeTables outcometables = null;
   
-  public ImageFileTable scans = new ImageFileTable( this );
+  public ScanData scans = new ScanData( this );
   
   Vector<DataTransformInstruction> datatransforminstructions = new Vector<DataTransformInstruction>();
 
@@ -144,12 +143,11 @@ public class ExaminationData
   {
     this.examcatalogue = examcatalogue;
     this.examfolder = examfolder;
-    examfile        = new File( examfolder, "qyouti.xml" );
+    examfile        = new File( examfolder, "qyouti.xml"    );
     questionfile    = new File( examfolder, "questions.xml" );
-    examinerfile    = new File( examfolder, "examiner.xml" );
-    outcomefile     = new File( examfolder, "outcomes.xml" );
+    examinerfile    = new File( examfolder, "examiner.xml"  );
+    outcomefile     = new File( examfolder, "outcomes.xml"  );
     scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
-    responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
@@ -159,12 +157,11 @@ public class ExaminationData
   public void close() throws IOException
   {
     scanarchive.close();
-    responsearchive.close();
   }
   
   // Gather all use of "fireTable***" to methods here to make it hard to
   // forget that changes in one table may involve changes in others...
-  public void processRowsInserted( ImageFileTable model, int first, int last )
+  public void processRowsInserted( ScanData model, int first, int last )
   {
     model.fireTableRowsInserted( first, last );
   }  
@@ -197,11 +194,11 @@ public class ExaminationData
   {
     model.fireTableDataChanged();
   }
-  public void processDataChanged( QuestionData model )
+  public void processDataChanged( ScannedQuestionData model )
   {
     model.fireTableDataChanged();
   }
-  public void processRowsUpdated( QuestionData model, int first, int last )
+  public void processRowsUpdated( ScannedQuestionData model, int first, int last )
   {
     reviewlist.fireTableRowsUpdated( 0, reviewlist.getRowCount()-1 );    
     model.fireTableRowsUpdated( first, last );
@@ -229,11 +226,6 @@ public class ExaminationData
   public CompositeFile getScanImageArchive()
   {
     return scanarchive;
-  }
-  
-  public CompositeFile getResponseImageArchive()
-  {
-    return responsearchive;
   }
   
   public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
@@ -415,7 +407,7 @@ public class ExaminationData
   public int getExaminerDecision( String candidateident, String questionident )
   {
     ExaminerQuestionData eqd = getExaminerQuestionData( candidateident, questionident, false );
-    if ( eqd == null ) return QuestionData.EXAMINER_DECISION_NONE;
+    if ( eqd == null ) return ScannedQuestionData.EXAMINER_DECISION_NONE;
     return eqd.getExaminerdecision();
   }
 
@@ -444,16 +436,16 @@ public class ExaminationData
   
   
   
-  public void addToReviewList( CandidateData c, QuestionData q )
+  public void addToReviewList( CandidateData c, ScannedQuestionData q )
   {
     if ( reviewfilter == REVIEW_FILTER_UNREVIEWED && 
-            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_NONE )
+            getExaminerDecision( c.id, q.getIdent() ) != ScannedQuestionData.EXAMINER_DECISION_NONE )
       return;
     if ( reviewfilter == REVIEW_FILTER_OVERRIDDEN && 
-            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_OVERRIDE )
+            getExaminerDecision( c.id, q.getIdent() ) != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE )
       return;
     if ( reviewfilter == REVIEW_FILTER_CONFIRMED && 
-            getExaminerDecision( c.id, q.getIdent() ) != QuestionData.EXAMINER_DECISION_STAND )
+            getExaminerDecision( c.id, q.getIdent() ) != ScannedQuestionData.EXAMINER_DECISION_STAND )
       return;
     reviewlist.add( c, q );    
   }
@@ -462,7 +454,7 @@ public class ExaminationData
   {
     int i, j;
     CandidateData c;
-    QuestionData q;
+    ScannedQuestionData q;
     
     reviewlist.clear();
     
@@ -518,54 +510,44 @@ public class ExaminationData
     fireTableStructureChanged();
   }
 
+  public ScannedPageData getScannedPageData( String pageident )
+  {
+    return scans.getScannedPageData(pageident);
+  }
+  
   public void clearScans()
   {
     CandidateData candidate;
-    PageData page;
-    QuestionData question;
-    ResponseData response;
+    PrintedPageData page;
+    ScannedPageData spage;
+    ScannedQuestionData question;
+    ScannedResponseData response;
 
-    outcometables.cmap.clear();
+    outcometables.clearNonFixedOutcomes();
     outcometables.setUnsavedChanges( true );
     
-    examinerdata.cmap.clear();
+    examinerdata.cmap.clear(); // only clearing decisions about student responses, not marking schemes
     examinerdata.setUnsavedChanges( true );
-    
-    for ( int i = 0; i < candidates_sorted.size(); i++ )
-    {
-      candidate = candidates_sorted.get( i );
-      candidate.score = 0.0;
-      for ( int j = 0; j < candidate.pages.size(); j++ )
-      {
-        page = candidate.pages.get( j );
-        page.questions.clear();
-        page.scanned = false;
-        page.processed = false;
-        page.error = null;
-        page.source = null;
-      }
-      //candidate.pages.clear();
-    }
+
+    scans.clearScanFileData();
+    scans.clearScannedPageData();
+    scans.setUnsavedChanges( true );
     
     pagelistmodel.fireTableDataChanged();
         
     try
     {
       scanarchive.close();
-      Files.deleteIfExists( new File(scanarchive.getCanonicalPath()).toPath() );
-
-      responsearchive.close();
-      Files.deleteIfExists( new File(responsearchive.getCanonicalPath()).toPath() );
-      
+      Files.deleteIfExists( new File(scanarchive.getCanonicalPath()).toPath() );      
       scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
-      responsearchive = CompositeFile.getCompositeFile(new File( examfolder, "responses.tar" ));      
     }
     catch ( Exception e )
     {
     }
     
-    scans.clear();
+    scans.clearScanFileData();
     setUnsavedChangesInMain( true );
+    setUnsavedChangesInScans( true );
   }
   
   
@@ -631,6 +613,7 @@ public class ExaminationData
       }
     }
     setUnsavedChangesInMain( true );
+    setUnsavedChangesInOutcome( true );
     fireTableDataChanged();    
   }
 
@@ -657,30 +640,37 @@ public class ExaminationData
     return pages.size();
   }
   
-  public void addPage( PageData page )
+  public void addPage( PrintedPageData page )
   {
     pages.add( page );
     pagemap.put( page.pageid, page );
     pagelistmodel.fireTableDataChanged();
   }
   
-  public PageData createPage(
+  public PrintedPageData createPage(
                     String printid,
                     String pageid,
                     CandidateData candidate )
   {
-    PageData page = new PageData( this, printid, pageid, candidate );
+    PrintedPageData page = new PrintedPageData( this, printid, pageid, candidate );
     addPage( page );
     linkPageToCandidate( page );
     return page;
   }
   
-  public PageData getPage( int n )
+  public String getCandidateIdentFromPage( String pageident )
+  {
+    PrintedPageData ppd = lookUpPage( pageident );
+    if ( ppd == null ) return null;
+    return ppd.candidate_number;
+  }
+  
+  public PrintedPageData getPage( int n )
   {
     return pages.get( n );
   }
   
-  public PageData lookUpPage( String id )
+  public PrintedPageData lookUpPage( String id )
   {
     return pagemap.get( id );
   }
@@ -688,6 +678,7 @@ public class ExaminationData
   public void addScanImageFile( ImageFileData ifd )
   {
     scans.add( ifd );
+    setUnsavedChangesInScans( true );
   }
   
   public boolean isScanImageFileImported( ImageFileData ifd )
@@ -1035,8 +1026,8 @@ public class ExaminationData
       candidate = candidates_sorted.get(i);
       list.add( candidate.id );
       list.add( candidate.name );
-      if (candidate.score != null)
-        list.add( candidate.score.toString() );
+      if (candidate.getScore() != null)
+        list.add( candidate.getScore().toString() );
       else
         list.add( "" );
       for ( j=0; j<outcomenames.size(); j++ )
@@ -1534,7 +1525,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
   }
 
-  public CandidateData linkPageToCandidate(PageData page)
+  public CandidateData linkPageToCandidate(PrintedPageData page)
   {
     if ( page.candidate_number == null )
       return null;
@@ -1569,23 +1560,31 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   
   public void invalidateOutcomes( String itemident )
   {
-    PageData page;
+    PrintedPageData page;
+    ScannedPageData spage;
     for ( int i=0; i<getPageCount(); i++ )
     {
       page = getPage( i );
       if ( page.error != null )
         continue;
       
+      spage = this.getScannedPageData(page.pageid);
+      if ( spage == null )
+        continue;
+
       if ( itemident == null )
       {
-        page.processed = false;
+        spage.setProcessed( false );
       }
       else
       {
-        for ( int j=0; j<page.questions.size(); j++ )
+        for ( ScannedQuestionData q : spage.getQuestions() )
         {
-          if ( itemident.equals( page.questions.get( j ).getItem().getIdent() ) )
-            page.processed = false;
+          if ( itemident.equals( q.getItem().getIdent() ) )
+          {
+            spage.setProcessed( false );
+            break;
+          }
         }
       }
     
@@ -1603,35 +1602,43 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   
   public void updateOutcomes()
   {
-    PageData page;
+    PrintedPageData page;
+    ScannedPageData spage;
     for ( int i=0; i<getPageCount(); i++ )
     {
       page = getPage( i );
       if ( page.error != null )
         continue;
-      if ( page.processed )
+      spage = getScannedPageData(page.pageid);
+      if ( spage == null )
         continue;
-      updateOutcomes( page );
+      if ( spage.isProcessed() )
+        continue;
+      updateOutcomes( page, spage );
     }
     //rebuildOutcomeNameList();    
   }
 
-  private void updateOutcomes( PageData page )
+  
+  
+  private void updateOutcomes( PrintedPageData page, ScannedPageData spage )
   {
     if ( page.candidate ==null )
         return;
     // Compute outcomes based on QTI def of question
-    for ( int j=0; j<page.questions.size(); j++ )
-    {
-      page.questions.get( j ).processResponses();
-    }
-    if ( page.questions.size() > 0 )
-    {
-      // recalculates total score after every page
-      page.candidate.processAllResponses();
-    }
-    page.processed = true;    
+    for ( ScannedQuestionData q : spage.getQuestions() )
+      q.processResponses();
+    page.candidate.processAllResponses();
+    spage.setProcessed( true );
   }
+  
+  public void processAllResponses( String candidateident )
+  {
+    CandidateData c = candidates.get(candidateident);
+    c.processAllResponses();
+  }  
+  
+  
   
   public QTIElementItem getAssessmentItem(String id)
   {
@@ -1679,6 +1686,25 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         }
       }
       
+      if ( this.scans.areThereUnsavedChanges() )
+      {
+        writer = new OutputStreamWriter( this.scanarchive.getOutputStream("scans.xml",true), "utf8");
+        writer.write("<?xml version=\"1.0\"?>\r\n<scans nextscanfileident=\"" );
+        writer.write( Integer.toString(nextscanfileident) );
+        writer.write("\">\r\n");
+        writer.write("  <files>\r\n");
+        for ( int i=0; i<scans.size(); i++ )
+        {
+          ImageFileData ifd = scans.get(i);
+          ifd.emit(writer);
+        }
+        writer.write("  </files>\r\n");
+        writer.write("  <pages>\r\n");
+        for ( ScannedPageData page : scans.getScannedPageDataList() )
+          page.emit(writer);
+        writer.write("  </pages>\r\n");        
+        writer.write("</scans>\r\n");
+      }
     } catch (Exception ex)
     {
       Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
@@ -1712,6 +1738,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     if ( unsaved_changes != b )
     {
       unsaved_changes = b;
+      fireStatusChange();
+    }
+  }
+
+  public void setUnsavedChangesInScans( boolean b )
+  {
+    if ( scans.areThereUnsavedChanges() != b )
+    {
+      scans.setUnsavedChanges( b );
       fireStatusChange();
     }
   }
@@ -1935,6 +1970,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       loadBlankExaminerData();
     qdefs.qti.setOverride( examinerdata.examinerqdefs.qti );
 
+    loadScanData();
+    
     try
     {
       loadOutcomeData( new InputSource( new FileInputStream( outcomefile ) ) );
@@ -1968,6 +2005,63 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       examinerdata = new ExaminerData( this, roote );
     return examinerdata;
   }
+  
+  private void loadScanData()
+  {
+    InputStream in = null;
+    try
+    {
+      if ( !scanarchive.exists("scans.xml") )
+        return;
+      in = scanarchive.getInputStream("scans.xml");
+      InputSource source = new InputSource( in );
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      Document document = builder.parse( source );
+      Element roote = document.getDocumentElement();
+      
+      String a = roote.getAttribute( "nextscanfileident" );
+      if ( a != null && a.length() > 0 )
+        nextscanfileident = new Integer( a ).intValue();
+      
+      NodeList cnl = roote.getElementsByTagName("file");
+      for (int j = 0; j < cnl.getLength(); j++)
+        scans.add( new ImageFileData(this, (Element) cnl.item(j) ) );
+
+      NodeList pnl = roote.getElementsByTagName("page");
+      for (int j = 0; j < pnl.getLength(); j++)
+      {
+        ScannedPageData spage = new ScannedPageData( this, (Element)pnl.item(j) );
+        scans.addScannedPageData(spage);
+      }
+    }
+    catch (IOException ex)
+    {
+      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    catch (ParserConfigurationException ex)
+    {
+      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    catch (SAXException ex)
+    {
+      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    finally
+    {
+      try
+      {
+        if ( in != null )
+          in.close();
+      }
+      catch (IOException ex)
+      {
+        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+  }
+  
   
   private void loadOutcomeData( InputSource source )
           throws ParserConfigurationException, SAXException, IOException
@@ -2058,24 +2152,14 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         }
         sortCandidates();
       }
-
-      if ("scans".equals(e.getNodeName()))
-      {
-        String a = e.getAttribute( "nextscanfileident" );
-        if ( a != null && a.length() > 0 )
-          nextscanfileident = new Integer( a ).intValue();
-        cnl = e.getElementsByTagName("file");
-        for (int j = 0; j < cnl.getLength(); j++)
-          scans.add( new ImageFileData(this, (Element) cnl.item(j) ) );
-      }
       
       if ("pages".equals(e.getNodeName()))
       {
          cnl = e.getElementsByTagName("page");
-        PageData page;
+        PrintedPageData page;
         for (int j = 0; j < cnl.getLength(); j++)
         {
-          page = new PageData(this, (Element) cnl.item(j) );
+          page = new PrintedPageData(this, (Element) cnl.item(j) );
           addPage( page );
         }
 

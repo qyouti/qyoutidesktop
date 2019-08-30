@@ -136,10 +136,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
  * @return
  * @throws IOException 
  */  
-  public PageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+  public PrintedPageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
   {
     int i;
-    PageData page=null;
+    PrintedPageData page=null;
+    ScannedPageData spage=null;
     ZXingResult barcoderesult;
     Rectangle r;
     Rectangle[] barcodesearchrect = new Rectangle[4];
@@ -209,12 +210,12 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         return null;                
       }      
       
-      if ( page.scanned )
+      spage = exam.getScannedPageData(pageid);
+      if ( spage != null )
       {
         ifd.setError( "A scan for this page ID has already been imported " + pageid + "'." );
         return null;                
       }      
-      page.scanned=true;
       
       // use printid and pageid to get information about the page...
       page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
@@ -391,26 +392,27 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
   }
 
 
-  public PageData decode( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+  public PrintedPageData decode( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws PageDecodeException
   {
-    int layout = exam.getQTIRenderIntegerOption("layout");
-    if ( layout == 2 )
+    //int layout = exam.getQTIRenderIntegerOption("layout");
+    //if ( layout == 2 )
       return decode2( exam, ifd, image );
-    return decode1( exam, ifd, image );
+    //return decode1( exam, ifd, image );
   }
   
-  public PageData decode2( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+  public PrintedPageData decode2( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws PageDecodeException
   {
-    PageData page=null;
+    PrintedPageData page=null;
+    ScannedPageData spage=null;
     BarcodeResult barcode;
     BullseyePage bpage;
     PaginationRecord paginationrecord=null;
     PaginationRecord.Page prpage=null;
     PaginationRecord.Bullseye b=null;
-    QuestionData question;
-    ResponseData response;
+    ScannedQuestionData question;
+    ScannedResponseData response;
 
     int i, j, k;    
     Point2D.Float[] pointd = new Point2D.Float[4];
@@ -436,17 +438,19 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( page == null )
       throw new PageDecodeException( "Unable to find the page in the print record " + barcode.getPageID() + "'." );
       
-    if ( page.scanned )
+    spage = exam.getScannedPageData( page.pageid );
+    
+    if ( spage != null )
       throw new PageDecodeException( "A scan for this page ID has already been imported " + barcode.getPageID() + "'." );
   
+    spage = new ScannedPageData( exam, page.pageid );
+    exam.scans.addScannedPageData(spage);
+    
     //paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
     PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
     page.candidate = exam.candidates.get( prcandidate.getId() );
     page.candidate_number = page.candidate.id;        
     page.candidate_name = page.candidate.name;      
-    //page.declared_calibration_width  = caldim[0];
-    //page.declared_calibration_height = caldim[1];
-    page.scanned=true;
     page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );  
     page.rotatedimage = image;
 
@@ -488,7 +492,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     QuestionMetricBox box;
     for ( i=0; i < items.length; i++ )
     {
-      question = new QuestionData( items[i].getIdent(), page );
+      question = new ScannedQuestionData( exam, page.pageid, page.candidate_number, items[i].getIdent() );
+      spage.addQuestion(question);
       question.setImagesProcessed( false );
 
       bpage.toImageBounds( items[i].getCorners(itemcorners), itembounds );
@@ -512,10 +517,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       {
         box = qmr.boxes.get(j);
         bpage.toImageBounds( box.getCorners(boxcorners, itemcorners[0].x, itemcorners[0].y ), boxbounds );
-        response = new ResponseData( question, j, box );
+        response = new ScannedResponseData( exam, page.candidate_number, question.getIdent(), j, box );
         response.setImageWidth( boxbounds.width );
         response.setImageHeight( boxbounds.height );
         response.setImage( page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ) );
+        question.addScannedResponseData(response);
       }
     }
     
@@ -524,13 +530,14 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     return page;
   }
   
-  public PageData decode1( ExaminationData exam, ImageFileData ifd, BufferedImage image )
+  /*
+  public PrintedPageData decode1( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws PageDecodeException
   {
     int i;
-    PageData page;
-    QuestionData question;
-    ResponseData response;
+    PrintedPageData page;
+    ScannedQuestionData question;
+    ScannedResponseData response;
     Point subimage_topleft;
     Point subimage_bottomright;
     int w, h;
@@ -597,7 +604,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     
     for ( int q=0; q<items.length; q++ )
     {
-      question = new QuestionData( items[q].getIdent(), page );
+      question = new ScannedQuestionData( items[q].getIdent(), page );
       question.setImagesProcessed( false );
       questionmetrics = items[q].getQuestionMetricsRecord();
 
@@ -642,7 +649,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
             (items[q].getX() + boxes[r].x + boxes[r].width)/100.0,
             (items[q].getY() + boxes[r].y + boxes[r].height)/100.0
             );
-        response = new ResponseData( question, r, boxes[r] );
+        response = new ScannedResponseData( question, r, boxes[r] );
         w = subimage_bottomright.x - subimage_topleft.x;
         h = subimage_bottomright.y - subimage_topleft.y;
         response.setImageWidth( w );
@@ -659,20 +666,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       }
     }
    
-    /*
-    // now ready to try and interpret the images of the pink boxes
-    //page.prepareImageProcessor( qmrset.isMonochromePrint(), page.blackness, boxthreshold );
-    page.prepareImageProcessor( false, page.blackness, boxthreshold );
-    try
-    {
-      processBoxImages( page );
-    } catch (IOException ex)
-    {
-      Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-      page.error = "Technical error processing filtered box images.";
-      return page;
-    }
-    */
     
     if ( debug )
     {
@@ -693,14 +686,16 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     }
     return page;
   }
-
+*/
+  
+  
   public void processBoxImages( ExaminationData exam )
           throws IOException
   {
     int i, j, k;
-    PageData page;
-    QuestionData q;
-    ResponseData r;
+    PrintedPageData page;
+    ScannedPageData spage;
+    ScannedResponseData r;
     int maxw=0, maxh=0;
     QTIElementItem qti_item;
 
@@ -710,9 +705,9 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page = exam.getPage( i );
       if ( page.error != null )
         continue;
-      for ( j=0; j<page.questions.size(); j++ )
+      spage = exam.getScannedPageData(page.pageid);
+      for ( ScannedQuestionData q : spage.getQuestions() )
       {
-        q = page.questions.get( j );
         if ( q.areImagesProcessed() )
           continue;
         for ( k=0; k<q.responsedatas.size(); k++ )
@@ -734,20 +729,19 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       page = exam.getPage( i );
       if ( page.error != null )
         continue;
-      processBoxImages( page, xlocator );
+      processBoxImages( exam, page, xlocator );
     }
   }
   
   
-  private void processBoxImages( PageData page, XLocator xlocator ) throws IOException
+  private void processBoxImages( ExaminationData exam, PrintedPageData page, XLocator xlocator ) throws IOException
   {
-    QuestionData questiondata;
     QTIElementItem qti_item;
     QTIResponse[] responses;
 
-    for ( int i=0; i<page.questions.size(); i++ )
+    ScannedPageData spage = exam.getScannedPageData(page.pageid);
+    for ( ScannedQuestionData questiondata : spage.getQuestions() )
     {
-      questiondata = page.questions.get( i );
       if ( questiondata == null || questiondata.getIdent() == null || questiondata.areImagesProcessed() )
         continue;
       questiondata.setImagesProcessed( true );
@@ -775,7 +769,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     }
   }
 
-  private void processBoxImagesForSketcharea( QTIExtensionRespextension responseext, QuestionData questiondata ) throws IOException
+  private void processBoxImagesForSketcharea( QTIExtensionRespextension responseext, ScannedQuestionData questiondata ) throws IOException
   {
     // At present no processing required - the image needs no special processing in
     // sketch areas
@@ -783,11 +777,11 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
   private void processBoxImagesForResponselid( 
           QTIElementResponselid responselid, 
-          QuestionData questiondata, 
+          ScannedQuestionData questiondata, 
           XLocator xlocator )
           throws IOException
   {
-    ResponseData responsedata;
+    ScannedResponseData responsedata;
 
     QTIElementResponselabel[] rlabels = responselid.getResponseLabels();
     BufferedImage[] imagelist = new BufferedImage[rlabels.length];

@@ -46,12 +46,10 @@ public class CandidateData
   public static final int STATUS_OK = 4;
   
   public ExaminationData exam;
-  public ArrayList<PageData> pages = new ArrayList<PageData>();
+  public ArrayList<PrintedPageData> pages = new ArrayList<PrintedPageData>();
   public String name;
   public String id;
   public boolean anonymous;
-
-  public Double score = null;
 
   public UserRenderPreferences preferences = null;
 
@@ -65,7 +63,6 @@ public class CandidateData
     this.name = name;
     this.id = id;
     this.anonymous = anonymous;
-    this.score = null;
     this.preferences = null;
   }
 
@@ -77,8 +74,6 @@ public class CandidateData
     id   = element.getAttribute( "id" );
     String str = element.getAttribute( "anonymous" );
     anonymous = str != null && str.toLowerCase().startsWith( "y" );
-    try { score = Double.valueOf( element.getAttribute( "score" ) ); }
-    catch ( Exception e ) { score = null; }
     //System.out.println( "Adding candidate " + id );
     exam.candidates.put( id, this );
     exam.candidates_sorted.add( this );
@@ -107,7 +102,7 @@ public class CandidateData
     }
 
     nl = element.getElementsByTagName( "page" );
-    PageData page;
+    PrintedPageData page;
     String pageid;
     Element eseq;
     for ( int j=0; j<nl.getLength(); j++ )
@@ -128,6 +123,19 @@ public class CandidateData
       preferences = null;
   }
 
+  public Double getScore()
+  {
+    OutcomeCandidateData ocd = exam.getOutcomeCandidateData(id, false);
+    if ( ocd == null ) return null;
+    OutcomeDatum od = ocd.getDatum("SCORE");
+    if ( od == null ) return null;
+    if ( od.value == null ) return null;
+    if ( od.value instanceof Integer )
+      return ((Integer)od.value).doubleValue();
+    if ( !(od.value instanceof Double) ) return null;
+    return (Double)od.value;
+  }
+  
   public int getStatus()
   {
     if ( exam.getPageCount() == 0 )
@@ -136,7 +144,7 @@ public class CandidateData
       return STATUS_UNSCANNED;
     
     int q=0, n=0;
-    QuestionData qd;
+    ScannedQuestionData qd;
     for ( int i=0; itemidents!=null && i<itemidents.size(); i++ )
     {
       qd = getQuestionData( itemidents.get( i) );
@@ -147,7 +155,7 @@ public class CandidateData
       if ( qd.needsreview )
       {
         n++;
-        if ( qd.getExaminerDecision() == QuestionData.EXAMINER_DECISION_NONE )
+        if ( qd.getExaminerDecision() == ScannedQuestionData.EXAMINER_DECISION_NONE )
           return STATUS_ATTENTION;
       }
     }
@@ -178,7 +186,7 @@ public class CandidateData
     }    
   }
   
-  public void addPage( PageData page )
+  public void addPage( PrintedPageData page )
   {
     // make a local reference to the page
     if ( pages.contains( page ) )
@@ -195,20 +203,21 @@ public class CandidateData
     itemidents.add( ident );
   }
   
-  public ResponseData getResponse( String qid, int resp_offset )
+  public ScannedResponseData getResponse( String qid, int resp_offset )
   {
     int i, j;
-    PageData page;
-    QuestionData question;
+    PrintedPageData page;
+    ScannedPageData spage;
+    
     for ( i=0; i<pages.size(); i++ )
     {
       page = pages.get(i);
-      for ( j=0; j<page.questions.size(); j++ )
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      for ( ScannedQuestionData question : spage.getQuestions() )
       {
-        question = page.questions.get(j);
         if ( qid.equals( question.getIdent() ) )
         {
-          //System.out.println( "found q " );
           if ( resp_offset>=0 && resp_offset < question.responsedatas.size() )
             return question.responsedatas.get( resp_offset );
           return null;
@@ -219,17 +228,19 @@ public class CandidateData
     return null;
   }
 
-  public QuestionData getQuestionData( String qid )
+  public ScannedQuestionData getQuestionData( String qid )
   {
     int i, j;
-    PageData page;
-    QuestionData question;
+    PrintedPageData page;
+    ScannedPageData spage;
+    
     for ( i=0; i<pages.size(); i++ )
     {
       page = pages.get(i);
-      for ( j=0; j<page.questions.size(); j++ )
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      for ( ScannedQuestionData question : spage.getQuestions() )
       {
-        question = page.questions.get(j);
         if ( qid.equals( question.getIdent() ) )
           return question;
       }
@@ -241,9 +252,16 @@ public class CandidateData
 
   public int questionsScanned()
   {
+    PrintedPageData page;
+    ScannedPageData spage;
     int total=0;
     for ( int i=0; i<pages.size(); i++ )
-      total += pages.get(i).questions.size();
+    {
+      page = pages.get(i);
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      total += spage.getQuestions().size();
+    }
     return total;
   }
 
@@ -271,8 +289,6 @@ public class CandidateData
           throws IOException
   {
     writer.write( "  <candidate name=\"" + name + "\" id=\"" + id + "\"" );
-    if ( score != null )
-      writer.write( " score=\"" + score + "\"" );
     if ( anonymous )
       writer.write( " anonymous=\"yes\"" );
     writer.write( ">\r\n" );
@@ -334,32 +350,47 @@ public class CandidateData
   }
 
 
-  public QuestionData firstQuestionData()
+  public ScannedQuestionData firstQuestionData()
   {
+    List<ScannedQuestionData> list;
+    PrintedPageData page;
+    ScannedPageData spage;
     for ( int i=0; i< pages.size(); i++ )
     {
-      if ( !pages.get( i ).questions.isEmpty() )
-        return pages.get(i).questions.firstElement();
+      page = pages.get( i );
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      list = spage.getQuestions();
+      if ( !list.isEmpty() )
+        return list.get(0);
     }
 
     return null;
   }
 
-  public QuestionData lastQuestionData()
+  public ScannedQuestionData lastQuestionData()
   {
+    List<ScannedQuestionData> list;
+    PrintedPageData page;
+    ScannedPageData spage;
     for ( int i=pages.size()-1; i>=0; i-- )
     {
-      if ( !pages.get( i ).questions.isEmpty() )
-        return pages.get(i).questions.lastElement();
+      page = pages.get( i );
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      list = spage.getQuestions();
+      if ( !list.isEmpty() )
+        return list.get(list.size()-1);
     }
 
     return null;
   }
 
 
-  public PageData nextPageData( PageData p, boolean not_empty )
+  public PrintedPageData nextPageData( PrintedPageData p, boolean not_empty )
   {
-    PageData other;
+    PrintedPageData other;
+    ScannedPageData spage;
     int i = pages.indexOf( p );
     if ( i < 0 )
       return null;
@@ -367,7 +398,8 @@ public class CandidateData
     if ( (i+1) < pages.size() )
     {
       other = pages.get( i+1 );
-      if ( not_empty && other.questions.size() == 0 )
+      spage = exam.getScannedPageData(other.pageid);
+      if ( not_empty && (spage == null || spage.getQuestions().size() == 0) )
         return nextPageData( other, not_empty );
       return other;
     }
@@ -375,9 +407,10 @@ public class CandidateData
     return null;
   }
 
-  public PageData previousPageData( PageData p, boolean not_empty )
+  public PrintedPageData previousPageData( PrintedPageData p, boolean not_empty )
   {
-    PageData other;
+    PrintedPageData other;
+    ScannedPageData spage;
     int i = pages.indexOf( p );
     if ( i < 0 )
       return null;
@@ -385,7 +418,8 @@ public class CandidateData
     if ( (i-1) >= 0 )
     {
       other = pages.get( i-1 );
-      if ( not_empty && other.questions.size() == 0 )
+      spage = exam.getScannedPageData(other.pageid);
+      if ( not_empty && (spage == null || spage.getQuestions().size() == 0) )
         return previousPageData( other, not_empty );
       return other;
     }
@@ -429,6 +463,8 @@ public class CandidateData
 
   public void processAllResponses()
   {
+    PrintedPageData page;
+    ScannedPageData spage;
     OutcomeData outcomes = getOutcomes();
     // all questions need to be processed to ensure that
     // QTI structure is fully populated with this candidate's
@@ -442,9 +478,12 @@ public class CandidateData
     // for each question that we have data for
     for ( int p=0; p<pages.size(); p++ )
     {
-      for ( int q=0; q<pages.get(p).questions.size(); q++ )
+      page = pages.get(p);
+      spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null ) continue;
+      for ( ScannedQuestionData q : spage.getQuestions() )
       {
-        pages.get(p).questions.get(q).processResponses();
+        q.processResponses();
       }
     }
 
@@ -470,7 +509,7 @@ public class CandidateData
     // object.
     String[] outcome_names = exam.qdefs.qti.getOutcomeNames();
     OutcomeDatum outcomedata;
-    outcomes.clear();
+    outcomes.clearNonFixedOutcomes();
     for ( int i=0; i<outcome_names.length; i++ )
     {
       outcomedata = new OutcomeDatum();
@@ -481,23 +520,6 @@ public class CandidateData
       outcomes.addDatum( outcomedata );
     }
     exam.processDataChanged( outcomes );
-
-
-    score = null;
-    OutcomeDatum score_datum = outcomes.getDatum("SCORE");
-    if ( score_datum == null )
-      return;
-    Object score_value = score_datum.value;
-    if ( score_value instanceof Double )
-    {
-      score = (Double)score_value;
-      return;
-    }
-    if ( score_value instanceof Integer )
-    {
-      score = new Double( ((Integer)score_value).doubleValue() );
-      return;
-    }
   }
 
   @Override

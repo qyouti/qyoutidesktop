@@ -18,7 +18,7 @@ public class QuestionReviewTable
   class QuestionReviewItem
   {
     CandidateData candidatedata;
-    QuestionData questiondata;
+    ScannedQuestionData questiondata;
   }
   
   ExaminationData exam;
@@ -38,7 +38,7 @@ public class QuestionReviewTable
     exam.processRowsDeleted( this, 0, n );
   }
   
-  public void add( CandidateData candidatedata, QuestionData questiondata )
+  public void add( CandidateData candidatedata, ScannedQuestionData questiondata )
   {
     QuestionReviewItem item = new QuestionReviewItem();
     item.candidatedata = candidatedata;
@@ -52,7 +52,7 @@ public class QuestionReviewTable
     return list.get( i ).candidatedata;
   }
   
-  public QuestionData getQuestionData( int i )
+  public ScannedQuestionData getQuestionData( int i )
   {
     return list.get( i ).questiondata;
   }
@@ -99,11 +99,11 @@ public class QuestionReviewTable
       case 2:
         switch ( item.questiondata.getExaminerDecision() )
         {
-          case QuestionData.EXAMINER_DECISION_NONE:
+          case ScannedQuestionData.EXAMINER_DECISION_NONE:
             return "No review decision.";
-          case QuestionData.EXAMINER_DECISION_OVERRIDE:
+          case ScannedQuestionData.EXAMINER_DECISION_OVERRIDE:
             return "Responses overridden by examiner";
-          case QuestionData.EXAMINER_DECISION_STAND:
+          case ScannedQuestionData.EXAMINER_DECISION_STAND:
             return "Examiner decided responses will stand";
         }        
         return "Status no. " + item.questiondata.getExaminerDecision();

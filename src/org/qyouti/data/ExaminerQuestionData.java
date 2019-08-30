@@ -19,7 +19,7 @@ import org.w3c.dom.NodeList;
  */
 public class ExaminerQuestionData
 {
-  private int examinerdecision = QuestionData.EXAMINER_DECISION_NONE;  
+  private int examinerdecision = ScannedQuestionData.EXAMINER_DECISION_NONE;  
   private Element element;
   private String ident;
 
@@ -31,7 +31,7 @@ public class ExaminerQuestionData
     ident = element.getAttribute("ident");
     String str = element.getAttribute( "decision" );
     try { examinerdecision = Integer.parseInt( str ); }
-    catch ( NumberFormatException nfe ) { examinerdecision =  QuestionData.EXAMINER_DECISION_NONE; }
+    catch ( NumberFormatException nfe ) { examinerdecision =  ScannedQuestionData.EXAMINER_DECISION_NONE; }
     NodeList nlchildren = element.getChildNodes();
     NodeList nl;
     Element child;
@@ -83,7 +83,7 @@ public class ExaminerQuestionData
     writer.write( " decision=\"" + examinerdecision + "\"" );
     writer.write( ">\r\n" );
 
-    if ( this.examinerdecision == QuestionData.EXAMINER_DECISION_OVERRIDE )
+    if ( this.examinerdecision == ScannedQuestionData.EXAMINER_DECISION_OVERRIDE )
     {
       writer.write( "      <overrides>\r\n" );
       for ( ExaminerResponseData erd : rmap.values() )

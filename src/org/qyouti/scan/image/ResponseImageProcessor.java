@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import org.qyouti.compositefile.CompositeFile;
-import org.qyouti.data.ResponseData;
+import org.qyouti.data.ScannedResponseData;
 
 /**
  *

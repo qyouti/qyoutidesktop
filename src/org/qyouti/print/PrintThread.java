@@ -88,7 +88,7 @@ public class PrintThread extends Thread
     {
       URI examfolderuri = exam.getExamFolder().getCanonicalFile().toURI();
       List<GenericDocument> paginated;
-      PageData page;
+      PrintedPageData page;
       TranscoderInput tinput;
       TranscoderOutput transout;
       File pagefile, svgfile;

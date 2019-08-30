@@ -45,9 +45,11 @@ import org.w3c.dom.NodeList;
  *
  * @author jon
  */
-public class ResponseData
+public class ScannedResponseData
 {
-  public QuestionData question;
+  private ExaminationData exam;
+  public String questionident;
+  public String candidateident;
 
   public int position=-1;
   public String type;
@@ -66,24 +68,25 @@ public class ResponseData
 
   ExaminerResponseData erd = null;
   
-  public ResponseData( QuestionData question, int position, QuestionMetricBox box )
+  public ScannedResponseData( ExaminationData exam, String candidateident, String questionident, int position, QuestionMetricBox box )
   {
-    this.question = question;
+    this.exam = exam;
+    this.candidateident = candidateident;
+    this.questionident = questionident;
     this.position = position;
     this.type = box.getType();
     this.ident = box.getIdent();
     this.index = box.getIndex();
     if ( ident == null || ident.length() == 0 )
       setIdentFromIndex();
-
-    question.responsedatas.add( this );
-    question.responsedatatable.put( ident, this );
   }
   
   
-  public ResponseData( QuestionData question, Element element, int item )
+  public ScannedResponseData( ExaminationData exam, String candidateident, String questionident, Element element, int item )
   {
-    this.question = question;
+    this.exam = exam;
+    this.candidateident = candidateident;
+    this.questionident = questionident;
     position = item;
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
@@ -106,15 +109,12 @@ public class ResponseData
     String content = element.getTextContent();
     if ( content !=null && content.length() > 0 )
       debug_message = content;
-    
-    question.responsedatas.add( this );
-    question.responsedatatable.put( ident, this );
   }
 
   public boolean isSelected()
   {
-    if ( question.getExaminerDecision() == QuestionData.EXAMINER_DECISION_OVERRIDE )
-      return question.page.exam.isExaminerSelected(question.page.candidate_number, question.getIdent(), ident);
+    if ( exam.getExaminerDecision(candidateident,questionident) == ScannedQuestionData.EXAMINER_DECISION_OVERRIDE )
+      return exam.isExaminerSelected(candidateident, questionident, ident);
     return candidate_selected;
   }
   
@@ -142,7 +142,7 @@ public class ResponseData
 
   private void setIdentFromIndex()
   {
-    QTIElementItem qtiitem = question.page.exam.getAssessmentItem( question.getIdent() );
+    QTIElementItem qtiitem = exam.getAssessmentItem( questionident );
     QTIElementResponselabel label = qtiitem.getResponselabelByOffset( index );
     if ( label != null )
       ident = label.getIdent();
@@ -153,33 +153,33 @@ public class ResponseData
   private BufferedImage loadImage( String fname )
   {
     BufferedImage img=null;
-    CompositeFile archive = question.page.exam.responsearchive;
-    if ( !archive.exists( fname ) )
+    CompositeFile archive = exam.getScanImageArchive();
+    if ( !archive.exists( "responses/" + fname ) )
       return null;
     
     try
     {
-      InputStream in = archive.getInputStream(fname);
+      InputStream in = archive.getInputStream("responses/" + fname);
       img = ImageIO.read(in);
       in.close();
     } catch (IOException ex)
     {
-      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }
     return img;
   }
 
   public void setImage( BufferedImage image )
   {
-    CompositeFile archive = question.page.exam.responsearchive;
+    CompositeFile archive = exam.getScanImageArchive();
     try
     {
-      OutputStream out = archive.getOutputStream( getImageFileName(), true );
+      OutputStream out = archive.getOutputStream( "responses/" + getImageFileName(), true );
       ImageIO.write(image, "png", out );
       out.close();
     } catch (IOException ex)
     {
-      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }    
   }
 
@@ -201,17 +201,13 @@ public class ResponseData
   {
     if ( imagefilename != null )
       return imagefilename;    
-    imagefilename = question.getIdent() + "_" + position + "_" +
-                question.page.candidate_number +
-                ".png";
+    imagefilename = questionident + "_" + position + "_" + candidateident + ".png";
     return imagefilename;
   }
 
   public String getFilteredImageFileName()
   {
-    return question.getIdent() + "_" + position + "_" +
-                question.page.candidate_number +
-                "_filt.jpg";
+    return questionident + "_" + position + "_" + candidateident + "_filt.jpg";
   }
 
 

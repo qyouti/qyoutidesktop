@@ -87,7 +87,6 @@ public class ScanTask
   int exitCode = 0;
 
   CompositeFile pageimagearchive;
-  CompositeFile responseimagearchive;
   int imageCounter = 0;
   Path tempfolderpath;
   ArrayList<File> tempfiles=new ArrayList<File>();
@@ -116,7 +115,6 @@ public class ScanTask
     this.preprocess = preprocess;
     this.commandline = commandline;
     pageimagearchive = exam.getScanImageArchive();
-    responseimagearchive = exam.getResponseImageArchive();
   }
 
   public void setScanTaskListener( ScanTaskListener listener )
@@ -162,7 +160,7 @@ public class ScanTask
 
     try
     {
-      PageData page=null;
+      PrintedPageData page=null;
       //scanfilelist.sort();
       FileInputStream fis;
       FileChannel fc;
@@ -210,10 +208,6 @@ public class ScanTask
           }
           destfile = new File( folder, scanfilelist.get( i ).getName() );
           success = scanfilelist.get( i ).renameTo( destfile );
-          if ( success )
-          {
-            page.source = destfile.getCanonicalPath();
-          }
 
           if ( !commandline )
           {
@@ -346,7 +340,7 @@ public class ScanTask
         extractor.run();
       }
       
-      OutputStream out = pageimagearchive.getOutputStream( ifd.getImportedname(), true );
+      OutputStream out = pageimagearchive.getOutputStream( "pages/" + ifd.getImportedname(), true );
       InputStream in = new FileInputStream( pdffile );
       IOUtils.copy(in, out);
       in.close();
@@ -367,7 +361,7 @@ public class ScanTask
           throws PageDecodeException, FileNotFoundException, IOException
   {
     // Read data from page.
-    PageData page = pagedecoder.decode( exam, ifd, image );
+    PrintedPageData page = pagedecoder.decode( exam, ifd, image );
     
     if ( page!=null )
     {
@@ -375,7 +369,7 @@ public class ScanTask
       String fn = page.getPreferredFileName();
       if ( fn != null )
         ifd.setImportedname(fn);
-      OutputStream out = pageimagearchive.getOutputStream( ifd.getImportedname(), true );
+      OutputStream out = pageimagearchive.getOutputStream( "pages/" + ifd.getImportedname(), true );
       ImageIO.write( image, "PNG", out );
       out.close();
       ifd.setImported( true );
@@ -475,51 +469,6 @@ public class ScanTask
     }
   }
   
-/*  
-  private void processPageOutcomes()
-  {
-    int i;
-    PageData page;
-    
-    // Images are now fully processed so now it's
-    // time to work out the outcomes
-    for ( i = 0; i < exam.getPageCount(); i++ )
-    {
-      page = exam.getPage( i );
-      if ( page.error != null || page.processed )
-        continue;
-      processPageOutcomes( page );
-    }    
-  }
-  
-  private void processPageOutcomes( PageData page )
-  {
-    if ( page == null )
-    {
-      return;
-    }
-
-    page.candidate = page.exam.linkPageToCandidate( page );
-    if ( page.candidate == null )
-    {
-      return;
-    }
-
-    // Compute outcomes based on QTI def of question
-    for ( int j = 0; j < page.questions.size(); j++ )
-    {
-      page.questions.get( j ).processResponses();
-    }
-    if ( page.questions.size() > 0 )
-    {
-      // recalculates total score after every page
-      page.candidate.processAllResponses();
-      // and updates presentation of data
-      //view.gotoQuestion( page.questions.lastElement() );
-    }
-    page.processed = true;
-  }
-*/
   
   @Override
   public boolean imageUpdate( Image img, int infoflags, int x, int y, int width,

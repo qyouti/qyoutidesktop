@@ -86,7 +86,7 @@ public class QuestionDefinitions
     QTIElementItem item;
     QTIElementResponselabel label;
     CandidateData candidate;
-    ResponseData response;
+    ScannedResponseData response;
     Vector<Double> candidates_right = new Vector<Double>();
     Vector<Double> candidates_wrong = new Vector<Double>();
     HodgesLehmann hodges_lehmann;
@@ -125,9 +125,9 @@ public class QuestionDefinitions
         {
           candidate = candidates.get( k );
           //System.out.println( "Candidate: " + candidate.id + "(" + candidate.score + ") " );
-          if ( candidate.score == null )
+          if ( candidate.getScore() == null )
             continue;
-          if ( candidate.score.doubleValue() == 0.0 )
+          if ( candidate.getScore().doubleValue() == 0.0 )
             continue;
           response = candidate.getResponse( item.getIdent(), j );
           if ( response != null )
@@ -138,11 +138,11 @@ public class QuestionDefinitions
                   || ( !response.isSelected() && label.isIncorrect() )
                )
             {
-              candidates_right.add( candidate.score );
+              candidates_right.add( candidate.getScore() );
             }
             else
             {
-              candidates_wrong.add( candidate.score );
+              candidates_wrong.add( candidate.getScore() );
             }
           }
         }

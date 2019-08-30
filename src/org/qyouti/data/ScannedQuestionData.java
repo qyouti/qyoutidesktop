@@ -50,56 +50,61 @@ import org.w3c.dom.NodeList;
  *
  * @author jon
  */
-public class QuestionData
+public class ScannedQuestionData
                 extends AbstractTableModel
 {
   public static final int EXAMINER_DECISION_NONE = 0;
   public static final int EXAMINER_DECISION_STAND = 1;
   public static final int EXAMINER_DECISION_OVERRIDE = 2;
-  
-  public PageData page;
+
+  private ExaminationData exam=null;
+  private String pageident=null;
+  private String candidateident = null;
   private String ident=null;
+  
   public boolean imagesprocessed = false;
   public boolean needsreview = false;
   
-  public Vector<ResponseData> responsedatas = new Vector<ResponseData>();
-  public Hashtable<String,ResponseData> responsedatatable = new Hashtable<String,ResponseData>();
+  public Vector<ScannedResponseData> responsedatas = new Vector<ScannedResponseData>();
+  public Hashtable<String,ScannedResponseData> responsedatatable = new Hashtable<String,ScannedResponseData>();
 
   ExaminerOverrideListener eolistener=null;
 
   private SoftReference<BufferedImage> q_image;
   
-  public QuestionData( String ident, PageData page )
+  public ScannedQuestionData( ExaminationData exam, String pageident, String candidateident, String qident )
   {
-    this.ident = ident;
-    this.page = page;
-    page.questions.add( this );
-    page.exam.processDataChanged( this );
+    this.ident = qident;
+    this.pageident = pageident;
+    this.candidateident = candidateident;
+    this.exam = exam;
+    //spage.addQuestion( this );
+    //ppage.exam.processDataChanged( this );
   }
 
 
-  public QuestionData( PageData page, Element element )
+  public ScannedQuestionData( ExaminationData exam, String pageident, String candidateident, Element element )
   {
-    this.page = page;
+    this.exam = exam;
+    this.pageident = pageident;
+    this.candidateident = candidateident;
 
     ident = element.getAttribute("ident");
     String str = element.getAttribute( "needsreview" );
     needsreview = str != null && str.toLowerCase().startsWith( "y" );
     str = element.getAttribute( "imagesprocessed" );
     imagesprocessed = str != null && str.toLowerCase().startsWith( "t" );
-    str = element.getAttribute( "decision" );
     
     NodeList nl = element.getElementsByTagName( "response" );
-    ResponseData response;
+    ScannedResponseData response;
 
     for ( int j=0; j<nl.getLength(); j++ )
-      response = new ResponseData( this, (Element)nl.item( j ), j );
-    // then recreate enhanced images
-//    for ( int j=0; j<responses.size(); j++ )
-//      responses.get( j ).filterImage( page.blackness, page.lightestredmean );
+    {
+      response = new ScannedResponseData( exam, candidateident, ident, (Element)nl.item( j ), j );
+      addScannedResponseData( response );
+    }
 
-    page.questions.add( this );
-    page.exam.processDataChanged( this );
+    exam.processDataChanged( this );
   }
 
   public String getIdent()
@@ -107,28 +112,37 @@ public class QuestionData
     return ident;
   }
 
+  
+  public void addScannedResponseData( ScannedResponseData r )
+  {
+    responsedatas.add(r);
+    responsedatatable.put(r.ident, r);
+  }
+  
+  
+  
   public OutcomeData getOutcomes()
   {
-    return page.exam.getQuestionOutcomes(page.candidate_number, ident);
+    return exam.getQuestionOutcomes(candidateident, ident);
   }
 
   public String getImageFileName()
   {
-    return ident + "_" + page.candidate_number + ".png";
+    return ident + "_" + candidateident + ".png";
   }
   
   private BufferedImage loadImage( String fname )
   {
     BufferedImage img=null;
-    CompositeFile archive = page.exam.responsearchive;
+    CompositeFile archive = exam.getScanImageArchive();
     try
     {
-      InputStream in = archive.getInputStream(fname);
+      InputStream in = archive.getInputStream("questions/"+fname);
       img = ImageIO.read(in);
       in.close();
     } catch (IOException ex)
     {
-      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }
     return img;
   }
@@ -142,15 +156,15 @@ public class QuestionData
   
   public void setImage( BufferedImage image )
   {
-    CompositeFile archive = page.exam.responsearchive;
+    CompositeFile archive = exam.getScanImageArchive();
     try
     {
-      OutputStream out = archive.getOutputStream( getImageFileName(), true );
+      OutputStream out = archive.getOutputStream( "questions/"+getImageFileName(), true );
       ImageIO.write(image, "png", out );
       out.close();
     } catch (IOException ex)
     {
-      Logger.getLogger(ResponseData.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }    
   }
   
@@ -167,20 +181,20 @@ public class QuestionData
   
   public int getExaminerDecision()
   {
-    return page.exam.getExaminerDecision(page.candidate_number, ident);
+    return exam.getExaminerDecision(candidateident, ident);
   }
   
   public void setExaminerDecision( int examinerdecision )
   {
-    page.exam.setExaminerDecision(page.candidate_number, ident, examinerdecision);
-    page.candidate.processAllResponses();
+    exam.setExaminerDecision(candidateident, ident, examinerdecision);
+    exam.processAllResponses(candidateident);
     // which row?  Don't know.
-    page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
+    exam.processRowsUpdated( this, 0, getRowCount()-1 );
   }
 
   
   
-  public ResponseData getResponseData( String ident )
+  public ScannedResponseData getResponseData( String ident )
   {
     return responsedatatable.get( ident );
   }
@@ -188,12 +202,12 @@ public class QuestionData
   public QTIElementItem getItem()
   {
     if ( ident == null ) return null;
-    return page.exam.getAssessmentItem( ident );
+    return exam.getAssessmentItem( ident );
   }
   
   public void processResponses()
   {
-    QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
+    QTIElementItem qtiitem = exam.getAssessmentItem( ident );
 
     if ( qtiitem == null )
     {
@@ -218,7 +232,7 @@ public class QuestionData
     // find all the response elements
     QTIResponse[] responses = qtiitem.getResponses();
     QTIElementResponselabel[] rlabels;
-    ResponseData responsedata;
+    ScannedResponseData responsedata;
     for ( int j=0; j<responses.length; j++ )
     {
       if ( !responses[j].isSupported() )
@@ -255,8 +269,8 @@ public class QuestionData
     // record item outcomes from qti elements into candidate data store
     String[] outcome_names = qtiitem.getOutcomeNames();
     OutcomeDatum outcomedata;
-    OutcomeData outcomes = page.exam.getQuestionOutcomes(page.candidate_number, ident);
-    outcomes.clear();
+    OutcomeData outcomes = exam.getQuestionOutcomes(candidateident, ident);
+    outcomes.clearNonFixedOutcomes();
     for ( int i=0; i<outcome_names.length; i++ )
     {
       outcomedata = new OutcomeDatum();
@@ -266,25 +280,25 @@ public class QuestionData
       //System.out.println( "Value " + outcomedata.value );
       outcomes.addDatum( outcomedata );
     }
-    page.exam.processDataChanged( this );
+    exam.processDataChanged( this );
   }
 
   public int getOutcomeCount()
   {
-    OutcomeData outcomes = page.exam.getQuestionOutcomes(page.candidate_number, ident);
+    OutcomeData outcomes = exam.getQuestionOutcomes(candidateident, ident);
     return outcomes.getRowCount();
   }
 
   public String getOutcomeIdentifier( int offset )
   {
-    QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
+    QTIElementItem qtiitem = exam.getAssessmentItem( ident );
     String[] outcome_names = qtiitem.getOutcomeNames();
     return outcome_names[offset];
   }
 
   public String getOutcomeValueString( int n )
   {
-    OutcomeData outcomes = page.exam.getQuestionOutcomes(page.candidate_number, ident);
+    OutcomeData outcomes = exam.getQuestionOutcomes(candidateident, ident);
     OutcomeDatum outcomedata = outcomes.getDatumAt( n );
     if ( outcomedata == null || outcomedata.value == null )
       return "null";
@@ -379,7 +393,7 @@ public class QuestionData
   {
     int h = -1; // indicate no preference with -1
     
-    ResponseData response = responsedatas.get( rowIndex );
+    ScannedResponseData response = responsedatas.get( rowIndex );
     if ( response.getImage() != null )
       h = response.getImageHeight();
     
@@ -389,8 +403,8 @@ public class QuestionData
     @Override
   public Object getValueAt(int rowIndex, int columnIndex)
   {
-    ResponseData response = responsedatas.get( rowIndex );
-    QTIElementItem qtiitem = page.exam.getAssessmentItem( ident );
+    ScannedResponseData response = responsedatas.get( rowIndex );
+    QTIElementItem qtiitem = exam.getAssessmentItem( ident );
     
     switch ( columnIndex )
     {
@@ -420,7 +434,7 @@ public class QuestionData
         return response.needsreview?"dubious":"";
       case 6:
         //if ( examinerdecision==EXAMINER_DECISION_OVERRIDE )
-          return new Boolean( page.exam.isExaminerSelected(page.candidate_number, response.question.ident, response.ident) );
+          return new Boolean( exam.isExaminerSelected(candidateident, ident, response.ident) );
         //return "n/a";
     }
     return null;
@@ -432,18 +446,18 @@ public class QuestionData
     if ( !isCellEditable( rowIndex, columnIndex ) )
       return;
 
-    ResponseData response = responsedatas.get( rowIndex );
-    page.exam.setExaminerDecision( page.candidate_number, ident, QuestionData.EXAMINER_DECISION_OVERRIDE );
-    page.exam.setExaminerSelected( page.candidate_number, ident, response.ident, ((Boolean)aValue).booleanValue() );
+    ScannedResponseData response = responsedatas.get( rowIndex );
+    exam.setExaminerDecision(candidateident, ident, ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
+    exam.setExaminerSelected(candidateident, ident, response.ident, ((Boolean)aValue).booleanValue() );
     
     if ( eolistener != null )
       eolistener.examinerOverrideChanged();
     
     //processResponses();
-    page.candidate.processAllResponses();
-    page.exam.processRowsUpdated( this, 0, getRowCount()-1 );
-    page.exam.setUnsavedChangesInExaminer( true );
-    page.exam.setUnsavedChangesInOutcome( true );
+    exam.processAllResponses(candidateident);
+    exam.processRowsUpdated( this, 0, getRowCount()-1 );
+    exam.setUnsavedChangesInExaminer( true );
+    exam.setUnsavedChangesInOutcome( true );
   }
 
   public void setExaminerOverrideListener( ExaminerOverrideListener eolistener )

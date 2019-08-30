@@ -27,7 +27,7 @@ public class CandidateQuestionPanel
 {
   CandidateData candidate;
   String questionident;
-  QuestionData questiondata;
+  ScannedQuestionData questiondata;
   TableModelListener questiondatalistener;
   QTIElementItem item;
   
@@ -68,13 +68,13 @@ public class CandidateQuestionPanel
       {
         switch ( questiondata.getExaminerDecision() )
         {
-          case QuestionData.EXAMINER_DECISION_NONE:
+          case ScannedQuestionData.EXAMINER_DECISION_NONE:
             statuslabel.setText( "Review recommended." );
             break;
-          case QuestionData.EXAMINER_DECISION_OVERRIDE:
+          case ScannedQuestionData.EXAMINER_DECISION_OVERRIDE:
             statuslabel.setText( "Responses overridden by examiner. (Review was recommended.)" );
             break;
-          case QuestionData.EXAMINER_DECISION_STAND:
+          case ScannedQuestionData.EXAMINER_DECISION_STAND:
             statuslabel.setText( "Examiner decided responses will stand. (Review was recommended.)" );
             break;            
         }
@@ -83,13 +83,13 @@ public class CandidateQuestionPanel
       {
         switch ( questiondata.getExaminerDecision() )
         {
-          case QuestionData.EXAMINER_DECISION_NONE:
+          case ScannedQuestionData.EXAMINER_DECISION_NONE:
             statuslabel.setText( "Review not recommended." );
             break;
-          case QuestionData.EXAMINER_DECISION_OVERRIDE:
+          case ScannedQuestionData.EXAMINER_DECISION_OVERRIDE:
             statuslabel.setText( "Responses overridden by examiner. (Review was not recommended.)" );
             break;
-          case QuestionData.EXAMINER_DECISION_STAND:
+          case ScannedQuestionData.EXAMINER_DECISION_STAND:
             statuslabel.setText( "Examiner decided responses will stand.  (Review was not recommended.)" );
             break;            
         }
@@ -131,7 +131,7 @@ public class CandidateQuestionPanel
       cb.setIcon( TrueFalseIcon.FALSEICON );
       dce = new DefaultCellEditor( cb );
       responsetable.setDefaultEditor( Boolean.class, dce);
-      pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE );
+      pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
       responsetable.setDefaultRenderer( Boolean.class, pinkboxrenderer );
       outcometable.setModel( questiondata.getOutcomes() );
     }
@@ -146,7 +146,7 @@ public class CandidateQuestionPanel
   @Override
   public void examinerOverrideChanged()
   {
-    pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != QuestionData.EXAMINER_DECISION_OVERRIDE );
+    pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
     updateButtons();
   }
   
@@ -154,13 +154,13 @@ public class CandidateQuestionPanel
   {
     switch ( questiondata.getExaminerDecision() )
     {
-      case QuestionData.EXAMINER_DECISION_NONE:
+      case ScannedQuestionData.EXAMINER_DECISION_NONE:
         decisionbuttona.setSelected( true );
         break;
-      case QuestionData.EXAMINER_DECISION_STAND:
+      case ScannedQuestionData.EXAMINER_DECISION_STAND:
         decisionbuttonb.setSelected( true );
         break;            
-      case QuestionData.EXAMINER_DECISION_OVERRIDE:
+      case ScannedQuestionData.EXAMINER_DECISION_OVERRIDE:
         decisionbuttonc.setSelected( true );
         break;
     }    
@@ -509,7 +509,7 @@ public class CandidateQuestionPanel
       return;
     }
     
-    ResponseData rd = questiondata.responsedatas.get( s );
+    ScannedResponseData rd = questiondata.responsedatas.get( s );
     if ( rd == null )
       return;
     

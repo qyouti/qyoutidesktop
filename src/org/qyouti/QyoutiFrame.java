@@ -59,7 +59,7 @@ public class QyoutiFrame
   BusyDialog busydialog;
 
   String editquestionident;
-  QuestionData currentquestiondata;
+  ScannedQuestionData currentquestiondata;
   String scanfolder = null;
 
   boolean customisationpanelupdating=false;
@@ -1700,7 +1700,7 @@ public class QyoutiFrame
     }
 
     ImageViewDialog dialog = new ImageViewDialog( this, true );
-    dialog.setImage( exam.getScanImageArchive(), filename );
+    dialog.setImage( exam.getScanImageArchive(), "pages/"+filename );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
 
@@ -2061,7 +2061,7 @@ public class QyoutiFrame
     }    
   }//GEN-LAST:event_nextreviewbuttonActionPerformed
 
-  private void updateLeftList()
+  private void updateLeftReviewList()
   {
     if ( exam.getReviewType() == ExaminationData.REVIEW_BY_QUESTION )  // All questions
     {
@@ -2082,7 +2082,7 @@ public class QyoutiFrame
     if ( exam.getReviewType() == type )
       return;
     exam.setReviewType( type );
-    updateLeftList();
+    updateLeftReviewList();
   }
 
   private void reviewFilterChanged( int filter )
@@ -2093,7 +2093,7 @@ public class QyoutiFrame
     // because this will allow them to thin out the list as
     // they change the review statuses on entries.
     exam.setReviewFilter( filter );
-    updateLeftList();
+    updateLeftReviewList();
   }
   
   
@@ -2115,6 +2115,7 @@ public class QyoutiFrame
   private void recomputemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_recomputemenuitemActionPerformed
   {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
     exam.recomputeOutcomes();
+    updateLeftReviewList();
   }//GEN-LAST:event_recomputemenuitemActionPerformed
 
   private void reviewincludeallActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeallActionPerformed
@@ -2537,7 +2538,7 @@ public class QyoutiFrame
       scanfiletable.setModel( exam.scans );
       candidatetable.setModel( exam );
       questionreviewtable.setModel( exam.reviewlist );
-      updateLeftList();
+      updateLeftReviewList();
       exam.load();
       setTitle( "Qyouti - " + examfolder.getName() );
       if ( exam.qdefs != null )
@@ -2833,7 +2834,7 @@ public class QyoutiFrame
   {
     int i;
     CandidateData c;
-    QuestionData q;
+    ScannedQuestionData q;
     CandidateQuestionPanel cqp;
     GridBagConstraints gbc = new GridBagConstraints();
 
