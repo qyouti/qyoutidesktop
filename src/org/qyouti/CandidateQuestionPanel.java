@@ -27,7 +27,7 @@ public class CandidateQuestionPanel
 {
   CandidateData candidate;
   String questionident;
-  ScannedQuestionData questiondata;
+  ScannedQuestionData scannedquestiondata;
   TableModelListener questiondatalistener;
   QTIElementItem item;
   
@@ -41,7 +41,7 @@ public class CandidateQuestionPanel
     candidate = cd;
     questionident = ident;
     item = candidate.exam.qdefs.qti.getItem( ident );
-    questiondata = candidate.getQuestionData( ident );
+    scannedquestiondata = candidate.getQuestionData( ident );
     
     initComponents();
     
@@ -56,17 +56,17 @@ public class CandidateQuestionPanel
     else
       titlelabel.setText( item.getTitle() );
     
-    if ( questiondata == null )
+    if ( scannedquestiondata == null )
     {
       statuslabel.setText( "Not scanned" );
       centrepanel.setVisible( false );
     }
     else
     {
-      questiondata.setExaminerOverrideListener( this );
-      if ( questiondata.needsreview )
+      scannedquestiondata.setExaminerOverrideListener( this );
+      if ( scannedquestiondata.needsreview )
       {
-        switch ( questiondata.getExaminerDecision() )
+        switch ( scannedquestiondata.getExaminerDecision() )
         {
           case ScannedQuestionData.EXAMINER_DECISION_NONE:
             statuslabel.setText( "Review recommended." );
@@ -81,7 +81,7 @@ public class CandidateQuestionPanel
       }
       else
       {
-        switch ( questiondata.getExaminerDecision() )
+        switch ( scannedquestiondata.getExaminerDecision() )
         {
           case ScannedQuestionData.EXAMINER_DECISION_NONE:
             statuslabel.setText( "Review not recommended." );
@@ -97,16 +97,16 @@ public class CandidateQuestionPanel
 
       updateButtons();
 
-      responsetable.setModel( questiondata );
+      responsetable.setModel(scannedquestiondata );
       questiondatalistener = new TableModelListener(){
         @Override
         public void tableChanged( TableModelEvent e )
         {
           System.out.println( "CandidateQuestionPanel detected table change." );
           int h;
-          for ( int i=0; i<questiondata.getRowCount(); i++ )
+          for ( int i=0; i<scannedquestiondata.getRowCount(); i++ )
           {
-            h = questiondata.getRowHeight( i );
+            h = scannedquestiondata.getRowHeight( i );
             if ( h>0 )
               responsetable.setRowHeight( i, h );
           }
@@ -117,10 +117,10 @@ public class CandidateQuestionPanel
         }
       };
       
-      questiondata.addTableModelListener( questiondatalistener );
-      for ( int i=0; i<questiondata.getRowCount(); i++ )
+      scannedquestiondata.addTableModelListener( questiondatalistener );
+      for ( int i=0; i<scannedquestiondata.getRowCount(); i++ )
       {
-        int h = questiondata.getRowHeight( i );
+        int h = scannedquestiondata.getRowHeight( i );
         if ( h>0 )
           responsetable.setRowHeight( i, h );
       }
@@ -131,9 +131,9 @@ public class CandidateQuestionPanel
       cb.setIcon( TrueFalseIcon.FALSEICON );
       dce = new DefaultCellEditor( cb );
       responsetable.setDefaultEditor( Boolean.class, dce);
-      pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
+      pinkboxrenderer.setGreyed(scannedquestiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
       responsetable.setDefaultRenderer( Boolean.class, pinkboxrenderer );
-      outcometable.setModel( questiondata.getOutcomes() );
+      outcometable.setModel(scannedquestiondata.getOutcomes() );
     }
     
     imagescrollpanel.setVisible( true );
@@ -146,13 +146,13 @@ public class CandidateQuestionPanel
   @Override
   public void examinerOverrideChanged()
   {
-    pinkboxrenderer.setGreyed( questiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
+    pinkboxrenderer.setGreyed(scannedquestiondata.getExaminerDecision() != ScannedQuestionData.EXAMINER_DECISION_OVERRIDE );
     updateButtons();
   }
   
   public final void updateButtons()
   {
-    switch ( questiondata.getExaminerDecision() )
+    switch ( scannedquestiondata.getExaminerDecision() )
     {
       case ScannedQuestionData.EXAMINER_DECISION_NONE:
         decisionbuttona.setSelected( true );
@@ -173,7 +173,7 @@ public class CandidateQuestionPanel
     super.removeNotify();
     this.responsetable.setModel( new DefaultTableModel() );
     this.outcometable.setModel( new DefaultTableModel() );
-    questiondata.removeTableModelListener( questiondatalistener );
+    scannedquestiondata.removeTableModelListener( questiondatalistener );
   }
 
   
@@ -433,13 +433,13 @@ public class CandidateQuestionPanel
 
   private void loadQuestionImage()
   {
-    if ( questiondata == null || questiondata.getImage() == null )
+    if ( scannedquestiondata == null || scannedquestiondata.getImage() == null )
     {
       imagelabel.setText( "Not Scanned" );
     }
     else
     {
-      questionimage = questiondata.getImage();
+      questionimage = scannedquestiondata.getImage();
       imagelabel.setIcon( new ImageIcon( questionimage ) );        
       imagelabel.setText( "" );
     }
@@ -474,10 +474,10 @@ public class CandidateQuestionPanel
   
   public void handleDecision( int n )
   {
-    if ( n != questiondata.getExaminerDecision() )
+    if ( n != scannedquestiondata.getExaminerDecision() )
     {
       System.out.println( "examiner decision change." );
-      questiondata.setExaminerDecision( n );
+      scannedquestiondata.setExaminerDecision( n );
       candidate.exam.setUnsavedChangesInExaminer( true );
     }    
   }
@@ -509,7 +509,7 @@ public class CandidateQuestionPanel
       return;
     }
     
-    ScannedResponseData rd = questiondata.responsedatas.get( s );
+    ScannedResponseData rd = scannedquestiondata.responsedatas.get( s );
     if ( rd == null )
       return;
     

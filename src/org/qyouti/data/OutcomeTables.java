@@ -27,6 +27,17 @@ public class OutcomeTables
   {
   }
   
+  public void invalidateCandidate( String ident )
+  {
+    OutcomeCandidateData ocd = cmap.get(ident);
+    if ( ocd != null ) ocd.setValid( false );
+  }
+  
+  public void invalidateAllCandidates()
+  {
+    for ( OutcomeCandidateData ocd : cmap.values() )
+      ocd.setValid( false );    
+  }
   
   public OutcomeTables( ExaminationData exam, Element root )
   {
@@ -115,9 +126,9 @@ public class OutcomeTables
         writer.write( "    " );
         c.getDatumAt(i).emit( writer );
       }
-      for ( String qident : c.qmap.keySet() )
+      for ( String qident : c.getIDSet() )
       {
-        OutcomeData q = c.qmap.get(qident);
+        OutcomeData q = c.getQuestionOutcomeData(qident);
         writer.write( "    <question ident=\"" + qident + "\">\r\n" );
         for ( int i=0; i<q.getRowCount(); i++ )
         {

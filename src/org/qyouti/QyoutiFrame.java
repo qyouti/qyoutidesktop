@@ -2392,10 +2392,7 @@ public class QyoutiFrame
   void questionEditStored( boolean override )
   {
     if ( exam.pagelistmodel.getRowCount() > 0 )
-    {
-      exam.invalidateOutcomes( editquestionident );  // null question ident means invalidate all
-      exam.updateOutcomes();
-    }
+      exam.recomputeOutcomes();
     exam.setUnsavedChangesInExaminer( true );
     if ( !override )
       exam.setUnsavedChangesInQuestions( true );

@@ -29,6 +29,7 @@ package org.qyouti.data;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import javax.swing.event.*;
 import javax.swing.table.AbstractTableModel;
@@ -41,14 +42,23 @@ import javax.xml.transform.TransformerException;
 public class OutcomeCandidateData
           extends OutcomeData
 {
-  HashMap<String,OutcomeData> qmap = new HashMap<>();
-  String cident;
+  private final HashMap<String,OutcomeData> qmap = new HashMap<>();
+  private final String cident;
+  private boolean valid=true;
+  
   
   public OutcomeCandidateData(ExaminationData exam, String cident)
   {
     super(exam);
     this.cident = cident;
   }
+
+  public String getIdent()
+  {
+    return cident;
+  }
+  
+  
   
   public void addQuestionOutcomeData( String qident, OutcomeData o )
   {
@@ -60,9 +70,29 @@ public class OutcomeCandidateData
     return qmap.get(qident);
   }
   
-  public void clearnQuestionOutcomeData()
+  public Set<String> getIDSet()
   {
-    qmap.clear();
+    return qmap.keySet();
   }
   
+  @Override
+  public void clearNonFixedOutcomes()
+  {
+    super.clearNonFixedOutcomes();
+  }  
+  
+  public void clearQuestionOutcomes()
+  {
+    qmap.clear();    
+  }  
+
+  public boolean isValid()
+  {
+    return valid;
+  }
+
+  public void setValid(boolean valid)
+  {
+    this.valid = valid;
+  }
 }

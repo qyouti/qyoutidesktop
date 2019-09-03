@@ -762,6 +762,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
           processBoxImagesForSketcharea( (QTIExtensionRespextension)responses[j], questiondata );
       }
     }
+    spage.setProcessed(true);
   }
 
   private void processBoxImagesForSketcharea( QTIExtensionRespextension responseext, ScannedQuestionData questiondata ) throws IOException

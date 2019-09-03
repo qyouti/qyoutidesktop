@@ -357,6 +357,7 @@ public class ScanTask
         // work out which boxes the candidate put
         // crosses in
         pagedecoder.processBoxImages( exam );
+        
         // score the items and work out other outcomes
         exam.recomputeOutcomes();
         // which candidate marks are dubious?

@@ -187,7 +187,8 @@ public class ScannedQuestionData
   public void setExaminerDecision( int examinerdecision )
   {
     exam.setExaminerDecision(candidateident, ident, examinerdecision);
-    exam.processAllResponses(candidateident);
+    exam.invalidateOutcomes(candidateident);
+    exam.updateOutcomes();
     // which row?  Don't know.
     exam.processRowsUpdated( this, 0, getRowCount()-1 );
   }
@@ -453,8 +454,8 @@ public class ScannedQuestionData
     if ( eolistener != null )
       eolistener.examinerOverrideChanged();
     
-    //processResponses();
-    exam.processAllResponses(candidateident);
+    exam.invalidateOutcomes(candidateident);
+    exam.updateOutcomes();
     exam.processRowsUpdated( this, 0, getRowCount()-1 );
     exam.setUnsavedChangesInExaminer( true );
     exam.setUnsavedChangesInOutcome( true );

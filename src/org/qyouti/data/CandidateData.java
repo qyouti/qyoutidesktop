@@ -465,7 +465,7 @@ public class CandidateData
     return exam.getCandidateOutcomes(id);
   }
 
-  public void processAllResponses()
+  public void computeCandidateOutcomes()
   {
     PrintedPageData page;
     ScannedPageData spage;
@@ -516,6 +516,11 @@ public class CandidateData
     outcomes.clearNonFixedOutcomes();
     for ( int i=0; i<outcome_names.length; i++ )
     {
+      // don't overwrite fixed outcomes
+      outcomedata = outcomes.getDatum(outcome_names[i]);
+      if ( outcomedata != null )
+        continue;
+      
       outcomedata = new OutcomeDatum();
       outcomedata.name = outcome_names[i];
       outcomedata.value = exam.qdefs.qti.getOutcomeValue( outcome_names[i] );

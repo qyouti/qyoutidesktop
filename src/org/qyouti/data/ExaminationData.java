@@ -100,12 +100,17 @@ public class ExaminationData
   public static final String questionarchivename = "questions.tar";
   public static final String questionfilename = "questions.xml";
   
-  private File examinerfile;
-  private File outcomefile;
+  public static final String outcomearchivename = "outcomes.tar";
+  public static final String outcomefilename = "outcomes.xml";
+  
+  public static final String examinerarchivename = "examiner.tar";
+  public static final String examinerfilename = "examiner.xml";
   
   CompositeFile mainarchive;
   CompositeFile questionarchive;
   CompositeFile scanarchive;
+  CompositeFile outcomearchive;
+  CompositeFile examinerarchive;
 
   private Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
   public HashMap<String,PrintedPageData> pagemap = new HashMap<String,PrintedPageData>();
@@ -157,9 +162,9 @@ public class ExaminationData
     mainarchive     = CompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
     questionarchive = CompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
     scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+    outcomearchive  = CompositeFile.getCompositeFile(new File( examfolder, outcomearchivename ));
+    examinerarchive = CompositeFile.getCompositeFile(new File( examfolder, examinerarchivename ));
     
-    examinerfile    = new File( examfolder, "examiner.xml"  );
-    outcomefile     = new File( examfolder, "outcomes.xml"  );
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
     default_options.setProperty( "name_in_footer", "true" );
     default_options.setProperty( "id_in_footer", "true" );
@@ -396,12 +401,12 @@ public class ExaminationData
   {
     OutcomeCandidateData ocd = getOutcomeCandidateData( candidateident, create );
     if ( ocd == null ) return null;
-    OutcomeData oqd = ocd.qmap.get(questionident);
+    OutcomeData oqd = ocd.getQuestionOutcomeData(questionident);
     if ( oqd != null) return oqd;
     if ( create )
     {
       oqd = new OutcomeData( this );
-      ocd.qmap.put(questionident, oqd);
+      ocd.addQuestionOutcomeData(questionident, oqd);
     }
     return oqd;
   }
@@ -1569,42 +1574,21 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     return page.candidate;
   }
 
+  
+  
   public void invalidateAllOutcomes()
   {
-    invalidateOutcomes( null );
+    outcometables.invalidateAllCandidates();
   }
   
-  public void invalidateOutcomes( String itemident )
+  /** 
+   * Marks scanned pages as not processed if they match the
+   * criteria.
+   * @param candidateident
+  */
+  public void invalidateOutcomes( String candidateident )
   {
-    PrintedPageData page;
-    ScannedPageData spage;
-    for ( int i=0; i<getPageCount(); i++ )
-    {
-      page = getPage( i );
-      if ( page.error != null )
-        continue;
-      
-      spage = this.getScannedPageData(page.pageid);
-      if ( spage == null )
-        continue;
-
-      if ( itemident == null )
-      {
-        spage.setProcessed( false );
-      }
-      else
-      {
-        for ( ScannedQuestionData q : spage.getQuestions() )
-        {
-          if ( itemident.equals( q.getItem().getIdent() ) )
-          {
-            spage.setProcessed( false );
-            break;
-          }
-        }
-      }
-    
-    }    
+    outcometables.invalidateCandidate( candidateident );
   }
   
   public void recomputeOutcomes()
@@ -1615,46 +1599,21 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     processDataChanged();    
   }
   
-  
   public void updateOutcomes()
   {
-    PrintedPageData page;
-    ScannedPageData spage;
-    for ( int i=0; i<getPageCount(); i++ )
-    {
-      page = getPage( i );
-      if ( page.error != null )
-        continue;
-      spage = getScannedPageData(page.pageid);
-      if ( spage == null )
-        continue;
-      if ( spage.isProcessed() )
-        continue;
-      updateOutcomes( page, spage );
-    }
-    //rebuildOutcomeNameList();    
+    for ( OutcomeCandidateData ocd : outcometables.cmap.values() )
+      if ( !ocd.isValid() )
+        updateOutcomes( ocd );
   }
 
-  
-  
-  private void updateOutcomes( PrintedPageData page, ScannedPageData spage )
-  {
-    if ( page.candidate ==null )
-        return;
-    // Compute outcomes based on QTI def of question
-    for ( ScannedQuestionData q : spage.getQuestions() )
-      q.processResponses();
-    page.candidate.processAllResponses();
-    spage.setProcessed( true );
-  }
-  
-  public void processAllResponses( String candidateident )
-  {
-    CandidateData c = candidates.get(candidateident);
-    c.processAllResponses();
+  public void updateOutcomes( OutcomeCandidateData ocd )
+  {    
+    CandidateData c = this.candidates.get(ocd.getIdent());
+    c.computeCandidateOutcomes();
+    ocd.setValid( true );
+    setUnsavedChangesInOutcome( true );
+    processDataChanged();    
   }  
-  
-  
   
   public QTIElementItem getAssessmentItem(String id)
   {
@@ -1668,7 +1627,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     {
       if ( examinerdata != null && examinerdata.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter(new FileOutputStream(examinerfile), "utf8");
+        writer = new OutputStreamWriter( examinerarchive.getOutputStream( examinerfilename, true), "utf8");
         examinerdata.emit( writer );
         writer.close();
         writer = null;        
@@ -1676,7 +1635,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( outcometables != null && outcometables.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter(new FileOutputStream(outcomefile), "utf8");
+        writer = new OutputStreamWriter( outcomearchive.getOutputStream(outcomefilename, true), "utf8");
         outcometables.emit( writer );
         writer.close();
         writer = null;                
@@ -2019,23 +1978,15 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     loadMain();
     loadPagination();
     
-    if ( examinerfile.exists() )
-      loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
+    if ( examinerarchive.exists( examinerfilename ) )
+      loadExaminerData();
     else
       loadBlankExaminerData();
     qdefs.qti.setOverride( examinerdata.examinerqdefs.qti );
 
     loadScanData();
     
-    try
-    {
-      loadOutcomeData( new InputSource( new FileInputStream( outcomefile ) ) );
-    }
-    catch ( FileNotFoundException e )
-    {
-      System.out.println( "No outcome data yet" );
-      outcometables = new OutcomeTables();
-    }
+    loadOutcomeData();
   }
 
   private void loadBlankExaminerData()
@@ -2045,6 +1996,14 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     ByteArrayInputStream in = new ByteArrayInputStream(strempty.getBytes("UTF-8"));
     InputSource ins = new InputSource( in );
     loadExaminerData( ins );
+  }
+  
+  private ExaminerData loadExaminerData()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    InputStream in = examinerarchive.getInputStream( examinerfilename );
+    InputSource source = new InputSource( in );
+    return loadExaminerData( source );
   }
   
   private ExaminerData loadExaminerData( InputSource source )
@@ -2118,19 +2077,22 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   }
   
   
-  private void loadOutcomeData( InputSource source )
+  private void loadOutcomeData()
           throws ParserConfigurationException, SAXException, IOException
   {
+    outcometables = new OutcomeTables();
+    if ( !outcomearchive.exists( outcomefilename ) )
+      return;
+    
+    InputStream in = outcomearchive.getInputStream(outcomefilename);
+    InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     DocumentBuilder builder = factory.newDocumentBuilder();
     Document document = builder.parse( source );
     Element roote = document.getDocumentElement();
-    outcometables=null;
     if ("outcomes".equals(roote.getNodeName()))
       outcometables = new OutcomeTables( this, roote );
-    else
-      outcometables = new OutcomeTables();
   }
   
   private void loadQuestions()
