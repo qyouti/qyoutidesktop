@@ -1996,7 +1996,7 @@ public class QyoutiFrame
       actionmenu.setEnabled( false );
       exam.setUnsavedChangesInMain( true );
       progressbar.setIndeterminate( true );
-      ScanTask scantask = new ScanTask( preferences, exam, files, false, false );
+      ScanTask scantask = new ScanTask( preferences, exam, files );
       scantask.setScanTaskListener( this );
       scantask.start();
     }

@@ -182,20 +182,7 @@ public class PrintThread extends Thread
       
       //pdftranscoder.complete();
       //transout.getOutputStream().close();
-      exam.setLastPrintID( printid );
-
-      System.out.println( "Recording pagination data." );
-
-      FileWriter writer;
-      File pagrecfile = new File(examfolder, "pagination_" + printid + ".xml");
-      if ( pagrecfile.exists() )
-        throw new IllegalArgumentException( "Unable to save pagination record." );
-      // This helps with dodgy file systems
-      try { pagrecfile.createNewFile(); }
-      catch ( Exception ee ) {}
-      writer = new FileWriter( pagrecfile );
-      paginationrecord.emit(writer);
-      writer.close();
+      exam.setPaginationRecord( paginationrecord );
     }
     catch (TranscoderException te )
     {

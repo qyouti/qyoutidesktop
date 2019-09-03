@@ -82,8 +82,6 @@ public class ScanTask
   public boolean active = false;
   //Vector<String> errorpages= new Vector<String>();
   boolean image_ready;
-  boolean preprocess = false;
-  boolean commandline = false;
   int exitCode = 0;
 
   CompositeFile pageimagearchive;
@@ -96,8 +94,7 @@ public class ScanTask
   Base64Encoder b64 = new Base64Encoder();
   
   
-  public ScanTask( QyoutiPreferences preferences, ExaminationData exam,
-                   File[] scanfiles, boolean preprocess, boolean commandline )
+  public ScanTask( QyoutiPreferences preferences, ExaminationData exam, File[] scanfiles )
   {
     try
     {
@@ -112,8 +109,6 @@ public class ScanTask
     this.preferences = preferences;
     this.exam = exam;
     this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
-    this.preprocess = preprocess;
-    this.commandline = commandline;
     pageimagearchive = exam.getScanImageArchive();
   }
 
@@ -125,14 +120,8 @@ public class ScanTask
   @Override
   public void run()
   {
-    if ( preprocess )
-    {
-      runPreProcess();
-    }
-    else
-    {
-      runImport();
-    }
+    runImport();
+    
     if ( listener != null )
     {
       listener.scanCompleted();
@@ -151,87 +140,6 @@ public class ScanTask
       {        
       }
     }
-  }
-
-  public void runPreProcess()
-  {
-    int i, j, k, l;
-    active = true;
-
-    try
-    {
-      PrintedPageData page=null;
-      //scanfilelist.sort();
-      FileInputStream fis;
-      FileChannel fc;
-      MappedByteBuffer bb;
-//      PDFFile pdffile;
-//      PDFPage pdfpage;
-      Image image;
-      String uri;
-      String newname;
-      File newfile;
-      String foldername;
-      File folder, destfile;
-      boolean success;
-
-      int th = preferences.getPropertyInt( "qyouti.scan.threshold" );
-      int inset = preferences.getPropertyInt( "qyouti.scan.inset" );
-      pagedecoder = new PageDecoder( (double) th / 100.0, inset );
-
-      for ( i = 0; i < scanfilelist.size(); i++ )
-      {
-        if ( scanfilelist.get( i ).getName().endsWith( ".png" )
-                || scanfilelist.get( i ).getName().endsWith( ".jpg" ) )
-        {
-          System.out.println( "\n\nProcessing " + scanfilelist.get( i ).
-                  getName() );
-
-          // Read data from page.
-//          page = pagedecoder.identifyPage( exam, scanfilelist.get( i ).
-//                                           getCanonicalPath(), exam.
-//                                           getPageCount() );
-          if ( page!=null )
-            page.rotatedimage=null;
-          
-          if ( page.error != null )
-          {
-            System.out.println( "ERROR:  " + page.error );
-          }
-          exam.addPage( page );
-
-          foldername = page.getPreferredFolderName();
-          folder = new File( scanfilelist.get( i ).getParentFile(), foldername );
-          if ( !folder.exists() )
-          {
-            folder.mkdir();
-          }
-          destfile = new File( folder, scanfilelist.get( i ).getName() );
-          success = scanfilelist.get( i ).renameTo( destfile );
-
-          if ( !commandline )
-          {
-            exam.processDataChanged( exam.pagelistmodel );
-          }
-        }
-      }
-      if ( !commandline )
-      {
-        JOptionPane.showMessageDialog( null, "Finished processing images." );
-      }
-
-    }
-    catch ( Exception ex )
-    {
-      ex.printStackTrace();
-      if ( !commandline )
-      {
-        JOptionPane.
-                showMessageDialog( null, "An error interupted the processing." );
-      }
-    }
-
-    active = false;
   }
 
     /**

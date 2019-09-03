@@ -218,17 +218,13 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       }      
       
       // use printid and pageid to get information about the page...
-      page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );
-      page.paginationfile = new File( page.examfolder, "pagination_" + page.printid + ".xml" );              
-      //page.source = sourcename;
-
-      if ( !page.paginationfile.exists() && !page.paginationfile.isFile() )
+      if ( page.printid != exam.getLastPrintID() )
       {
-        ifd.setError( "Cannot find the pagination data file for this page." );
+        ifd.setError( "The print ID on this page does not match the last print out." );
         return null;
       }
-      
-      PaginationRecord paginationrecord = exam.examcatalogue.getPrintMetric( page.printid );
+        
+      PaginationRecord paginationrecord = exam.getPaginationRecord(page.printid);
       if ( paginationrecord == null )
       {
         ifd.setError( "Cannot find the pagination data file for this page." );
@@ -427,7 +423,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( !barcode.getPrintID().equals( exam.getLastPrintID()) )
       throw new PageDecodeException( "Print ID in barcode does not match loaded exam.");
 
-    paginationrecord = exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+    paginationrecord = exam.getPaginationRecord( barcode.getPrintID() );
     if ( paginationrecord == null )
       throw new PageDecodeException( "Cannot load print metric record.");
     prpage = paginationrecord.getPage( barcode.getPageID() );
@@ -451,7 +447,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     page.candidate = exam.candidates.get( prcandidate.getId() );
     page.candidate_number = page.candidate.id;        
     page.candidate_name = page.candidate.name;      
-    page.examfolder = exam.examcatalogue.getExamFolderFromPrintMetric( page.printid );  
     page.rotatedimage = image;
 
     for ( i=0; i<4; i++ )

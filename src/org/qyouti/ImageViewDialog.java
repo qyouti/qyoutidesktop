@@ -94,7 +94,7 @@ public class ImageViewDialog
         errormessagelabel.setText("Print ID in barcode does not match loaded exam.");
       else
       {
-        paginationrecord = frame.exam.examcatalogue.getPrintMetric( barcode.getPrintID() );
+        paginationrecord = frame.exam.getPaginationRecord( barcode.getPrintID() );
         page = paginationrecord.getPage( barcode.getPageID() );
         
         if ( page.getBarcodeLocation() != barcode.getLocation() )

@@ -75,8 +75,8 @@ public class PrintedPageData implements Comparable<PrintedPageData>
 
   public ResponseImageProcessor responseimageprocessor = null;
 
-  public File examfolder;
-  public File paginationfile;
+  //public File examfolder;
+  //public File paginationfile;
   public CandidateData candidate;
   public String candidate_number;
   public String candidate_name;
@@ -133,18 +133,6 @@ public class PrintedPageData implements Comparable<PrintedPageData>
     this.candidate = exam.linkPageToCandidate( this );
   }
 
-
-
-  public String getPreferredFolderName()
-  {
-    if ( error != null )
-      return "bad_scans";
-    if ( printid == null || printid.length() == 0 )
-      return "bad_scans";
-    if ( examfolder == null )
-      return "unidentified_scans_" + printid;
-    return "scans_for_" + examfolder.getName();
-  }
 
   public String getPreferredFileExtension()
   {

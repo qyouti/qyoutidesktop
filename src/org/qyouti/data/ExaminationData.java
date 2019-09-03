@@ -56,6 +56,7 @@ import org.qyouti.compositefile.CompositeFile;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
+import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QTIRenderOptions;
 import org.qyouti.qti1.gui.QuestionMetricsRecordSetCache;
 import org.qyouti.statistics.Histogram;
@@ -105,7 +106,7 @@ public class ExaminationData
   CompositeFile mainarchive;
   CompositeFile questionarchive;
   CompositeFile scanarchive;
-  
+
   private Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
   public HashMap<String,PrintedPageData> pagemap = new HashMap<String,PrintedPageData>();
   public PageListModel pagelistmodel = new PageListModel( this, pages );
@@ -123,6 +124,8 @@ public class ExaminationData
   public QuestionMetricsRecordSetCache qmrcache;
 
   String lastprintid=null;
+  private PaginationRecord lastpaginationrecord = null;
+  
   boolean unsaved_changes=false;
 
   OutcomeDataListener outcomelistener = new OutcomeDataListener();
@@ -632,7 +635,8 @@ public class ExaminationData
   {
     CandidateData candidate;
     
-    setLastPrintID( null );
+    setUnsavedChangesInMain( true );
+    setPaginationRecord( null );
     for ( int i = 0; i < candidates_sorted.size(); i++ )
     {
       candidate = candidates_sorted.get( i );
@@ -1795,12 +1799,49 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     return lastprintid;
   }
 
-  public void setLastPrintID( String lastprintid )
+  public void setPaginationRecord( PaginationRecord pr )
   {
-    this.lastprintid = lastprintid;
+    lastpaginationrecord = pr;
+    if ( pr == null )
+    {
+      lastprintid = null;
+      return;
+    }
+    
+    OutputStreamWriter writer = null;
+    try
+    {
+      lastprintid = pr.getPrintId();
+      System.out.println( "Recording pagination data." );
+      String name = "pagination_" + lastprintid + ".xml";
+      writer = new OutputStreamWriter( mainarchive.getOutputStream( name, true ) );
+      lastpaginationrecord.emit(writer);
+    }
+    catch (IOException ex)
+    {
+      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    finally
+    {
+      try
+      {
+        if ( writer != null )
+          writer.close();
+      }
+      catch (IOException ex)
+      {
+        Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
     fireStatusChange();
   }
 
+  public PaginationRecord getPaginationRecord( String id )
+  {
+    if ( lastprintid == null || !lastprintid.equals(id) )
+      return null;
+    return lastpaginationrecord;
+  }
   
   
   public void emitOptions(Writer writer)
@@ -1964,6 +2005,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Collections.sort( persons_sorted, new PersonComparator() );
   }
   
+  
+ 
+  
   public void load()
           throws ParserConfigurationException, SAXException, IOException
   {
@@ -1973,6 +2017,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     loadQuestions();
     
     loadMain();
+    loadPagination();
     
     if ( examinerfile.exists() )
       loadExaminerData( new InputSource( new FileInputStream( examinerfile ) ) );
@@ -2101,6 +2146,34 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     qdefs=null;
     if ("questestinterop".equals(roote.getNodeName()))
       qdefs = new QuestionDefinitions(roote, personlistmodel );
+  }
+
+  private void loadPagination()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    lastpaginationrecord = null;
+    if ( this.lastprintid == null )
+      return;
+    
+    String name = "pagination_" + lastprintid + ".xml";
+    if ( !mainarchive.exists(name) )
+      return;
+
+    InputStream in = mainarchive.getInputStream(name);
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder;
+    Document document;
+    try
+    {
+      builder = factory.newDocumentBuilder();
+      document = builder.parse( in );
+      lastpaginationrecord = new PaginationRecord( document );
+    }
+    catch ( ParserConfigurationException | SAXException | IOException ex )
+    {
+      Logger.getLogger( ExaminationCatalogue.class.getName() ).
+              log( Level.SEVERE, null, ex );
+    }
   }
   
   private void loadMain()
