@@ -78,12 +78,11 @@ public class ImageViewDialog
     bpage = bpscanner.scan(image);
   }
   
-  public void setImage( CompositeFile archivefile, String filename )
+  public void setImage( BufferedImage image )
   {    
     try
     {
-      InputStream in = archivefile.getInputStream(filename);
-      image = ImageIO.read(in); 
+      this.image = image; 
       
       barcode = BarcodeScanner.scan(image);
       if ( barcode == null )

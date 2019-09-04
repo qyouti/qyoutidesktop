@@ -84,7 +84,6 @@ public class ScanTask
   boolean image_ready;
   int exitCode = 0;
 
-  CompositeFile pageimagearchive;
   int imageCounter = 0;
   Path tempfolderpath;
   ArrayList<File> tempfiles=new ArrayList<File>();
@@ -109,7 +108,6 @@ public class ScanTask
     this.preferences = preferences;
     this.exam = exam;
     this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
-    pageimagearchive = exam.getScanImageArchive();
   }
 
   public void setScanTaskListener( ScanTaskListener listener )
@@ -248,7 +246,8 @@ public class ScanTask
         extractor.run();
       }
       
-      OutputStream out = pageimagearchive.getOutputStream( "pages/" + ifd.getImportedname(), true );
+      
+      OutputStream out = exam.getScanArchiveOutputStream( "pdfs/" + ifd.getImportedname() );
       InputStream in = new FileInputStream( pdffile );
       IOUtils.copy(in, out);
       in.close();
@@ -277,9 +276,7 @@ public class ScanTask
       String fn = page.getPreferredFileName();
       if ( fn != null )
         ifd.setImportedname(fn);
-      OutputStream out = pageimagearchive.getOutputStream( "pages/" + ifd.getImportedname(), true );
-      ImageIO.write( image, "PNG", out );
-      out.close();
+      exam.sendImageToScanArchive(image, "pages/" + ifd.getImportedname(), "png" );
       ifd.setImported( true );
     }    
   }

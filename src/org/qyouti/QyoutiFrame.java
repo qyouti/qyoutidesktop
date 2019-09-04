@@ -26,6 +26,7 @@ import org.apache.fop.fonts.*;
 import org.apache.fop.svg.*;
 import org.apache.fop.svg.font.*;
 import org.qyouti.barcode.*;
+import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.data.*;
 import org.qyouti.fonts.*;
 import org.qyouti.print.*;
@@ -47,6 +48,8 @@ public class QyoutiFrame
 
   QyoutiPreferences preferences;
   QyoutiFontManager fontmanager;
+
+  CryptographyManager cryptomanager;
   
   File examfolder = null;
   ExaminationData exam;
@@ -57,6 +60,7 @@ public class QyoutiFrame
 
   ExamSelectDialog selectdialog;
   BusyDialog busydialog;
+  IdentityDialog identitydialog;
 
   String editquestionident;
   ScannedQuestionData currentquestiondata;
@@ -108,6 +112,11 @@ public class QyoutiFrame
       preferences.setDefaults();
       preferences.save();
     }
+
+
+    cryptomanager = new CryptographyManager( homefolder, preferences );
+    cryptomanager.init();
+    identitydialog = new IdentityDialog( this, cryptomanager );
     
     fontmanager = new QyoutiFontManager( preferences );
 
@@ -552,6 +561,8 @@ public class QyoutiFrame
     progressbar = new javax.swing.JProgressBar();
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
+    identitymenuitem = new javax.swing.JMenuItem();
+    sep1c = new javax.swing.JPopupMenu.Separator();
     newmenuitem = new javax.swing.JMenuItem();
     openmenuitem = new javax.swing.JMenuItem();
     savemenuitem = new javax.swing.JMenuItem();
@@ -1140,6 +1151,17 @@ public class QyoutiFrame
 
     filemenu.setText("File");
 
+    identitymenuitem.setText("Identity...");
+    identitymenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        identitymenuitemActionPerformed(evt);
+      }
+    });
+    filemenu.add(identitymenuitem);
+    filemenu.add(sep1c);
+
     newmenuitem.setText("New Exam/Survey...");
     newmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
@@ -1529,7 +1551,9 @@ public class QyoutiFrame
 
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
   {//GEN-HEADEREND:event_openmenuitemActionPerformed
-
+    if ( cryptomanager.getUser() == null )
+      JOptionPane.showMessageDialog( this, "You need to create an identity before you can open exams." );
+    
     if ( !confirmDataLoss( "Are you sure you want to open a different exam/survey?" ) )
     {
       return;
@@ -1571,6 +1595,9 @@ public class QyoutiFrame
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
   {//GEN-HEADEREND:event_newmenuitemActionPerformed
+    if ( cryptomanager.getUser() == null )
+      JOptionPane.showMessageDialog( this, "You need to create an identity before you can create exams." );
+    
     if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
     {
       return;
@@ -1700,7 +1727,7 @@ public class QyoutiFrame
     }
 
     ImageViewDialog dialog = new ImageViewDialog( this, true );
-    dialog.setImage( exam.getScanImageArchive(), "pages/"+filename );
+    dialog.setImage( exam.getImageFromScanArchive( "pages/"+filename ) );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
 
@@ -2385,6 +2412,11 @@ public class QyoutiFrame
     cqp.updateButtons();
   }//GEN-LAST:event_overridereviewmenuitemActionPerformed
 
+  private void identitymenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_identitymenuitemActionPerformed
+  {//GEN-HEADEREND:event_identitymenuitemActionPerformed
+    identitydialog.setVisible( true );
+  }//GEN-LAST:event_identitymenuitemActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -2405,7 +2437,7 @@ public class QyoutiFrame
    */
   void examinationBuilt( File folder, ExamTemplate template )
   {
-    ExaminationData.saveNewExamination( folder, template.getMainDocumentAsString(), template.getQuestionDocumentAsString() );
+    ExaminationData.saveNewExamination( cryptomanager, folder, template.getMainDocumentAsString(), template.getQuestionDocumentAsString() );
     loadExam( folder );
   }
 
@@ -2461,7 +2493,7 @@ public class QyoutiFrame
       if ( exam!= null )
         exam.close();
       
-      exam = new ExaminationData( examcatalogue, examfolder );
+      exam = new ExaminationData( cryptomanager, examcatalogue, examfolder );
       exam.addExaminationDataStatusListener( this );
       persontable.setModel( exam.personlistmodel );
       exam.personlistmodel.addTableModelListener( 
@@ -2600,6 +2632,7 @@ public class QyoutiFrame
   private javax.swing.ButtonGroup fontprefbuttongroup;
   private javax.swing.JList<String> fontsizelist;
   private javax.swing.JMenuItem forgetprintmenuitem;
+  private javax.swing.JMenuItem identitymenuitem;
   private javax.swing.JMenuItem importcanmenuitem;
   private javax.swing.JMenuItem importimagesmenuitem;
   private javax.swing.JMenuItem importqmenuitem;
@@ -2691,6 +2724,7 @@ public class QyoutiFrame
   private javax.swing.JPanel selectedpersonpanel;
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
+  private javax.swing.JPopupMenu.Separator sep1c;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
   private javax.swing.JCheckBox serifcheckbox;

@@ -24,6 +24,7 @@ package org.qyouti.data;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.*;
 import java.net.MalformedURLException;
@@ -34,6 +35,7 @@ import java.text.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.xml.parsers.DocumentBuilder;
@@ -52,7 +54,8 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.fop.apps.*;
 import org.qyouti.clipboard.*;
-import org.qyouti.compositefile.CompositeFile;
+import org.qyouti.crypto.CryptographyManager;
+import org.qyouti.compositefile.*;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementMaterial;
 import org.qyouti.qti1.element.QTIElementMattext;
@@ -78,6 +81,8 @@ import org.xml.sax.*;
 public class ExaminationData
         extends AbstractTableModel implements QTIRenderOptions
 {
+  private CryptographyManager cryptomanager;
+  private EncryptedCompositeFileUser user;
   public ExaminationCatalogue examcatalogue = null;
   LinkedList<ExaminationDataStatusListener> listeners = new LinkedList<ExaminationDataStatusListener>();
         
@@ -106,11 +111,11 @@ public class ExaminationData
   public static final String examinerarchivename = "examiner.tar";
   public static final String examinerfilename = "examiner.xml";
   
-  CompositeFile mainarchive;
-  CompositeFile questionarchive;
-  CompositeFile scanarchive;
-  CompositeFile outcomearchive;
-  CompositeFile examinerarchive;
+  EncryptedCompositeFile mainarchive;
+  EncryptedCompositeFile questionarchive;
+  EncryptedCompositeFile scanarchive;
+  EncryptedCompositeFile outcomearchive;
+  EncryptedCompositeFile examinerarchive;
 
   private Vector<PrintedPageData> pages = new Vector<PrintedPageData>();
   public HashMap<String,PrintedPageData> pagemap = new HashMap<String,PrintedPageData>();
@@ -153,17 +158,32 @@ public class ExaminationData
   
   int nextscanfileident = 10000;
   
-  public ExaminationData(ExaminationCatalogue examcatalogue,File examfolder)
+  public ExaminationData( CryptographyManager cryptomanager, ExaminationCatalogue examcatalogue,File examfolder )
           throws IOException
   {
+    this.cryptomanager = cryptomanager;
+    user = this.cryptomanager.getUser();
     this.examcatalogue = examcatalogue;
     this.examfolder = examfolder;
     
-    mainarchive     = CompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
-    questionarchive = CompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
-    scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
-    outcomearchive  = CompositeFile.getCompositeFile(new File( examfolder, outcomearchivename ));
-    examinerarchive = CompositeFile.getCompositeFile(new File( examfolder, examinerarchivename ));
+    mainarchive     = EncryptedCompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
+    questionarchive = EncryptedCompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
+    scanarchive     = EncryptedCompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+    outcomearchive  = EncryptedCompositeFile.getCompositeFile(new File( examfolder, outcomearchivename ));
+    examinerarchive = EncryptedCompositeFile.getCompositeFile(new File( examfolder, examinerarchivename ));
+
+    try
+    {
+      mainarchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      questionarchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      scanarchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      outcomearchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      examinerarchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+    }
+    catch ( Exception e )
+    {
+      throw new IOException( e );
+    }
     
     qmrcache = new QuestionMetricsRecordSetCache( examfolder );
     default_options.setProperty( "name_in_footer", "true" );
@@ -173,9 +193,11 @@ public class ExaminationData
 
   public void close() throws IOException
   {
-    mainarchive.close();
     questionarchive.close();
     scanarchive.close();
+    outcomearchive.close();
+    examinerarchive.close();
+    mainarchive.close();
   }
   
   // Gather all use of "fireTable***" to methods here to make it hard to
@@ -242,9 +264,44 @@ public class ExaminationData
     return examfolder;
   }
   
-  public CompositeFile getScanImageArchive()
+//  public CompositeFile getScanImageArchive()
+//  {
+//    return scanarchive;
+//  }
+  
+  public BufferedImage getImageFromScanArchive( String name )
   {
-    return scanarchive;
+    if ( !scanarchive.exists(name) ) return null;
+    BufferedImage img=null;
+    try
+    {
+      InputStream in = scanarchive.getDecryptingInputStream( user, name );
+      img = ImageIO.read(in);
+      in.close();
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return img;
+  }
+  
+  public void sendImageToScanArchive( BufferedImage image, String name, String format )
+  {
+    try
+    {
+      OutputStream out = scanarchive.getEncryptingOutputStream( user, name, true );
+      ImageIO.write(image, format, out );
+      out.close();
+    } catch (IOException ex)
+    {
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+  
+  public OutputStream getScanArchiveOutputStream( String name )
+          throws IOException
+  {
+    return scanarchive.getEncryptingOutputStream( user, name, true );
   }
   
   public void addExaminationDataStatusListener( ExaminationDataStatusListener listener )
@@ -558,13 +615,14 @@ public class ExaminationData
     {
       scanarchive.close();
       Files.deleteIfExists( new File(scanarchive.getCanonicalPath()).toPath() );      
-      scanarchive     = CompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+      scanarchive     = EncryptedCompositeFile.getCompositeFile(new File( examfolder, "scans.tar" ));
+      scanarchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
     }
     catch ( Exception e )
     {
+      e.printStackTrace();
     }
     
-    scans.clearScanFileData();
     setUnsavedChangesInMain( true );
     setUnsavedChangesInScans( true );
   }
@@ -1627,7 +1685,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     {
       if ( examinerdata != null && examinerdata.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter( examinerarchive.getOutputStream( examinerfilename, true), "utf8");
+        writer = new OutputStreamWriter( examinerarchive.getEncryptingOutputStream( user, examinerfilename, true), "utf8");
         examinerdata.emit( writer );
         writer.close();
         writer = null;        
@@ -1635,7 +1693,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( outcometables != null && outcometables.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter( outcomearchive.getOutputStream(outcomefilename, true), "utf8");
+        writer = new OutputStreamWriter( outcomearchive.getEncryptingOutputStream( user, outcomefilename, true), "utf8");
         outcometables.emit( writer );
         writer.close();
         writer = null;                
@@ -1643,7 +1701,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( qdefs != null && qdefs.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter( questionarchive.getOutputStream(questionfilename, true), "utf8");
+        writer = new OutputStreamWriter( questionarchive.getEncryptingOutputStream(cryptomanager.getUser(),questionfilename, true), "utf8");
         qdefs.emit( writer );
         writer.close();
         writer = null;
@@ -1651,7 +1709,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( this.unsaved_changes )
       {
-        writer = new OutputStreamWriter( mainarchive.getOutputStream(mainfilename, true), "utf8");
+        writer = new OutputStreamWriter( mainarchive.getEncryptingOutputStream(cryptomanager.getUser(), mainfilename, true), "utf8");
         emit(writer);
         writer.close();
         writer = null;
@@ -1663,7 +1721,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       
       if ( this.scans.areThereUnsavedChanges() )
       {
-        writer = new OutputStreamWriter( scanarchive.getOutputStream("scans.xml",true), "utf8");
+        writer = new OutputStreamWriter( scanarchive.getEncryptingOutputStream( user, "scans.xml",true), "utf8");
         writer.write("<?xml version=\"1.0\"?>\r\n<scans nextscanfileident=\"" );
         writer.write( Integer.toString(nextscanfileident) );
         writer.write("\">\r\n");
@@ -1773,7 +1831,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       lastprintid = pr.getPrintId();
       System.out.println( "Recording pagination data." );
       String name = "pagination_" + lastprintid + ".xml";
-      writer = new OutputStreamWriter( mainarchive.getOutputStream( name, true ) );
+      writer = new OutputStreamWriter( mainarchive.getEncryptingOutputStream( cryptomanager.getUser(), name, true ), "utf8" );
       lastpaginationrecord.emit(writer);
     }
     catch (IOException ex)
@@ -2001,7 +2059,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   private ExaminerData loadExaminerData()
           throws ParserConfigurationException, SAXException, IOException
   {
-    InputStream in = examinerarchive.getInputStream( examinerfilename );
+    InputStream in = examinerarchive.getDecryptingInputStream( user, examinerfilename );
     InputSource source = new InputSource( in );
     return loadExaminerData( source );
   }
@@ -2027,7 +2085,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     {
       if ( !scanarchive.exists("scans.xml") )
         return;
-      in = scanarchive.getInputStream("scans.xml");
+      in = scanarchive.getDecryptingInputStream(user,"scans.xml");
       InputSource source = new InputSource( in );
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
@@ -2084,7 +2142,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     if ( !outcomearchive.exists( outcomefilename ) )
       return;
     
-    InputStream in = outcomearchive.getInputStream(outcomefilename);
+    InputStream in = outcomearchive.getDecryptingInputStream(user,outcomefilename);
     InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
@@ -2093,12 +2151,13 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     Element roote = document.getDocumentElement();
     if ("outcomes".equals(roote.getNodeName()))
       outcometables = new OutcomeTables( this, roote );
+    in.close();
   }
   
   private void loadQuestions()
           throws ParserConfigurationException, SAXException, IOException
   {
-    InputStream in = questionarchive.getInputStream(questionfilename);
+    InputStream in = questionarchive.getDecryptingInputStream(cryptomanager.getUser(),questionfilename);
     InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
@@ -2108,6 +2167,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     qdefs=null;
     if ("questestinterop".equals(roote.getNodeName()))
       qdefs = new QuestionDefinitions(roote, personlistmodel );
+    in.close();
   }
 
   private void loadPagination()
@@ -2121,7 +2181,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     if ( !mainarchive.exists(name) )
       return;
 
-    InputStream in = mainarchive.getInputStream(name);
+    InputStream in = mainarchive.getDecryptingInputStream(cryptomanager.getUser(), name);
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder;
     Document document;
@@ -2136,12 +2196,13 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       Logger.getLogger( ExaminationCatalogue.class.getName() ).
               log( Level.SEVERE, null, ex );
     }
+    in.close();
   }
   
   private void loadMain()
           throws ParserConfigurationException, SAXException, IOException
   {
-    InputStream in = mainarchive.getInputStream(mainfilename);
+    InputStream in = mainarchive.getDecryptingInputStream(cryptomanager.getUser(), mainfilename);
     InputSource source = new InputSource( in );
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
@@ -2353,14 +2414,17 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   
   
   
-  public static void saveNewExamination( File examfolder, String strmain, String strquestions )
+  public static void saveNewExamination( CryptographyManager cryptomanager, File examfolder, String strmain, String strquestions )
   {
     Writer writer=null;
+    EncryptedCompositeFile temparchive=null;
+    EncryptedCompositeFileUser user = cryptomanager.getUser();
     
     try
     {
-      CompositeFile mainarchive = CompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
-      writer = new OutputStreamWriter( mainarchive.getOutputStream(mainfilename, true), "utf8");
+      temparchive = EncryptedCompositeFile.getCompositeFile(new File( examfolder, mainarchivename ));
+      temparchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      writer = new OutputStreamWriter( temparchive.getEncryptingOutputStream(user,mainfilename, true), "utf8");
       writer.write( strmain );
     }
     catch ( Exception ex )
@@ -2382,13 +2446,26 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
                   log( Level.SEVERE, null, ex );
         }
       }
+      if ( temparchive != null )
+      {
+        try
+        {
+          temparchive.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( ExaminationData.class.getName() ).
+                  log( Level.SEVERE, null, ex );          
+        }
+      }
     }
     
     writer = null;
     try
     {
-      CompositeFile questionarchive = CompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
-      writer = new OutputStreamWriter( questionarchive.getOutputStream(questionfilename, true), "utf8");
+      temparchive = EncryptedCompositeFile.getCompositeFile(new File( examfolder, questionarchivename ));
+      temparchive.addPublicKey( user, user.getPgppublickey(), user.getKeyalias() );
+      writer = new OutputStreamWriter( temparchive.getEncryptingOutputStream( user, questionfilename, true ), "utf8");
       writer.write( strquestions );
     }
     catch ( Exception ex )
@@ -2410,9 +2487,19 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
                   log( Level.SEVERE, null, ex );
         }
       }
-    }
-
-    
+      if ( temparchive != null )
+      {
+        try
+        {
+          temparchive.close();
+        }
+        catch ( IOException ex )
+        {
+          Logger.getLogger( ExaminationData.class.getName() ).
+                  log( Level.SEVERE, null, ex );          
+        }
+      }
+    }    
   }
   
 }

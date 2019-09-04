@@ -152,35 +152,12 @@ public class ScannedResponseData
 
   private BufferedImage loadImage( String fname )
   {
-    BufferedImage img=null;
-    CompositeFile archive = exam.getScanImageArchive();
-    if ( !archive.exists( "responses/" + fname ) )
-      return null;
-    
-    try
-    {
-      InputStream in = archive.getInputStream("responses/" + fname);
-      img = ImageIO.read(in);
-      in.close();
-    } catch (IOException ex)
-    {
-      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    return img;
+    return exam.getImageFromScanArchive("responses/"+fname);
   }
 
   public void setImage( BufferedImage image )
   {
-    CompositeFile archive = exam.getScanImageArchive();
-    try
-    {
-      OutputStream out = archive.getOutputStream( "responses/" + getImageFileName(), true );
-      ImageIO.write(image, "png", out );
-      out.close();
-    } catch (IOException ex)
-    {
-      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
-    }    
+    exam.sendImageToScanArchive( image, "responses/"+getImageFileName(), "png" );
   }
 
   public BufferedImage getImage()

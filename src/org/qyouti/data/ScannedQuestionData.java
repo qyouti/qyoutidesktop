@@ -133,18 +133,7 @@ public class ScannedQuestionData
   
   private BufferedImage loadImage( String fname )
   {
-    BufferedImage img=null;
-    CompositeFile archive = exam.getScanImageArchive();
-    try
-    {
-      InputStream in = archive.getInputStream("questions/"+fname);
-      img = ImageIO.read(in);
-      in.close();
-    } catch (IOException ex)
-    {
-      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    return img;
+    return exam.getImageFromScanArchive("questions/"+fname);
   }
 
   public BufferedImage getImage()
@@ -156,16 +145,7 @@ public class ScannedQuestionData
   
   public void setImage( BufferedImage image )
   {
-    CompositeFile archive = exam.getScanImageArchive();
-    try
-    {
-      OutputStream out = archive.getOutputStream( "questions/"+getImageFileName(), true );
-      ImageIO.write(image, "png", out );
-      out.close();
-    } catch (IOException ex)
-    {
-      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
-    }    
+    exam.sendImageToScanArchive( image, "questions/"+getImageFileName(), "png" );
   }
   
   

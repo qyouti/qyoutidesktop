@@ -15,6 +15,16 @@
             <Property name="text" type="java.lang.String" value="File"/>
           </Properties>
           <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="identitymenuitem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Identity..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="identitymenuitemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="sep1c">
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="newmenuitem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="New Exam/Survey..."/>
