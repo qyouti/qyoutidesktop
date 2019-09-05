@@ -27,6 +27,7 @@ import org.apache.fop.svg.*;
 import org.apache.fop.svg.font.*;
 import org.qyouti.barcode.*;
 import org.qyouti.crypto.CryptographyManager;
+import org.qyouti.crypto.CryptographyManagerException;
 import org.qyouti.data.*;
 import org.qyouti.fonts.*;
 import org.qyouti.print.*;
@@ -115,7 +116,16 @@ public class QyoutiFrame
 
 
     cryptomanager = new CryptographyManager( homefolder, preferences );
-    cryptomanager.init();
+    try
+    {
+      cryptomanager.init();
+    }
+    catch (CryptographyManagerException ex)
+    {
+      Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
+      JOptionPane.showMessageDialog( this, "Technical fault attempting to initialise cryptography manager." );
+      System.exit(1);
+    }
     identitydialog = new IdentityDialog( this, cryptomanager );
     
     fontmanager = new QyoutiFontManager( preferences );
@@ -562,6 +572,8 @@ public class QyoutiFrame
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
     identitymenuitem = new javax.swing.JMenuItem();
+    newfoldermenuitem = new javax.swing.JMenuItem();
+    selectfoldermenuitem = new javax.swing.JMenuItem();
     sep1c = new javax.swing.JPopupMenu.Separator();
     newmenuitem = new javax.swing.JMenuItem();
     openmenuitem = new javax.swing.JMenuItem();
@@ -1160,9 +1172,15 @@ public class QyoutiFrame
       }
     });
     filemenu.add(identitymenuitem);
+
+    newfoldermenuitem.setText("New Exam Store Folder...");
+    filemenu.add(newfoldermenuitem);
+
+    selectfoldermenuitem.setText("Select Exam Store Folder...");
+    filemenu.add(selectfoldermenuitem);
     filemenu.add(sep1c);
 
-    newmenuitem.setText("New Exam/Survey...");
+    newmenuitem.setText("New Exam...");
     newmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1172,7 +1190,7 @@ public class QyoutiFrame
     });
     filemenu.add(newmenuitem);
 
-    openmenuitem.setText("Open Exam/Survey...");
+    openmenuitem.setText("Open Exam...");
     openmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1192,7 +1210,7 @@ public class QyoutiFrame
     });
     filemenu.add(savemenuitem);
 
-    propsmenuitem.setText("Exam/Survey Properties...");
+    propsmenuitem.setText("Exam Properties...");
     propsmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1552,7 +1570,10 @@ public class QyoutiFrame
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
   {//GEN-HEADEREND:event_openmenuitemActionPerformed
     if ( cryptomanager.getUser() == null )
+    {
       JOptionPane.showMessageDialog( this, "You need to create an identity before you can open exams." );
+      return;
+    }
     
     if ( !confirmDataLoss( "Are you sure you want to open a different exam/survey?" ) )
     {
@@ -1596,7 +1617,10 @@ public class QyoutiFrame
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
   {//GEN-HEADEREND:event_newmenuitemActionPerformed
     if ( cryptomanager.getUser() == null )
+    {
       JOptionPane.showMessageDialog( this, "You need to create an identity before you can create exams." );
+      return;
+    }
     
     if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
     {
@@ -2673,6 +2697,7 @@ public class QyoutiFrame
   private javax.swing.JTabbedPane jTabbedPane1;
   private javax.swing.JTextPane jTextPane1;
   private javax.swing.JMenuBar menubar;
+  private javax.swing.JMenuItem newfoldermenuitem;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JButton nextreviewbutton;
   private javax.swing.JMenuItem nextreviewmenuitem;
@@ -2722,6 +2747,7 @@ public class QyoutiFrame
   private javax.swing.JLabel savestatuslabel;
   private javax.swing.JTable scanfiletable;
   private javax.swing.JPanel selectedpersonpanel;
+  private javax.swing.JMenuItem selectfoldermenuitem;
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep1c;

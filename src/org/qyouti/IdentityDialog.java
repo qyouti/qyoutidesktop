@@ -5,8 +5,11 @@
  */
 package org.qyouti;
 
+import java.awt.Frame;
+import java.math.BigInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.qyouti.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
@@ -23,61 +26,36 @@ public class IdentityDialog
   
   /**
    * Creates new form IdentityDialog
+   * @param parent
+   * @param cryptoman
    */
-  public IdentityDialog(java.awt.Frame parent, CryptographyManager cryptoman )
+  public IdentityDialog(Frame parent, CryptographyManager cryptoman )
   {
     super(parent, true);
     this.cryptoman = cryptoman;
-    initComponents();
-    
-    if ( !cryptoman.isWindowsAvailable() )
-    {
-      usewindowscheckbox.setSelected( false );
-      usewindowscheckbox.setEnabled( false );
-    }
-    
-    user = cryptoman.getUser();
-    if ( user != null )
-    {
-      useralias.setText( cryptoman.getUserAlias() );
-      keystorename.setText( cryptoman.isKeyStoreWindows()?"Windows System":"Password protected file" );
-    }
+    initComponents();    
+    updateFields();
   }
 
-  public void createNewKeys()
+  public final void updateFields()
   {
-    errortextarea.setText("");
-    String newname = createkeynametextfield.getText();
-    String newemail = createkeyemailtextfield.getText();
-    if ( newname == null || newname.trim().length() == 0 )
-    {
-      errortextarea.setText("Name cannot be empty.");
-      return;
-    }
-    if ( newemail == null || newemail.trim().length() == 0 )
-    {
-      errortextarea.setText("Email cannot be empty.");
-      return;
-    }
-
-    String alias = newname.trim() + " <" + newemail.trim() + ">";
-    boolean usewindows = usewindowscheckbox.isSelected();
-    
-    try
-    {
-      cryptoman.createNewKeys(alias, usewindows);
-    }
-    catch (CryptographyManagerException ex)
-    {
-      errortextarea.setText(ex.getMessage());
-      return;
-    }
-
     user = cryptoman.getUser();
     if ( user != null )
     {
       useralias.setText( cryptoman.getUserAlias() );
-      keystorename.setText( cryptoman.isKeyStoreWindows()?"Windows system":"Password protected file" );
+      BigInteger f = new BigInteger( 1, user.getPgppublickey().getFingerprint() );
+      fingerprint.setText( f.toString( 16 ).toUpperCase() );
+      passwordtype.setText( cryptoman.isKeyStoreWindows()?"Windows cryptography - no password.":"Password must be entered every time Qyouti is started." );
+      createbutton.setEnabled( false );
+      deletebutton.setEnabled( true );
+    }    
+    else
+    {
+      useralias.setText("---");
+      fingerprint.setText("---");
+      passwordtype.setText("---");
+      createbutton.setEnabled( true );
+      deletebutton.setEnabled( false );
     }
   }
   
@@ -92,135 +70,90 @@ public class IdentityDialog
     java.awt.GridBagConstraints gridBagConstraints;
 
     jLabel2 = new javax.swing.JLabel();
-    jPanel3 = new javax.swing.JPanel();
-    jLabel1 = new javax.swing.JLabel();
-    createkeynametextfield = new javax.swing.JTextField();
-    jLabel3 = new javax.swing.JLabel();
-    createkeyemailtextfield = new javax.swing.JTextField();
-    usewindowscheckbox = new javax.swing.JCheckBox();
-    createnewkeysbutton = new javax.swing.JButton();
     jPanel1 = new javax.swing.JPanel();
     jLabel4 = new javax.swing.JLabel();
     useralias = new javax.swing.JLabel();
     jLabel6 = new javax.swing.JLabel();
-    keystorename = new javax.swing.JLabel();
-    jScrollPane1 = new javax.swing.JScrollPane();
-    errortextarea = new javax.swing.JTextArea();
+    fingerprint = new javax.swing.JLabel();
+    jLabel1 = new javax.swing.JLabel();
+    passwordtype = new javax.swing.JLabel();
     jPanel2 = new javax.swing.JPanel();
+    createbutton = new javax.swing.JButton();
+    deletebutton = new javax.swing.JButton();
     closebutton = new javax.swing.JButton();
 
     jLabel2.setText("jLabel2");
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-    jPanel3.setLayout(new java.awt.GridBagLayout());
+    jLabel4.setText("My Key Name:");
 
-    jLabel1.setText("Name:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(jLabel1, gridBagConstraints);
+    useralias.setText("...");
 
-    createkeynametextfield.setMinimumSize(new java.awt.Dimension(200, 24));
-    createkeynametextfield.setPreferredSize(new java.awt.Dimension(200, 24));
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(createkeynametextfield, gridBagConstraints);
+    jLabel6.setText("Key Fingerprint:");
 
-    jLabel3.setText("Email Address:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(jLabel3, gridBagConstraints);
+    fingerprint.setText("...");
 
-    createkeyemailtextfield.setMinimumSize(new java.awt.Dimension(200, 24));
-    createkeyemailtextfield.setPreferredSize(new java.awt.Dimension(200, 24));
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(createkeyemailtextfield, gridBagConstraints);
+    jLabel1.setText("Protection:");
 
-    usewindowscheckbox.setText("Use Windows Key Store");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.gridwidth = 2;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(usewindowscheckbox, gridBagConstraints);
+    passwordtype.setText("...");
 
-    createnewkeysbutton.setText("Create New Keys");
-    createnewkeysbutton.addActionListener(new java.awt.event.ActionListener()
+    javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+    jPanel1.setLayout(jPanel1Layout);
+    jPanel1Layout.setHorizontalGroup(
+      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jPanel1Layout.createSequentialGroup()
+        .addGap(60, 60, 60)
+        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+          .addComponent(jLabel1)
+          .addComponent(jLabel6)
+          .addComponent(jLabel4))
+        .addGap(18, 18, 18)
+        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(useralias, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+          .addComponent(fingerprint, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+          .addComponent(passwordtype, javax.swing.GroupLayout.DEFAULT_SIZE, 425, Short.MAX_VALUE))
+        .addContainerGap())
+    );
+    jPanel1Layout.setVerticalGroup(
+      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jPanel1Layout.createSequentialGroup()
+        .addGap(27, 27, 27)
+        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(jLabel4)
+          .addComponent(useralias))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(jLabel6)
+          .addComponent(fingerprint, javax.swing.GroupLayout.PREFERRED_SIZE, 12, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(jLabel1)
+          .addComponent(passwordtype))
+        .addContainerGap())
+    );
+
+    getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
+
+    createbutton.setText("Create...");
+    createbutton.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
       {
-        createnewkeysbuttonActionPerformed(evt);
+        createbuttonActionPerformed(evt);
       }
     });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 2;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.gridheight = 3;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(createnewkeysbutton, gridBagConstraints);
+    jPanel2.add(createbutton);
 
-    getContentPane().add(jPanel3, java.awt.BorderLayout.NORTH);
-
-    jPanel1.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8), javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED)));
-    jPanel1.setLayout(new java.awt.GridBagLayout());
-
-    jLabel4.setText("Key Name:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel1.add(jLabel4, gridBagConstraints);
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 2;
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel1.add(useralias, gridBagConstraints);
-
-    jLabel6.setText("Key Store:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel1.add(jLabel6, gridBagConstraints);
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 2;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel1.add(keystorename, gridBagConstraints);
-
-    jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder("Error Message"));
-
-    errortextarea.setEditable(false);
-    errortextarea.setColumns(20);
-    errortextarea.setRows(5);
-    jScrollPane1.setViewportView(errortextarea);
-
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-    gridBagConstraints.ipadx = 77;
-    gridBagConstraints.ipady = 77;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.weightx = 1.0;
-    gridBagConstraints.weighty = 1.0;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel1.add(jScrollPane1, gridBagConstraints);
-
-    getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
+    deletebutton.setText("Delete");
+    deletebutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        deletebuttonActionPerformed(evt);
+      }
+    });
+    jPanel2.add(deletebutton);
 
     closebutton.setText("Close");
     closebutton.addActionListener(new java.awt.event.ActionListener()
@@ -237,35 +170,43 @@ public class IdentityDialog
     pack();
   }// </editor-fold>//GEN-END:initComponents
 
-  private void createnewkeysbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_createnewkeysbuttonActionPerformed
-  {//GEN-HEADEREND:event_createnewkeysbuttonActionPerformed
-    createNewKeys();
-  }//GEN-LAST:event_createnewkeysbuttonActionPerformed
-
   private void closebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_closebuttonActionPerformed
   {//GEN-HEADEREND:event_closebuttonActionPerformed
     dispose();
   }//GEN-LAST:event_closebuttonActionPerformed
 
+  private void createbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_createbuttonActionPerformed
+  {//GEN-HEADEREND:event_createbuttonActionPerformed
+    
+    CreateIdentityDialog cid = new CreateIdentityDialog( (Frame)getParent(), cryptoman );
+    cid.setModal( true );
+    cid.setVisible( true );
+    
+    System.out.println( "CreateIdentityDialog created new identity." );
+    
+    updateFields();
+  }//GEN-LAST:event_createbuttonActionPerformed
+
+  private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletebuttonActionPerformed
+  {//GEN-HEADEREND:event_deletebuttonActionPerformed
+    // TODO add your handling code here:
+    JOptionPane.showMessageDialog( rootPane, "Not implemented yet." );
+  }//GEN-LAST:event_deletebuttonActionPerformed
+
 
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton closebutton;
-  private javax.swing.JTextField createkeyemailtextfield;
-  private javax.swing.JTextField createkeynametextfield;
-  private javax.swing.JButton createnewkeysbutton;
-  private javax.swing.JTextArea errortextarea;
+  private javax.swing.JButton createbutton;
+  private javax.swing.JButton deletebutton;
+  private javax.swing.JLabel fingerprint;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel4;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
-  private javax.swing.JPanel jPanel3;
-  private javax.swing.JScrollPane jScrollPane1;
-  private javax.swing.JLabel keystorename;
+  private javax.swing.JLabel passwordtype;
   private javax.swing.JLabel useralias;
-  private javax.swing.JCheckBox usewindowscheckbox;
   // End of variables declaration//GEN-END:variables
 }

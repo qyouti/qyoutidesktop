@@ -23,11 +23,21 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="identitymenuitemActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="newfoldermenuitem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New Exam Store Folder..."/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="selectfoldermenuitem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Select Exam Store Folder..."/>
+              </Properties>
+            </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="sep1c">
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="newmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="New Exam/Survey..."/>
+                <Property name="text" type="java.lang.String" value="New Exam..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="newmenuitemActionPerformed"/>
@@ -35,7 +45,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="openmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Open Exam/Survey..."/>
+                <Property name="text" type="java.lang.String" value="Open Exam..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="openmenuitemActionPerformed"/>
@@ -51,7 +61,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="propsmenuitem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Exam/Survey Properties..."/>
+                <Property name="text" type="java.lang.String" value="Exam Properties..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="propsmenuitemActionPerformed"/>

@@ -5,17 +5,26 @@
  */
 package org.qyouti.crypto;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Security;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,30 +32,42 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.Cipher;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyPacket;
 import org.bouncycastle.bcpg.RSAPublicBCPGKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPPrivateKey;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.qyouti.QyoutiPreferences;
+import org.qyouti.compositefile.EncryptedCompositeFile;
 import org.qyouti.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.compositefile.demo.KeyUtil;
 import org.qyouti.winselfcert.WindowsCertificateGenerator;
+import static org.qyouti.winselfcert.WindowsCertificateGenerator.CRYPT_USER_PROTECTED;
+import static org.qyouti.winselfcert.WindowsCertificateGenerator.MS_ENH_RSA_AES_PROV;
+import static org.qyouti.winselfcert.WindowsCertificateGenerator.PROV_RSA_AES;
 
 /**
  *
@@ -56,12 +77,11 @@ public class CryptographyManager
 {
   QyoutiPreferences prefs;
   String useralias;
+  char[] password;
+  boolean windowsavailable=false;
   boolean usewindows;
   
-  KeyStore windowsKeyStore;
-  PrivateKey windowsPrivateKey;
-  
-  File pgpseckeyfile, pgppubkeyfile;
+  File pgpseckeyfile, pgppubkeyfile, winpassfile;
   PGPPrivateKey  prikey;
   PGPPublicKey  pubkey;
   
@@ -75,18 +95,25 @@ public class CryptographyManager
   
   public CryptographyManager( File base, QyoutiPreferences prefs )
   {
+    this.password = null;
     this.prefs = prefs;
     
     useralias = prefs.getProperty("qyouti.crypto.useralias", null);
     usewindows = "yes".equalsIgnoreCase(prefs.getProperty("qyouti.crypto.usewindows", "no"));
     pgpseckeyfile = new File( base, "seckeyring.gpg" );
     pgppubkeyfile = new File( base, "pubkeyring.gpg" );
+    winpassfile = new File( base, "seckeypassword.bin" );
     Security.addProvider(new BouncyCastleProvider());
+  }
+  
+  public void setPassword( char[] password )
+  {
+    this.password = password;
   }
   
   public boolean isWindowsAvailable()
   {
-    return windowsKeyStore != null;
+    return windowsavailable;
   }
 
   public String getUserAlias()
@@ -106,7 +133,7 @@ public class CryptographyManager
     return user;
   }
   
-  public void init()
+  public void init() throws CryptographyManagerException
   {
     FileInputStream fin;
 
@@ -164,21 +191,16 @@ public class CryptographyManager
       }
     }
       
-
-
-    if ( useralias == null || usewindows )
+    try
     {
-      try
-      {
-        windowsKeyStore = KeyStore.getInstance("Windows-MY");
-        windowsKeyStore.load(null, null);  // Load keystore 
-      }
-      catch ( Exception e )
-      {
-        // indicate that Windows key store is not available.
-        windowsKeyStore = null;
-      }    
+      KeyStore windowsKeyStore = KeyStore.getInstance("Windows-MY");
+      windowsKeyStore.load(null, null);  // Load keystore 
+      windowsavailable = true;
     }
+    catch ( Exception e )
+    {
+    }    
+    
     loadUserKeys();
   }
   
@@ -210,28 +232,17 @@ public class CryptographyManager
   }
   
   
-  public void loadUserKeys()
+  public void loadUserKeys() throws CryptographyManagerException
   {
     if ( useralias == null )
       return;
 
     if ( usewindows )
-      try {
-        windowsPrivateKey = (PrivateKey)windowsKeyStore.getKey( useralias, null );
-    }
-    catch (KeyStoreException ex) {
-      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    catch (NoSuchAlgorithmException ex) {
-      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    catch (UnrecoverableKeyException ex) {
-      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    
+      password = loadWindowsEncryptedPassword();
+      
     try
     {
-      prikey = getPrivateKey(useralias, "fredfred!".toCharArray() );      
+      prikey = getPrivateKey(useralias, password );
       pubkey = getPublicKey(useralias);
     }
     catch (PGPException ex)
@@ -239,99 +250,204 @@ public class CryptographyManager
       Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
     }
     
-    if ( usewindows )
-      user = new EncryptedCompositeFileUser( useralias, windowsPrivateKey, windowsKeyStore.getProvider(), pubkey );
-    else
-      user = new EncryptedCompositeFileUser( useralias, prikey, pubkey );
+    user = new EncryptedCompositeFileUser( useralias, prikey, pubkey );
     
   }
   
   
-  public void createNewKeys( String alias, boolean win ) throws CryptographyManagerException
+  public void createNewKeys( String alias, char[] password, boolean win ) throws CryptographyManagerException
   {
+    if ( password == null || password.length == 0 )
+    {
+      try
+      {
+        password = EncryptedCompositeFile.generateRandomPassphrase();
+      }
+      catch (NoSuchAlgorithmException ex)
+      {
+        Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+        throw new CryptographyManagerException( "Unable to generate password." );
+      }
+    }
+    
     if ( win )
-      createNewWindowsKeys( alias );
-    else
-      createNewPGPKeys( alias );
+    {
+      storeWindowsEncryptedPassword( password );
+    }
+    
+    createNewPGPKeys( alias, password );
     prefs.setProperty( "qyouti.crypto.useralias", alias);
     prefs.setProperty( "qyouti.crypto.usewindows", win?"yes":"no" );
     prefs.save();
+    useralias = alias;
+    usewindows = win;
+    loadUserKeys();
   }
   
-  public void createNewPGPKeys( String alias ) throws CryptographyManagerException
+    private void exportKeyPair(
+          KeyPair pair,
+          String alias,
+          char[] passPhrase)
+          throws IOException, InvalidKeyException, NoSuchProviderException, SignatureException, PGPException
   {
+
+    PGPDigestCalculator sha1Calc = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
+    PGPKeyPair keyPair = new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, pair, new Date());
+    PGPSecretKey secretKey = new PGPSecretKey(
+            PGPSignature.DEFAULT_CERTIFICATION,
+            keyPair,
+            alias,
+            sha1Calc,
+            null,
+            null,
+            new JcaPGPContentSignerBuilder(
+                    keyPair.getPublicKey().getAlgorithm(),
+                    HashAlgorithmTags.SHA1),
+            new JcePBESecretKeyEncryptorBuilder(
+                    PGPEncryptedData.CAST5,
+                    sha1Calc).setProvider("BC").build(passPhrase));
+    PGPPublicKey key = secretKey.getPublicKey();
+
+    ArrayList<PGPSecretKey> seckeylist = new ArrayList<>();
+    seckeylist.add(secretKey);
+    PGPSecretKeyRing secretKeyRing = new PGPSecretKeyRing(seckeylist);
+
+    ArrayList<PGPPublicKey> keylist = new ArrayList<>();
+    keylist.add(key);
+    PGPPublicKeyRing keyring = new PGPPublicKeyRing(keylist);
+    
+    secringcoll = PGPSecretKeyRingCollection.addSecretKeyRing( secringcoll, secretKeyRing );
+    pubringcoll = PGPPublicKeyRingCollection.addPublicKeyRing( pubringcoll, keyring );
+    
+    FileOutputStream fout;
+    fout = new FileOutputStream( pgpseckeyfile );
+    secringcoll.encode(fout);
+    fout.close();
+    
+    fout = new FileOutputStream( pgppubkeyfile );
+    pubringcoll.encode(fout);
+    fout.close();
   }
+
+
   
-  public void createNewWindowsKeys( String alias ) throws CryptographyManagerException
+  public void createNewPGPKeys( String alias, char[] password ) throws CryptographyManagerException
   {
-    WindowsCertificateGenerator wcg = new WindowsCertificateGenerator();
-    BigInteger serial;
     try
     {
+      KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
+      kpg.initialize(2048);
+      KeyPair kp = kpg.generateKeyPair();
+      
+      exportKeyPair( kp, alias, password );
+    }
+    catch (Exception ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      throw new CryptographyManagerException( "Unable to create key pair." );
+    }
+    
+    
+  }
+  
+  private char[] loadWindowsEncryptedPassword() throws CryptographyManagerException
+  {
+    try
+    {
+      KeyStore keyStore = KeyStore.getInstance("Windows-MY");
+      keyStore.load(null, null);  // Load keystore 
+      PrivateKey k = (PrivateKey)keyStore.getKey("My key pair for guarding passwords", null );    
+
+      FileInputStream fin = new FileInputStream( winpassfile );
+      ByteArrayOutputStream baout = new ByteArrayOutputStream();
+      int b;
+      while ( (b = fin.read()) >=0  )
+        baout.write( b );
+      fin.close();
+      baout.close();
+
+      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+      cipher.init( Cipher.DECRYPT_MODE, k );
+      byte[] decrypt = cipher.doFinal( baout.toByteArray() );
+      System.out.println( "Password is: " + new String( decrypt, "UTF8" ) );
+      return new String( decrypt, "UTF8" ).toCharArray();
+    }
+    catch ( Exception e )
+    {
+      e.printStackTrace();
+    }
+    return null;
+  }
+  
+  private void storeWindowsEncryptedPassword( char[] password ) throws CryptographyManagerException
+  {
+    PublicKey pubkey;
+    
+    try
+    {
+      KeyStore keyStore = KeyStore.getInstance("Windows-MY");
+      keyStore.load(null, null);  // Load keystore 
+      Certificate c = keyStore.getCertificate( "My key pair for guarding passwords" );
+      if ( c == null )
+      {
+        if ( !makeWindowsKeyPair( "My key pair for guarding passwords" ) )
+          throw new CryptographyManagerException( "Unable to create Windows cryptography certificate." );
+        keyStore.load(null, null);  // Load keystore 
+        c = keyStore.getCertificate( "My key pair for guarding passwords" );
+        if ( c == null )
+          throw new CryptographyManagerException( "Unable to get Windows cryptography certificate." );
+      }
+      pubkey = c.getPublicKey();
+    }
+    catch ( Exception e )
+    {
+      e.printStackTrace();
+      throw new CryptographyManagerException( "Technical problem trying to get Windows cryptography certificate." );
+    }
+    
+    try
+    {
+      FileOutputStream fout = new FileOutputStream( winpassfile );
+      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+      cipher.init( Cipher.ENCRYPT_MODE, pubkey );
+      byte[] crypt = cipher.doFinal( new String(password).getBytes() );
+      FileOutputStream out = new FileOutputStream( winpassfile );
+      out.write(crypt);
+      out.close();
+    }
+    catch ( Exception ex )
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      throw new CryptographyManagerException( "Technical problem trying to save encrypted password." );
+    }
+  }
+  
+  
+  public static boolean makeWindowsKeyPair( String alias )
+  {
+    try
+    {
+      PublicKey pubk;
+      BigInteger serial;
+      WindowsCertificateGenerator wcg = new WindowsCertificateGenerator();
       
       serial = wcg.generateSelfSignedCertificate(
               "CN=" + alias,
               "qyouti-" + UUID.randomUUID().toString(),
-              WindowsCertificateGenerator.MS_ENH_RSA_AES_PROV,
-              WindowsCertificateGenerator.PROV_RSA_AES,
+              MS_ENH_RSA_AES_PROV,
+              PROV_RSA_AES,
               true,
               2048,
-              WindowsCertificateGenerator.CRYPT_USER_PROTECTED
+              CRYPT_USER_PROTECTED
       );
-      if (serial == null)
-      {
-        System.out.println("Failed to make certificate.");
-        return;
-      }
-      else
-      {
-        System.out.println("Serial number = " + serial.toString(16) );
-        System.out.println("As long = " + Long.toHexString( serial.longValue() ) );        
-      }
-
-
-      // convert the public to PGPPublicKey 
-      RSAPublicKey winpubkey = (RSAPublicKey)wcg.getPublickey();
-      RSAPublicBCPGKey rsapubkey = new RSAPublicBCPGKey( winpubkey.getModulus(), winpubkey.getPublicExponent());
-      PublicKeyPacket pubpacket = new PublicKeyPacket( PublicKeyPacket.RSA_GENERAL, new Date(System.currentTimeMillis()), rsapubkey );
-      PGPPublicKey pgppublickey = new PGPPublicKey( pubpacket, new BcKeyFingerprintCalculator() );
-      
-      System.out.println(" Converted key id = " + Long.toHexString(pgppublickey.getKeyID()) );
-
-      // wrap the JCA private key so it can be used in bouncy castle
-      // There is a problem with passing in a keyid derived from the Windows CAPI
-      // serial number. The public key has a 'natural' id which is calculated from
-      // its fingerprint. Use that.
-      JcaPGPPrivateKey prik = new JcaPGPPrivateKey( pgppublickey.getKeyID(), wcg.getPrivatekey() );
-      
-      
-      //BcPGPKeyConverter conv = new BcPGPKeyConverter();
-      //PGPPublicKey pgppublickey = conv.getPGPPublicKey(PublicKeyAlgorithmTags.RSA_GENERAL, null,  );
-              
-      // Add ID and sign it with own (wrapped JCA) private key.
-      JcaPGPContentSignerBuilder signerbuilder = new JcaPGPContentSignerBuilder( pgppublickey.getAlgorithm(), HashAlgorithmTags.SHA1 );
-      PGPSignatureGenerator siggen = new PGPSignatureGenerator( signerbuilder );
-      siggen.init(PGPSignature.DEFAULT_CERTIFICATION, prik );
-      PGPSignature certification = siggen.generateCertification( alias, pgppublickey );      
-      PGPPublicKey signedpgppublickey = PGPPublicKey.addCertification( pgppublickey, alias, certification );
-              
-      // Put the signed public key in a key ring
-      ArrayList<PGPPublicKey> keylist = new ArrayList<>();
-      keylist.add(signedpgppublickey);
-      PGPPublicKeyRing keyring = new PGPPublicKeyRing(keylist);
-
-      pubringcoll = PGPPublicKeyRingCollection.addPublicKeyRing( pubringcoll, keyring );
-      
-      FileOutputStream fout = new FileOutputStream( pgppubkeyfile );
-      pubringcoll.encode(fout);
-      fout.close();      
+      if (serial != null)
+        return true;
     }
-    catch (Exception e)
+    catch ( Exception e )
     {
-      e.printStackTrace(System.out);
-      throw new CryptographyManagerException( "Unable" );
+      e.printStackTrace();
     }
-    
-    loadUserKeys();
-  }  
+    return false;
+  }
+  
 }
