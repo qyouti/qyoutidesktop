@@ -12,6 +12,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -60,6 +63,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPPrivateKey;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
+import org.bouncycastle.util.Arrays;
 import org.qyouti.QyoutiPreferences;
 import org.qyouti.compositefile.EncryptedCompositeFile;
 import org.qyouti.compositefile.EncryptedCompositeFileUser;
@@ -75,6 +79,8 @@ import static org.qyouti.winselfcert.WindowsCertificateGenerator.PROV_RSA_AES;
  */
 public class CryptographyManager
 {
+  private static final String WINDOWS_CERTIFICATE_ALIAS = "Qyouti Certificate for Protecting Private Keys";
+  
   QyoutiPreferences prefs;
   String useralias;
   char[] password;
@@ -108,6 +114,18 @@ public class CryptographyManager
   
   public void setPassword( char[] password )
   {
+    if ( usewindows )
+    {
+      try
+      {
+        password = loadWindowsEncryptedPassword();
+      }
+      catch (CryptographyManagerException ex)
+      {
+        Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+        password = null;
+      }
+    }
     this.password = password;
   }
   
@@ -121,7 +139,7 @@ public class CryptographyManager
     return useralias;
   }
 
-  public boolean isKeyStoreWindows()
+  public boolean isPrivateKeyWindowsProtected()
   {
     return usewindows;
   }
@@ -131,6 +149,12 @@ public class CryptographyManager
   public EncryptedCompositeFileUser getUser()
   {
     return user;
+  }
+  
+  public boolean isUserReady()
+  {
+    if ( user == null ) return false;
+    return user.getPgpprivatekey() != null;
   }
   
   public void init() throws CryptographyManagerException
@@ -199,9 +223,9 @@ public class CryptographyManager
     }
     catch ( Exception e )
     {
-    }    
+    }
     
-    loadUserKeys();
+    loadUser();
   }
   
   public PGPPublicKey getPublicKey( String name ) throws PGPException
@@ -217,7 +241,7 @@ public class CryptographyManager
     return keyring.getPublicKey();
   }
   
-  public PGPPrivateKey getPrivateKey( String name, char[] passphrase ) throws PGPException
+  private PGPPrivateKey getPrivateKey( String name, char[] passphrase ) throws PGPException
   {
     if ( secringcoll == null ) return null;
     Iterator<PGPSecretKeyRing> it = secringcoll.getKeyRings(name);
@@ -231,27 +255,60 @@ public class CryptographyManager
     return keyring.getSecretKey().extractPrivateKey(dec);
   }
   
-  
-  public void loadUserKeys() throws CryptographyManagerException
+  public void unloadPrivateKey()
   {
-    if ( useralias == null )
-      return;
-
-    if ( usewindows )
-      password = loadWindowsEncryptedPassword();
-      
+    prikey = null;
+    user = new EncryptedCompositeFileUser( useralias, null, pubkey );
+    password = null;
+  }
+  
+  public boolean loadPrivateKey()
+  {
+    prikey = null;
+    if ( user == null || useralias == null )
+      return false;
+    
     try
     {
+      if ( password == null )
+        return false;
+      
       prikey = getPrivateKey(useralias, password );
-      pubkey = getPublicKey(useralias);
+      user = new EncryptedCompositeFileUser( useralias, prikey, pubkey );
     }
-    catch (PGPException ex)
+    catch (Exception ex)
     {
       Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      prikey = null;
+      return false;
+    }
+    return true;
+  }
+  
+  public boolean loadUser()
+  {
+    prikey = null;
+    pubkey = null;
+    user = null;
+      
+    if ( useralias == null )
+      return false;
+
+    try
+    {
+      pubkey = getPublicKey(useralias);
+      user = new EncryptedCompositeFileUser( useralias, null, pubkey );
+    }
+    catch (Exception ex)
+    {
+      prikey = null;
+      pubkey = null;
+      user = null;
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
     }
     
-    user = new EncryptedCompositeFileUser( useralias, prikey, pubkey );
-    
+    return true;
   }
   
   
@@ -281,10 +338,63 @@ public class CryptographyManager
     prefs.save();
     useralias = alias;
     usewindows = win;
-    loadUserKeys();
+    loadUser();
+  }
+
+  private void saveKeyRingCollections() throws IOException
+  {
+    FileOutputStream fout;
+    fout = new FileOutputStream( pgpseckeyfile );
+    secringcoll.encode(fout);
+    fout.close();
+    
+    fout = new FileOutputStream( pgppubkeyfile );
+    pubringcoll.encode(fout);
+    fout.close();    
   }
   
-    private void exportKeyPair(
+  public boolean deleteKeyPair()
+  {
+    try
+    {
+      // get list of all secret key rings with right alias
+      Iterator<PGPSecretKeyRing> it = secringcoll.getKeyRings( useralias );
+      PGPSecretKeyRing secretkeyring;
+      if ( !it.hasNext() )
+        return false;
+      secretkeyring = it.next();
+      if ( it.hasNext() )
+        return false;
+      
+      Iterator<PGPPublicKeyRing> pubit = pubringcoll.getKeyRings( useralias );
+      PGPPublicKeyRing publickeyring;
+      if ( !pubit.hasNext() )
+        return false;
+      publickeyring = pubit.next();
+      if ( pubit.hasNext() )
+        return false;
+      
+      secringcoll = PGPSecretKeyRingCollection.removeSecretKeyRing( secringcoll, secretkeyring );
+      pubringcoll = PGPPublicKeyRingCollection.removePublicKeyRing( pubringcoll, publickeyring );
+      useralias = null;
+      user = null;
+      prikey = null;
+      pubkey = null;
+      password = null;
+      saveKeyRingCollections();
+      prefs.remove( "qyouti.crypto.useralias" );
+      prefs.remove( "qyouti.crypto.usewindows" );
+      prefs.save();
+      return true;
+    }
+    catch (Exception ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
+    }
+  }
+  
+  private void exportKeyPair(
           KeyPair pair,
           String alias,
           char[] passPhrase)
@@ -319,14 +429,7 @@ public class CryptographyManager
     secringcoll = PGPSecretKeyRingCollection.addSecretKeyRing( secringcoll, secretKeyRing );
     pubringcoll = PGPPublicKeyRingCollection.addPublicKeyRing( pubringcoll, keyring );
     
-    FileOutputStream fout;
-    fout = new FileOutputStream( pgpseckeyfile );
-    secringcoll.encode(fout);
-    fout.close();
-    
-    fout = new FileOutputStream( pgppubkeyfile );
-    pubringcoll.encode(fout);
-    fout.close();
+    saveKeyRingCollections();
   }
 
 
@@ -356,7 +459,7 @@ public class CryptographyManager
     {
       KeyStore keyStore = KeyStore.getInstance("Windows-MY");
       keyStore.load(null, null);  // Load keystore 
-      PrivateKey k = (PrivateKey)keyStore.getKey("My key pair for guarding passwords", null );    
+      PrivateKey k = (PrivateKey)keyStore.getKey(WINDOWS_CERTIFICATE_ALIAS, null );    
 
       FileInputStream fin = new FileInputStream( winpassfile );
       ByteArrayOutputStream baout = new ByteArrayOutputStream();
@@ -369,7 +472,6 @@ public class CryptographyManager
       Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
       cipher.init( Cipher.DECRYPT_MODE, k );
       byte[] decrypt = cipher.doFinal( baout.toByteArray() );
-      System.out.println( "Password is: " + new String( decrypt, "UTF8" ) );
       return new String( decrypt, "UTF8" ).toCharArray();
     }
     catch ( Exception e )
@@ -387,13 +489,13 @@ public class CryptographyManager
     {
       KeyStore keyStore = KeyStore.getInstance("Windows-MY");
       keyStore.load(null, null);  // Load keystore 
-      Certificate c = keyStore.getCertificate( "My key pair for guarding passwords" );
+      Certificate c = keyStore.getCertificate( WINDOWS_CERTIFICATE_ALIAS );
       if ( c == null )
       {
-        if ( !makeWindowsKeyPair( "My key pair for guarding passwords" ) )
+        if ( !makeWindowsKeyPair( WINDOWS_CERTIFICATE_ALIAS ) )
           throw new CryptographyManagerException( "Unable to create Windows cryptography certificate." );
         keyStore.load(null, null);  // Load keystore 
-        c = keyStore.getCertificate( "My key pair for guarding passwords" );
+        c = keyStore.getCertificate( WINDOWS_CERTIFICATE_ALIAS );
         if ( c == null )
           throw new CryptographyManagerException( "Unable to get Windows cryptography certificate." );
       }
@@ -450,4 +552,39 @@ public class CryptographyManager
     return false;
   }
   
+  public static String prettyPrintFingerprint( byte[] raw )
+  {
+    StringBuilder sb = new StringBuilder();
+    int chunk = 2;
+    int extra = raw.length % chunk;
+    byte[] padded;
+    ByteBuffer bb;
+    if ( extra != 0 )
+    {
+      padded = new byte[raw.length + chunk-extra];
+      bb = ByteBuffer.wrap( padded );
+      byte[] more = new byte[chunk-extra];
+      Arrays.clear(more);
+      bb.put( more );
+      bb.put( raw );
+    }
+    else
+      bb = ByteBuffer.wrap( raw );
+    
+    bb.rewind();
+    ShortBuffer ib = bb.asShortBuffer();
+    
+    for ( int i=0; ib.hasRemaining(); i++ )
+    {
+      if ( i>0 )
+        sb.append( " : " );
+      String part = Integer.toHexString( ((int)ib.get()) & 0xffff ).toUpperCase();
+      for ( int j=part.length(); j<4; j++ )
+        part = "0" + part;
+      sb.append( part );
+    }
+    
+    return sb.toString();
+  }
+    
 }

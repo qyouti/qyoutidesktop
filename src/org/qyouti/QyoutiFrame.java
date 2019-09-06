@@ -572,6 +572,7 @@ public class QyoutiFrame
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
     identitymenuitem = new javax.swing.JMenuItem();
+    sep1d = new javax.swing.JPopupMenu.Separator();
     newfoldermenuitem = new javax.swing.JMenuItem();
     selectfoldermenuitem = new javax.swing.JMenuItem();
     sep1c = new javax.swing.JPopupMenu.Separator();
@@ -1163,7 +1164,7 @@ public class QyoutiFrame
 
     filemenu.setText("File");
 
-    identitymenuitem.setText("Identity...");
+    identitymenuitem.setText("Keys...");
     identitymenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1172,11 +1173,26 @@ public class QyoutiFrame
       }
     });
     filemenu.add(identitymenuitem);
+    filemenu.add(sep1d);
 
     newfoldermenuitem.setText("New Exam Store Folder...");
+    newfoldermenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        newfoldermenuitemActionPerformed(evt);
+      }
+    });
     filemenu.add(newfoldermenuitem);
 
     selectfoldermenuitem.setText("Select Exam Store Folder...");
+    selectfoldermenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        selectfoldermenuitemActionPerformed(evt);
+      }
+    });
     filemenu.add(selectfoldermenuitem);
     filemenu.add(sep1c);
 
@@ -1569,9 +1585,9 @@ public class QyoutiFrame
 
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
   {//GEN-HEADEREND:event_openmenuitemActionPerformed
-    if ( cryptomanager.getUser() == null )
+    if ( !cryptomanager.isUserReady() )
     {
-      JOptionPane.showMessageDialog( this, "You need to create an identity before you can open exams." );
+      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
       return;
     }
     
@@ -1616,9 +1632,9 @@ public class QyoutiFrame
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
   {//GEN-HEADEREND:event_newmenuitemActionPerformed
-    if ( cryptomanager.getUser() == null )
+    if ( !cryptomanager.isUserReady() )
     {
-      JOptionPane.showMessageDialog( this, "You need to create an identity before you can create exams." );
+      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
       return;
     }
     
@@ -2441,6 +2457,26 @@ public class QyoutiFrame
     identitydialog.setVisible( true );
   }//GEN-LAST:event_identitymenuitemActionPerformed
 
+  private void newfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newfoldermenuitemActionPerformed
+  {//GEN-HEADEREND:event_newfoldermenuitemActionPerformed
+    if ( !cryptomanager.isUserReady() )
+    {
+      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      return;
+    }
+
+  }//GEN-LAST:event_newfoldermenuitemActionPerformed
+
+  private void selectfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_selectfoldermenuitemActionPerformed
+  {//GEN-HEADEREND:event_selectfoldermenuitemActionPerformed
+    if ( !cryptomanager.isUserReady() )
+    {
+      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      return;
+    }
+
+  }//GEN-LAST:event_selectfoldermenuitemActionPerformed
+
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -2751,6 +2787,7 @@ public class QyoutiFrame
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep1c;
+  private javax.swing.JPopupMenu.Separator sep1d;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
   private javax.swing.JCheckBox serifcheckbox;

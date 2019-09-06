@@ -46,12 +46,18 @@
                       <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="useralias" max="32767" attributes="0"/>
                       <Component id="fingerprint" max="32767" attributes="0"/>
-                      <Component id="passwordtype" alignment="0" pref="425" max="32767" attributes="0"/>
+                      <Component id="passwordtype" alignment="0" pref="402" max="32767" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <Component id="opentogglebutton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      </Group>
+                      <Component id="privatekeyopenlabel" alignment="0" pref="402" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -75,7 +81,14 @@
                       <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="passwordtype" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="privatekeyopenlabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <Component id="opentogglebutton" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace pref="44" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -83,7 +96,7 @@
       <SubComponents>
         <Component class="javax.swing.JLabel" name="jLabel4">
           <Properties>
-            <Property name="text" type="java.lang.String" value="My Key Name:"/>
+            <Property name="text" type="java.lang.String" value="My Key Pair Name:"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="useralias">
@@ -110,6 +123,24 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="..."/>
           </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Is Private Key Open:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="privatekeyopenlabel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="..."/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JToggleButton" name="opentogglebutton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Open Private Key"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="opentogglebuttonActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
@@ -140,7 +171,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="closebutton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Close"/>
+            <Property name="text" type="java.lang.String" value="Dismiss"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="closebuttonActionPerformed"/>
