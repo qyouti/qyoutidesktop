@@ -26,8 +26,10 @@ import org.apache.fop.fonts.*;
 import org.apache.fop.svg.*;
 import org.apache.fop.svg.font.*;
 import org.qyouti.barcode.*;
+import org.qyouti.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
+import org.qyouti.crypto.PasswordProvider;
 import org.qyouti.data.*;
 import org.qyouti.fonts.*;
 import org.qyouti.print.*;
@@ -44,14 +46,15 @@ import org.w3c.dom.*;
 public class QyoutiFrame
         extends javax.swing.JFrame
         implements WindowListener, ExaminationDataStatusListener,
-                   ScanTaskListener
+                   ScanTaskListener, PasswordProvider
 {
 
   QyoutiPreferences preferences;
   QyoutiFontManager fontmanager;
 
   CryptographyManager cryptomanager;
-  
+
+  ExamStoreConfiguration examstore = null;
   File examfolder = null;
   ExaminationData exam;
   ExaminationCatalogue examcatalogue;
@@ -115,7 +118,7 @@ public class QyoutiFrame
     }
 
 
-    cryptomanager = new CryptographyManager( homefolder, preferences );
+    cryptomanager = new CryptographyManager( homefolder, preferences, this );
     try
     {
       cryptomanager.init();
@@ -482,6 +485,18 @@ public class QyoutiFrame
     centralpanel = new javax.swing.JPanel();
     noexamloadedpanel = new javax.swing.JPanel();
     noexamloadedlabel = new javax.swing.JLabel();
+    storetabs = new javax.swing.JTabbedPane();
+    storetab = new javax.swing.JPanel();
+    storeleftpanel = new javax.swing.JPanel();
+    jScrollPane8 = new javax.swing.JScrollPane();
+    publicintro = new javax.swing.JTextArea();
+    jScrollPane9 = new javax.swing.JScrollPane();
+    publicintroverification = new javax.swing.JTable();
+    storerightpanel = new javax.swing.JPanel();
+    jSplitPane5 = new javax.swing.JSplitPane();
+    jPanel14 = new javax.swing.JPanel();
+    jPanel15 = new javax.swing.JPanel();
+    examtab = new javax.swing.JPanel();
     tabs = new javax.swing.JTabbedPane();
     qtab = new javax.swing.JPanel();
     jSplitPane3 = new javax.swing.JSplitPane();
@@ -624,7 +639,54 @@ public class QyoutiFrame
     noexamloadedlabel.setText("No active exam/survey");
     noexamloadedpanel.add(noexamloadedlabel);
 
-    centralpanel.add(noexamloadedpanel, "card3");
+    centralpanel.add(noexamloadedpanel, "blank");
+
+    storetab.setLayout(new java.awt.GridLayout(1, 2));
+
+    storeleftpanel.setLayout(new java.awt.BorderLayout());
+
+    publicintro.setColumns(20);
+    publicintro.setRows(5);
+    jScrollPane8.setViewportView(publicintro);
+
+    storeleftpanel.add(jScrollPane8, java.awt.BorderLayout.CENTER);
+
+    publicintroverification.setModel(new javax.swing.table.DefaultTableModel(
+      new Object [][]
+      {
+        {null, null, null, null},
+        {null, null, null, null},
+        {null, null, null, null},
+        {null, null, null, null}
+      },
+      new String []
+      {
+        "Title 1", "Title 2", "Title 3", "Title 4"
+      }
+    ));
+    jScrollPane9.setViewportView(publicintroverification);
+
+    storeleftpanel.add(jScrollPane9, java.awt.BorderLayout.SOUTH);
+
+    storetab.add(storeleftpanel);
+
+    storerightpanel.setLayout(new java.awt.BorderLayout());
+
+    jSplitPane5.setDividerLocation(100);
+    jSplitPane5.setDividerSize(8);
+    jSplitPane5.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+    jSplitPane5.setResizeWeight(0.5);
+    jSplitPane5.setLeftComponent(jPanel14);
+    jSplitPane5.setRightComponent(jPanel15);
+
+    storerightpanel.add(jSplitPane5, java.awt.BorderLayout.CENTER);
+
+    storetab.add(storerightpanel);
+
+    storetabs.addTab("Examination Store", storetab);
+    storetabs.addTab("Examinations", examtab);
+
+    centralpanel.add(storetabs, "store");
 
     tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
@@ -1140,7 +1202,7 @@ public class QyoutiFrame
 
     tabs.addTab("Review", rtab);
 
-    centralpanel.add(tabs, "card2");
+    centralpanel.add(tabs, "exam");
 
     getContentPane().add(centralpanel, java.awt.BorderLayout.CENTER);
 
@@ -1585,9 +1647,10 @@ public class QyoutiFrame
 
   private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
   {//GEN-HEADEREND:event_openmenuitemActionPerformed
-    if ( !cryptomanager.isUserReady() )
+    EncryptedCompositeFileUser user = cryptomanager.getUser();    
+    if ( user == null )
     {
-      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
       return;
     }
     
@@ -1632,12 +1695,13 @@ public class QyoutiFrame
 
   private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
   {//GEN-HEADEREND:event_newmenuitemActionPerformed
-    if ( !cryptomanager.isUserReady() )
+    EncryptedCompositeFileUser user = cryptomanager.getUser();    
+    if ( user == null )
     {
-      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
       return;
     }
-    
+
     if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
     {
       return;
@@ -2459,22 +2523,72 @@ public class QyoutiFrame
 
   private void newfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newfoldermenuitemActionPerformed
   {//GEN-HEADEREND:event_newfoldermenuitemActionPerformed
-    if ( !cryptomanager.isUserReady() )
+    EncryptedCompositeFileUser user = cryptomanager.getUser();    
+    if ( user == null )
     {
-      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
       return;
     }
+
+    JFileChooser fc = new JFileChooser();
+    fc.setAccessory( new NewExamStoreAdvicePanel() );
+    fc.setDialogTitle( "Select folder for new exam store." );
+    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+    int returnVal = fc.showOpenDialog(this);
+    File folder;
+    if (returnVal != JFileChooser.APPROVE_OPTION)
+      return;
+    
+    folder = fc.getSelectedFile();
+    File configfile = new File( folder, "qyoutistore.tar");
+    if ( !folder.isDirectory() )
+    {
+      JOptionPane.showMessageDialog( this, "You selected a file.  \nYou need to select a folder (directory) to create a new exam store." );
+      return;
+    }
+    if ( configfile.exists() )
+    {
+      JOptionPane.showMessageDialog( this, "The selected folder already contains a Qyouti store configuration file." );
+      return;
+    }
+    
+    examstore = new ExamStoreConfiguration( cryptomanager, configfile );
+    examstore.newConfig();
+    ((CardLayout)centralpanel.getLayout()).show( centralpanel, "store" );
 
   }//GEN-LAST:event_newfoldermenuitemActionPerformed
 
   private void selectfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_selectfoldermenuitemActionPerformed
   {//GEN-HEADEREND:event_selectfoldermenuitemActionPerformed
-    if ( !cryptomanager.isUserReady() )
+    EncryptedCompositeFileUser user = cryptomanager.getUser();    
+    if ( user == null )
     {
-      JOptionPane.showMessageDialog( this, "You need to open your private key before this action." );
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
       return;
     }
 
+    JFileChooser fc = new JFileChooser();
+    fc.setAccessory( new OpenExamStoreAdvicePanel() );
+    fc.setDialogTitle( "Select Qyouti store configuration file." );
+    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+    int returnVal = fc.showOpenDialog(this);
+    File file;
+    if (returnVal != JFileChooser.APPROVE_OPTION)
+      return;
+    
+    file = fc.getSelectedFile();
+    if ( !file.isFile() || !"qyoutistore.tar".equals(file.getName()) )
+    {
+      JOptionPane.showMessageDialog( this, "The selection you made is not a file name qyoutistore.tar." );
+      return;
+    }
+
+    examstore = new ExamStoreConfiguration( cryptomanager, file );
+    examstore.loadConfig();
+    publicintro.setText( examstore.getPublicIntro() );
+    publicintroverification.setModel( examstore.getPublicIntroVerification() );
+    storeleftpanel.doLayout();
+    ((CardLayout)centralpanel.getLayout()).show( centralpanel, "store" );
   }//GEN-LAST:event_selectfoldermenuitemActionPerformed
 
   /**
@@ -2684,6 +2798,7 @@ public class QyoutiFrame
   private javax.swing.JMenuItem editallquestionsmenuitem;
   private javax.swing.JMenuItem editquestionmenuitem;
   private javax.swing.JLabel errorlabel;
+  private javax.swing.JPanel examtab;
   private javax.swing.JMenuItem exitmenuitem;
   private javax.swing.JMenuItem exprepliesmenuitem;
   private javax.swing.JMenuItem expscoresmenuitem;
@@ -2709,6 +2824,8 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel11;
   private javax.swing.JPanel jPanel12;
   private javax.swing.JPanel jPanel13;
+  private javax.swing.JPanel jPanel14;
+  private javax.swing.JPanel jPanel15;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
@@ -2724,12 +2841,15 @@ public class QyoutiFrame
   private javax.swing.JScrollPane jScrollPane5;
   private javax.swing.JScrollPane jScrollPane6;
   private javax.swing.JScrollPane jScrollPane7;
+  private javax.swing.JScrollPane jScrollPane8;
+  private javax.swing.JScrollPane jScrollPane9;
   private javax.swing.JPopupMenu.Separator jSeparator1;
   private javax.swing.JPopupMenu.Separator jSeparator2;
   private javax.swing.JSplitPane jSplitPane1;
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JSplitPane jSplitPane4;
+  private javax.swing.JSplitPane jSplitPane5;
   private javax.swing.JTabbedPane jTabbedPane1;
   private javax.swing.JTextPane jTextPane1;
   private javax.swing.JMenuBar menubar;
@@ -2758,6 +2878,8 @@ public class QyoutiFrame
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
   private javax.swing.JPanel ptab;
+  private javax.swing.JTextArea publicintro;
+  private javax.swing.JTable publicintroverification;
   private javax.swing.JScrollPane qprevscrollpane;
   private javax.swing.JTable qrevlefttable;
   private javax.swing.JPanel qrpanelouter;
@@ -2799,6 +2921,10 @@ public class QyoutiFrame
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JPanel stab;
   private javax.swing.JPanel statuspanel;
+  private javax.swing.JPanel storeleftpanel;
+  private javax.swing.JPanel storerightpanel;
+  private javax.swing.JPanel storetab;
+  private javax.swing.JTabbedPane storetabs;
   private javax.swing.JTabbedPane tabs;
   private javax.swing.JMenuItem viewscanmenuitem;
   // End of variables declaration//GEN-END:variables
@@ -2927,6 +3053,29 @@ public class QyoutiFrame
       ident = ( row < 0 )?null:exam.qdefs.getValueAt( row, 0 ).toString();
       exam.setReviewQuestionIdent( ident );
     }  
+  }
+
+  @Override
+  public char[] getUserSuppliedPassword()
+  {
+    JPanel panel = new JPanel();
+    JLabel label = new JLabel("Enter the password for your private key:");
+    JPasswordField pass = new JPasswordField();
+    panel.setLayout(new FlowLayout() );
+    pass.setMinimumSize( new Dimension(200,30) );
+    pass.setPreferredSize( pass.getMinimumSize() );
+    pass.setSize( pass.getMinimumSize() );
+    panel.add(label);
+    panel.add(pass);
+    panel.doLayout();
+    String[] options = new String[]{"O.K.", "Cancel"};
+    int option = JOptionPane.showOptionDialog(null, panel, "Enter Password",
+                             JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
+                             null, options, options[1]);
+    if(option == 0) // pressing OK button
+      return pass.getPassword();
+    return null;
+    
   }
 
   

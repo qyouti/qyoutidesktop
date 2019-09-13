@@ -5,12 +5,18 @@
  */
 package org.qyouti;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JLabel;
@@ -18,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.util.Arrays;
 import org.qyouti.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
@@ -32,6 +39,16 @@ public class IdentityDialog
 {
   CryptographyManager cryptoman;
   EncryptedCompositeFileUser user;
+
+  private static final DateFormat df = new SimpleDateFormat( "HH:mm dd/MMM/yyyy" );
+
+  class Entry
+  {
+    PGPSecretKey key;
+    Date creationdate;
+  }
+
+  private ArrayList<Entry> entries = new ArrayList<>();
   
   /**
    * Creates new form IdentityDialog
@@ -46,37 +63,84 @@ public class IdentityDialog
     updateFields();
   }
 
-
-  public final void updateFields()
+  private void addEntry( PGPSecretKey key )
   {
-    user = cryptoman.getUser();
-    if ( user != null )
-    {
-      System.out.println( new BigInteger( 1, user.getPgppublickey().getFingerprint() ).toString( 16 ) );
-    
-      useralias.setText( cryptoman.getUserAlias() );
-      fingerprint.setText( CryptographyManager.prettyPrintFingerprint( user.getPgppublickey().getFingerprint() ) );
-      passwordtype.setText( cryptoman.isPrivateKeyWindowsProtected()?"Windows cryptography - no password.":"Password must be entered every time Qyouti is started." );
-      privatekeyopenlabel.setText( (user.getPgpprivatekey()==null)?"No":"Yes" );
-      createbutton.setEnabled( false );
-      deletebutton.setEnabled( true );
-      opentogglebutton.setEnabled( true );
-      opentogglebutton.setSelected( user.getPgpprivatekey() != null );
-      opentogglebutton.setText( (user.getPgpprivatekey() != null)?"Close Private Key":"Open Private Key" );
-    }    
-    else
-    {
-      useralias.setText("---");
-      fingerprint.setText("---");
-      passwordtype.setText("---");
-      privatekeyopenlabel.setText("---");
-      createbutton.setEnabled( true );
-      deletebutton.setEnabled( false );
-      opentogglebutton.setEnabled( false );
-      opentogglebutton.setSelected( false );
-      opentogglebutton.setText( "Open Private Key" );
-    }
+    Entry entry = new Entry();
+    entry.key = key;
+    entry.creationdate = CryptographyManager.getSecretKeyCreationDate(key);
+    entries.add(entry);
   }
+
+  private void sortEntries()
+  {
+    entries.sort( new Comparator<Entry>() {
+      @Override
+      public int compare(Entry o1, Entry o2)
+      {
+        long da = 0L;
+        long db = 0L;
+        if ( o1.creationdate != null )
+          da = o1.creationdate.getTime();
+        if ( o2.creationdate != null )
+          db = o2.creationdate.getTime();
+        if ( da < db ) return -1;
+        if ( da > db ) return 1;
+        return 0;
+      }
+    } );
+  }
+  
+  private Entry getSelectedEntry()
+  {
+    Component c = tabbedpane.getSelectedComponent();
+    if ( c == null || !(c instanceof SecretKeyPanel) )
+      return null;
+    return entries.get( tabbedpane.getSelectedIndex() );
+  }
+  
+  private final void updateFields()
+  {
+    entries.clear();
+    PGPSecretKey[] seckeys = cryptoman.getSecretKeys();
+    for ( PGPSecretKey k : seckeys )
+      addEntry( k );
+    sortEntries();
+    PGPSecretKey preferredseckey = cryptoman.getPreferredSecretKey();
+    
+    tabbedpane.removeAll();
+    createbutton.setEnabled( true );
+    deletebutton.setEnabled( false );
+    selectbutton.setEnabled( false );
+    
+    if ( seckeys.length == 0 )
+    {
+      JPanel blank = new JPanel();
+      blank.setLayout( new FlowLayout() );
+      blank.add( new JLabel( "No key pairs in your key store." ) );
+      tabbedpane.add( "Empty", blank ); 
+      return;
+    }
+
+    int selected = -1;
+    for ( int i=0; i<entries.size(); i++ )
+    {
+      Entry e = entries.get(i);
+      String epw = cryptoman.getEncryptedWindowsPassword( e.key );
+      SecretKeyPanel skpanel = new SecretKeyPanel( e.key, epw != null );
+      tabbedpane.add( (e.creationdate==null)?"Unknown Date":df.format(e.creationdate), skpanel );
+      if ( e.key == preferredseckey )
+      {
+        selected = i;
+        tabbedpane.setTitleAt( i, "Preferred" );
+      }
+    }
+
+    deletebutton.setEnabled( true );
+    selectbutton.setEnabled( true );
+    
+    tabbedpane.setSelectedIndex( (selected>0)?selected:0 );
+  }
+
   
   /**
    * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The
@@ -88,95 +152,40 @@ public class IdentityDialog
   {
 
     jLabel2 = new javax.swing.JLabel();
+    jPanel3 = new javax.swing.JPanel();
+    jTextArea1 = new javax.swing.JTextArea();
     jPanel1 = new javax.swing.JPanel();
-    jLabel4 = new javax.swing.JLabel();
-    useralias = new javax.swing.JLabel();
-    jLabel6 = new javax.swing.JLabel();
-    fingerprint = new javax.swing.JLabel();
-    jLabel1 = new javax.swing.JLabel();
-    passwordtype = new javax.swing.JLabel();
-    jLabel3 = new javax.swing.JLabel();
-    privatekeyopenlabel = new javax.swing.JLabel();
-    opentogglebutton = new javax.swing.JToggleButton();
+    tabbedpane = new javax.swing.JTabbedPane();
     jPanel2 = new javax.swing.JPanel();
     createbutton = new javax.swing.JButton();
     deletebutton = new javax.swing.JButton();
+    selectbutton = new javax.swing.JButton();
     closebutton = new javax.swing.JButton();
 
     jLabel2.setText("jLabel2");
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-    jLabel4.setText("My Key Pair Name:");
+    jPanel3.setLayout(new java.awt.BorderLayout());
 
-    useralias.setText("...");
+    jTextArea1.setEditable(false);
+    jTextArea1.setColumns(20);
+    jTextArea1.setLineWrap(true);
+    jTextArea1.setRows(2);
+    jTextArea1.setText("Select the key pair to use for encrypting/decrypting data.");
+    jTextArea1.setWrapStyleWord(true);
+    jTextArea1.setOpaque(false);
+    jPanel3.add(jTextArea1, java.awt.BorderLayout.PAGE_START);
 
-    jLabel6.setText("Key Fingerprint:");
+    getContentPane().add(jPanel3, java.awt.BorderLayout.NORTH);
 
-    fingerprint.setText("...");
+    jPanel1.setMinimumSize(new java.awt.Dimension(650, 400));
+    jPanel1.setPreferredSize(new java.awt.Dimension(650, 400));
+    jPanel1.setLayout(new java.awt.BorderLayout());
 
-    jLabel1.setText("Protection:");
-
-    passwordtype.setText("...");
-
-    jLabel3.setText("Is Private Key Open:");
-
-    privatekeyopenlabel.setText("...");
-
-    opentogglebutton.setText("Open Private Key");
-    opentogglebutton.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        opentogglebuttonActionPerformed(evt);
-      }
-    });
-
-    javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-    jPanel1.setLayout(jPanel1Layout);
-    jPanel1Layout.setHorizontalGroup(
-      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jPanel1Layout.createSequentialGroup()
-        .addGap(60, 60, 60)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-          .addComponent(jLabel1)
-          .addComponent(jLabel6)
-          .addComponent(jLabel4)
-          .addComponent(jLabel3))
-        .addGap(18, 18, 18)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(useralias, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(fingerprint, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(passwordtype, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
-          .addGroup(jPanel1Layout.createSequentialGroup()
-            .addComponent(opentogglebutton)
-            .addGap(0, 0, Short.MAX_VALUE))
-          .addComponent(privatekeyopenlabel, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE))
-        .addContainerGap())
-    );
-    jPanel1Layout.setVerticalGroup(
-      jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(jPanel1Layout.createSequentialGroup()
-        .addGap(27, 27, 27)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jLabel4)
-          .addComponent(useralias))
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jLabel6)
-          .addComponent(fingerprint, javax.swing.GroupLayout.PREFERRED_SIZE, 12, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jLabel1)
-          .addComponent(passwordtype))
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-          .addComponent(jLabel3)
-          .addComponent(privatekeyopenlabel))
-        .addGap(18, 18, 18)
-        .addComponent(opentogglebutton)
-        .addContainerGap(44, Short.MAX_VALUE))
-    );
+    tabbedpane.setMinimumSize(new java.awt.Dimension(500, 300));
+    tabbedpane.setPreferredSize(new java.awt.Dimension(500, 300));
+    jPanel1.add(tabbedpane, java.awt.BorderLayout.CENTER);
 
     getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
 
@@ -200,7 +209,17 @@ public class IdentityDialog
     });
     jPanel2.add(deletebutton);
 
-    closebutton.setText("Dismiss");
+    selectbutton.setText("Select");
+    selectbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        selectbuttonActionPerformed(evt);
+      }
+    });
+    jPanel2.add(selectbutton);
+
+    closebutton.setText("Cancel");
     closebutton.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -235,6 +254,13 @@ public class IdentityDialog
   private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletebuttonActionPerformed
   {//GEN-HEADEREND:event_deletebuttonActionPerformed
     
+    Entry e = getSelectedEntry();
+    if ( e == null )
+    {
+      JOptionPane.showMessageDialog( rootPane, "No key pair is selected." );
+      return;
+    }
+    
     if ( 0 != JOptionPane.showConfirmDialog( rootPane, 
             "If you delete the key pair you will permanently lose \n" +
             "access to files protected with just your public key. \n" +
@@ -245,11 +271,24 @@ public class IdentityDialog
             JOptionPane.YES_NO_OPTION ) )
       return;
     
-    if ( !cryptoman.deleteKeyPair() )
+    if ( !cryptoman.deleteKeyPair( e.key ) )
       JOptionPane.showMessageDialog( rootPane, "There was a technical fault attempting to delete your key pair." );
     updateFields();
     
   }//GEN-LAST:event_deletebuttonActionPerformed
+
+  private void selectbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_selectbuttonActionPerformed
+  {//GEN-HEADEREND:event_selectbuttonActionPerformed
+    Component c = tabbedpane.getSelectedComponent();
+    if ( !(c instanceof SecretKeyPanel ) )
+      return;
+    
+    PGPSecretKey seckey;
+    Entry e = this.getSelectedEntry();
+    cryptoman.setPreferredSecretKey( e.key );
+    updateFields();
+    dispose();
+  }//GEN-LAST:event_selectbuttonActionPerformed
 
   
   private char[] promptForPassword()
@@ -273,52 +312,19 @@ public class IdentityDialog
     return null;
   }
   
-  private void loadPrivateKey()
-  {
-    EncryptedCompositeFileUser user = cryptoman.getUser();
-    if ( user == null )
-      return;
-
-    char[] pw = null;
-    if ( !cryptoman.isPrivateKeyWindowsProtected() )
-    {
-      pw = promptForPassword();
-      if ( pw == null )
-        return;
-    }
-    cryptoman.setPassword(pw);
-
-    if ( !cryptoman.loadPrivateKey() )
-      JOptionPane.showMessageDialog( rootPane, "Loading your private key failed." );
-  }
-  
-  private void opentogglebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_opentogglebuttonActionPerformed
-  {//GEN-HEADEREND:event_opentogglebuttonActionPerformed
-    
-    if ( opentogglebutton.isSelected() )
-      loadPrivateKey();
-    else
-      cryptoman.unloadPrivateKey();  
-    updateFields();
-  }//GEN-LAST:event_opentogglebuttonActionPerformed
-
+ 
 
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton closebutton;
   private javax.swing.JButton createbutton;
   private javax.swing.JButton deletebutton;
-  private javax.swing.JLabel fingerprint;
-  private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
-  private javax.swing.JLabel jLabel4;
-  private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
-  private javax.swing.JToggleButton opentogglebutton;
-  private javax.swing.JLabel passwordtype;
-  private javax.swing.JLabel privatekeyopenlabel;
-  private javax.swing.JLabel useralias;
+  private javax.swing.JPanel jPanel3;
+  private javax.swing.JTextArea jTextArea1;
+  private javax.swing.JButton selectbutton;
+  private javax.swing.JTabbedPane tabbedpane;
   // End of variables declaration//GEN-END:variables
 }

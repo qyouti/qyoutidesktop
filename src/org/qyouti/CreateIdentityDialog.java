@@ -100,13 +100,14 @@ public class CreateIdentityDialog
   
   public boolean createKeyPair()
   {
-    String name = nametextfield.getText().trim();
-    String email = emailtextfield.getText().trim();
-    boolean win = usewindowscheckbox.isSelected();
-    char[] pass1 = passwordfield1.getPassword();
-    char[] pass2 = passwordfield2.getPassword();
+    String name     = nametextfield.getText().trim();
+    String username = usernametextfield.getText().trim();
+    String email    = emailtextfield.getText().trim();
+    boolean win     = usewindowscheckbox.isSelected();
+    char[] pass1    = passwordfield1.getPassword();
+    char[] pass2    = passwordfield2.getPassword();
 
-    String alias = name + " <" + email + ">";
+    String alias = name + " (" + username + ") <" + email + ">";
     if ( win )
       pass1=null;
     
@@ -138,6 +139,8 @@ public class CreateIdentityDialog
     jPanel3 = new javax.swing.JPanel();
     jLabel1 = new javax.swing.JLabel();
     nametextfield = new javax.swing.JTextField();
+    jLabel6 = new javax.swing.JLabel();
+    usernametextfield = new javax.swing.JTextField();
     jLabel3 = new javax.swing.JLabel();
     emailtextfield = new javax.swing.JTextField();
     usewindowscheckbox = new javax.swing.JCheckBox();
@@ -157,6 +160,8 @@ public class CreateIdentityDialog
 
     jLabel1.setText("Name:");
     gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(jLabel1, gridBagConstraints);
@@ -164,14 +169,35 @@ public class CreateIdentityDialog
     nametextfield.setMinimumSize(new java.awt.Dimension(200, 28));
     nametextfield.setPreferredSize(new java.awt.Dimension(200, 28));
     gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 0;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(nametextfield, gridBagConstraints);
 
+    jLabel6.setText("Computer User Name:");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    jPanel3.add(jLabel6, gridBagConstraints);
+
+    usernametextfield.setMinimumSize(new java.awt.Dimension(200, 28));
+    usernametextfield.setPreferredSize(new java.awt.Dimension(200, 28));
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    jPanel3.add(usernametextfield, gridBagConstraints);
+
     jLabel3.setText("Email Address:");
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(jLabel3, gridBagConstraints);
@@ -179,7 +205,7 @@ public class CreateIdentityDialog
     emailtextfield.setMinimumSize(new java.awt.Dimension(200, 28));
     emailtextfield.setPreferredSize(new java.awt.Dimension(200, 28));
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridy = 2;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
@@ -195,7 +221,7 @@ public class CreateIdentityDialog
       }
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 2;
+    gridBagConstraints.gridy = 3;
     gridBagConstraints.gridwidth = 2;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(usewindowscheckbox, gridBagConstraints);
@@ -203,7 +229,7 @@ public class CreateIdentityDialog
     jLabel5.setText("Password:");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 3;
+    gridBagConstraints.gridy = 4;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(jLabel5, gridBagConstraints);
@@ -220,7 +246,7 @@ public class CreateIdentityDialog
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 3;
+    gridBagConstraints.gridy = 4;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
@@ -229,7 +255,7 @@ public class CreateIdentityDialog
     jLabel4.setText("Reenter Password:");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 4;
+    gridBagConstraints.gridy = 5;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
     jPanel3.add(jLabel4, gridBagConstraints);
 
@@ -245,7 +271,7 @@ public class CreateIdentityDialog
     });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 4;
+    gridBagConstraints.gridy = 5;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
@@ -323,11 +349,13 @@ public class CreateIdentityDialog
   private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel4;
   private javax.swing.JLabel jLabel5;
+  private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JTextField nametextfield;
   private javax.swing.JPasswordField passwordfield1;
   private javax.swing.JPasswordField passwordfield2;
+  private javax.swing.JTextField usernametextfield;
   private javax.swing.JCheckBox usewindowscheckbox;
   // End of variables declaration//GEN-END:variables
 }
