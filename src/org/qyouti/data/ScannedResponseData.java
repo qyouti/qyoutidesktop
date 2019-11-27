@@ -32,7 +32,7 @@ import java.lang.ref.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import org.qyouti.compositefile.CompositeFile;
+import org.quipto.compositefile.CompositeFile;
 import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;

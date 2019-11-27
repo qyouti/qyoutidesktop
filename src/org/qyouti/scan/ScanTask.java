@@ -55,7 +55,7 @@ import org.apache.pdfbox.tools.imageio.*;
 import org.bouncycastle.util.encoders.*;
 import org.bullseye.*;
 import org.qyouti.*;
-import org.qyouti.compositefile.CompositeFile;
+import org.quipto.compositefile.CompositeFile;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecodeException;
 import org.qyouti.scan.process.PageDecoder;

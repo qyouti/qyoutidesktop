@@ -36,7 +36,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
-import org.qyouti.compositefile.CompositeFile;
+import org.quipto.compositefile.CompositeFile;
 import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;

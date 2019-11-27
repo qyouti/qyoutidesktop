@@ -31,6 +31,15 @@ public class EmptyExam
 "<option name=\"id_in_footer\">true</option>\n" +
 "</options>\n" +
 "\n" +
+"<keys>\n" +
+"  <administrators>\n" +
+"  </administrators>\n" +
+"  <examiners>\n" +
+"  </examiners>\n" +
+"  <observers>\n" +
+"  </observers>\n" +
+"</keys>\r\n" +
+"\n" +
 "<persons>\n" +
 "</persons>\n" +
 "\n" +

@@ -26,7 +26,7 @@ import javax.swing.JPasswordField;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.util.Arrays;
-import org.qyouti.compositefile.EncryptedCompositeFileUser;
+import org.quipto.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
 
@@ -101,22 +101,29 @@ public class IdentityDialog
   private final void updateFields()
   {
     entries.clear();
-    PGPSecretKey[] seckeys = cryptoman.getSecretKeys();
-    for ( PGPSecretKey k : seckeys )
-      addEntry( k );
-    sortEntries();
-    PGPSecretKey preferredseckey = cryptoman.getPreferredSecretKey();
     
     tabbedpane.removeAll();
     createbutton.setEnabled( true );
     deletebutton.setEnabled( false );
     selectbutton.setEnabled( false );
     
+    PGPSecretKey[] seckeys = new PGPSecretKey[0];
+    PGPSecretKey preferredseckey = null;
+    
+    if ( cryptoman.personalKeyStoreFileExists() )
+    {
+      seckeys = cryptoman.getSecretKeys();
+      for ( PGPSecretKey k : seckeys )
+        addEntry( k );
+      sortEntries();
+      preferredseckey = cryptoman.getPreferredSecretKey();
+    }
+    
     if ( seckeys.length == 0 )
     {
       JPanel blank = new JPanel();
       blank.setLayout( new FlowLayout() );
-      blank.add( new JLabel( "No key pairs in your key store." ) );
+      blank.add( new JLabel( cryptoman.personalKeyStoreFileExists()?"No key pairs in your key store.":"No personal key store exists." ) );
       tabbedpane.add( "Empty", blank ); 
       return;
     }
@@ -125,8 +132,7 @@ public class IdentityDialog
     for ( int i=0; i<entries.size(); i++ )
     {
       Entry e = entries.get(i);
-      String epw = cryptoman.getEncryptedWindowsPassword( e.key );
-      SecretKeyPanel skpanel = new SecretKeyPanel( e.key, epw != null );
+      SecretKeyPanel skpanel = new SecretKeyPanel( e.key, cryptoman.hasEncryptedWindowsPassword( e.key ) );
       tabbedpane.add( (e.creationdate==null)?"Unknown Date":df.format(e.creationdate), skpanel );
       if ( e.key == preferredseckey )
       {

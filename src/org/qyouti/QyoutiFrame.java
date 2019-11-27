@@ -11,6 +11,8 @@ import java.awt.event.*;
 import java.awt.geom.*;
 import java.io.*;
 import java.net.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.*;
 import java.util.logging.*;
 import javax.swing.*;
@@ -25,8 +27,10 @@ import org.apache.batik.transcoder.*;
 import org.apache.fop.fonts.*;
 import org.apache.fop.svg.*;
 import org.apache.fop.svg.font.*;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.qyouti.barcode.*;
-import org.qyouti.compositefile.EncryptedCompositeFileUser;
+import org.quipto.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
 import org.qyouti.crypto.PasswordProvider;
@@ -101,11 +105,6 @@ public class QyoutiFrame
     homefolder = new File( homefolder, "qyouti" );
     if ( !homefolder.exists() )
       homefolder.mkdir();
-    String strbasefolder = System.getProperty( "qyouti.exambase" );
-    if ( strbasefolder != null && strbasefolder.length() > 0 )
-      basefolder = new File( strbasefolder );
-    else
-      basefolder = new File( homefolder, "exams" );
     
     File preferences_file = new File( homefolder, "preferences.xml" );
     preferences = new QyoutiPreferences( preferences_file );
@@ -115,6 +114,19 @@ public class QyoutiFrame
     {
       preferences.setDefaults();
       preferences.save();
+    }
+
+    String strbasefolder = System.getProperty( "qyouti.exambase" );
+    if ( strbasefolder != null && strbasefolder.length() > 0 )
+      basefolder = new File( strbasefolder );
+    else
+    {
+      basefolder = null;
+      String prefbase = preferences.getProperty("qyouti.exambase");
+      if ( prefbase != null )
+        basefolder = new File( prefbase );
+      if ( basefolder == null || !basefolder.exists() || !basefolder.isDirectory() )
+        basefolder = new File( homefolder, "exams" );
     }
 
 
@@ -485,19 +497,34 @@ public class QyoutiFrame
     centralpanel = new javax.swing.JPanel();
     noexamloadedpanel = new javax.swing.JPanel();
     noexamloadedlabel = new javax.swing.JLabel();
-    storetabs = new javax.swing.JTabbedPane();
-    storetab = new javax.swing.JPanel();
-    storeleftpanel = new javax.swing.JPanel();
-    jScrollPane8 = new javax.swing.JScrollPane();
-    publicintro = new javax.swing.JTextArea();
-    jScrollPane9 = new javax.swing.JScrollPane();
-    publicintroverification = new javax.swing.JTable();
-    storerightpanel = new javax.swing.JPanel();
-    jSplitPane5 = new javax.swing.JSplitPane();
-    jPanel14 = new javax.swing.JPanel();
-    jPanel15 = new javax.swing.JPanel();
-    examtab = new javax.swing.JPanel();
     tabs = new javax.swing.JTabbedPane();
+    atab = new javax.swing.JPanel();
+    jPanel15 = new javax.swing.JPanel();
+    jLabel7 = new javax.swing.JLabel();
+    jLabel9 = new javax.swing.JLabel();
+    jLabel8 = new javax.swing.JLabel();
+    personalkeystorelabel = new javax.swing.JLabel();
+    personalkeystorealiaslabel = new javax.swing.JLabel();
+    teamkeystorelabel = new javax.swing.JLabel();
+    jPanel14 = new javax.swing.JPanel();
+    jPanel16 = new javax.swing.JPanel();
+    jScrollPane8 = new javax.swing.JScrollPane();
+    keyadministratorlist = new javax.swing.JList<>();
+    jPanel18 = new javax.swing.JPanel();
+    jButton2 = new javax.swing.JButton();
+    jButton3 = new javax.swing.JButton();
+    jPanel17 = new javax.swing.JPanel();
+    jScrollPane9 = new javax.swing.JScrollPane();
+    keyexaminerlist = new javax.swing.JList<>();
+    jPanel19 = new javax.swing.JPanel();
+    jButton4 = new javax.swing.JButton();
+    jButton5 = new javax.swing.JButton();
+    jPanel20 = new javax.swing.JPanel();
+    jScrollPane10 = new javax.swing.JScrollPane();
+    keyobserverlist = new javax.swing.JList<>();
+    jPanel21 = new javax.swing.JPanel();
+    jButton6 = new javax.swing.JButton();
+    jButton7 = new javax.swing.JButton();
     qtab = new javax.swing.JPanel();
     jSplitPane3 = new javax.swing.JSplitPane();
     sp1 = new javax.swing.JScrollPane();
@@ -587,9 +614,6 @@ public class QyoutiFrame
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
     identitymenuitem = new javax.swing.JMenuItem();
-    sep1d = new javax.swing.JPopupMenu.Separator();
-    newfoldermenuitem = new javax.swing.JMenuItem();
-    selectfoldermenuitem = new javax.swing.JMenuItem();
     sep1c = new javax.swing.JPopupMenu.Separator();
     newmenuitem = new javax.swing.JMenuItem();
     openmenuitem = new javax.swing.JMenuItem();
@@ -641,54 +665,132 @@ public class QyoutiFrame
 
     centralpanel.add(noexamloadedpanel, "blank");
 
-    storetab.setLayout(new java.awt.GridLayout(1, 2));
-
-    storeleftpanel.setLayout(new java.awt.BorderLayout());
-
-    publicintro.setColumns(20);
-    publicintro.setRows(5);
-    jScrollPane8.setViewportView(publicintro);
-
-    storeleftpanel.add(jScrollPane8, java.awt.BorderLayout.CENTER);
-
-    publicintroverification.setModel(new javax.swing.table.DefaultTableModel(
-      new Object [][]
-      {
-        {null, null, null, null},
-        {null, null, null, null},
-        {null, null, null, null},
-        {null, null, null, null}
-      },
-      new String []
-      {
-        "Title 1", "Title 2", "Title 3", "Title 4"
-      }
-    ));
-    jScrollPane9.setViewportView(publicintroverification);
-
-    storeleftpanel.add(jScrollPane9, java.awt.BorderLayout.SOUTH);
-
-    storetab.add(storeleftpanel);
-
-    storerightpanel.setLayout(new java.awt.BorderLayout());
-
-    jSplitPane5.setDividerLocation(100);
-    jSplitPane5.setDividerSize(8);
-    jSplitPane5.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-    jSplitPane5.setResizeWeight(0.5);
-    jSplitPane5.setLeftComponent(jPanel14);
-    jSplitPane5.setRightComponent(jPanel15);
-
-    storerightpanel.add(jSplitPane5, java.awt.BorderLayout.CENTER);
-
-    storetab.add(storerightpanel);
-
-    storetabs.addTab("Examination Store", storetab);
-    storetabs.addTab("Examinations", examtab);
-
-    centralpanel.add(storetabs, "store");
-
     tabs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
+
+    atab.setLayout(new java.awt.BorderLayout());
+
+    jPanel15.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+    jLabel7.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+    jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel7.setText("Personal key store:");
+
+    jLabel9.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+    jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel9.setText("Personal key name:");
+
+    jLabel8.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+    jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel8.setText("Team key store:");
+
+    javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
+    jPanel15.setLayout(jPanel15Layout);
+    jPanel15Layout.setHorizontalGroup(
+      jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jPanel15Layout.createSequentialGroup()
+        .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel15Layout.createSequentialGroup()
+              .addContainerGap()
+              .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
+          .addGroup(jPanel15Layout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        .addGap(18, 18, 18)
+        .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(teamkeystorelabel, javax.swing.GroupLayout.DEFAULT_SIZE, 676, Short.MAX_VALUE)
+          .addComponent(personalkeystorelabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+          .addComponent(personalkeystorealiaslabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        .addContainerGap())
+    );
+    jPanel15Layout.setVerticalGroup(
+      jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+      .addGroup(jPanel15Layout.createSequentialGroup()
+        .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(jLabel7)
+          .addComponent(personalkeystorelabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(jLabel9)
+          .addComponent(personalkeystorealiaslabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(jLabel8)
+          .addComponent(teamkeystorelabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+    );
+
+    atab.add(jPanel15, java.awt.BorderLayout.NORTH);
+
+    jPanel14.setLayout(new java.awt.GridLayout(1, 3, 16, 0));
+
+    jPanel16.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Administrator Access", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+    jPanel16.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane8.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+    jScrollPane8.setViewportView(keyadministratorlist);
+
+    jPanel16.add(jScrollPane8, java.awt.BorderLayout.CENTER);
+
+    jButton2.setText("Add");
+    jButton2.setEnabled(false);
+    jPanel18.add(jButton2);
+
+    jButton3.setText("Remove");
+    jButton3.setEnabled(false);
+    jPanel18.add(jButton3);
+
+    jPanel16.add(jPanel18, java.awt.BorderLayout.PAGE_START);
+
+    jPanel14.add(jPanel16);
+
+    jPanel17.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Examiner Access", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+    jPanel17.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane9.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+    jScrollPane9.setViewportView(keyexaminerlist);
+
+    jPanel17.add(jScrollPane9, java.awt.BorderLayout.CENTER);
+
+    jButton4.setText("Add");
+    jButton4.setEnabled(false);
+    jPanel19.add(jButton4);
+
+    jButton5.setText("Remove");
+    jButton5.setEnabled(false);
+    jPanel19.add(jButton5);
+
+    jPanel17.add(jPanel19, java.awt.BorderLayout.PAGE_START);
+
+    jPanel14.add(jPanel17);
+
+    jPanel20.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Observers", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+    jPanel20.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane10.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+    jScrollPane10.setViewportView(keyobserverlist);
+
+    jPanel20.add(jScrollPane10, java.awt.BorderLayout.CENTER);
+
+    jButton6.setText("Add");
+    jButton6.setEnabled(false);
+    jPanel21.add(jButton6);
+
+    jButton7.setText("Remove");
+    jButton7.setEnabled(false);
+    jPanel21.add(jButton7);
+
+    jPanel20.add(jPanel21, java.awt.BorderLayout.PAGE_START);
+
+    jPanel14.add(jPanel20);
+
+    atab.add(jPanel14, java.awt.BorderLayout.CENTER);
+
+    tabs.addTab("Access", atab);
 
     qtab.setLayout(new java.awt.BorderLayout());
 
@@ -1226,7 +1328,7 @@ public class QyoutiFrame
 
     filemenu.setText("File");
 
-    identitymenuitem.setText("Keys...");
+    identitymenuitem.setText("Select Encryption Key...");
     identitymenuitem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -1235,27 +1337,6 @@ public class QyoutiFrame
       }
     });
     filemenu.add(identitymenuitem);
-    filemenu.add(sep1d);
-
-    newfoldermenuitem.setText("New Exam Store Folder...");
-    newfoldermenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        newfoldermenuitemActionPerformed(evt);
-      }
-    });
-    filemenu.add(newfoldermenuitem);
-
-    selectfoldermenuitem.setText("Select Exam Store Folder...");
-    selectfoldermenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        selectfoldermenuitemActionPerformed(evt);
-      }
-    });
-    filemenu.add(selectfoldermenuitem);
     filemenu.add(sep1c);
 
     newmenuitem.setText("New Exam...");
@@ -1645,25 +1726,6 @@ public class QyoutiFrame
     }
   }//GEN-LAST:event_expscoresmenuitemActionPerformed
 
-  private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
-  {//GEN-HEADEREND:event_openmenuitemActionPerformed
-    EncryptedCompositeFileUser user = cryptomanager.getUser();    
-    if ( user == null )
-    {
-      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
-      return;
-    }
-    
-    if ( !confirmDataLoss( "Are you sure you want to open a different exam/survey?" ) )
-    {
-      return;
-    }
-
-    selectdialog.setExamName( "" );
-    selectdialog.setDialogType( ExamSelectDialog.TYPE_OPEN );
-    selectdialog.setVisible( true );
-  }//GEN-LAST:event_openmenuitemActionPerformed
-
   private void importcanmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importcanmenuitemActionPerformed
   {//GEN-HEADEREND:event_importcanmenuitemActionPerformed
     boolean forceanon = false;
@@ -1692,28 +1754,6 @@ public class QyoutiFrame
     exam.importPersons( list, forceanon );
     exam.setUnsavedChangesInMain( true );
   }//GEN-LAST:event_importcanmenuitemActionPerformed
-
-  private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
-  {//GEN-HEADEREND:event_newmenuitemActionPerformed
-    EncryptedCompositeFileUser user = cryptomanager.getUser();    
-    if ( user == null )
-    {
-      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
-      return;
-    }
-
-    if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
-    {
-      return;
-    }
-
-    selectdialog.setExamName( "" );
-
-    //selectdialog.setBaseFolder( );
-    selectdialog.setDialogType( ExamSelectDialog.TYPE_NEW );
-    selectdialog.setVisible( true );
-
-  }//GEN-LAST:event_newmenuitemActionPerformed
 
   
     public void setPreviewItem( QTIElementItem item, int qnumber )
@@ -1834,27 +1874,6 @@ public class QyoutiFrame
     dialog.setImage( exam.getImageFromScanArchive( "pages/"+filename ) );
     dialog.setVisible( true );
   }//GEN-LAST:event_viewscanmenuitemActionPerformed
-
-  private void exitmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_exitmenuitemActionPerformed
-  {//GEN-HEADEREND:event_exitmenuitemActionPerformed
-    confirmExit();
-  }//GEN-LAST:event_exitmenuitemActionPerformed
-
-  private void savemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_savemenuitemActionPerformed
-  {//GEN-HEADEREND:event_savemenuitemActionPerformed
-
-    if ( exam == null )
-    {
-      JOptionPane.
-              showMessageDialog( this, "No exam/survey open." );
-      return;
-    }
-    
-    if ( exam.save() )
-      return;
-    JOptionPane.showMessageDialog( this, "Technical error attempting to save exam/survey." );
-    
-  }//GEN-LAST:event_savemenuitemActionPerformed
 
   private void editallquestionsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_editallquestionsmenuitemActionPerformed
   {//GEN-HEADEREND:event_editallquestionsmenuitemActionPerformed
@@ -2047,21 +2066,6 @@ public class QyoutiFrame
     }    
   }
 
-  private void propsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_propsmenuitemActionPerformed
-  {//GEN-HEADEREND:event_propsmenuitemActionPerformed
-
-    if ( exam == null )
-    {
-      JOptionPane.
-              showMessageDialog( this, "No exam/survey open." );
-      return;
-    }
-
-    ExamPropertiesDialog dialog = new ExamPropertiesDialog( this, true );
-    dialog.setExaminationData( exam );
-    dialog.setVisible( true );
-  }//GEN-LAST:event_propsmenuitemActionPerformed
-
   private void importimagesmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importimagesmenuitemActionPerformed
   {//GEN-HEADEREND:event_importimagesmenuitemActionPerformed
 
@@ -2141,14 +2145,6 @@ public class QyoutiFrame
 
 
   }//GEN-LAST:event_importimagesmenuitemActionPerformed
-
-  private void aboutmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_aboutmenuitemActionPerformed
-  {//GEN-HEADEREND:event_aboutmenuitemActionPerformed
-    
-    AboutDialog dialog = new AboutDialog( this, true );
-    dialog.setVisible( true );
-    
-  }//GEN-LAST:event_aboutmenuitemActionPerformed
 
   private void previousreviewbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_previousreviewbuttonActionPerformed
   {//GEN-HEADEREND:event_previousreviewbuttonActionPerformed
@@ -2462,13 +2458,6 @@ public class QyoutiFrame
     persontable.repaint();
   }//GEN-LAST:event_noneanonbuttonActionPerformed
 
-  private void configmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_configmenuitemActionPerformed
-  {//GEN-HEADEREND:event_configmenuitemActionPerformed
-    ConfigDialog cd = new ConfigDialog( this, this.fontmanager );
-    cd.setVisible( true );
-    
-  }//GEN-LAST:event_configmenuitemActionPerformed
-
   private void reviewincludeconfirmedActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reviewincludeconfirmedActionPerformed
   {//GEN-HEADEREND:event_reviewincludeconfirmedActionPerformed
     reviewFilterChanged( 4 );
@@ -2516,81 +2505,101 @@ public class QyoutiFrame
     cqp.updateButtons();
   }//GEN-LAST:event_overridereviewmenuitemActionPerformed
 
+  private void exitmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_exitmenuitemActionPerformed
+  {//GEN-HEADEREND:event_exitmenuitemActionPerformed
+    confirmExit();
+  }//GEN-LAST:event_exitmenuitemActionPerformed
+
+  private void aboutmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_aboutmenuitemActionPerformed
+  {//GEN-HEADEREND:event_aboutmenuitemActionPerformed
+
+    AboutDialog dialog = new AboutDialog( this, true );
+    dialog.setVisible( true );
+  }//GEN-LAST:event_aboutmenuitemActionPerformed
+
+  private void configmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_configmenuitemActionPerformed
+  {//GEN-HEADEREND:event_configmenuitemActionPerformed
+    ConfigDialog cd = new ConfigDialog( this, this.fontmanager );
+    cd.setVisible( true );
+  }//GEN-LAST:event_configmenuitemActionPerformed
+
+  private void propsmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_propsmenuitemActionPerformed
+  {//GEN-HEADEREND:event_propsmenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+      showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    ExamPropertiesDialog dialog = new ExamPropertiesDialog( this, true );
+    dialog.setExaminationData( exam );
+    dialog.setVisible( true );
+  }//GEN-LAST:event_propsmenuitemActionPerformed
+
+  private void savemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_savemenuitemActionPerformed
+  {//GEN-HEADEREND:event_savemenuitemActionPerformed
+
+    if ( exam == null )
+    {
+      JOptionPane.
+      showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( exam.save() )
+    return;
+    JOptionPane.showMessageDialog( this, "Technical error attempting to save exam/survey." );
+  }//GEN-LAST:event_savemenuitemActionPerformed
+
+  private void openmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openmenuitemActionPerformed
+  {//GEN-HEADEREND:event_openmenuitemActionPerformed
+    PGPSecretKey seckey = cryptomanager.getPreferredSecretKey();
+    if ( seckey == null )
+    {
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
+      return;
+    }
+
+    if ( !confirmDataLoss( "Are you sure you want to open a different exam/survey?" ) )
+    {
+      return;
+    }
+
+    selectdialog.setExamName( "" );
+    selectdialog.setDialogType( ExamSelectDialog.TYPE_OPEN );
+    selectdialog.setVisible( true );
+  }//GEN-LAST:event_openmenuitemActionPerformed
+
+  private void newmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newmenuitemActionPerformed
+  {//GEN-HEADEREND:event_newmenuitemActionPerformed
+    PGPSecretKey seckey = cryptomanager.getPreferredSecretKey();
+    if ( seckey == null )
+    {
+      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
+      return;
+    }
+
+    if ( !confirmDataLoss( "Are you sure you want to create a new exam/survey?" ) )
+    {
+      return;
+    }
+
+    selectdialog.setExamName( "" );
+
+    //selectdialog.setBaseFolder( );
+    selectdialog.setDialogType( ExamSelectDialog.TYPE_NEW );
+    selectdialog.setVisible( true );
+  }//GEN-LAST:event_newmenuitemActionPerformed
+
   private void identitymenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_identitymenuitemActionPerformed
   {//GEN-HEADEREND:event_identitymenuitemActionPerformed
     identitydialog.setVisible( true );
   }//GEN-LAST:event_identitymenuitemActionPerformed
 
-  private void newfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newfoldermenuitemActionPerformed
-  {//GEN-HEADEREND:event_newfoldermenuitemActionPerformed
-    EncryptedCompositeFileUser user = cryptomanager.getUser();    
-    if ( user == null )
-    {
-      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
-      return;
-    }
-
-    JFileChooser fc = new JFileChooser();
-    fc.setAccessory( new NewExamStoreAdvicePanel() );
-    fc.setDialogTitle( "Select folder for new exam store." );
-    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-    int returnVal = fc.showOpenDialog(this);
-    File folder;
-    if (returnVal != JFileChooser.APPROVE_OPTION)
-      return;
-    
-    folder = fc.getSelectedFile();
-    File configfile = new File( folder, "qyoutistore.tar");
-    if ( !folder.isDirectory() )
-    {
-      JOptionPane.showMessageDialog( this, "You selected a file.  \nYou need to select a folder (directory) to create a new exam store." );
-      return;
-    }
-    if ( configfile.exists() )
-    {
-      JOptionPane.showMessageDialog( this, "The selected folder already contains a Qyouti store configuration file." );
-      return;
-    }
-    
-    examstore = new ExamStoreConfiguration( cryptomanager, configfile );
-    examstore.newConfig();
-    ((CardLayout)centralpanel.getLayout()).show( centralpanel, "store" );
-
-  }//GEN-LAST:event_newfoldermenuitemActionPerformed
-
-  private void selectfoldermenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_selectfoldermenuitemActionPerformed
-  {//GEN-HEADEREND:event_selectfoldermenuitemActionPerformed
-    EncryptedCompositeFileUser user = cryptomanager.getUser();    
-    if ( user == null )
-    {
-      JOptionPane.showMessageDialog( this, "You need to select and open your private key before this action." );
-      return;
-    }
-
-    JFileChooser fc = new JFileChooser();
-    fc.setAccessory( new OpenExamStoreAdvicePanel() );
-    fc.setDialogTitle( "Select Qyouti store configuration file." );
-    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-    int returnVal = fc.showOpenDialog(this);
-    File file;
-    if (returnVal != JFileChooser.APPROVE_OPTION)
-      return;
-    
-    file = fc.getSelectedFile();
-    if ( !file.isFile() || !"qyoutistore.tar".equals(file.getName()) )
-    {
-      JOptionPane.showMessageDialog( this, "The selection you made is not a file name qyoutistore.tar." );
-      return;
-    }
-
-    examstore = new ExamStoreConfiguration( cryptomanager, file );
-    examstore.loadConfig();
-    publicintro.setText( examstore.getPublicIntro() );
-    publicintroverification.setModel( examstore.getPublicIntroVerification() );
-    storeleftpanel.doLayout();
-    ((CardLayout)centralpanel.getLayout()).show( centralpanel, "store" );
-  }//GEN-LAST:event_selectfoldermenuitemActionPerformed
-
+  /**/
+  
   /**
    * Indicates that the question edit dialog stored some changes into its item
    * object. So, the exam file needs saving to disk.
@@ -2613,11 +2622,20 @@ public class QyoutiFrame
   {
     ExaminationData.saveNewExamination( cryptomanager, folder, template.getMainDocumentAsString(), template.getQuestionDocumentAsString() );
     loadExam( folder );
+    exam.addAdministratorKey( cryptomanager.getPreferredSecretKey().getPublicKey().getKeyID() );
+    exam.save();
   }
 
   boolean examSelectDialogDone()
   {
-    basefolder = selectdialog.getBaseFolder();
+    File bf = selectdialog.getBaseFolder();
+    if ( !basefolder.getAbsolutePath().equals( bf.getAbsolutePath() ) )
+    {
+      basefolder = bf;
+      preferences.setProperty("qyouti.exambase", basefolder.getAbsolutePath() );
+      preferences.save();
+    }
+    
     examcatalogue = selectdialog.getExaminationCatalogue();
 
     File fold = new File( basefolder, selectdialog.getExamName() );
@@ -2646,6 +2664,17 @@ public class QyoutiFrame
     if ( selectdialog.getDialogType() == ExamSelectDialog.TYPE_OPEN )
     {
       System.out.println( "Open exam/survey: " + selectdialog.getExamName() );
+      File teamfile = new File( basefolder, "teamkeyring.tar" );
+      try
+      {
+        this.cryptomanager.setTeamKeyRingFile(teamfile, !teamfile.exists() );
+      }
+      catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | PGPException ex)
+      {
+        Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
+        JOptionPane.showMessageDialog( this, "Unable to open the team key store for the exam." );
+        return false;
+      }
       loadExam( fold );
     }
 
@@ -2685,8 +2714,30 @@ public class QyoutiFrame
       candidatetable.setModel( exam );
       questionreviewtable.setModel( exam.reviewlist );
       updateLeftReviewList();
+      
       exam.load();
+
       setTitle( "Qyouti - " + examfolder.getName() );
+      
+      personalkeystorelabel.setText( "" );
+      File pkf = cryptomanager.getPersonalKeyStoreFile();
+      if ( pkf != null && pkf.exists() )
+        personalkeystorelabel.setText( pkf.getAbsolutePath() );
+      
+      personalkeystorealiaslabel.setText("");
+      String pa = cryptomanager.getPersonalAlias();
+      if ( pa != null )
+        personalkeystorealiaslabel.setText(pa);
+      
+      teamkeystorelabel.setText( "" );
+      File tkf = cryptomanager.getTeamKeyStoreFile();
+      if ( tkf != null && tkf.exists() )
+        teamkeystorelabel.setText( tkf.getAbsolutePath() );
+
+      keyadministratorlist.setModel( exam.keysadmin );
+      keyexaminerlist.setModel(exam.keysexaminer);
+      keyobserverlist.setModel(exam.keysobserver);
+      
       if ( exam.qdefs != null )
       {
         questiontable.setModel( exam.qdefs );
@@ -2785,6 +2836,7 @@ public class QyoutiFrame
   private javax.swing.JMenu actionmenu;
   private javax.swing.JButton allanonbutton;
   private javax.swing.JTable analysistable;
+  private javax.swing.JPanel atab;
   private javax.swing.JCheckBox bigpinkcheckbox;
   private javax.swing.JTable candidatetable;
   private javax.swing.JPanel centralpanel;
@@ -2798,7 +2850,6 @@ public class QyoutiFrame
   private javax.swing.JMenuItem editallquestionsmenuitem;
   private javax.swing.JMenuItem editquestionmenuitem;
   private javax.swing.JLabel errorlabel;
-  private javax.swing.JPanel examtab;
   private javax.swing.JMenuItem exitmenuitem;
   private javax.swing.JMenuItem exprepliesmenuitem;
   private javax.swing.JMenuItem expscoresmenuitem;
@@ -2813,12 +2864,21 @@ public class QyoutiFrame
   private javax.swing.JMenuItem importqmenuitem;
   private javax.swing.JMenuItem itemanalysismenuitem;
   private javax.swing.JButton jButton1;
+  private javax.swing.JButton jButton2;
+  private javax.swing.JButton jButton3;
+  private javax.swing.JButton jButton4;
+  private javax.swing.JButton jButton5;
+  private javax.swing.JButton jButton6;
+  private javax.swing.JButton jButton7;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel4;
   private javax.swing.JLabel jLabel5;
   private javax.swing.JLabel jLabel6;
+  private javax.swing.JLabel jLabel7;
+  private javax.swing.JLabel jLabel8;
+  private javax.swing.JLabel jLabel9;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel10;
   private javax.swing.JPanel jPanel11;
@@ -2826,7 +2886,13 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel13;
   private javax.swing.JPanel jPanel14;
   private javax.swing.JPanel jPanel15;
+  private javax.swing.JPanel jPanel16;
+  private javax.swing.JPanel jPanel17;
+  private javax.swing.JPanel jPanel18;
+  private javax.swing.JPanel jPanel19;
   private javax.swing.JPanel jPanel2;
+  private javax.swing.JPanel jPanel20;
+  private javax.swing.JPanel jPanel21;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JPanel jPanel4;
   private javax.swing.JPanel jPanel5;
@@ -2835,6 +2901,7 @@ public class QyoutiFrame
   private javax.swing.JPanel jPanel8;
   private javax.swing.JPanel jPanel9;
   private javax.swing.JScrollPane jScrollPane1;
+  private javax.swing.JScrollPane jScrollPane10;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JScrollPane jScrollPane3;
   private javax.swing.JScrollPane jScrollPane4;
@@ -2849,11 +2916,12 @@ public class QyoutiFrame
   private javax.swing.JSplitPane jSplitPane2;
   private javax.swing.JSplitPane jSplitPane3;
   private javax.swing.JSplitPane jSplitPane4;
-  private javax.swing.JSplitPane jSplitPane5;
   private javax.swing.JTabbedPane jTabbedPane1;
   private javax.swing.JTextPane jTextPane1;
+  private javax.swing.JList<String> keyadministratorlist;
+  private javax.swing.JList<String> keyexaminerlist;
+  private javax.swing.JList<String> keyobserverlist;
   private javax.swing.JMenuBar menubar;
-  private javax.swing.JMenuItem newfoldermenuitem;
   private javax.swing.JMenuItem newmenuitem;
   private javax.swing.JButton nextreviewbutton;
   private javax.swing.JMenuItem nextreviewmenuitem;
@@ -2867,6 +2935,8 @@ public class QyoutiFrame
   private javax.swing.JMenuItem overridereviewmenuitem;
   private javax.swing.JTable pagestable;
   private javax.swing.JMenuItem pdfprintmenuitem;
+  private javax.swing.JLabel personalkeystorealiaslabel;
+  private javax.swing.JLabel personalkeystorelabel;
   private javax.swing.JPanel personpanel;
   private javax.swing.JTable persontable;
   private javax.swing.JPanel perstab;
@@ -2878,8 +2948,6 @@ public class QyoutiFrame
   private javax.swing.JProgressBar progressbar;
   private javax.swing.JMenuItem propsmenuitem;
   private javax.swing.JPanel ptab;
-  private javax.swing.JTextArea publicintro;
-  private javax.swing.JTable publicintroverification;
   private javax.swing.JScrollPane qprevscrollpane;
   private javax.swing.JTable qrevlefttable;
   private javax.swing.JPanel qrpanelouter;
@@ -2905,11 +2973,9 @@ public class QyoutiFrame
   private javax.swing.JLabel savestatuslabel;
   private javax.swing.JTable scanfiletable;
   private javax.swing.JPanel selectedpersonpanel;
-  private javax.swing.JMenuItem selectfoldermenuitem;
   private javax.swing.JPopupMenu.Separator sep1;
   private javax.swing.JPopupMenu.Separator sep1b;
   private javax.swing.JPopupMenu.Separator sep1c;
-  private javax.swing.JPopupMenu.Separator sep1d;
   private javax.swing.JPopupMenu.Separator sep2;
   private javax.swing.JPopupMenu.Separator sep3;
   private javax.swing.JCheckBox serifcheckbox;
@@ -2921,11 +2987,8 @@ public class QyoutiFrame
   private javax.swing.JLabel spacerlabel;
   private javax.swing.JPanel stab;
   private javax.swing.JPanel statuspanel;
-  private javax.swing.JPanel storeleftpanel;
-  private javax.swing.JPanel storerightpanel;
-  private javax.swing.JPanel storetab;
-  private javax.swing.JTabbedPane storetabs;
   private javax.swing.JTabbedPane tabs;
+  private javax.swing.JLabel teamkeystorelabel;
   private javax.swing.JMenuItem viewscanmenuitem;
   // End of variables declaration//GEN-END:variables
 

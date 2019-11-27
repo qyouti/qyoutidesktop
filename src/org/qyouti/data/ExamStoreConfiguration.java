@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.CopyUtils;
 import org.apache.pdfbox.io.IOUtils;
-import org.qyouti.compositefile.EncryptedCompositeFile;
+import org.quipto.compositefile.EncryptedCompositeFile;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.SignatureVerificationResultSet;
 
@@ -31,7 +31,6 @@ public class ExamStoreConfiguration
   EncryptedCompositeFile configarchive;
 
   String publicintro;
-  SignatureVerificationResultSet publicintroverification;
   
   ArrayList<ExamStorePerson> persons;
   
@@ -46,8 +45,7 @@ public class ExamStoreConfiguration
   {
     try
     {
-      configarchive = EncryptedCompositeFile.getCompositeFile( configfile );
-      configarchive.addPublicKey( cryptoman.getUser(), cryptoman.getUser().getPgppublickey(), cryptoman.getUser().getKeyalias() );
+      configarchive = cryptoman.getEncryptedCompositeFile( configfile, true );
       setPublicIntro( "To do - edit this intro." );
       configarchive.close();
       configarchive = null;
@@ -64,8 +62,7 @@ public class ExamStoreConfiguration
   {
     try
     {
-      configarchive = EncryptedCompositeFile.getCompositeFile( configfile );
-      configarchive.addPublicKey( cryptoman.getUser(), cryptoman.getUser().getPgppublickey(), cryptoman.getUser().getKeyalias() );
+      configarchive = cryptoman.getEncryptedCompositeFile( configfile, false );
       loadPublicIntro();
       configarchive.close();
       configarchive = null;
@@ -79,17 +76,9 @@ public class ExamStoreConfiguration
   private final void setPublicIntro( String intro ) throws IOException, Exception
   {
     publicintro = intro;
-    byte[] signature = cryptoman.sign( intro.getBytes( "UTF8" ) );
-
-    // NOT encrypted
     OutputStream dataout = configarchive.getOutputStream( "intro.txt", true );
     dataout.write( intro.getBytes( "UTF8" ) );
     dataout.close();
-    
-    OutputStream sigaout = configarchive.getOutputStream( "intro.txt.sig", true );
-    sigaout.write( signature );
-    sigaout.close();
-    
   }
 
   private final void loadPublicIntro() throws IOException, Exception
@@ -100,13 +89,6 @@ public class ExamStoreConfiguration
     IOUtils.copy(datain, baout);
     datain.close();
     publicintro = baout.toString("UTF8");
-    
-    InputStream sigin = configarchive.getInputStream( "intro.txt.sig" );
-    ByteArrayOutputStream sigbaout = new ByteArrayOutputStream();
-    IOUtils.copy(sigin, sigbaout);
-    sigin.close();
-
-    publicintroverification = cryptoman.verify( baout.toByteArray(), sigbaout.toByteArray() );
   }
 
   
@@ -115,8 +97,4 @@ public class ExamStoreConfiguration
     return publicintro;
   }
   
-  public SignatureVerificationResultSet getPublicIntroVerification()
-  {
-    return publicintroverification;
-  }
 }

@@ -22,7 +22,7 @@ import javax.swing.*;
 import org.bullseye.BullseyeGenerator;
 import org.bullseye.BullseyePage;
 import org.bullseye.BullseyePageScanner;
-import org.qyouti.compositefile.CompositeFile;
+import org.quipto.compositefile.CompositeFile;
 import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QuestionMetricBox;
 import org.qyouti.qti1.gui.QuestionMetricsRecord;

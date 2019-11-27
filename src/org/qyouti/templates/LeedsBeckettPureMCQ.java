@@ -33,6 +33,15 @@ public class LeedsBeckettPureMCQ
 "<option name=\"id_in_footer\">true</option>\r\n" +
 "</options>\r\n" +
 "\r\n" +
+"<keys>\r\n" +
+"  <administrators>\r\n" +
+"  </administrators>\r\n" +
+"  <examiners>\r\n" +
+"  </examiners>\r\n" +
+"  <observers>\r\n" +
+"  </observers>\r\n" +
+"</keys>\r\n" +
+"\r\n" +
 "<persons>\r\n" +
 "</persons>\r\n" +
 "\r\n" +

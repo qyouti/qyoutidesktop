@@ -8,7 +8,7 @@ package org.qyouti;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.qyouti.compositefile.EncryptedCompositeFileUser;
+import org.quipto.compositefile.EncryptedCompositeFileUser;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
 
@@ -107,7 +107,7 @@ public class CreateIdentityDialog
     char[] pass1    = passwordfield1.getPassword();
     char[] pass2    = passwordfield2.getPassword();
 
-    String alias = name + " (" + username + ") <" + email + ">";
+    String alias = name; //name + " (" + username + ") <" + email + ">";
     if ( win )
       pass1=null;
     
