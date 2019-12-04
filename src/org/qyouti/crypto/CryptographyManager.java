@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.tree.TreeModel;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -75,6 +77,11 @@ public class CryptographyManager
     Security.addProvider(new BouncyCastleProvider());
   }
   
+  public TreeModel getTeamTreeModel()
+  {
+    return teamtrust.getTreeModel();
+  }
+  
   public boolean personalKeyStoreFileExists()
   {
     return personalkeystorefile.exists();
@@ -114,8 +121,13 @@ public class CryptographyManager
   public static Date getSecretKeyCreationDate( PGPSecretKey seckey )
   {
     PGPPublicKey pubkey = seckey.getPublicKey();
+    return getPublicKeyCreationDate( pubkey );
+  }
+  
+  public static Date getPublicKeyCreationDate( PGPPublicKey pubkey )
+  {
     // Get self signatures - should only be one
-    Iterator<PGPSignature> it = pubkey.getSignaturesForKeyID( seckey.getKeyID() );
+    Iterator<PGPSignature> it = pubkey.getSignaturesForKeyID( pubkey.getKeyID() );
     PGPSignature sig;
     if ( it.hasNext() )
     {
@@ -212,6 +224,73 @@ public class CryptographyManager
       return null;
     return teamtrust.findPublicKey(keyid);
   }
+
+  public boolean addTrustedPublicKey( PGPPublicKey pubkey )
+  {
+    if ( personalkeystore == null )
+      return false;
+    
+    StandardRSAKeyBuilderSigner signer = new StandardRSAKeyBuilderSigner();
+    PGPSecretKeyRing seckeyring = personalkeystore.getSecretKeyRing(personalalias);
+    PGPSecretKey signingseckey = personalkeyfinder.getSecretKeyForSigning();
+    
+    PGPPublicKey newpubkey = signer.signKey(
+            personalkeyfinder.getPrivateKey(signingseckey), 
+            pubkey, 
+            KeyFlags.CERTIFY_OTHER | KeyFlags.ENCRYPT_STORAGE | KeyFlags.SIGN_DATA,
+            StandardRSAKeyBuilderSigner.INCLUDE_SELF_SIGNATURE );
+    
+    ArrayList<PGPPublicKey> list = new ArrayList<>();
+    list.add(newpubkey);
+    PGPPublicKeyRing pubkeyring = new PGPPublicKeyRing( list );
+    try
+    {
+      personalkeystore.setPublicKeyRing( pubkeyring );
+    }
+    catch (IOException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
+    }
+    return true;
+  }
+  
+  public boolean addPublicKeyToTeam( PGPPublicKey pubkey, boolean controller )
+  {
+    try
+    {
+      teamtrust.addPublicKeyToTeamStore(personalkeyfinder.getSecretKeyForSigning().getPublicKey(), pubkey, controller);
+    }
+    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
+    }
+    
+    return true;
+  }
+  
+  public PGPPublicKey[] getTrustedPublicKeys()
+  {
+    if ( personalkeystore == null )
+      return new PGPPublicKey[0];
+    List<PGPPublicKeyRing> list = personalkeystore.getAllPublicKeyRings();
+    PGPPublicKey[] a = new PGPPublicKey[list.size()];
+    for ( int i=0; i<a.length; i++ )
+      a[i] = list.get(i).getPublicKey();
+    return a;
+  }
+  
+  public PGPPublicKey[] getTeamPublicKeys()
+  {
+    if ( teamtrust == null )
+      return new PGPPublicKey[0];
+    List<PGPPublicKeyRing> list = teamtrust.getAllTeamPublicKeyRings();
+    PGPPublicKey[] a = new PGPPublicKey[list.size()];
+    for ( int i=0; i<a.length; i++ )
+      a[i] = list.get(i).getPublicKey();
+    return a;
+  }
   
   public PGPSecretKey[] getSecretKeys()
   {
@@ -235,6 +314,16 @@ public class CryptographyManager
     personalalias = seckey.getUserIDs().next();
     prefs.setProperty("qyouti.crypto.alias", personalalias );
     prefs.save();
+    try
+    {
+      personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
+      personalkeyfinder.init();
+    }
+    catch (IOException | PGPException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      personalkeyfinder = null;
+    }
   }
   
   
@@ -259,7 +348,6 @@ public class CryptographyManager
         personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
         personalkeyfinder.init();
       }
-      personalkeystore.initB();
       return personalkeystore;
     }
     return null;
@@ -278,7 +366,7 @@ public class CryptographyManager
     // export
     if ( andexport )
     {
-      File file = new File( personalkeystorefile.getParentFile(), alias + "_selfsignedpublickey.gpg" );
+      File file = new File( personalkeystorefile.getParentFile(), alias.replace(" ", "_") + "_selfsignedpublickey.gpg" );
       if ( file.exists() )
         file.delete();
       FileOutputStream fout = new FileOutputStream( file );
@@ -297,7 +385,7 @@ public class CryptographyManager
     PGPSecretKeyRing keyring = new PGPSecretKeyRing(keylist);
     keystore.setSecretKeyRing(keyring);
     
-    storePublicKey( true, alias, keystore, key.getPublicKey() );  
+    storePublicKey( false, alias, keystore, key.getPublicKey() );  
   }  
   
   public void createNewKeys( String alias, char[] password, boolean win ) throws CryptographyManagerException

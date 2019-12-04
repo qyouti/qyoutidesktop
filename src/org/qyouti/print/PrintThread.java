@@ -95,9 +95,9 @@ public class PrintThread extends Thread
       ArrayList<File> pagefiles = new ArrayList<>();
       File pdffile;
       if ( type == TYPE_ANALYSIS )
-        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + "_analysis.pdf" );
+        pdffile = new File( examfolder, examfolder.getName() + "_analysis.pdf" );
       else
-        pdffile = new File( examfolder.getParentFile(), examfolder.getName() + ".pdf" );
+        pdffile = new File( examfolder, examfolder.getName() + ".pdf" );
       PDFMergerUtility pdfmerger = new PDFMergerUtility();
       pdfmerger.setDestinationFileName( pdffile.getAbsolutePath() );        
       PaginationRecord paginationrecord;
@@ -150,9 +150,9 @@ public class PrintThread extends Thread
         System.out.println( "SVG Ready" );
         for ( int i=0; i<paginated.size(); i++ )
         {
-          svgfile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".svg" );
-          QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
-          pagefile = new File( examfolder.getParentFile(), examfolder.getName() + "_" + p + ".pdf" );
+          //svgfile = new File( examfolder, examfolder.getName() + "_" + p + ".svg" );
+          //QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
+          pagefile = new File( examfolder, examfolder.getName() + "_" + p + ".pdf" );
           p++;
           pagefiles.add( pagefile );
           System.out.println( "Transcoding page " + (i+1) + " to " + pagefile.getAbsolutePath() );

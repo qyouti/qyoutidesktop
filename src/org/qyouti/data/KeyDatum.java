@@ -6,6 +6,7 @@
 package org.qyouti.data;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 
 /**
  *
@@ -14,6 +15,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 public class KeyDatum
 {
   long keyid;
+  PGPSecretKey secretkey;
   PGPPublicKey publickey;
   String displayname;
 }

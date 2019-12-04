@@ -28,6 +28,7 @@ import org.apache.fop.fonts.*;
 import org.apache.fop.svg.*;
 import org.apache.fop.svg.font.*;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.qyouti.barcode.*;
 import org.quipto.compositefile.EncryptedCompositeFileUser;
@@ -511,20 +512,20 @@ public class QyoutiFrame
     jScrollPane8 = new javax.swing.JScrollPane();
     keyadministratorlist = new javax.swing.JList<>();
     jPanel18 = new javax.swing.JPanel();
-    jButton2 = new javax.swing.JButton();
-    jButton3 = new javax.swing.JButton();
+    addadministratorbutton = new javax.swing.JButton();
+    removeadministratorbutton = new javax.swing.JButton();
     jPanel17 = new javax.swing.JPanel();
     jScrollPane9 = new javax.swing.JScrollPane();
     keyexaminerlist = new javax.swing.JList<>();
     jPanel19 = new javax.swing.JPanel();
-    jButton4 = new javax.swing.JButton();
-    jButton5 = new javax.swing.JButton();
+    addexaminerbutton = new javax.swing.JButton();
+    removeexaminerbutton = new javax.swing.JButton();
     jPanel20 = new javax.swing.JPanel();
     jScrollPane10 = new javax.swing.JScrollPane();
     keyobserverlist = new javax.swing.JList<>();
     jPanel21 = new javax.swing.JPanel();
-    jButton6 = new javax.swing.JButton();
-    jButton7 = new javax.swing.JButton();
+    addobserverbutton = new javax.swing.JButton();
+    removeobserverbutton = new javax.swing.JButton();
     qtab = new javax.swing.JPanel();
     jSplitPane3 = new javax.swing.JSplitPane();
     sp1 = new javax.swing.JScrollPane();
@@ -613,12 +614,13 @@ public class QyoutiFrame
     progressbar = new javax.swing.JProgressBar();
     menubar = new javax.swing.JMenuBar();
     filemenu = new javax.swing.JMenu();
-    identitymenuitem = new javax.swing.JMenuItem();
-    sep1c = new javax.swing.JPopupMenu.Separator();
     newmenuitem = new javax.swing.JMenuItem();
     openmenuitem = new javax.swing.JMenuItem();
     savemenuitem = new javax.swing.JMenuItem();
     propsmenuitem = new javax.swing.JMenuItem();
+    sep1c = new javax.swing.JPopupMenu.Separator();
+    identitymenuitem = new javax.swing.JMenuItem();
+    teammenuitem = new javax.swing.JMenuItem();
     sep1 = new javax.swing.JPopupMenu.Separator();
     configmenuitem = new javax.swing.JMenuItem();
     aboutmenuitem = new javax.swing.JMenuItem();
@@ -734,13 +736,25 @@ public class QyoutiFrame
 
     jPanel16.add(jScrollPane8, java.awt.BorderLayout.CENTER);
 
-    jButton2.setText("Add");
-    jButton2.setEnabled(false);
-    jPanel18.add(jButton2);
+    addadministratorbutton.setText("Add");
+    addadministratorbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        addadministratorbuttonActionPerformed(evt);
+      }
+    });
+    jPanel18.add(addadministratorbutton);
 
-    jButton3.setText("Remove");
-    jButton3.setEnabled(false);
-    jPanel18.add(jButton3);
+    removeadministratorbutton.setText("Remove");
+    removeadministratorbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        removeadministratorbuttonActionPerformed(evt);
+      }
+    });
+    jPanel18.add(removeadministratorbutton);
 
     jPanel16.add(jPanel18, java.awt.BorderLayout.PAGE_START);
 
@@ -755,13 +769,25 @@ public class QyoutiFrame
 
     jPanel17.add(jScrollPane9, java.awt.BorderLayout.CENTER);
 
-    jButton4.setText("Add");
-    jButton4.setEnabled(false);
-    jPanel19.add(jButton4);
+    addexaminerbutton.setText("Add");
+    addexaminerbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        addexaminerbuttonActionPerformed(evt);
+      }
+    });
+    jPanel19.add(addexaminerbutton);
 
-    jButton5.setText("Remove");
-    jButton5.setEnabled(false);
-    jPanel19.add(jButton5);
+    removeexaminerbutton.setText("Remove");
+    removeexaminerbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        removeexaminerbuttonActionPerformed(evt);
+      }
+    });
+    jPanel19.add(removeexaminerbutton);
 
     jPanel17.add(jPanel19, java.awt.BorderLayout.PAGE_START);
 
@@ -776,13 +802,25 @@ public class QyoutiFrame
 
     jPanel20.add(jScrollPane10, java.awt.BorderLayout.CENTER);
 
-    jButton6.setText("Add");
-    jButton6.setEnabled(false);
-    jPanel21.add(jButton6);
+    addobserverbutton.setText("Add");
+    addobserverbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        addobserverbuttonActionPerformed(evt);
+      }
+    });
+    jPanel21.add(addobserverbutton);
 
-    jButton7.setText("Remove");
-    jButton7.setEnabled(false);
-    jPanel21.add(jButton7);
+    removeobserverbutton.setText("Remove");
+    removeobserverbutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        removeobserverbuttonActionPerformed(evt);
+      }
+    });
+    jPanel21.add(removeobserverbutton);
 
     jPanel20.add(jPanel21, java.awt.BorderLayout.PAGE_START);
 
@@ -1328,17 +1366,6 @@ public class QyoutiFrame
 
     filemenu.setText("File");
 
-    identitymenuitem.setText("Select Encryption Key...");
-    identitymenuitem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        identitymenuitemActionPerformed(evt);
-      }
-    });
-    filemenu.add(identitymenuitem);
-    filemenu.add(sep1c);
-
     newmenuitem.setText("New Exam...");
     newmenuitem.addActionListener(new java.awt.event.ActionListener()
     {
@@ -1378,6 +1405,27 @@ public class QyoutiFrame
       }
     });
     filemenu.add(propsmenuitem);
+    filemenu.add(sep1c);
+
+    identitymenuitem.setText("Manage Personal Keystore...");
+    identitymenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        identitymenuitemActionPerformed(evt);
+      }
+    });
+    filemenu.add(identitymenuitem);
+
+    teammenuitem.setText("Manage Team Keystore...");
+    teammenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        teammenuitemActionPerformed(evt);
+      }
+    });
+    filemenu.add(teammenuitem);
     filemenu.add(sep1);
 
     configmenuitem.setText("Configure...");
@@ -1635,6 +1683,13 @@ public class QyoutiFrame
       JOptionPane.showMessageDialog( this, "No question to analyse." );
       return;
     }
+
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) && 
+            !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only analyse questions if your key is in the administrator or examiner list." );
+      return;
+    }
     
     int i, n=0;
     CandidateData cd;
@@ -1737,6 +1792,12 @@ public class QyoutiFrame
       return;
     }
 
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only import candidates if your key is in the administrator list." );
+      return;
+    }
+
     String lastprintid = exam.getLastPrintID();    
     if ( lastprintid != null && lastprintid.length() != 0 )
     {
@@ -1798,6 +1859,16 @@ public class QyoutiFrame
       return;
     }
 
+    boolean admin = exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR);
+    if ( !admin && 
+            !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only edit questions if your key is in the administrator or examiner list." );
+      return;
+    }
+
+
+
     QTIElementItem item = null;
     if ( tabs.getSelectedComponent() == qtab )
     {
@@ -1827,9 +1898,9 @@ public class QyoutiFrame
     }
 
     String lastprintid = exam.getLastPrintID();
-    template.setPresentationeditenabled( lastprintid == null || lastprintid.length() == 0 );
-    template.setProcessingeditenabled( exam.scans.size() == 0 );
-
+    template.setPresentationeditenabled( admin && (lastprintid == null || lastprintid.length() == 0) );
+    template.setProcessingeditenabled( admin && (exam.scans.size() == 0) );
+      
     QuestionEditDialog dialog = new QuestionEditDialog( this, true );
     dialog.setTemplate( template );
     dialog.setVisible( true );
@@ -1885,6 +1956,14 @@ public class QyoutiFrame
       return;
     }
 
+    boolean admin = exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR);
+    if ( !admin && 
+            !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only edit questions if your key is in the administrator or examiner list." );
+      return;
+    }
+
     QTIElementItem item = null;
 
     int n = exam.qdefs.getRowCount();
@@ -1909,8 +1988,8 @@ public class QyoutiFrame
       }
 
       String lastprintid = exam.getLastPrintID();
-      template.setPresentationeditenabled( lastprintid == null || lastprintid.length() == 0 );
-      template.setProcessingeditenabled( exam.scans.size() == 0 );
+      template.setPresentationeditenabled( admin && (lastprintid == null || lastprintid.length() == 0) );
+      template.setProcessingeditenabled( admin && (exam.scans.size() == 0) );
 
       dialog.addTemplate( template );
     }
@@ -1925,6 +2004,12 @@ public class QyoutiFrame
     {
       JOptionPane.
               showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can clear scanned images and the data extracted from them, if your key is in the administrator list." );
       return;
     }
 
@@ -1944,6 +2029,11 @@ public class QyoutiFrame
 
   private void forgetprintmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_forgetprintmenuitemActionPerformed
   {//GEN-HEADEREND:event_forgetprintmenuitemActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only forget a print run if your key is in the administrators list." );
+      return;
+    }
 
     if ( exam == null )
     {
@@ -1984,6 +2074,12 @@ public class QyoutiFrame
     {
       JOptionPane.
               showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only print the paper if your key is in the administrators list." );
       return;
     }
 
@@ -2076,6 +2172,12 @@ public class QyoutiFrame
       return;
     }
 
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only import scanned images if your key is in the administrator list." );
+      return;
+    }
+    
     String lpid = exam.getLastPrintID();
     if ( lpid == null || lpid.length() == 0 )
     {
@@ -2241,6 +2343,13 @@ public class QyoutiFrame
 
   private void recomputemenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_recomputemenuitemActionPerformed
   {//GEN-HEADEREND:event_recomputemenuitemActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) &&
+          !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER)  )
+    {
+      JOptionPane.showMessageDialog( this, "You can only import scanned images if your key is in the administrator or examiner list." );
+      return;
+    }
+    
     exam.recomputeOutcomes();
     updateLeftReviewList();
   }//GEN-LAST:event_recomputemenuitemActionPerformed
@@ -2418,6 +2527,12 @@ public class QyoutiFrame
 
   private void allanonbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_allanonbuttonActionPerformed
   {//GEN-HEADEREND:event_allanonbuttonActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only change anonymity if your key is in the administrator list." );
+      return;
+    }
+    
     String lpid = exam.getLastPrintID();
     if ( lpid != null && lpid.length() > 0 )
     {
@@ -2439,6 +2554,12 @@ public class QyoutiFrame
 
   private void noneanonbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_noneanonbuttonActionPerformed
   {//GEN-HEADEREND:event_noneanonbuttonActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only change anonymity if your key is in the administrator list." );
+      return;
+    }
+    
     String lpid = exam.getLastPrintID();
     if ( lpid != null && lpid.length() > 0 )
     {
@@ -2481,6 +2602,12 @@ public class QyoutiFrame
 
   private void confirmreviewmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_confirmreviewmenuitemActionPerformed
   {//GEN-HEADEREND:event_confirmreviewmenuitemActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only confirm if your key is in the examiner list." );
+      return;
+    }
+
     tabs.setSelectedComponent( rtab );
     
     CandidateQuestionPanel cqp;
@@ -2494,6 +2621,12 @@ public class QyoutiFrame
 
   private void overridereviewmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_overridereviewmenuitemActionPerformed
   {//GEN-HEADEREND:event_overridereviewmenuitemActionPerformed
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only override if your key is in the examiner list." );
+      return;
+    }
+    
     tabs.setSelectedComponent( rtab );
     
     CandidateQuestionPanel cqp;
@@ -2530,6 +2663,12 @@ public class QyoutiFrame
     {
       JOptionPane.
       showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only edit examination properties if your key is in the administrator list." );
       return;
     }
 
@@ -2597,6 +2736,121 @@ public class QyoutiFrame
   {//GEN-HEADEREND:event_identitymenuitemActionPerformed
     identitydialog.setVisible( true );
   }//GEN-LAST:event_identitymenuitemActionPerformed
+
+  private void teammenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_teammenuitemActionPerformed
+  {//GEN-HEADEREND:event_teammenuitemActionPerformed
+    
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+    
+    TeamDialog teamdialog = new TeamDialog( this, cryptomanager );
+    teamdialog.setVisible( true );
+    
+  }//GEN-LAST:event_teammenuitemActionPerformed
+
+  private void addPersonToExam( String type )
+  {
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only add keys to the access rights if your key is in the administrators list." );
+      return;
+    }
+    
+    ExamAddMemberDialog dialog = new ExamAddMemberDialog( this, cryptomanager );
+    dialog.setVisible( true );
+    
+    PGPPublicKey selectedpublickey = dialog.getSelectedPublicKey();
+    if ( selectedpublickey == null )
+      return;
+    long keyid = selectedpublickey.getKeyID();
+    
+    if ( JOptionPane.showConfirmDialog( this, 
+            "Are you sure you want to add: \n" + 
+            selectedpublickey.getUserIDs().next() +
+                    "\n to the examination in the role of " + type + "?",
+            "Add Key to Exam",
+            JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION )
+      return;
+    
+    if ( "administrator".equals(type) )
+      exam.addAdministratorKey( keyid );
+    else if ( "examiner".equals(type) )
+      exam.addExaminerKey( keyid );
+    else if ( "observer".equals(type) )
+      exam.addObserverKey( keyid );
+  }
+  
+  private void removePersonFromExam( String type, JList listbox )
+  {
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only remove keys from the access rights if your key is in the administrators list." );
+      return;
+    }
+    
+    int selection = listbox.getSelectedIndex();
+    if ( selection < 0 )
+    {
+      JOptionPane.showMessageDialog( this, "You need to select a key in the list before pressing the remove button." );
+      return;
+    }
+    String name="";
+    if ( "administrator".equals(type) )
+      name = exam.getAdministratorKeyName(selection);
+    else if ( "examiner".equals(type) )
+      name = exam.getExaminerKeyName( selection );
+    else if ( "observer".equals(type) )
+      name = exam.getObserverKeyName( selection );    
+
+    if ( JOptionPane.showConfirmDialog( this, 
+            "Are you sure you want to remove: \n" + 
+            name +
+                    "\n (in the role of " + type + ") from the examination?",
+            "Remove Key from Exam",
+            JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION )
+      return;
+    
+    if ( "administrator".equals(type) )
+      exam.removeAdministratorKey( selection );
+    else if ( "examiner".equals(type) )
+      exam.removeExaminerKey( selection );
+    else if ( "observer".equals(type) )
+      exam.removeObserverKey( selection );    
+  }
+  
+  private void addadministratorbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_addadministratorbuttonActionPerformed
+  {//GEN-HEADEREND:event_addadministratorbuttonActionPerformed
+    addPersonToExam( "administator" );
+  }//GEN-LAST:event_addadministratorbuttonActionPerformed
+
+  private void addexaminerbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_addexaminerbuttonActionPerformed
+  {//GEN-HEADEREND:event_addexaminerbuttonActionPerformed
+    addPersonToExam( "examiner" );
+  }//GEN-LAST:event_addexaminerbuttonActionPerformed
+
+  private void addobserverbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_addobserverbuttonActionPerformed
+  {//GEN-HEADEREND:event_addobserverbuttonActionPerformed
+    addPersonToExam( "observer" );
+  }//GEN-LAST:event_addobserverbuttonActionPerformed
+
+  private void removeadministratorbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_removeadministratorbuttonActionPerformed
+  {//GEN-HEADEREND:event_removeadministratorbuttonActionPerformed
+    removePersonFromExam( "administrator", keyadministratorlist );
+  }//GEN-LAST:event_removeadministratorbuttonActionPerformed
+
+  private void removeexaminerbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_removeexaminerbuttonActionPerformed
+  {//GEN-HEADEREND:event_removeexaminerbuttonActionPerformed
+    removePersonFromExam( "examiner", keyexaminerlist );
+  }//GEN-LAST:event_removeexaminerbuttonActionPerformed
+
+  private void removeobserverbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_removeobserverbuttonActionPerformed
+  {//GEN-HEADEREND:event_removeobserverbuttonActionPerformed
+    removePersonFromExam( "observer", keyobserverlist );
+  }//GEN-LAST:event_removeobserverbuttonActionPerformed
 
   /**/
   
@@ -2773,6 +3027,7 @@ public class QyoutiFrame
               log( Level.SEVERE, null, ex );
       noexamloadedlabel.setText( "Error attempting to load exam/survey." );
       ((CardLayout)centralpanel.getLayout()).first( centralpanel );
+      JOptionPane.showMessageDialog( this, "Unable to open the exam data files." );
     }
 
   }
@@ -2834,6 +3089,9 @@ public class QyoutiFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutmenuitem;
   private javax.swing.JMenu actionmenu;
+  private javax.swing.JButton addadministratorbutton;
+  private javax.swing.JButton addexaminerbutton;
+  private javax.swing.JButton addobserverbutton;
   private javax.swing.JButton allanonbutton;
   private javax.swing.JTable analysistable;
   private javax.swing.JPanel atab;
@@ -2864,12 +3122,6 @@ public class QyoutiFrame
   private javax.swing.JMenuItem importqmenuitem;
   private javax.swing.JMenuItem itemanalysismenuitem;
   private javax.swing.JButton jButton1;
-  private javax.swing.JButton jButton2;
-  private javax.swing.JButton jButton3;
-  private javax.swing.JButton jButton4;
-  private javax.swing.JButton jButton5;
-  private javax.swing.JButton jButton6;
-  private javax.swing.JButton jButton7;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel3;
@@ -2957,6 +3209,9 @@ public class QyoutiFrame
   private javax.swing.JTable questionreviewtable;
   private javax.swing.JTable questiontable;
   private javax.swing.JMenuItem recomputemenuitem;
+  private javax.swing.JButton removeadministratorbutton;
+  private javax.swing.JButton removeexaminerbutton;
+  private javax.swing.JButton removeobserverbutton;
   private javax.swing.JButton resetpreferencesbutton;
   private javax.swing.JRadioButton reviewincludeall;
   private javax.swing.ButtonGroup reviewincludebuttongroup;
@@ -2989,6 +3244,7 @@ public class QyoutiFrame
   private javax.swing.JPanel statuspanel;
   private javax.swing.JTabbedPane tabs;
   private javax.swing.JLabel teamkeystorelabel;
+  private javax.swing.JMenuItem teammenuitem;
   private javax.swing.JMenuItem viewscanmenuitem;
   // End of variables declaration//GEN-END:variables
 

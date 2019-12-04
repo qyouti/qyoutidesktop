@@ -27,10 +27,10 @@ import au.com.bytecode.opencsv.CSVWriter;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.*;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.*;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclFileAttributeView;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.*;
@@ -38,8 +38,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.swing.DefaultListModel;
-import javax.swing.JOptionPane;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.xml.parsers.DocumentBuilder;
@@ -47,18 +45,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import org.apache.fop.apps.*;
 import org.bouncycastle.openpgp.PGPException;
-import org.qyouti.clipboard.*;
 import org.qyouti.crypto.CryptographyManager;
 import org.quipto.compositefile.*;
 import org.qyouti.QyoutiFrame;
@@ -68,11 +59,9 @@ import org.qyouti.qti1.element.QTIElementMattext;
 import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QTIRenderOptions;
 import org.qyouti.qti1.gui.QuestionMetricsRecordSetCache;
-import org.qyouti.statistics.Histogram;
 import org.qyouti.templates.ItemTemplate;
 import org.qyouti.util.QyoutiUtils;
 import org.qyouti.xml.QyoutiDocBuilderFactory;
-import org.qyouti.xml.StringProcessor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -87,6 +76,10 @@ import org.xml.sax.*;
 public class ExaminationData
         extends AbstractTableModel implements QTIRenderOptions
 {
+  public static final int EXAM_ROLE_ADMINISTRATOR = 0;
+  public static final int EXAM_ROLE_EXAMINER = 1;
+  public static final int EXAM_ROLE_OBSERVER = 2;
+  
   private CryptographyManager cryptomanager;
   private EncryptedCompositeFileUser user;
   public ExaminationCatalogue examcatalogue = null;
@@ -95,6 +88,8 @@ public class ExaminationData
   public KeyData keysadmin;
   public KeyData keysexaminer;
   public KeyData keysobserver;
+  
+  public KeyData[] keysbyrole = new KeyData[3];
   
   public Hashtable<String, PersonData> persons = new Hashtable<>();
   public ArrayList<PersonData> persons_sorted = new ArrayList<>();
@@ -178,6 +173,9 @@ public class ExaminationData
     this.keysadmin    = new KeyData( cryptomanager );
     this.keysexaminer = new KeyData( cryptomanager );
     this.keysobserver = new KeyData( cryptomanager );
+    keysbyrole[ExaminationData.EXAM_ROLE_ADMINISTRATOR] = keysadmin;
+    keysbyrole[ExaminationData.EXAM_ROLE_EXAMINER]      = keysexaminer;
+    keysbyrole[ExaminationData.EXAM_ROLE_OBSERVER]      = keysobserver;
     
     user = this.cryptomanager.getUser();
     this.examcatalogue = examcatalogue;
@@ -205,23 +203,61 @@ public class ExaminationData
     mainarchive.close();
   }
 
+  public boolean isCurrentUserInRole( int role )
+  {
+    KeyData data = keysbyrole[role];
+    return data.contains( cryptomanager.getPreferredSecretKey().getKeyID() );
+  }
 
   public void addAdministratorKey( long keyid )
   {
     keysadmin.addKey( keyid );
-    unsaved_changes=true;
+    setUnsavedChangesInMain(true);
   }
   
   public void addExaminerKey( long keyid )
   {
     keysexaminer.addKey( keyid );
-    unsaved_changes=true;
+    setUnsavedChangesInMain(true);
   }
   
   public void addObserverKey( long keyid )
   {
     keysobserver.addKey( keyid );
-    unsaved_changes=true;
+    setUnsavedChangesInMain(true);
+  }
+  
+  public String getAdministratorKeyName( int index )
+  {
+    return keysadmin.getElementAt(index);
+  }
+  
+  public String getExaminerKeyName( int index )
+  {
+    return keysexaminer.getElementAt(index);
+  }
+  
+  public String getObserverKeyName( int index )
+  {
+    return keysobserver.getElementAt(index);
+  }
+  
+  public void removeAdministratorKey( int index )
+  {
+    keysadmin.removeKeyAt(index);
+    setUnsavedChangesInMain(true);
+  }
+  
+  public void removeExaminerKey( int index )
+  {
+    keysexaminer.removeKeyAt(index);
+    setUnsavedChangesInMain(true);
+  }
+  
+  public void removeObserverKey( int index )
+  {
+    keysobserver.removeKeyAt(index);
+    setUnsavedChangesInMain(true);
   }
   
   // Gather all use of "fireTable***" to methods here to make it hard to
@@ -1775,6 +1811,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       {
         Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
       }
+      
+      if ( isCurrentUserInRole(EXAM_ROLE_ADMINISTRATOR) )
+        updateAccessRights();
     }
     unsaved_changes = false;
     fireStatusChange();
@@ -2516,7 +2555,52 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     
   }
   
+  public void updateAccessRights( EncryptedCompositeFile f, KeyData keys, int permissions )
+  {
+    try
+    {
+      for ( KeyDatum keydatum : keys.keylist )
+      {
+          f.addPublicKey( keydatum.publickey );
+          f.setPermission( keydatum.publickey, permissions );
+      }
+      Path file = new File( f.getCanonicalPath() ).toPath();
+      AclFileAttributeView view = Files.getFileAttributeView(file, AclFileAttributeView.class);
+      System.out.println( "Name of ACL: " + view.name() );
+      for ( AclEntry entry : view.getAcl() )
+      {
+        System.out.println( "ACL Entry: " + entry.toString() );
+      }
+      System.out.println( "End of ACL " );
+    }
+    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException ex)
+    {
+      Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
   
+  public void updateAccessRights()
+  {
+    ArrayList<EncryptedCompositeFile> allfiles = new ArrayList<>();
+    ArrayList<EncryptedCompositeFile> examinerfiles = new ArrayList<>();
+    allfiles.add( mainarchive );
+    allfiles.add( questionarchive );
+    allfiles.add( scanarchive );
+    allfiles.add( examinerarchive );
+    allfiles.add( outcomearchive );
+    examinerfiles.add( examinerarchive );
+    examinerfiles.add( outcomearchive );
+    
+    for ( EncryptedCompositeFile f : allfiles )
+    {
+      updateAccessRights( f, keysadmin, EncryptedCompositeFile.ALL_PERMISSIONS );
+      if ( examinerfiles.contains(f) )
+        updateAccessRights( f, keysexaminer, EncryptedCompositeFile.READ_PERMISSION | EncryptedCompositeFile.WRITE_PERMISSION );
+      else
+        updateAccessRights( f, keysexaminer, EncryptedCompositeFile.READ_PERMISSION );
+      updateAccessRights( f, keysobserver, EncryptedCompositeFile.READ_PERMISSION );
+    }
+  }
   
   public static void saveNewExamination( CryptographyManager cryptomanager, File examfolder, String strmain, String strquestions )
   {
@@ -2562,15 +2646,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
       if ( temparchive != null )
       {
-        try
-        {
-          temparchive.close();
-        }
-        catch ( IOException ex )
-        {
-          Logger.getLogger( ExaminationData.class.getName() ).
-                  log( Level.SEVERE, null, ex );          
-        }
+        temparchive.close();
       }
     }
     
@@ -2602,15 +2678,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       }
       if ( temparchive != null )
       {
-        try
-        {
-          temparchive.close();
-        }
-        catch ( IOException ex )
-        {
-          Logger.getLogger( ExaminationData.class.getName() ).
-                  log( Level.SEVERE, null, ex );          
-        }
+        temparchive.close();
       }
     }    
 

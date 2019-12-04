@@ -107,7 +107,7 @@ public class CreateIdentityDialog
     char[] pass1    = passwordfield1.getPassword();
     char[] pass2    = passwordfield2.getPassword();
 
-    String alias = name; //name + " (" + username + ") <" + email + ">";
+    String alias = name + " (" + username + ") <" + email + ">";
     if ( win )
       pass1=null;
     

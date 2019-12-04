@@ -474,6 +474,12 @@ public class CandidateQuestionPanel
   
   public void handleDecision( int n )
   {
+    if ( !candidate.exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_EXAMINER) )
+    {
+      JOptionPane.showMessageDialog( this, "You can only record decisions about candidate input if your key is in the examiner list." );
+      return;
+    }
+    
     if ( n != scannedquestiondata.getExaminerDecision() )
     {
       System.out.println( "examiner decision change." );
