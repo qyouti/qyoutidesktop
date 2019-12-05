@@ -23,6 +23,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.quipto.compositefile.EncryptedCompositeFileUser;
+import org.quipto.passwords.WindowsPasswordHandler;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.data.KeyData;
 
@@ -34,7 +35,6 @@ public class IdentityDialog
         extends javax.swing.JDialog
 {
   CryptographyManager cryptoman;
-  EncryptedCompositeFileUser user;
 
   private static final DateFormat df = new SimpleDateFormat( "HH:mm dd/MMM/yyyy" );
 
@@ -49,6 +49,7 @@ public class IdentityDialog
   public IdentityDialog(Frame parent, CryptographyManager cryptoman )
   {
     super(parent, true);
+    this.setTitle("Qyouti - Manage Personal Key Store");
     this.cryptoman = cryptoman;
     secretentries = new KeyData( cryptoman );
     publicentries = new KeyData( cryptoman );
@@ -94,15 +95,24 @@ public class IdentityDialog
     deletebutton.setEnabled( selecteditem >= 0 );
   }
   
-  private final void updateFields()
+  private void updateFields()
   {
     secretentries.clear();
     publicentries.clear();
     
     PGPSecretKey preferredseckey = null;
     
+    keystorelabel.setText("");
+    protectiontypelabel.setText("");
+    String alias = cryptoman.getPersonalAlias();
+    activekeylabel.setText( alias==null?"no active key selected":alias );
     if ( cryptoman.personalKeyStoreFileExists() )
     {
+      if ( cryptoman.getPersonalKeyStoreUser().getPasswordHandler() instanceof WindowsPasswordHandler )
+        protectiontypelabel.setText( "Windows Cryptography" );
+      else
+        protectiontypelabel.setText( "Password" );
+      keystorelabel.setText( cryptoman.getPersonalKeyStoreFile().getAbsolutePath() );
       PGPSecretKey[] seckeys;
       seckeys = cryptoman.getSecretKeys();
       for ( PGPSecretKey k : seckeys )
@@ -129,7 +139,7 @@ public class IdentityDialog
     if ( selected >= 0 )
     {
       PGPSecretKey seck = secretentries.getSecretKeyAt(selected);
-      SecretKeyPanel skpanel = new SecretKeyPanel( seck, cryptoman.hasEncryptedWindowsPassword( seck ) );
+      SecretKeyPanel skpanel = new SecretKeyPanel( cryptoman, seck );
       secretsplitpane.setRightComponent( skpanel );
     }    
     else
@@ -149,7 +159,7 @@ public class IdentityDialog
     if ( selected >= 0 )
     {
       PGPPublicKey puck = publicentries.getKeyAt(selected);
-      PublicKeyPanel pukpanel = new PublicKeyPanel( puck );
+      PublicKeyPanel pukpanel = new PublicKeyPanel( cryptoman, puck );
       trustedsplitpane.setRightComponent( pukpanel );
     }    
     else
@@ -441,7 +451,7 @@ public class IdentityDialog
     seckey = secretentries.getSecretKeyAt( selected );
     cryptoman.setPreferredSecretKey( seckey );
     updateFields();
-    dispose();
+    JOptionPane.showMessageDialog( rootPane, "The selected key has been made active and will automatically load in the future." );    
   }//GEN-LAST:event_activatebuttonActionPerformed
 
   private void secretkeypairlistValueChanged(javax.swing.event.ListSelectionEvent evt)//GEN-FIRST:event_secretkeypairlistValueChanged
@@ -542,7 +552,7 @@ public class IdentityDialog
     }
 
     JOptionPane.showMessageDialog( rootPane, "Success - the key was imported into your personal store." );
-    updateSelectedTrustedKeyPane();    
+    updateFields();  
   }//GEN-LAST:event_importbuttonActionPerformed
 
   

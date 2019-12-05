@@ -3081,7 +3081,15 @@ public class QyoutiFrame
     {
       public void run()
       {
-        new QyoutiFrame().setVisible( true );
+        try
+        {
+          new QyoutiFrame().setVisible( true );
+        }
+        catch ( Exception e )
+        {
+          e.printStackTrace();
+          System.exit( 1 );
+        }
       }
     } );
   }

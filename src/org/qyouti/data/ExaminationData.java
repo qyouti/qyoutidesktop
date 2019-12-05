@@ -30,14 +30,20 @@ import java.math.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
 import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.UserPrincipal;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.xml.parsers.DocumentBuilder;
@@ -79,6 +85,37 @@ public class ExaminationData
   public static final int EXAM_ROLE_ADMINISTRATOR = 0;
   public static final int EXAM_ROLE_EXAMINER = 1;
   public static final int EXAM_ROLE_OBSERVER = 2;
+
+
+  static final Set<AclEntryPermission> READPERMISSIONS = EnumSet.of(
+            AclEntryPermission.READ_DATA, 
+            AclEntryPermission.READ_NAMED_ATTRS, 
+            AclEntryPermission.READ_ATTRIBUTES,
+            AclEntryPermission.READ_ACL,
+            AclEntryPermission.SYNCHRONIZE
+    );
+  static final Set<AclEntryPermission> WRITEPERMISSIONS = EnumSet.of(
+            AclEntryPermission.WRITE_DATA, 
+            AclEntryPermission.APPEND_DATA, 
+            AclEntryPermission.WRITE_ATTRIBUTES,
+            AclEntryPermission.WRITE_NAMED_ATTRS
+    );
+  static final Set<AclEntryPermission> ACCESSPERMISSIONS = EnumSet.of(
+            AclEntryPermission.DELETE, 
+            AclEntryPermission.WRITE_ACL, 
+            AclEntryPermission.WRITE_OWNER
+    );
+  static final Set<AclEntryPermission> READWRITEPERMISSIONS;
+  static final Set<AclEntryPermission> FULLPERMISSIONS;
+  static
+  {
+    READWRITEPERMISSIONS = EnumSet.copyOf(READPERMISSIONS);
+    READWRITEPERMISSIONS.addAll(WRITEPERMISSIONS);
+    FULLPERMISSIONS = EnumSet.copyOf(READWRITEPERMISSIONS);
+    FULLPERMISSIONS.addAll(ACCESSPERMISSIONS);    
+  }
+          
+
   
   private CryptographyManager cryptomanager;
   private EncryptedCompositeFileUser user;
@@ -1812,11 +1849,11 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
       }
       
-      if ( isCurrentUserInRole(EXAM_ROLE_ADMINISTRATOR) )
-        updateAccessRights();
     }
     unsaved_changes = false;
     fireStatusChange();
+    if ( isCurrentUserInRole(EXAM_ROLE_ADMINISTRATOR) )
+      updateAccessRights();
     return true;
   }
 
@@ -2555,7 +2592,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     
   }
   
-  public void updateAccessRights( EncryptedCompositeFile f, KeyData keys, int permissions )
+  private void updateAccessRights( EncryptedCompositeFile f, KeyData keys, int permissions )
   {
     try
     {
@@ -2564,19 +2601,111 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
           f.addPublicKey( keydatum.publickey );
           f.setPermission( keydatum.publickey, permissions );
       }
-      Path file = new File( f.getCanonicalPath() ).toPath();
-      AclFileAttributeView view = Files.getFileAttributeView(file, AclFileAttributeView.class);
-      System.out.println( "Name of ACL: " + view.name() );
-      for ( AclEntry entry : view.getAcl() )
-      {
-        System.out.println( "ACL Entry: " + entry.toString() );
-      }
-      System.out.println( "End of ACL " );
     }
     catch (IOException | NoSuchProviderException | NoSuchAlgorithmException ex)
     {
       Logger.getLogger(ExaminationData.class.getName()).log(Level.SEVERE, null, ex);
     }
+  }
+  
+  private AclEntry addPrincipalToACEBuilder( FileSystem filesystem, AclEntry.Builder builder, String name )
+  {
+    UserPrincipal principal;
+    try
+    {
+      // TODO get rid of hard-wired windows domain
+      // by looking at domain part of user email address
+      System.out.println( "Looking for " + name );
+      principal = filesystem.getUserPrincipalLookupService().lookupPrincipalByName( name );
+    }
+    catch ( Exception e )
+    {
+      System.out.println( "Not found." );
+      principal=null;
+    }
+    if ( principal != null )
+    {
+      builder.setPrincipal(principal);
+      return builder.build();
+    }    
+    return null;
+  }
+  
+  private void updateOperatingSystemAccessRights( Path file, List<Set<AclEntryPermission>> permsetlist ) throws IOException
+  {
+    AclFileAttributeView view = Files.getFileAttributeView(file, AclFileAttributeView.class);
+    if ( view == null )
+      throw new IOException("Unable to set file permissions on " + file.toString() + " because the file system does not support access rights." );
+    List<AclEntry> oldlist = view.getAcl();
+    System.out.println( "Dumping ACL for: " + file.toString() );
+    for ( AclEntry entry : oldlist )
+      System.out.println( "ACL Entry: " + entry.toString() );
+    System.out.println( "End of ACL " );
+
+
+    FileSystem filesystem = file.getFileSystem();
+    ArrayList<AclEntry> aclentrylist = new ArrayList<>();
+    AclEntry.Builder builder = AclEntry.newBuilder();
+    Pattern pattern = Pattern.compile("\\((.*?)\\)");
+
+    builder.setType(AclEntryType.ALLOW);
+    builder.setFlags(); 
+    builder.setPermissions( permsetlist.get( 0 ) );
+    AclEntry ace = addPrincipalToACEBuilder( filesystem, builder, "\\OWNER RIGHTS" );
+    if ( ace == null )
+      throw new IOException( "Unable to find the '\\OWNER RIGHTS security principal trying to access rights on " + file.toString() );
+    aclentrylist.add(ace);
+
+    for ( int r=0; r<keysbyrole.length; r++ )
+    {
+      builder.setType(AclEntryType.ALLOW);
+      builder.setFlags(); 
+      builder.setPermissions( permsetlist.get(r) );
+      for ( KeyDatum k : keysbyrole[r].keylist )
+      {
+        Matcher matcher =pattern.matcher(k.displayname);
+        if ( !matcher.find() )
+          throw new IOException( "Unable to find a computer user name in parentheses as part of the key name " + k.displayname + " Prevented setting access rights on " +file.toString() );
+        String name = "LEEDSBECKETT\\" + matcher.group(1);            // TODO get rid of hard coded domain
+        ace = addPrincipalToACEBuilder( filesystem, builder, name );
+        if ( ace == null )
+          throw new IOException( "Unable to find the given computer user name, " + name + " on the file system. Prevented setting access rights on " +file.toString() );
+        aclentrylist.add(ace);
+      }
+    }
+
+    System.out.println( "Dumping proposed ACL for: " + view.name() );
+    for ( AclEntry entry : aclentrylist )
+      System.out.println( "ACL Entry: " + entry.toString() );
+    System.out.println( "End of ACL " );
+
+    // if same entries in same order no need to save.
+    if ( oldlist.size() == aclentrylist.size() )
+    {
+      boolean equal = true;
+      for ( int i=0; i<oldlist.size(); i++ )
+      {
+        if ( !oldlist.get(i).equals(aclentrylist.get(i)) )
+        {
+          equal = false;
+          break;
+        }
+      }
+      if ( equal )
+      {
+        System.out.println( "Current ACL already matches. No need to save." );
+        return;
+      }
+    }
+    
+    
+    view.setAcl( aclentrylist );
+
+    System.out.println( "Dumping ACL for: " + view.name() );
+    for ( AclEntry entry : view.getAcl() )
+      System.out.println( "ACL Entry: " + entry.toString() );
+    System.out.println( "End of ACL " );
+
   }
   
   public void updateAccessRights()
@@ -2591,6 +2720,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     examinerfiles.add( examinerarchive );
     examinerfiles.add( outcomearchive );
     
+    
+    ArrayList<Set<AclEntryPermission>> permsetlist = new ArrayList<>();
+    
     for ( EncryptedCompositeFile f : allfiles )
     {
       updateAccessRights( f, keysadmin, EncryptedCompositeFile.ALL_PERMISSIONS );
@@ -2599,6 +2731,20 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       else
         updateAccessRights( f, keysexaminer, EncryptedCompositeFile.READ_PERMISSION );
       updateAccessRights( f, keysobserver, EncryptedCompositeFile.READ_PERMISSION );
+      
+      permsetlist.clear();
+      permsetlist.add( FULLPERMISSIONS );
+      permsetlist.add( examinerfiles.contains(f)?READWRITEPERMISSIONS:READPERMISSIONS );
+      permsetlist.add( READPERMISSIONS );
+      Path file = new File( f.getCanonicalPath() ).toPath();
+      try
+      {
+        updateOperatingSystemAccessRights( file, permsetlist );
+      }
+      catch ( IOException ioe )
+      {
+        JOptionPane.showMessageDialog(null, "Data was saved but failed to set access rights on the saved files.\nReason:\n" + ioe.getMessage() );
+      }
     }
   }
   

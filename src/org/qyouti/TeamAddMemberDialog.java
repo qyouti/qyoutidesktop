@@ -83,6 +83,7 @@ public class TeamAddMemberDialog
     int selecteditem;
     selecteditem = trustedpublickeylist.getSelectedIndex();
     addcontrollerbutton.setEnabled( selecteditem >= 0 );
+    addmemberbutton.setEnabled( selecteditem >= 0 );
   }
   
   private final void updateFields()
@@ -108,7 +109,7 @@ public class TeamAddMemberDialog
     if ( selected >= 0 )
     {
       PGPPublicKey puck = publicentries.getKeyAt(selected);
-      PublicKeyPanel pukpanel = new PublicKeyPanel( puck );
+      PublicKeyPanel pukpanel = new PublicKeyPanel( cryptoman, puck );
       trustedsplitpane.setRightComponent( pukpanel );
     }    
     else
@@ -129,7 +130,7 @@ public class TeamAddMemberDialog
       JOptionPane.showMessageDialog( rootPane, "Select a public key from the list first." );
       return;
     }
-    
+
     selectedkey = publicentries.getKeyAt( selected );
     this.controller = controller;
     dispose();

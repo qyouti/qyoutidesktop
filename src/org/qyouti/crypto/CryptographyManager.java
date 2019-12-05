@@ -63,6 +63,7 @@ public class CryptographyManager
   
   File teamkeystorefile;
   TeamTrust teamtrust;
+  EncryptedCompositeFileUser personalstoreeu;
   EncryptedCompositeFileUser eu;
   
   public CryptographyManager( File base, QyoutiPreferences prefs, PasswordProvider pwprov )
@@ -173,6 +174,11 @@ public class CryptographyManager
     return eu;
   }
   
+  public EncryptedCompositeFileUser getPersonalKeyStoreUser()
+  {
+    return personalstoreeu;
+  }
+  
   public void init() throws CryptographyManagerException
   {
     
@@ -220,8 +226,8 @@ public class CryptographyManager
 
   public PGPPublicKey findPublicKey(long keyid)
   {
-    if ( teamtrust == null )
-      return null;
+    if ( teamtrust == null && personalkeyfinder != null )
+      return personalkeyfinder.findPublicKey(keyid);
     return teamtrust.findPublicKey(keyid);
   }
 
@@ -255,6 +261,11 @@ public class CryptographyManager
     return true;
   }
   
+  public boolean isTeamController()
+  {
+    return teamtrust.isController();
+  }
+  
   public boolean addPublicKeyToTeam( PGPPublicKey pubkey, boolean controller )
   {
     try
@@ -266,6 +277,21 @@ public class CryptographyManager
       Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
       return false;
     }
+    
+    return true;
+  }
+  
+  public boolean removePublicKeyFromTeam( PGPPublicKey pubkey )
+  {
+//    try
+//    {
+//      teamtrust
+//    }
+//    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException ex)
+//    {
+//      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+//      return false;
+//    }
     
     return true;
   }
@@ -329,20 +355,18 @@ public class CryptographyManager
   
   private CompositeFileKeyStore openPersonalKeyStore() throws IOException, PGPException, NoSuchProviderException, NoSuchAlgorithmException
   {
-    EncryptedCompositeFileUser eu;
-    
     try 
     {
       WindowsPasswordHandler winpasshandler = new WindowsPasswordHandler();
-      eu = new EncryptedCompositeFileUser( winpasshandler );
+      personalstoreeu = new EncryptedCompositeFileUser( winpasshandler );
     }
     catch ( KeyStoreException ksex )
     {
-      eu = null;
+      personalstoreeu = null;
     }
-    if ( eu != null )
+    if ( personalstoreeu != null )
     {
-      personalkeystore = new CompositeFileKeyStore( personalkeystorefile, eu );
+      personalkeystore = new CompositeFileKeyStore( personalkeystorefile, personalstoreeu );
       if ( personalalias != null )
       {
         personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );

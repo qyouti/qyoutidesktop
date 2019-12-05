@@ -100,7 +100,7 @@ public class ExamAddMemberDialog
     if ( selected >= 0 )
     {
       PGPPublicKey puck = publicentries.getKeyAt(selected);
-      PublicKeyPanel pukpanel = new PublicKeyPanel( puck );
+      PublicKeyPanel pukpanel = new PublicKeyPanel( cryptoman, puck );
       trustedsplitpane.setRightComponent( pukpanel );
     }    
     else

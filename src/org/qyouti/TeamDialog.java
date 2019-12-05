@@ -42,6 +42,7 @@ public class TeamDialog
   public TeamDialog(Frame parent, CryptographyManager cryptoman )
   {
     super(parent, true);
+    this.setTitle("Qyouti - Manage Team Key Store");
     this.cryptoman = cryptoman;
     publicentries = new KeyData( cryptoman );
     initComponents();    
@@ -90,6 +91,7 @@ public class TeamDialog
     for ( PGPPublicKey k : pubkeys )
       publicentries.addKey( k );
 
+    keystorelabel.setText( cryptoman.getTeamKeyStoreFile().getAbsolutePath() );
     updateSelectedTrustedKeyPane();
     updateButtons();
   }
@@ -101,7 +103,7 @@ public class TeamDialog
     if ( selected >= 0 )
     {
       PGPPublicKey puck = publicentries.getKeyAt(selected);
-      PublicKeyPanel pukpanel = new PublicKeyPanel( puck );
+      PublicKeyPanel pukpanel = new PublicKeyPanel( cryptoman, puck );
       trustedsplitpane.setRightComponent( pukpanel );
     }    
     else
@@ -123,6 +125,7 @@ public class TeamDialog
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents()
   {
+    java.awt.GridBagConstraints gridBagConstraints;
 
     jLabel2 = new javax.swing.JLabel();
     jPanel3 = new javax.swing.JPanel();
@@ -130,8 +133,16 @@ public class TeamDialog
     keystorelabel = new javax.swing.JLabel();
     jPanel1 = new javax.swing.JPanel();
     tabbedpane = new javax.swing.JTabbedPane();
+    teammapsplitpane = new javax.swing.JSplitPane();
     jScrollPane3 = new javax.swing.JScrollPane();
     jTree1 = new javax.swing.JTree();
+    jPanel4 = new javax.swing.JPanel();
+    jScrollPane1 = new javax.swing.JScrollPane();
+    jTextArea1 = new javax.swing.JTextArea();
+    jPanel5 = new javax.swing.JPanel();
+    jPanel6 = new javax.swing.JPanel();
+    jButton1 = new javax.swing.JButton();
+    jButton2 = new javax.swing.JButton();
     trustedsplitpane = new javax.swing.JSplitPane();
     jScrollPane2 = new javax.swing.JScrollPane();
     trustedpublickeylist = new javax.swing.JList<>();
@@ -191,9 +202,54 @@ public class TeamDialog
       }
     });
 
+    teammapsplitpane.setDividerLocation(500);
+    teammapsplitpane.setDividerSize(10);
+    teammapsplitpane.setResizeWeight(0.5);
+
     jScrollPane3.setViewportView(jTree1);
 
-    tabbedpane.addTab("Team Trust Map", jScrollPane3);
+    teammapsplitpane.setLeftComponent(jScrollPane3);
+
+    jPanel4.setLayout(new java.awt.BorderLayout());
+
+    jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+    jTextArea1.setEditable(false);
+    jTextArea1.setColumns(20);
+    jTextArea1.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+    jTextArea1.setLineWrap(true);
+    jTextArea1.setRows(5);
+    jTextArea1.setText("This panel is under development. It will give information about the node selected in the tree diagram. Missing signatures will be highlighted and it will be possible to promote/demote a key to/from controller.\n");
+    jTextArea1.setWrapStyleWord(true);
+    jTextArea1.setOpaque(false);
+    jScrollPane1.setViewportView(jTextArea1);
+
+    jPanel4.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+    jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+    jPanel6.setLayout(new java.awt.GridBagLayout());
+
+    jButton1.setText("Promote");
+    jButton1.setEnabled(false);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
+    jPanel6.add(jButton1, gridBagConstraints);
+
+    jButton2.setText("Demote");
+    jButton2.setEnabled(false);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
+    jPanel6.add(jButton2, gridBagConstraints);
+
+    jPanel5.add(jPanel6);
+
+    jPanel4.add(jPanel5, java.awt.BorderLayout.WEST);
+
+    teammapsplitpane.setRightComponent(jPanel4);
+
+    tabbedpane.addTab("Team Trust Map", teammapsplitpane);
 
     trustedsplitpane.setDividerLocation(200);
     trustedsplitpane.setDividerSize(10);
@@ -271,6 +327,12 @@ public class TeamDialog
     if ( selectedkey == null )
       return;
     
+    if ( !cryptoman.isTeamController() )
+    {
+      JOptionPane.showMessageDialog( rootPane, "Your personal key lacks controller access to the team. So, it is not possible edit the team." );
+      return;
+    }
+    
     if ( !cryptoman.addPublicKeyToTeam(selectedkey, dialog.isSelectedPublicKeyController() ) )
       JOptionPane.showMessageDialog( rootPane, "A technical problem occured attempting to add the key to the team." );      
     
@@ -288,17 +350,18 @@ public class TeamDialog
       return;
     }
     
-    if ( 0 != JOptionPane.showConfirmDialog( rootPane, 
-            "If you delete the key pair you will permanently lose \n" +
-            "access to files protected with just your public key. \n" +
-            "In the case of files which others also have access to \n" +
-            "you may be able to regain access with their cooperation.\n\n" +
-            "Are you sure you want to delete your key pair?",
-            "Delete Key Pair",
+    if ( JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog( rootPane, 
+            "If you delete the public key from the team, data signed \n" +
+            "by the owner of it will no longer be accepted as authentic \n" +
+            "by other team members. Also, data saved by team members will \n" +
+            "not be accessible by the owner of the key.\n\n" +
+            "Are you sure you want to delete the public key?",
+            "Delete Public Key",
             JOptionPane.YES_NO_OPTION ) )
       return;
     
-//    if ( !cryptoman.deleteKeyPair( secretentries.getSecretKeyAt( selected ) ) )
+    JOptionPane.showMessageDialog( rootPane, "Removing keys from the team is not yet implemented." );
+    //cryptoman.removePublicKeyFromTeam( publicentries.getKeyAt( selected ) );
 //      JOptionPane.showMessageDialog( rootPane, "There was a technical fault attempting to delete your key pair." );
     updateFields();
     
@@ -351,16 +414,24 @@ public class TeamDialog
   private javax.swing.JButton addbutton;
   private javax.swing.JButton closebutton;
   private javax.swing.JButton deletebutton;
+  private javax.swing.JButton jButton1;
+  private javax.swing.JButton jButton2;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JPanel jPanel1;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
+  private javax.swing.JPanel jPanel4;
+  private javax.swing.JPanel jPanel5;
+  private javax.swing.JPanel jPanel6;
+  private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JScrollPane jScrollPane3;
+  private javax.swing.JTextArea jTextArea1;
   private javax.swing.JTree jTree1;
   private javax.swing.JLabel keystorelabel;
   private javax.swing.JTabbedPane tabbedpane;
+  private javax.swing.JSplitPane teammapsplitpane;
   private javax.swing.JList<String> trustedpublickeylist;
   private javax.swing.JSplitPane trustedsplitpane;
   // End of variables declaration//GEN-END:variables
