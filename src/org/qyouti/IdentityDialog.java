@@ -321,7 +321,7 @@ public class IdentityDialog
 
     trustedsplitpane.setLeftComponent(jScrollPane2);
 
-    tabbedpane.addTab("Trusted Keys", trustedsplitpane);
+    tabbedpane.addTab("Personally Trusted Public Keys", trustedsplitpane);
 
     jPanel1.add(tabbedpane, java.awt.BorderLayout.CENTER);
 

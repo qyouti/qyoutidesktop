@@ -900,8 +900,8 @@
             <Container class="javax.swing.JPanel" name="perstab">
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                  <JTabbedPaneConstraints tabName="Persons">
-                    <Property name="tabTitle" type="java.lang.String" value="Persons"/>
+                  <JTabbedPaneConstraints tabName="Candidates">
+                    <Property name="tabTitle" type="java.lang.String" value="Candidates"/>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>
@@ -1271,8 +1271,8 @@
             <Container class="javax.swing.JPanel" name="ptab">
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                  <JTabbedPaneConstraints tabName="Pages">
-                    <Property name="tabTitle" type="java.lang.String" value="Pages"/>
+                  <JTabbedPaneConstraints tabName="Printed Pages">
+                    <Property name="tabTitle" type="java.lang.String" value="Printed Pages"/>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>

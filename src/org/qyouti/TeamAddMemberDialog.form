@@ -56,8 +56,8 @@
               <Font name="Dialog" size="13" style="0"/>
             </Property>
             <Property name="lineWrap" type="boolean" value="true"/>
-            <Property name="rows" type="int" value="5"/>
-            <Property name="text" type="java.lang.String" value="Select the key you want to add to the team.  Adding the key as a team controller will allow the owner of the key to add other keys.  To prevent that add the key as a team member.&#xa;"/>
+            <Property name="rows" type="int" value="7"/>
+            <Property name="text" type="java.lang.String" value="Select the key from your personal key store you want to add to the team.  Members of the team who trust you personally will also trust the keys you add to the team.&#xa;&#xa;Adding the key as a team controller will allow the owner of the key to add other keys to the team like you.  (But the owner of that key must also add your key to the team to make this work fully.) Adding the key as an ordinary team member means the key will be a trusted member of the team but cannot add other keys to the team."/>
             <Property name="wrapStyleWord" type="boolean" value="true"/>
             <Property name="opaque" type="boolean" value="false"/>
           </Properties>
@@ -110,8 +110,8 @@
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                  <JTabbedPaneConstraints tabName="Trusted Keys">
-                    <Property name="tabTitle" type="java.lang.String" value="Trusted Keys"/>
+                  <JTabbedPaneConstraints tabName="Personally Trusted Public Keys">
+                    <Property name="tabTitle" type="java.lang.String" value="Personally Trusted Public Keys"/>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>

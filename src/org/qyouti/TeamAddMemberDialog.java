@@ -167,8 +167,8 @@ public class TeamAddMemberDialog
     jTextArea1.setColumns(20);
     jTextArea1.setFont(new java.awt.Font("Dialog", 0, 13)); // NOI18N
     jTextArea1.setLineWrap(true);
-    jTextArea1.setRows(5);
-    jTextArea1.setText("Select the key you want to add to the team.  Adding the key as a team controller will allow the owner of the key to add other keys.  To prevent that add the key as a team member.\n");
+    jTextArea1.setRows(7);
+    jTextArea1.setText("Select the key from your personal key store you want to add to the team.  Members of the team who trust you personally will also trust the keys you add to the team.\n\nAdding the key as a team controller will allow the owner of the key to add other keys to the team like you.  (But the owner of that key must also add your key to the team to make this work fully.) Adding the key as an ordinary team member means the key will be a trusted member of the team but cannot add other keys to the team.");
     jTextArea1.setWrapStyleWord(true);
     jTextArea1.setOpaque(false);
     jScrollPane3.setViewportView(jTextArea1);
@@ -217,7 +217,7 @@ public class TeamAddMemberDialog
 
     trustedsplitpane.setLeftComponent(jScrollPane2);
 
-    tabbedpane.addTab("Trusted Keys", trustedsplitpane);
+    tabbedpane.addTab("Personally Trusted Public Keys", trustedsplitpane);
 
     jPanel1.add(tabbedpane, java.awt.BorderLayout.CENTER);
 

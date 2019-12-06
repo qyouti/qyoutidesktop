@@ -219,7 +219,7 @@ public class TeamDialog
     jTextArea1.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
     jTextArea1.setLineWrap(true);
     jTextArea1.setRows(5);
-    jTextArea1.setText("This panel is under development. It will give information about the node selected in the tree diagram. Missing signatures will be highlighted and it will be possible to promote/demote a key to/from controller.\n");
+    jTextArea1.setText("This panel is under development. It will give information about the node selected in the tree diagram. Missing signatures will be highlighted and it will be possible to promote/demote a key to/from controller.\n\nAt present a controller key is indicated with a folder icon whereas an ordinary member key is indicated with a file icon.\n");
     jTextArea1.setWrapStyleWord(true);
     jTextArea1.setOpaque(false);
     jScrollPane1.setViewportView(jTextArea1);
@@ -272,7 +272,7 @@ public class TeamDialog
 
     trustedsplitpane.setLeftComponent(jScrollPane2);
 
-    tabbedpane.addTab("Team Keys", trustedsplitpane);
+    tabbedpane.addTab("Team Public Keys", trustedsplitpane);
 
     jPanel1.add(tabbedpane, java.awt.BorderLayout.CENTER);
 

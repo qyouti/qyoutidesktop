@@ -177,7 +177,7 @@
                             </Property>
                             <Property name="lineWrap" type="boolean" value="true"/>
                             <Property name="rows" type="int" value="5"/>
-                            <Property name="text" type="java.lang.String" value="This panel is under development. It will give information about the node selected in the tree diagram. Missing signatures will be highlighted and it will be possible to promote/demote a key to/from controller.&#xa;"/>
+                            <Property name="text" type="java.lang.String" value="This panel is under development. It will give information about the node selected in the tree diagram. Missing signatures will be highlighted and it will be possible to promote/demote a key to/from controller.&#xa;&#xa;At present a controller key is indicated with a folder icon whereas an ordinary member key is indicated with a file icon.&#xa;"/>
                             <Property name="wrapStyleWord" type="boolean" value="true"/>
                             <Property name="opaque" type="boolean" value="false"/>
                           </Properties>
@@ -242,8 +242,8 @@
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-                  <JTabbedPaneConstraints tabName="Team Keys">
-                    <Property name="tabTitle" type="java.lang.String" value="Team Keys"/>
+                  <JTabbedPaneConstraints tabName="Team Public Keys">
+                    <Property name="tabTitle" type="java.lang.String" value="Team Public Keys"/>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>

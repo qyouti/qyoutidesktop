@@ -1111,7 +1111,7 @@ public class QyoutiFrame
 
     perstab.add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
-    tabs.addTab("Persons", perstab);
+    tabs.addTab("Candidates", perstab);
 
     ctab.setLayout(new java.awt.BorderLayout());
 
@@ -1129,7 +1129,7 @@ public class QyoutiFrame
 
     ptab.add(sp3, java.awt.BorderLayout.CENTER);
 
-    tabs.addTab("Pages", ptab);
+    tabs.addTab("Printed Pages", ptab);
 
     stab.setLayout(new java.awt.BorderLayout());
 
