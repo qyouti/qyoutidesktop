@@ -405,7 +405,6 @@ public class IdentityDialog
     cid.setVisible( true );
     
     System.out.println( "CreateIdentityDialog created new identity." );
-    
     updateFields();
   }//GEN-LAST:event_createbuttonActionPerformed
 

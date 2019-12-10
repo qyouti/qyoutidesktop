@@ -228,7 +228,9 @@ public class CryptographyManager
   {
     if ( teamtrust == null && personalkeyfinder != null )
       return personalkeyfinder.findPublicKey(keyid);
-    return teamtrust.findPublicKey(keyid);
+    if ( teamtrust != null )
+      return teamtrust.findPublicKey(keyid);
+    return null;
   }
 
   public boolean addTrustedPublicKey( PGPPublicKey pubkey )
@@ -424,6 +426,12 @@ public class CryptographyManager
         openPersonalKeyStore();
       if (secretkey != null)
         storeSecretKey(alias, personalkeystore, secretkey);
+      if ( personalalias == null )
+      {
+        personalalias = alias;
+        personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
+        personalkeyfinder.init();
+      }
     }
     catch ( Exception e )
     {

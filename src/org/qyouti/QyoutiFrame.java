@@ -102,8 +102,10 @@ public class QyoutiFrame
   {
     currentLookAndFeel = UIManager.getLookAndFeel().getClass().getName();
 
+    String mode = System.getProperty( "qyouti.mode", "normal" );
+
     homefolder = new File( System.getProperty( "user.home" ) );
-    homefolder = new File( homefolder, "qyouti" );
+    homefolder = new File( homefolder, "debug".equals(mode)?"qyoutidebug":"qyouti" );
     if ( !homefolder.exists() )
       homefolder.mkdir();
     
@@ -2824,7 +2826,7 @@ public class QyoutiFrame
   
   private void addadministratorbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_addadministratorbuttonActionPerformed
   {//GEN-HEADEREND:event_addadministratorbuttonActionPerformed
-    addPersonToExam( "administator" );
+    addPersonToExam( "administrator" );
   }//GEN-LAST:event_addadministratorbuttonActionPerformed
 
   private void addexaminerbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_addexaminerbuttonActionPerformed
