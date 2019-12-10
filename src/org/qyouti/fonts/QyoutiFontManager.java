@@ -12,6 +12,7 @@ import javax.swing.plaf.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 import org.apache.avalon.framework.configuration.*;
+import org.apache.fontbox.util.autodetect.FontFileFinder;
 import org.apache.fop.fonts.*;
 import org.apache.fop.fonts.Font;
 import org.apache.fop.svg.*;
@@ -507,10 +508,34 @@ public class QyoutiFontManager
     return null;
   }
   
+  private java.util.List<File> getSystemFontDirectories()
+  {
+    FontFileFinder fontFileFinder = new FontFileFinder();
+    java.util.List<URI> systemFontList = fontFileFinder.find();
+    ArrayList<File> directories=new ArrayList<>();
+    for ( URI uri : systemFontList )
+    {
+      System.out.println( uri.toString() );
+      if ( "file".equals(uri.getScheme()) )
+      {
+        File file = new File( uri );
+        File dir = file.getParentFile();
+        if ( !directories.contains( dir ) )
+          directories.add( dir );
+      }
+    }
+    
+    for ( File dir : directories )
+      System.out.println( "System font directory: " + dir.toString() );
+    return directories;
+  }
+  
   private String getFOPConfigurationString( boolean search )
   {
     if ( !search )
       return pref.getProperty( "qyouti.print.font.fopconfig" );
+    
+    java.util.List<File> syslist = getSystemFontDirectories();
     
     String path;
     File builtin = getBuiltinFontDirectory();
@@ -529,7 +554,15 @@ public class QyoutiFontManager
       str.append( "</directory>\n" );
     }
  
-    str.append( "<auto-detect/>\n" );
+    // get rid of auto detect because it wastes time searching in all
+    // the jar files
+    //str.append( "<auto-detect/>\n" );
+    for ( File sysdir : syslist )
+    {
+      str.append( "    <directory>" );
+      str.append( sysdir.getAbsolutePath() );
+      str.append( "</directory>\n" );      
+    }
          
     String c = CONFIGXML.replace( "INSERT",  str.toString() );
     System.out.println( c );
