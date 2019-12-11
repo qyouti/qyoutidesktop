@@ -194,7 +194,7 @@ public class CryptographyManager
       {
         windowsavailable = false;
       }
-      personalkeystore = openPersonalKeyStore();
+      openPersonalKeyStore();
     }
     catch (Exception ex)
     {
@@ -354,8 +354,16 @@ public class CryptographyManager
     }
   }
   
+  private void openPersonalKeyFinder() throws IOException, PGPException
+  {
+    if ( personalalias != null )
+    {
+      personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
+      personalkeyfinder.init();
+    }    
+  }
   
-  private CompositeFileKeyStore openPersonalKeyStore() throws IOException, PGPException, NoSuchProviderException, NoSuchAlgorithmException
+  private void openPersonalKeyStore() throws IOException, PGPException, NoSuchProviderException, NoSuchAlgorithmException
   {
     try 
     {
@@ -369,14 +377,8 @@ public class CryptographyManager
     if ( personalstoreeu != null )
     {
       personalkeystore = new CompositeFileKeyStore( personalkeystorefile, personalstoreeu );
-      if ( personalalias != null )
-      {
-        personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
-        personalkeyfinder.init();
-      }
-      return personalkeystore;
+      openPersonalKeyFinder();
     }
-    return null;
   }
   
   private void storePublicKey( boolean andexport, String alias, CompositeFileKeyStore keystore, PGPPublicKey key ) throws IOException, PGPException
@@ -422,15 +424,10 @@ public class CryptographyManager
     {
       StandardRSAKeyBuilderSigner keybuilder = new StandardRSAKeyBuilderSigner();
       PGPSecretKey secretkey = keybuilder.buildSecretKey(alias, QuiptoStandards.SECRET_KEY_STANDARD_PASS);
-      if ( personalkeystore == null )
-        openPersonalKeyStore();
       if (secretkey != null)
-        storeSecretKey(alias, personalkeystore, secretkey);
-      if ( personalalias == null )
       {
-        personalalias = alias;
-        personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
-        personalkeyfinder.init();
+        storeSecretKey(alias, personalkeystore, secretkey);
+        setPreferredSecretKey( secretkey );
       }
     }
     catch ( Exception e )

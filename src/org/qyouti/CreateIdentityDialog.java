@@ -30,32 +30,15 @@ public class CreateIdentityDialog
     super(parent, true);
     this.cryptoman = cryptoman;
     initComponents();
-    
-    if ( !cryptoman.isWindowsAvailable() )
-    {
-      usewindowscheckbox.setSelected( false );
-      usewindowscheckbox.setEnabled( false );
-    }
-    updateFields();
+
   }
 
-  public void updateFields()
-  {
-    passwordfield1.setEnabled( !usewindowscheckbox.isSelected() );
-    if ( !passwordfield1.isEnabled() )
-      passwordfield1.setText( "" );
-    passwordfield2.setEnabled( !usewindowscheckbox.isSelected() );
-    if ( !passwordfield2.isEnabled() )
-      passwordfield2.setText( "" );
-  }
+
   
   public boolean validateInput()
   {
     String name = nametextfield.getText().trim();
     String email = emailtextfield.getText().trim();
-    boolean win = usewindowscheckbox.isSelected();
-    char[] pass1 = passwordfield1.getPassword();
-    char[] pass2 = passwordfield2.getPassword();
     
     if ( name.length() < 2 )
     {
@@ -72,28 +55,7 @@ public class CreateIdentityDialog
       JOptionPane.showMessageDialog( rootPane, "Email address lacks @." );
       return false;
     }
-    if ( !win )
-    {
-      if ( pass1.length < 10 )
-      {
-        JOptionPane.showMessageDialog( rootPane, "Password needs to be at least 10 characters long." );
-        return false;
-      }
-      if ( pass1.length != pass2.length )
-      {
-        JOptionPane.showMessageDialog( rootPane, "Retyped password doesn't match." );
-        return false;
-      }
-      for ( int i=0; i<pass1.length; i++ )
-      {
-        if ( pass1[i] != pass2[i] )
-        {
-          JOptionPane.showMessageDialog( rootPane, "Retyped password doesn't match." );
-          return false;
-        }
-      }
-    }
-    
+   
     return true;
   }
   
@@ -103,17 +65,12 @@ public class CreateIdentityDialog
     String name     = nametextfield.getText().trim();
     String username = usernametextfield.getText().trim();
     String email    = emailtextfield.getText().trim();
-    boolean win     = usewindowscheckbox.isSelected();
-    char[] pass1    = passwordfield1.getPassword();
-    char[] pass2    = passwordfield2.getPassword();
 
     String alias = name + " (" + username + ") <" + email + ">";
-    if ( win )
-      pass1=null;
-    
+
     try
     {
-      cryptoman.createNewKeys(alias, pass1, win);
+      cryptoman.createNewKeys(alias, null, true);
     }
     catch (CryptographyManagerException ex)
     {
@@ -143,11 +100,6 @@ public class CreateIdentityDialog
     usernametextfield = new javax.swing.JTextField();
     jLabel3 = new javax.swing.JLabel();
     emailtextfield = new javax.swing.JTextField();
-    usewindowscheckbox = new javax.swing.JCheckBox();
-    jLabel5 = new javax.swing.JLabel();
-    passwordfield1 = new javax.swing.JPasswordField();
-    jLabel4 = new javax.swing.JLabel();
-    passwordfield2 = new javax.swing.JPasswordField();
     jPanel2 = new javax.swing.JPanel();
     createnewkeysbutton = new javax.swing.JButton();
     closebutton = new javax.swing.JButton();
@@ -211,72 +163,6 @@ public class CreateIdentityDialog
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     jPanel3.add(emailtextfield, gridBagConstraints);
 
-    usewindowscheckbox.setSelected(true);
-    usewindowscheckbox.setText("Protect private key using Windows cryptography instead of a password");
-    usewindowscheckbox.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        usewindowscheckboxActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.gridwidth = 2;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(usewindowscheckbox, gridBagConstraints);
-
-    jLabel5.setText("Password:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 4;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(jLabel5, gridBagConstraints);
-
-    passwordfield1.setEnabled(false);
-    passwordfield1.setMinimumSize(new java.awt.Dimension(200, 28));
-    passwordfield1.setPreferredSize(new java.awt.Dimension(200, 28));
-    passwordfield1.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        passwordfield1ActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 4;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(passwordfield1, gridBagConstraints);
-
-    jLabel4.setText("Reenter Password:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 5;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHEAST;
-    jPanel3.add(jLabel4, gridBagConstraints);
-
-    passwordfield2.setEnabled(false);
-    passwordfield2.setMinimumSize(new java.awt.Dimension(200, 28));
-    passwordfield2.setPreferredSize(new java.awt.Dimension(200, 28));
-    passwordfield2.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        passwordfield2ActionPerformed(evt);
-      }
-    });
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 1;
-    gridBagConstraints.gridy = 5;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    jPanel3.add(passwordfield2, gridBagConstraints);
-
     getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
 
     createnewkeysbutton.setText("Create");
@@ -321,23 +207,6 @@ public class CreateIdentityDialog
     dispose();
   }//GEN-LAST:event_closebuttonActionPerformed
 
-  private void passwordfield1ActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_passwordfield1ActionPerformed
-  {//GEN-HEADEREND:event_passwordfield1ActionPerformed
-    // TODO add your handling code here:
-  }//GEN-LAST:event_passwordfield1ActionPerformed
-
-  private void passwordfield2ActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_passwordfield2ActionPerformed
-  {//GEN-HEADEREND:event_passwordfield2ActionPerformed
-    // TODO add your handling code here:
-  }//GEN-LAST:event_passwordfield2ActionPerformed
-
-  private void usewindowscheckboxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_usewindowscheckboxActionPerformed
-  {//GEN-HEADEREND:event_usewindowscheckboxActionPerformed
-    
-    updateFields();
-    
-  }//GEN-LAST:event_usewindowscheckboxActionPerformed
-
 
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -347,15 +216,10 @@ public class CreateIdentityDialog
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JLabel jLabel3;
-  private javax.swing.JLabel jLabel4;
-  private javax.swing.JLabel jLabel5;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JPanel jPanel2;
   private javax.swing.JPanel jPanel3;
   private javax.swing.JTextField nametextfield;
-  private javax.swing.JPasswordField passwordfield1;
-  private javax.swing.JPasswordField passwordfield2;
   private javax.swing.JTextField usernametextfield;
-  private javax.swing.JCheckBox usewindowscheckbox;
   // End of variables declaration//GEN-END:variables
 }
