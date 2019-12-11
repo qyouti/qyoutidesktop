@@ -403,8 +403,6 @@ public class IdentityDialog
     CreateIdentityDialog cid = new CreateIdentityDialog( (Frame)getParent(), cryptoman );
     cid.setModal( true );
     cid.setVisible( true );
-    
-    System.out.println( "CreateIdentityDialog created new identity." );
     updateFields();
   }//GEN-LAST:event_createbuttonActionPerformed
 
@@ -457,7 +455,7 @@ public class IdentityDialog
   {//GEN-HEADEREND:event_secretkeypairlistValueChanged
     
     if ( evt.getValueIsAdjusting() ) return;
-    System.out.println( "List selection event." );
+    //System.out.println( "List selection event." );
     updateSelectedKeyPane();
     updateButtons();    
   }//GEN-LAST:event_secretkeypairlistValueChanged
@@ -465,7 +463,7 @@ public class IdentityDialog
   private void trustedpublickeylistValueChanged(javax.swing.event.ListSelectionEvent evt)//GEN-FIRST:event_trustedpublickeylistValueChanged
   {//GEN-HEADEREND:event_trustedpublickeylistValueChanged
     if ( evt.getValueIsAdjusting() ) return;
-    System.out.println( "List selection event." );
+    //System.out.println( "List selection event." );
     updateSelectedTrustedKeyPane();
     updateButtons();
   }//GEN-LAST:event_trustedpublickeylistValueChanged
@@ -510,7 +508,7 @@ public class IdentityDialog
     }
     
     String armored = new String( baout.toByteArray() );
-    System.out.println( new String( armored ) );
+    //System.out.println( new String( armored ) );
     StringSelection strsel = new StringSelection( armored );
     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(strsel, null);
 

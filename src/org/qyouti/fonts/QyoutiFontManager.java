@@ -64,10 +64,12 @@ public class QyoutiFontManager
   
   public QyoutiFontManager( QyoutiPreferences pref )
   {
+    System.out.println( "Starting to scan fonts.");
     this.pref = pref;
     load();
     if ( !builtininstalled )
       installBuiltins();
+    System.out.println( "Font set up complete.");    
   }
   
   public void installBuiltins()
@@ -90,7 +92,7 @@ public class QyoutiFontManager
       {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         ge.registerFont( java.awt.Font.createFont( java.awt.Font.TRUETYPE_FONT, f ) );
-        System.out.println( "Installed " + f  );
+        //System.out.println( "Installed " + f  );
       }
       catch ( Exception ex )
       {
@@ -118,30 +120,30 @@ public class QyoutiFontManager
     
     Map<String,Typeface> map = configuredfontinfo.getFonts();
     
-    System.out.println( "Font scanning results:" );
+    //System.out.println( "Font scanning results:" );
     
-    configuredfontinfo.dumpAllTripletsToSystemOut();
+    //configuredfontinfo.dumpAllTripletsToSystemOut();
     
-    CustomFont cf;
-    for ( Typeface tf : map.values() )
-    {
-      if ( tf instanceof LazyFont )
-        tf = ((LazyFont)tf).getRealFont();
-      if ( !(tf instanceof CustomFont) )
-        continue;
-      cf = (CustomFont)tf;
-      if ( !cf.isEmbeddable() )
-        continue;
-      
-      System.out.println( tf.getFontName() + " = " + tf.getFontURI() );
-      for ( String ffname : tf.getFamilyNames() )
-        System.out.println( "Family name: " + ffname );
-      if ( tf.hasChar( '国' ) )
-        System.out.println( "                                                              THIS FONT HAS 国 IN IT." );
-      if ( tf.hasChar( 'ツ' ) )
-        System.out.println( "                                                              THIS FONT HAS ツ IN IT." );
-    }
-    System.out.println( "Font scanning complete." );    
+//    CustomFont cf;
+//    for ( Typeface tf : map.values() )
+//    {
+//      if ( tf instanceof LazyFont )
+//        tf = ((LazyFont)tf).getRealFont();
+//      if ( !(tf instanceof CustomFont) )
+//        continue;
+//      cf = (CustomFont)tf;
+//      if ( !cf.isEmbeddable() )
+//        continue;
+//      
+//      System.out.println( tf.getFontName() + " = " + tf.getFontURI() );
+//      for ( String ffname : tf.getFamilyNames() )
+//        System.out.println( "Family name: " + ffname );
+//      if ( tf.hasChar( '国' ) )
+//        System.out.println( "                                                              THIS FONT HAS 国 IN IT." );
+//      if ( tf.hasChar( 'ツ' ) )
+//        System.out.println( "                                                              THIS FONT HAS ツ IN IT." );
+//    }
+//    System.out.println( "Font scanning complete." );    
   }
 
   

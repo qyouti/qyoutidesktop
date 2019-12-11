@@ -35,7 +35,7 @@ public class PublicKeyPanel
     
     initComponents();
     namelabel.setText( key.getUserIDs().next() );
-    idlabel.setText( Long.toHexString( key.getKeyID() ) );
+    idlabel.setText( CryptographyManager.prettyPrintKeyID( key.getKeyID() ) );
     fingerprintlabel.setText( CryptographyManager.prettyPrintFingerprint( key.getFingerprint() ) );
     creationdatelabel.setText( "?" );
     Date d = CryptographyManager.getPublicKeyCreationDate( key );
@@ -98,7 +98,7 @@ public class PublicKeyPanel
     jLabel7.setText("Date of Creation:");
 
     jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-    jLabel1.setText("Key pair ID:");
+    jLabel1.setText("Key ID:");
 
     jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
     jLabel2.setText("Owner Name:");
@@ -117,6 +117,7 @@ public class PublicKeyPanel
     jLabel6.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
     jLabel6.setText("Public Key Signed By:");
 
+    signaturetextarea.setEditable(false);
     signaturetextarea.setColumns(20);
     signaturetextarea.setRows(4);
     jScrollPane2.setViewportView(signaturetextarea);

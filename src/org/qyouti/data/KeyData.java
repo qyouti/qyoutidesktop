@@ -87,7 +87,7 @@ public class KeyData extends AbstractListModel<String>
     KeyDatum datum = new KeyDatum();
     datum.publickey = key;
     datum.keyid = key.getKeyID();
-    datum.displayname = key.getUserIDs().next() + " (" + Long.toUnsignedString(datum.keyid,16) + ")";
+    datum.displayname = key.getUserIDs().next(); // + " (" + CryptographyManager.prettyPrintKeyID(datum.keyid) + ")";
     keylist.add(datum);
     this.fireIntervalAdded(this, keylist.size(), keylist.size());
   }
@@ -98,7 +98,7 @@ public class KeyData extends AbstractListModel<String>
     datum.secretkey = key;
     datum.publickey = key.getPublicKey();
     datum.keyid = key.getKeyID();
-    datum.displayname = key.getUserIDs().next() + " (" + Long.toUnsignedString(datum.keyid,16) + ")";
+    datum.displayname = key.getUserIDs().next(); // + " (" + CryptographyManager.prettyPrintKeyID(datum.keyid) + ")";
     keylist.add(datum);
     this.fireIntervalAdded(this, keylist.size(), keylist.size());
   }

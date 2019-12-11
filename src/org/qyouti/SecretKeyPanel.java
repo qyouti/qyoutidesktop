@@ -41,7 +41,7 @@ public class SecretKeyPanel
     pubkey = key.getPublicKey();
     initComponents();
     namelabel.setText( pubkey.getUserIDs().next() );
-    idlabel.setText( Long.toHexString( pubkey.getKeyID() ) );
+    idlabel.setText( CryptographyManager.prettyPrintKeyID( pubkey.getKeyID() ) );
     fingerprintlabel.setText( CryptographyManager.prettyPrintFingerprint( pubkey.getFingerprint() ) );
     creationdatelabel.setText( "?" );
     Date d = CryptographyManager.getSecretKeyCreationDate( key );
@@ -98,6 +98,7 @@ public class SecretKeyPanel
     jLabel6 = new javax.swing.JLabel();
     jScrollPane2 = new javax.swing.JScrollPane();
     signaturetextarea = new javax.swing.JTextArea();
+    jLabel8 = new javax.swing.JLabel();
 
     setMinimumSize(new java.awt.Dimension(500, 300));
 
@@ -105,7 +106,7 @@ public class SecretKeyPanel
     jLabel7.setText("Date of Creation:");
 
     jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-    jLabel1.setText("Key pair ID:");
+    jLabel1.setText("Key ID:");
 
     jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
     jLabel2.setText("Owner Name:");
@@ -124,9 +125,13 @@ public class SecretKeyPanel
     jLabel6.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
     jLabel6.setText("Public Key Signed By:");
 
+    signaturetextarea.setEditable(false);
     signaturetextarea.setColumns(20);
     signaturetextarea.setRows(5);
     jScrollPane2.setViewportView(signaturetextarea);
+
+    jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+    jLabel8.setText("As well as a public key for sharing there is a matching private key.");
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
@@ -134,20 +139,23 @@ public class SecretKeyPanel
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(layout.createSequentialGroup()
         .addContainerGap()
-        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-          .addComponent(jLabel6)
-          .addComponent(jLabel1)
-          .addComponent(jLabel2)
-          .addComponent(jLabel3)
-          .addComponent(jLabel7))
-        .addGap(18, 18, 18)
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(namelabel, javax.swing.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE)
-          .addComponent(idlabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(fingerprintlabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(creationdatelabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(jScrollPane2))
-        .addContainerGap())
+          .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+              .addComponent(jLabel6)
+              .addComponent(jLabel1)
+              .addComponent(jLabel2)
+              .addComponent(jLabel3)
+              .addComponent(jLabel7))
+            .addGap(18, 18, 18)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+              .addComponent(namelabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+              .addComponent(idlabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+              .addComponent(fingerprintlabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+              .addComponent(creationdatelabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+              .addComponent(jScrollPane2)))
+          .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 480, Short.MAX_VALUE))
+        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
     layout.setVerticalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -172,7 +180,9 @@ public class SecretKeyPanel
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addComponent(jLabel6)
           .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+        .addComponent(jLabel8)
+        .addContainerGap(91, Short.MAX_VALUE))
     );
   }// </editor-fold>//GEN-END:initComponents
 
@@ -186,6 +196,7 @@ public class SecretKeyPanel
   private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel jLabel6;
   private javax.swing.JLabel jLabel7;
+  private javax.swing.JLabel jLabel8;
   private javax.swing.JScrollPane jScrollPane2;
   private javax.swing.JLabel namelabel;
   private javax.swing.JTextArea signaturetextarea;

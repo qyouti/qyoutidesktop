@@ -448,9 +448,17 @@ public class CryptographyManager
   
 
   
+  public static String prettyPrintKeyID( long id )
+  {
+    byte[] raw = new byte[Long.BYTES];
+    for ( int i=0; i<Long.BYTES; i++ )
+      raw[Long.BYTES-i-1] = (byte)((id >> i*8) & 0xff);
+    return printFingerprint( raw, "  " );
+  }
+  
   public static String prettyPrintFingerprint( byte[] raw )
   {
-    return printFingerprint( raw, " : " );
+    return printFingerprint( raw, "  " );
   }
   
   public static String printFingerprint( byte[] raw, String separator )
