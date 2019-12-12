@@ -35,10 +35,13 @@ import org.bouncycastle.util.Arrays;
 import org.quipto.QuiptoStandards;
 import org.qyouti.QyoutiPreferences;
 import org.quipto.compositefile.EncryptedCompositeFile;
+import org.quipto.compositefile.EncryptedCompositeFilePasswordHandler;
 import org.quipto.compositefile.EncryptedCompositeFileUser;
+import org.quipto.compositefile.WrongPasswordException;
 import org.quipto.key.impl.CompositeFileKeyFinder;
 import org.quipto.key.impl.CompositeFileKeyStore;
 import org.quipto.key.impl.StandardRSAKeyBuilderSigner;
+import org.quipto.passwords.PasswordPasswordHandler;
 import org.quipto.passwords.WindowsPasswordHandler;
 import org.quipto.trust.team.TeamTrust;
 
@@ -58,6 +61,7 @@ public class CryptographyManager
   File pgpseckeyfile, pgppubkeyfile;
   File personalkeystorefile;
   String personalalias;
+  EncryptedCompositeFilePasswordHandler personalpasswordhandler;
   CompositeFileKeyStore personalkeystore;
   CompositeFileKeyFinder personalkeyfinder;
   
@@ -67,16 +71,36 @@ public class CryptographyManager
   EncryptedCompositeFileUser eu;
   
   public CryptographyManager( File base, QyoutiPreferences prefs, PasswordProvider pwprov )
+          throws CryptographyManagerException
   {
     this.password = null;
     this.prefs = prefs;
     this.pwprov = pwprov;
-    //preferredkeyfingerprint = prefs.getProperty("qyouti.crypto.preferredkey");
     personalalias = prefs.getProperty("qyouti.crypto.alias");
     personalkeystorefile = new File( base, "keystore.tar" );
     teamkeystorefile = null;
     Security.addProvider(new BouncyCastleProvider());
+    init();
   }
+
+  public void setPersonalKeyStoreMethodWindows()
+  {
+    try
+    {
+      personalpasswordhandler = new WindowsPasswordHandler();
+    }
+    catch (KeyStoreException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+  
+  public void setPersonalKeyStoreMethodPassword( char[] pass )
+  {
+    personalpasswordhandler = new PasswordPasswordHandler( null, pass );
+  }
+  
+  
   
   public TreeModel getTeamTreeModel()
   {
@@ -105,11 +129,10 @@ public class CryptographyManager
   
   public EncryptedCompositeFile getEncryptedCompositeFile( File file, boolean create ) throws IOException
   {
-    EncryptedCompositeFile compfile = new EncryptedCompositeFile( file, create, true, eu );
+    EncryptedCompositeFile compfile = new EncryptedCompositeFile( file, create, true );
     try
     {
-      compfile.initA();      
-      compfile.initB();    
+      compfile.setUser( eu );
     }
     catch ( Exception e )
     {
@@ -142,22 +165,35 @@ public class CryptographyManager
   }
   
   
-  public void setPassword( char[] password )
+  public boolean requiresPassword()
   {
-    if ( usewindows )
+    try
     {
-//      try
-//      {
-//        password = loadWindowsEncryptedPassword();
-//      }
-//      catch (CryptographyManagerException ex)
-//      {
-//        Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
-//        password = null;
-//      }
+      return "passwordpasswordhandler".equals( personalkeystore.getCustomPassphraseType() );
     }
-    this.password = password;
+    catch (IOException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return false;
   }
+  
+//  public void setPassword( char[] password )
+//  {
+//    if ( usewindows )
+//    {
+////      try
+////      {
+////        password = loadWindowsEncryptedPassword();
+////      }
+////      catch (CryptographyManagerException ex)
+////      {
+////        Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+////        password = null;
+////      }
+//    }
+//    this.password = password;
+//  }
   
   public boolean isWindowsAvailable()
   {
@@ -179,9 +215,8 @@ public class CryptographyManager
     return personalstoreeu;
   }
   
-  public void init() throws CryptographyManagerException
+  private void init() throws CryptographyManagerException
   {
-    
     try
     {
       try
@@ -194,7 +229,7 @@ public class CryptographyManager
       {
         windowsavailable = false;
       }
-      openPersonalKeyStore();
+      personalkeystore = new CompositeFileKeyStore( personalkeystorefile );
     }
     catch (Exception ex)
     {
@@ -203,7 +238,7 @@ public class CryptographyManager
     }
   }
   
-  public void setTeamKeyRingFile( File f, boolean create ) throws IOException, NoSuchProviderException, NoSuchAlgorithmException, PGPException
+  public void setTeamKeyRingFile( File f, boolean create ) throws IOException, NoSuchProviderException, NoSuchAlgorithmException, PGPException, WrongPasswordException
   {
     if ( personalkeystore == null || personalkeyfinder == null )
       throw new IOException( "Cannot open team key store - no personal key store is loaded." );
@@ -255,7 +290,7 @@ public class CryptographyManager
     {
       personalkeystore.setPublicKeyRing( pubkeyring );
     }
-    catch (IOException ex)
+    catch (Exception ex)
     {
       Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
       return false;
@@ -274,7 +309,7 @@ public class CryptographyManager
     {
       teamtrust.addPublicKeyToTeamStore(personalkeyfinder.getSecretKeyForSigning().getPublicKey(), pubkey, controller);
     }
-    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException ex)
+    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | WrongPasswordException ex)
     {
       Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
       return false;
@@ -360,28 +395,29 @@ public class CryptographyManager
     {
       personalkeyfinder = new CompositeFileKeyFinder( personalkeystore, personalalias, personalalias );
       personalkeyfinder.init();
-    }    
+    }
   }
   
-  private void openPersonalKeyStore() throws IOException, PGPException, NoSuchProviderException, NoSuchAlgorithmException
+  public boolean openPersonalKeyStore() throws WrongPasswordException
   {
-    try 
+    try
     {
-      WindowsPasswordHandler winpasshandler = new WindowsPasswordHandler();
-      personalstoreeu = new EncryptedCompositeFileUser( winpasshandler );
-    }
-    catch ( KeyStoreException ksex )
-    {
-      personalstoreeu = null;
-    }
-    if ( personalstoreeu != null )
-    {
-      personalkeystore = new CompositeFileKeyStore( personalkeystorefile, personalstoreeu );
+      personalkeystore = new CompositeFileKeyStore( personalkeystorefile );
+      personalkeystore.getCustomPassphraseType();
+
+      personalstoreeu = new EncryptedCompositeFileUser( personalpasswordhandler );
+      personalkeystore.setUser( personalstoreeu );
       openPersonalKeyFinder();
+      return true;
     }
+    catch (IOException | PGPException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return false;
   }
   
-  private void storePublicKey( boolean andexport, String alias, CompositeFileKeyStore keystore, PGPPublicKey key ) throws IOException, PGPException
+  private void storePublicKey( boolean andexport, String alias, CompositeFileKeyStore keystore, PGPPublicKey key ) throws IOException, PGPException, WrongPasswordException
   {
     if ( keystore == null )
       return;
@@ -403,7 +439,7 @@ public class CryptographyManager
     }
   }
 
-  private void storeSecretKey( String alias, CompositeFileKeyStore keystore, PGPSecretKey key ) throws IOException, PGPException
+  private void storeSecretKey( String alias, CompositeFileKeyStore keystore, PGPSecretKey key ) throws IOException, PGPException, WrongPasswordException
   {
     if ( keystore == null )
       return;

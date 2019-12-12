@@ -32,6 +32,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.qyouti.barcode.*;
 import org.quipto.compositefile.EncryptedCompositeFileUser;
+import org.quipto.compositefile.WrongPasswordException;
 import org.qyouti.crypto.CryptographyManager;
 import org.qyouti.crypto.CryptographyManagerException;
 import org.qyouti.crypto.PasswordProvider;
@@ -133,10 +134,9 @@ public class QyoutiFrame
     }
 
 
-    cryptomanager = new CryptographyManager( homefolder, preferences, this );
     try
     {
-      cryptomanager.init();
+      cryptomanager = new CryptographyManager( homefolder, preferences, this );
     }
     catch (CryptographyManagerException ex)
     {
@@ -144,6 +144,49 @@ public class QyoutiFrame
       JOptionPane.showMessageDialog( this, "Technical fault attempting to initialise cryptography manager." );
       System.exit(1);
     }
+    
+    if ( !cryptomanager.personalKeyStoreFileExists() )
+    {
+      CreatePersonalKeystoreDialog d = new CreatePersonalKeystoreDialog( this, true, cryptomanager );
+      d.setVisible( true );
+      if ( d.getOption() != CreatePersonalKeystoreDialog.OPTION_CREATE )
+        System.exit( 0 );
+      if ( d.useWindows() )
+        cryptomanager.setPersonalKeyStoreMethodWindows();
+      else
+        cryptomanager.setPersonalKeyStoreMethodPassword( d.getPass() );
+    }
+    else
+    {
+      if ( cryptomanager.requiresPassword() )
+      {
+        
+//        PersonalKeystoreAuthenticateDialog d = new PersonalKeystoreAuthenticateDialog( this, true );
+//        d.setVisible( true );
+//        if ( d.getOption() != PersonalKeystoreAuthenticateDialog.OPTION_OPEN )
+//          System.exit( 0 );
+        char[] pw = getUserSuppliedPassword();
+        if ( pw == null ) System.exit( 0 );
+        cryptomanager.setPersonalKeyStoreMethodPassword( pw );
+      }
+      else
+        cryptomanager.setPersonalKeyStoreMethodWindows();
+    }
+    
+    try
+    {
+      if ( !cryptomanager.openPersonalKeyStore() )
+      {      
+        JOptionPane.showMessageDialog( this, "Technical fault attempting to open personal key store." );
+        System.exit(1);
+      }
+    }
+    catch (WrongPasswordException ex)
+    {
+        JOptionPane.showMessageDialog( this, "The password provided did not work." );
+        System.exit(1);
+    }
+    
     identitydialog = new IdentityDialog( this, cryptomanager );
     
     fontmanager = new QyoutiFontManager( preferences );
@@ -2925,7 +2968,7 @@ public class QyoutiFrame
       {
         this.cryptomanager.setTeamKeyRingFile(teamfile, !teamfile.exists() );
       }
-      catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | PGPException ex)
+      catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | PGPException | WrongPasswordException ex)
       {
         Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
         JOptionPane.showMessageDialog( this, "Unable to open the team key store for the exam." );
@@ -3388,7 +3431,7 @@ public class QyoutiFrame
   public char[] getUserSuppliedPassword()
   {
     JPanel panel = new JPanel();
-    JLabel label = new JLabel("Enter the password for your private key:");
+    JLabel label = new JLabel("Enter the password for your personal key store:");
     JPasswordField pass = new JPasswordField();
     panel.setLayout(new FlowLayout() );
     pass.setMinimumSize( new Dimension(200,30) );
@@ -3398,10 +3441,19 @@ public class QyoutiFrame
     panel.add(pass);
     panel.doLayout();
     String[] options = new String[]{"O.K.", "Cancel"};
-    int option = JOptionPane.showOptionDialog(null, panel, "Enter Password",
-                             JOptionPane.NO_OPTION, JOptionPane.PLAIN_MESSAGE,
-                             null, options, options[1]);
-    if(option == 0) // pressing OK button
+    JOptionPane opane = new JOptionPane( panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION )
+    {
+      @Override
+      public void selectInitialValue()
+      {
+        pass.requestFocusInWindow();
+      }      
+    };
+    
+    JDialog dialog= opane.createDialog("Enter password");
+    dialog.setVisible(true);
+    Object value = opane.getValue();
+    if( value.equals(JOptionPane.OK_OPTION) ) // pressing OK button
       return pass.getPassword();
     return null;
     

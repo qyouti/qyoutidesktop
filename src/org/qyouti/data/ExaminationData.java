@@ -2759,7 +2759,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     {
       cryptomanager.setTeamKeyRingFile(teamfile, !teamfile.exists() );
     }
-    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | PGPException ex)
+    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | PGPException | WrongPasswordException ex)
     {
       Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex);
       return;
