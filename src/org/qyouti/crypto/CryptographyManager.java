@@ -97,7 +97,7 @@ public class CryptographyManager
   
   public void setPersonalKeyStoreMethodPassword( char[] pass )
   {
-    personalpasswordhandler = new PasswordPasswordHandler( null, pass );
+    personalpasswordhandler = new PasswordPasswordHandler( pass );
   }
   
   
