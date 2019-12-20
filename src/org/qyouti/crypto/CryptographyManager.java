@@ -318,6 +318,23 @@ public class CryptographyManager
     return true;
   }
   
+  public boolean endorsePublicKeyInTeam( PGPPublicKey teampubkey )
+  {
+    try    
+    {
+      PGPPublicKey personalpubkey = personalkeyfinder.findPublicKey( teampubkey.getKeyID() );
+      if ( personalpubkey == null )
+        return false;
+      teamtrust.addParentCertificationToTeamStore( personalpubkey );
+    }
+    catch (IOException | NoSuchProviderException | NoSuchAlgorithmException | WrongPasswordException ex)
+    {
+      Logger.getLogger(CryptographyManager.class.getName()).log(Level.SEVERE, null, ex);
+      return false;
+    }
+    return true;
+  }
+  
   public boolean removePublicKeyFromTeam( PGPPublicKey pubkey )
   {
 //    try

@@ -306,6 +306,14 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addbuttonActionPerformed"/>
           </Events>
         </Component>
+        <Component class="javax.swing.JButton" name="endorsebutton">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Add Signature to Key"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="endorsebuttonActionPerformed"/>
+          </Events>
+        </Component>
         <Component class="javax.swing.JButton" name="deletebutton">
           <Properties>
             <Property name="text" type="java.lang.String" value="Delete..."/>

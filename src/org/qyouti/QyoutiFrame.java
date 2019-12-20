@@ -2905,11 +2905,11 @@ public class QyoutiFrame
    */
   void questionEditStored( boolean override )
   {
-    if ( exam.pagelistmodel.getRowCount() > 0 )
-      exam.recomputeOutcomes();
     exam.setUnsavedChangesInExaminer( true );
     if ( !override )
       exam.setUnsavedChangesInQuestions( true );
+    if ( exam.scans.getRowCount() > 0 )
+      exam.recomputeOutcomes();
     exam.processDataChanged( exam.qdefs );
   }
 
@@ -3070,6 +3070,15 @@ public class QyoutiFrame
     {
       Logger.getLogger( QyoutiFrame.class.getName() ).
               log( Level.SEVERE, null, ex );
+      try
+      {
+        exam.close();
+      }
+      catch (IOException ex1)
+      {
+        Logger.getLogger(QyoutiFrame.class.getName()).log(Level.SEVERE, null, ex1);
+      }
+      exam = null;
       noexamloadedlabel.setText( "Error attempting to load exam/survey." );
       ((CardLayout)centralpanel.getLayout()).first( centralpanel );
       JOptionPane.showMessageDialog( this, "Unable to open the exam data files." );

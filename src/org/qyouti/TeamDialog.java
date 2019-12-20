@@ -79,6 +79,7 @@ public class TeamDialog
     if ( selectedpane == 1 )
       selecteditem = trustedpublickeylist.getSelectedIndex();
     addbutton.setEnabled( true  );
+    endorsebutton.setEnabled( selecteditem >= 0 );
     deletebutton.setEnabled( selecteditem >= 0 );
   }
   
@@ -148,6 +149,7 @@ public class TeamDialog
     trustedpublickeylist = new javax.swing.JList<>();
     jPanel2 = new javax.swing.JPanel();
     addbutton = new javax.swing.JButton();
+    endorsebutton = new javax.swing.JButton();
     deletebutton = new javax.swing.JButton();
     closebutton = new javax.swing.JButton();
 
@@ -288,6 +290,16 @@ public class TeamDialog
     });
     jPanel2.add(addbutton);
 
+    endorsebutton.setText("Add Signature to Key");
+    endorsebutton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        endorsebuttonActionPerformed(evt);
+      }
+    });
+    jPanel2.add(endorsebutton);
+
     deletebutton.setText("Delete...");
     deletebutton.addActionListener(new java.awt.event.ActionListener()
     {
@@ -385,6 +397,20 @@ public class TeamDialog
     updateButtons();
   }//GEN-LAST:event_tabbedpaneStateChanged
 
+  private void endorsebuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_endorsebuttonActionPerformed
+  {//GEN-HEADEREND:event_endorsebuttonActionPerformed
+    
+    int selected = trustedpublickeylist.getSelectedIndex();
+    if ( selected < 0 )
+    {
+      JOptionPane.showMessageDialog( rootPane, "No key pair is selected." );
+      return;
+    }    
+
+    if ( !cryptoman.endorsePublicKeyInTeam( publicentries.getKeyAt( selected ) ) )
+      JOptionPane.showMessageDialog( rootPane, "Unable to endorse the selected public key." );    
+  }//GEN-LAST:event_endorsebuttonActionPerformed
+
   
   private char[] promptForPassword()
   {
@@ -414,6 +440,7 @@ public class TeamDialog
   private javax.swing.JButton addbutton;
   private javax.swing.JButton closebutton;
   private javax.swing.JButton deletebutton;
+  private javax.swing.JButton endorsebutton;
   private javax.swing.JButton jButton1;
   private javax.swing.JButton jButton2;
   private javax.swing.JLabel jLabel1;

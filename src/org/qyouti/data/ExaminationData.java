@@ -233,11 +233,16 @@ public class ExaminationData
 
   public void close() throws IOException
   {
-    questionarchive.close();
-    scanarchive.close();
-    outcomearchive.close();
-    examinerarchive.close();
-    mainarchive.close();
+    if ( questionarchive != null )
+      questionarchive.close();
+    if ( scanarchive != null )
+      scanarchive.close();
+    if ( outcomearchive != null )
+      outcomearchive.close();
+    if ( examinerarchive != null )
+      examinerarchive.close();
+    if ( mainarchive != null )
+      mainarchive.close();
   }
 
   public boolean isCurrentUserInRole( int role )
@@ -1755,6 +1760,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   
   public void updateOutcomes()
   {
+    if ( outcometables == null || outcometables.cmap == null )
+      return;
     for ( OutcomeCandidateData ocd : outcometables.cmap.values() )
       if ( !ocd.isValid() )
         updateOutcomes( ocd );
@@ -1763,6 +1770,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   public void updateOutcomes( OutcomeCandidateData ocd )
   {    
     CandidateData c = this.candidates.get(ocd.getIdent());
+    if ( c == null ) return;
     c.computeCandidateOutcomes();
     ocd.setValid( true );
     setUnsavedChangesInOutcome( true );
