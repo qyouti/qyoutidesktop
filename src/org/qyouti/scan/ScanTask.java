@@ -24,38 +24,25 @@ package org.qyouti.scan;
 
 //import com.sun.pdfview.PDFFile;
 //import com.sun.pdfview.PDFPage;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.*;
-import java.nio.file.attribute.*;
 import java.security.*;
 import java.util.*;
 import java.util.logging.*;
-import java.util.stream.*;
 import javax.imageio.*;
-import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.*;
 import org.apache.pdfbox.contentstream.*;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.*;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.encryption.*;
-import org.apache.pdfbox.pdmodel.graphics.color.*;
 import org.apache.pdfbox.pdmodel.graphics.image.*;
-import org.apache.pdfbox.tools.imageio.*;
 import org.bouncycastle.util.encoders.*;
-import org.bullseye.*;
 import org.qyouti.*;
-import org.quipto.compositefile.CompositeFile;
 import org.qyouti.data.*;
 import org.qyouti.scan.process.PageDecodeException;
 import org.qyouti.scan.process.PageDecoder;
@@ -118,11 +105,22 @@ public class ScanTask
   @Override
   public void run()
   {
-    runImport();
+    long start = System.currentTimeMillis();
+    try
+    {
+      runImport();
+    }
+    catch ( Exception e )
+    {
+      e.printStackTrace();
+      exitCode = 1;
+    }
+    long now = System.currentTimeMillis();
+    System.out.println( "Elapsed time during scanning = " + (now-start) + " ms" );
     
     if ( listener != null )
     {
-      listener.scanCompleted();
+      listener.scanCompleted( this );
     }
     if ( tempfolderpath != null )
     {

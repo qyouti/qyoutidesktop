@@ -2272,7 +2272,7 @@ public class QyoutiFrame
       
       File[] files = fc.getSelectedFiles();
 
-      tabs.setSelectedIndex( 2 );
+      tabs.setSelectedIndex( 5 );
       //tabs.setEnabled( false );
       filemenu.setEnabled( false );
       actionmenu.setEnabled( false );
@@ -3072,7 +3072,8 @@ public class QyoutiFrame
               log( Level.SEVERE, null, ex );
       try
       {
-        exam.close();
+        if ( exam != null )
+          exam.close();
       }
       catch (IOException ex1)
       {
@@ -3365,12 +3366,14 @@ public class QyoutiFrame
   }
 
   @Override
-  public void scanCompleted()
+  public void scanCompleted( ScanTask task )
   {
     tabs.setEnabled( true );
     filemenu.setEnabled( true );
     actionmenu.setEnabled( true );
     progressbar.setIndeterminate( false );
+    if ( task.getExitCode() != 0 )
+      JOptionPane.showMessageDialog( this, "Technical fault attempting to import scanned pages." );
   }
 
 

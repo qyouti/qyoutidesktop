@@ -382,6 +382,7 @@ public class ExaminationData
       in.close();
     } catch (IOException ex)
     {
+      Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, name );
       Logger.getLogger(ScannedResponseData.class.getName()).log(Level.SEVERE, null, ex);
     }
     return img;

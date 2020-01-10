@@ -11,5 +11,5 @@ package org.qyouti.scan;
  */
 public interface ScanTaskListener
 {
-  public void scanCompleted();
+  public void scanCompleted( ScanTask task );
 }

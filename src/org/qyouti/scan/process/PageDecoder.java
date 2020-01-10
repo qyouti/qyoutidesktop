@@ -701,6 +701,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       if ( page.error != null )
         continue;
       spage = exam.getScannedPageData(page.pageid);
+      if ( spage == null )
+        continue;
       for ( ScannedQuestionData q : spage.getQuestions() )
       {
         if ( q.areImagesProcessed() )
@@ -735,6 +737,9 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     QTIResponse[] responses;
 
     ScannedPageData spage = exam.getScannedPageData(page.pageid);
+    if ( spage == null )
+      return;
+    
     for ( ScannedQuestionData questiondata : spage.getQuestions() )
     {
       if ( questiondata == null || questiondata.getIdent() == null || questiondata.areImagesProcessed() )
