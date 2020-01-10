@@ -6,7 +6,6 @@
 package org.bullseye;
 
 import java.awt.Point;
-import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.*;
 import java.text.*;
@@ -17,7 +16,6 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import org.apache.commons.math3.ml.clustering.DoublePoint;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
-import static org.bullseye.XLocatorByVote.SOBEL_THRESHOLD;
 import org.qyouti.scan.image.ImageResizer;
 
 /**
@@ -62,7 +60,7 @@ public class XLocatorByCluster extends Thread implements XLocator
   int currentinput;  
   BufferedImage input;
   
-  public static final double SOBEL_THRESHOLD = 0.45; //0.45;    
+  public static final double SOBEL_THRESHOLD = 0.5; //0.45;    
     
   
   /**
@@ -251,13 +249,23 @@ public class XLocatorByCluster extends Thread implements XLocator
         clusterdata[a][c].cluster = clusters.get(c);
         clusterdata[a][c].regression = new SimpleRegression();
         clusterdata[a][c].good = false;
+        clusterdata[a][c].sumx = 0.0;
+        clusterdata[a][c].sumy = 0.0;
         for ( DoublePoint p : clusters.get(c).getPoints() )
+        {
+          clusterdata[a][c].sumx += p.getPoint()[0];
+          clusterdata[a][c].sumy += p.getPoint()[1];
           clusterdata[a][c].regression.addData( p.getPoint()[0], p.getPoint()[1] );
+        }
+        clusterdata[a][c].meanx = clusterdata[a][c].sumx / clusters.get(c).getPoints().size();
+        clusterdata[a][c].meany = clusterdata[a][c].sumy / clusters.get(c).getPoints().size();
         clusterdata[a][c].regression.regress();
         clusterdata[a][c].slope = Math.abs( clusterdata[a][c].regression.getSlope() );
-        if ( clusterdata[a][c].slope > 0.3 && clusterdata[a][c].slope < 4.0 && clusterdata[a][c].regression.getRSquare() > 0.25 )
+        if ( clusterdata[a][c].slope > 0.3 && clusterdata[a][c].slope < 4.0 && clusterdata[a][c].regression.getSignificance() < 0.005 )
         {
-          dfromcentre = Math.abs( input.getWidth() - clusterdata[a][c].regression.predict(input.getWidth()/2) );
+          double dx = input.getWidth()/2 - clusterdata[a][c].meanx;
+          double dy = input.getHeight()/2 - clusterdata[a][c].meany;
+          dfromcentre = Math.sqrt( dx*dx + dy*dy );
           if ( bestcluster<0 || dfromcentre < bestdfromcentre )
           {
             bestcluster = c;
@@ -286,7 +294,7 @@ public class XLocatorByCluster extends Thread implements XLocator
       else
         isx = false;        
     }
-    // hasX == there is at least one
+    // hasX == there is at least one good cluster in each of four angles
     currentreport.hasX = isx;
   
     if ( debuglevel >= 2 )
@@ -315,7 +323,7 @@ public class XLocatorByCluster extends Thread implements XLocator
     }
     else
     {
-      if ( (badcount + goodcount) > 0.05*input.getHeight()*input.getWidth() )
+      if ( (badcount + goodcount) > 0.02*input.getHeight()*input.getWidth() )
         currentreport.dubious = true;
     }
     
@@ -392,6 +400,7 @@ public class XLocatorByCluster extends Thread implements XLocator
   class ClusterData
   {
     Cluster<DoublePoint> cluster;
+    double sumx, sumy, meanx, meany;
     SimpleRegression regression;
     double slope;
     boolean good;
