@@ -2990,6 +2990,8 @@ public class QyoutiFrame
     this.examfolder = examfolder;
 
     noexamloadedlabel.setText( "No exam/survey loaded." );
+    selectdialog.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    
     try
     {
       if ( exam!= null )
@@ -3084,7 +3086,10 @@ public class QyoutiFrame
       ((CardLayout)centralpanel.getLayout()).first( centralpanel );
       JOptionPane.showMessageDialog( this, "Unable to open the exam data files." );
     }
-
+    finally
+    {
+      selectdialog.setCursor(Cursor.getDefaultCursor());
+    }
   }
 
   /**

@@ -2229,6 +2229,8 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     loadScanData();
     
     loadOutcomeData();
+    
+    rebuildReviewList();
   }
 
   private void loadBlankExaminerData()
@@ -2492,7 +2494,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       getPage( p ).postLoad();
   
     //rebuildOutcomeNameList();
-    rebuildReviewList();
     
     fireStatusChange();
     fireTableDataChanged();
