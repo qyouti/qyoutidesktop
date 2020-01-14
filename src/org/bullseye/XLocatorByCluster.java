@@ -226,11 +226,11 @@ public class XLocatorByCluster extends Thread implements XLocator
     int count=0;
     int[] clustcount = new int[angles.length];
     ClusterData[][] clusterdata = new ClusterData[angles.length][];
-    byte[] red = { (byte)0xff, (byte)0,    (byte)0xff };
-    byte[] grn = { (byte)0xff, (byte)0xff, (byte)0    };
-    byte[] blu = { (byte)0xff, (byte)0,    (byte)0    };
+    byte[] red = { (byte)0xff, (byte)0,    (byte)0xff,  (byte)0xff };
+    byte[] grn = { (byte)0xff, (byte)0xff, (byte)0,     (byte)0xff };
+    byte[] blu = { (byte)0xff, (byte)0,    (byte)0,     (byte)0    };
     BufferedImage forandagainst = new BufferedImage( input.getWidth(), input.getHeight(), 
-            BufferedImage.TYPE_BYTE_BINARY, new IndexColorModel(2,3,red,grn,blu) );
+            BufferedImage.TYPE_BYTE_BINARY, new IndexColorModel(2,4,red,grn,blu) );
     for ( int a=0; a<angles.length; a++ )
     {
       list = this.getClusterables( sobelresult, angles[a], range );
@@ -285,6 +285,7 @@ public class XLocatorByCluster extends Thread implements XLocator
       }
       if ( bestcluster>=0 )
       {
+        notifyListeners( -1, false, null,  "Best cluster is cluster for angle " + angles[a] + " is " + bestcluster );
         for ( DoublePoint p : clusterdata[a][bestcluster].cluster.getPoints() )
         {
           forandagainst.setRGB( (int)p.getPoint()[0], (int)p.getPoint()[1], 0x00ff00 );
@@ -308,8 +309,25 @@ public class XLocatorByCluster extends Thread implements XLocator
         int rgb = forandagainst.getRGB( x, y );
         if ( (rgb & 0xffffff) != 0xffffff )
           continue;
-        forandagainst.setRGB(x, y, 0xff0000 );
-        badcount++;
+        int adjacentcount=0;
+        int otherrgb;
+        for ( int dx=x-1; dx>=0 && dx<sobelresult.width && dx<=x+1; dx++ )
+          for ( int dy=y-1; dy>=0 && dy<sobelresult.height && dy<=y+1; dy++ )
+          {
+            if ( dx==0 && dy == 0 ) continue;
+            otherrgb = forandagainst.getRGB(dx, dy) & 0xffffff;
+            if ( otherrgb == 0x00ff00 )
+              adjacentcount++;
+          }
+        if ( adjacentcount >=3 )
+        {
+          forandagainst.setRGB(x, y, 0xffff00 );
+        }
+        else
+        {
+          forandagainst.setRGB(x, y, 0xff0000 );
+          badcount++;
+        }
       }
     if ( debuglevel >= 2 )
       notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good count = " + goodcount + " Bad count " + badcount );

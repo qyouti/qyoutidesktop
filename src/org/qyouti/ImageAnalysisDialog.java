@@ -5,21 +5,12 @@
  */
 package org.qyouti;
 
-import java.awt.Color;
-import java.awt.Image;
+import java.awt.GridBagConstraints;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
-import org.bullseye.Sobel;
-import org.bullseye.SobelPixelResult;
-import org.bullseye.SobelResult;
 import org.bullseye.XLocator;
 import org.bullseye.XLocatorByCluster;
-import org.bullseye.XLocatorByVote;
 import org.bullseye.XLocatorListener;
 import org.bullseye.XLocatorReport;
 
@@ -90,11 +81,16 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
             @Override
             public void notifyDebugMessage( BufferedImage image, String message )
             {
+              GridBagConstraints gbc = new GridBagConstraints();
+              gbc.gridx = 0;
+              gbc.anchor = GridBagConstraints.LINE_START;
               JLabel label = new JLabel( message );
-                if ( image != null )
-              label.setIcon( new ImageIcon( image ) );
-              centrepanel.add(label);
+              if ( image != null )
+                label.setIcon( new ImageIcon( image ) );
+              centrepanel.add(label,gbc);
               centrepanel.doLayout();
+              scrollpane.getViewport().revalidate();
+              scrollpane.getViewport().repaint();
             }
         };
     
@@ -127,9 +123,10 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-    scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    scrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+    scrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
-    centrepanel.setLayout(new java.awt.GridLayout(0, 1));
+    centrepanel.setLayout(new java.awt.GridBagLayout());
     scrollpane.setViewportView(centrepanel);
 
     getContentPane().add(scrollpane, java.awt.BorderLayout.CENTER);
