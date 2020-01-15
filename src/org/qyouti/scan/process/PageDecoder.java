@@ -740,6 +740,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     if ( spage == null )
       return;
     
+    System.out.println( "Processing page " + page.candidate_name + " " + page.candidate_number );
     for ( ScannedQuestionData questiondata : spage.getQuestions() )
     {
       if ( questiondata == null || questiondata.getIdent() == null || questiondata.areImagesProcessed() )

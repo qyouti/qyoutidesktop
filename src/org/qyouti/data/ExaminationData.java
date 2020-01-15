@@ -694,6 +694,17 @@ public class ExaminationData
     return scans.getScannedPageData(pageident);
   }
   
+  public void clearExaminerResponseOverrides()
+  {
+    outcometables.clearNonFixedOutcomes();
+    outcometables.setUnsavedChanges( true );
+    examinerdata.cmap.clear(); // only clearing decisions about student responses, not marking schemes
+    examinerdata.setUnsavedChanges( true );
+    rebuildReviewList();
+    scans.markQuestionScansUnprocessed();
+    scans.setUnsavedChanges( true );
+  }
+  
   public void clearScans()
   {
     CandidateData candidate;

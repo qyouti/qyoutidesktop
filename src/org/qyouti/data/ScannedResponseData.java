@@ -111,6 +111,14 @@ public class ScannedResponseData
       debug_message = content;
   }
 
+  public void reset()
+  {
+    dark_pixels=-1;
+    needsreview=false;
+    candidate_selected=false;
+    debug_message=null;
+  }
+  
   public boolean isSelected()
   {
     if ( exam.getExaminerDecision(candidateident,questionident) == ScannedQuestionData.EXAMINER_DECISION_OVERRIDE )

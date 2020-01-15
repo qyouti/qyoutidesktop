@@ -79,6 +79,7 @@ public class ScanTask
   MessageDigest md;
   Base64Encoder b64 = new Base64Encoder();
   
+  boolean alsoimportimages=true;
   
   public ScanTask( QyoutiPreferences preferences, ExaminationData exam, File[] scanfiles )
   {
@@ -94,7 +95,11 @@ public class ScanTask
 
     this.preferences = preferences;
     this.exam = exam;
-    this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
+    if ( scanfiles != null )
+    {
+      this.scanfilelist = new ArrayList<File>( Arrays.asList( scanfiles ) );
+      this.alsoimportimages=true;
+    }
   }
 
   public void setScanTaskListener( ScanTaskListener listener )
@@ -330,23 +335,25 @@ public class ScanTask
     pagedecoder = new PageDecoder( (double) th / 100.0, inset );
     try
     {
-      if ( md == null ) return;
-  
-      for ( i = 0; i < scanfilelist.size(); i++ )
+      if ( alsoimportimages )
       {
-        if ( scanfilelist.get( i ).getName().endsWith( ".png" ) ||
-             scanfilelist.get( i ).getName().endsWith( ".jpg" )     )
+        if ( md == null ) return;
+        for ( i = 0; i < scanfilelist.size(); i++ )
         {
-          importImageFile( scanfilelist.get( i ) );
-        }
+          if ( scanfilelist.get( i ).getName().endsWith( ".png" ) ||
+               scanfilelist.get( i ).getName().endsWith( ".jpg" )     )
+          {
+            importImageFile( scanfilelist.get( i ) );
+          }
 
-        if ( scanfilelist.get( i ).getName().endsWith( ".pdf" ) )
-        {
-          // pull out images from PDF to temporary files and add them to the list
-          importPDF( i );
+          if ( scanfilelist.get( i ).getName().endsWith( ".pdf" ) )
+          {
+            // pull out images from PDF to temporary files and add them to the list
+            importPDF( i );
+          }
         }
       }
-
+      
       try
       {
         // work out which boxes the candidate put

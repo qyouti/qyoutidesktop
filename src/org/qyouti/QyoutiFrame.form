@@ -195,6 +195,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="viewscanmenuitemActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="reprocessimagesmenuitem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Reprocess Images..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reprocessimagesmenuitemActionPerformed"/>
+              </Events>
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="recomputemenuitem">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Recompute Outcomes"/>

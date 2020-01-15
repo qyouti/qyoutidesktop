@@ -65,6 +65,19 @@ public class ScanData extends AbstractTableModel
     pages.clear();
     pagesbyid.clear();
   }
+
+  public void markQuestionScansUnprocessed()
+  {
+    for ( ScannedPageData page : pages )
+      for ( ScannedQuestionData question : page.getQuestions() )
+      {
+        for ( ScannedResponseData response : question.responsedatas )
+          response.reset();
+        question.imagesprocessed = false;
+        question.needsreview = false;
+      }
+  }
+  
   
   public void addScannedPageData( ScannedPageData page )
   {

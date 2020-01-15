@@ -686,6 +686,7 @@ public class QyoutiFrame
     importimagesmenuitem = new javax.swing.JMenuItem();
     clearscanneddatamenuitem = new javax.swing.JMenuItem();
     viewscanmenuitem = new javax.swing.JMenuItem();
+    reprocessimagesmenuitem = new javax.swing.JMenuItem();
     recomputemenuitem = new javax.swing.JMenuItem();
     sep3 = new javax.swing.JPopupMenu.Separator();
     expscoresmenuitem = new javax.swing.JMenuItem();
@@ -1622,6 +1623,16 @@ public class QyoutiFrame
     });
     actionmenu.add(viewscanmenuitem);
 
+    reprocessimagesmenuitem.setText("Reprocess Images...");
+    reprocessimagesmenuitem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        reprocessimagesmenuitemActionPerformed(evt);
+      }
+    });
+    actionmenu.add(reprocessimagesmenuitem);
+
     recomputemenuitem.setText("Recompute Outcomes");
     recomputemenuitem.addActionListener(new java.awt.event.ActionListener()
     {
@@ -1968,14 +1979,14 @@ public class QyoutiFrame
       if ( row < 0 )
       {
         JOptionPane.
-                showMessageDialog( this, "Select a scan in the Scans tab to edit." );
+                showMessageDialog( this, "Select a scan in the Scans tab." );
         return;
       }
       filename = (String) scanfiletable.getValueAt( row, 2 );
-      if ( !filename.endsWith(".jpg") )
+      if ( !filename.endsWith(".png") )
       {
         JOptionPane.
-                showMessageDialog( this, "Select an image in the Scans tab to edit." );
+                showMessageDialog( this, "Select an image in the Scans tab, not a PDF file." );
         return;
       }
     }
@@ -2897,6 +2908,51 @@ public class QyoutiFrame
     removePersonFromExam( "observer", keyobserverlist );
   }//GEN-LAST:event_removeobserverbuttonActionPerformed
 
+  private void reprocessimagesmenuitemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reprocessimagesmenuitemActionPerformed
+  {//GEN-HEADEREND:event_reprocessimagesmenuitemActionPerformed
+    if ( exam == null )
+    {
+      JOptionPane.
+              showMessageDialog( this, "No exam/survey open." );
+      return;
+    }
+
+    if ( !exam.isCurrentUserInRole(ExaminationData.EXAM_ROLE_ADMINISTRATOR) )
+    {
+      JOptionPane.showMessageDialog( this, "You can clear reprocess images, if your key is in the administrator list." );
+      return;
+    }
+    
+    if ( JOptionPane.showConfirmDialog( this, 
+            "This will clear any examiner confirmations and overrides to candidate \n" + 
+            "X marks and reapply image analysis to all the X marks.  The only reason\n" +
+            "for doing this is when the software has been updated with a new or\n" +
+            "improved algorithm.\n\nAre you sure you wish to continue?",
+            "Confirmation",
+            JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION )
+      return;
+
+    try
+    {
+      exam.clearExaminerResponseOverrides();
+      filemenu.setEnabled( false );
+      actionmenu.setEnabled( false );
+      exam.setUnsavedChangesInMain( true );
+      progressbar.setIndeterminate( true );
+      ScanTask scantask = new ScanTask( preferences, exam, null );
+      scantask.setScanTaskListener( this );
+      scantask.start();
+    }
+    catch ( Exception ex )
+    {
+      exam.candidates.clear();
+      exam.candidates_sorted.clear();
+      JOptionPane.
+              showMessageDialog( this, "Technical error importing scanned images list." );
+    }
+    
+  }//GEN-LAST:event_reprocessimagesmenuitemActionPerformed
+
   /**/
   
   /**
@@ -3280,6 +3336,7 @@ public class QyoutiFrame
   private javax.swing.JButton removeadministratorbutton;
   private javax.swing.JButton removeexaminerbutton;
   private javax.swing.JButton removeobserverbutton;
+  private javax.swing.JMenuItem reprocessimagesmenuitem;
   private javax.swing.JButton resetpreferencesbutton;
   private javax.swing.JRadioButton reviewincludeall;
   private javax.swing.ButtonGroup reviewincludebuttongroup;
@@ -3378,7 +3435,7 @@ public class QyoutiFrame
     actionmenu.setEnabled( true );
     progressbar.setIndeterminate( false );
     if ( task.getExitCode() != 0 )
-      JOptionPane.showMessageDialog( this, "Technical fault attempting to import scanned pages." );
+      JOptionPane.showMessageDialog( this, "Technical fault attempting to process scanned pages." );
   }
 
 
