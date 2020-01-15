@@ -40,6 +40,15 @@ import org.qyouti.scan.image.ImageResizer;
  */
 public class XLocatorByCluster extends Thread implements XLocator
 {
+  static final int BUCKET_TYPE_IGNORE = 0;
+  static final int BUCKET_TYPE_LINE   = 1;
+  static final int BUCKET_TYPE_END    = 2;
+
+  static final int DIRECTION_NE = 0;  
+  static final int DIRECTION_SE = 1;  
+  static final int DIRECTION_NW = 2;  
+  static final int DIRECTION_SW = 3;  
+  
   int debuglevel=0;
   int maxwidth;
   int maxheight;
@@ -225,76 +234,36 @@ public class XLocatorByCluster extends Thread implements XLocator
     ArrayList<DoublePoint> list;
     int count=0;
     int[] clustcount = new int[angles.length];
-    ClusterData[][] clusterdata = new ClusterData[angles.length][];
+    ArrayList<ClusterData> clusterdatalist = new ArrayList<>();
     byte[] red = { (byte)0xff, (byte)0,    (byte)0xff,  (byte)0xff };
     byte[] grn = { (byte)0xff, (byte)0xff, (byte)0,     (byte)0xff };
     byte[] blu = { (byte)0xff, (byte)0,    (byte)0,     (byte)0    };
     BufferedImage forandagainst = new BufferedImage( input.getWidth(), input.getHeight(), 
             BufferedImage.TYPE_BYTE_BINARY, new IndexColorModel(2,4,red,grn,blu) );
+
     for ( int a=0; a<angles.length; a++ )
     {
+      // Get coordinates of pixels with the given angle
       list = this.getClusterables( sobelresult, angles[a], range );
       if ( debuglevel >= 2 )
         notifyListeners( -1, false, this.clusterablesToImage( list, input.getWidth(), input.getHeight() ), "Angle " + angles[a] );
       
+      // Find the clusters of pixel coordinates from the list
       clusters = clusterers.get(a).cluster(list);
       clustcount[a] = clusters.size();
       count+=clustcount[a];
-      clusterdata[a] = new ClusterData[clustcount[a]];
-      int bestcluster=-1;
-      double dfromcentre, bestdfromcentre=Double.MAX_VALUE;
       for ( int c=0; c<clusters.size(); c++)
-      {
-        clusterdata[a][c] = new ClusterData();
-        clusterdata[a][c].cluster = clusters.get(c);
-        clusterdata[a][c].regression = new SimpleRegression();
-        clusterdata[a][c].good = false;
-        clusterdata[a][c].sumx = 0.0;
-        clusterdata[a][c].sumy = 0.0;
-        for ( DoublePoint p : clusters.get(c).getPoints() )
-        {
-          clusterdata[a][c].sumx += p.getPoint()[0];
-          clusterdata[a][c].sumy += p.getPoint()[1];
-          clusterdata[a][c].regression.addData( p.getPoint()[0], p.getPoint()[1] );
-        }
-        clusterdata[a][c].meanx = clusterdata[a][c].sumx / clusters.get(c).getPoints().size();
-        clusterdata[a][c].meany = clusterdata[a][c].sumy / clusters.get(c).getPoints().size();
-        clusterdata[a][c].regression.regress();
-        clusterdata[a][c].slope = Math.abs( clusterdata[a][c].regression.getSlope() );
-        if ( clusterdata[a][c].slope > 0.3 && clusterdata[a][c].slope < 4.0 && clusterdata[a][c].regression.getSignificance() < 0.005 )
-        {
-          double dx = input.getWidth()/2 - clusterdata[a][c].meanx;
-          double dy = input.getHeight()/2 - clusterdata[a][c].meany;
-          dfromcentre = Math.sqrt( dx*dx + dy*dy );
-          if ( bestcluster<0 || dfromcentre < bestdfromcentre )
-          {
-            bestcluster = c;
-            bestdfromcentre = dfromcentre;
-          }
-          clusterdata[a][c].good = true;
-        }
-        if ( debuglevel >= 2 )
-        {
-          notifyListeners( -1, false, this.clusterablesToImage( clusters.get(c).getPoints(), input.getWidth(), input.getHeight() ), 
-                  "Cluster " + c + (clusterdata[a][c].good?" GOOD":" BAD") );
-          notifyListeners( -1, false, null,  "Slope " + clusterdata[a][c].slope );
-          notifyListeners( -1, false, null,  "p " + clusterdata[a][c].regression.getSignificance() );
-          notifyListeners( -1, false, null,  "r2 " + clusterdata[a][c].regression.getRSquare() );
-          notifyListeners( -1, false, null,  "MeanSqErr " + clusterdata[a][c].regression.getMeanSquareError() );
-        }
-      }
-      if ( bestcluster>=0 )
-      {
-        notifyListeners( -1, false, null,  "Best cluster is cluster for angle " + angles[a] + " is " + bestcluster );
-        for ( DoublePoint p : clusterdata[a][bestcluster].cluster.getPoints() )
-        {
-          forandagainst.setRGB( (int)p.getPoint()[0], (int)p.getPoint()[1], 0x00ff00 );
-          goodcount++;
-        }
-      }
-      else
-        isx = false;        
+        clusterdatalist.add( new ClusterData( a, clusters.get(c) ) );
     }
+    
+    ClusterBucketSet clusterbucketset = new ClusterBucketSet();
+    int permutationcount = clusterbucketset.getPermutationCount( clusterdatalist );
+    for ( int p = 0; p<permutationcount; p++ )
+    {
+      clusterbucketset.setPermutation( p, clusterdatalist );
+      
+    }
+    
     // hasX == there is at least one good cluster in each of four angles
     currentreport.hasX = isx;
   
@@ -417,10 +386,113 @@ public class XLocatorByCluster extends Thread implements XLocator
 
   class ClusterData
   {
+    int direction;
     Cluster<DoublePoint> cluster;
     double sumx, sumy, meanx, meany;
     SimpleRegression regression;
     double slope;
     boolean good;
+    
+    ClusterData( int direction, Cluster<DoublePoint> cluster )
+    {
+      this.direction = direction;
+      this.cluster = cluster;
+    }
+  }
+  
+  class ClusterBucket
+  {
+    int type;
+    int direction;
+    ArrayList<ClusterData> clusters=new ArrayList<>();
+    Cluster<DoublePoint> combinedcluster =  new Cluster<DoublePoint>();
+    
+    ClusterBucket( int type, int direction )
+    {
+      this.type = type;
+      this.direction = direction;
+    }
+    void clear()
+    {
+      clusters.clear();
+    }
+    void compute()
+    {
+      for ( ClusterData cd : clusters )
+        for ( DoublePoint point : cd.cluster.getPoints() )
+          combinedcluster.addPoint(point);
+    
+      //for ( DoublePoint point : combinedcluster.getPoints() )
+      double sumx, sumy, meanx, meany;
+      SimpleRegression regression;
+      
+      
+    }
+  }
+  
+  class ClusterBucketSet
+  {
+    ArrayList<ClusterBucket> allbuckets = new ArrayList<>();
+    ClusterBucket[][] buckets;
+
+    ClusterBucketSet()
+    {
+      buckets = new ClusterBucket[3][];
+      for ( int t=BUCKET_TYPE_IGNORE; t<=BUCKET_TYPE_END; t++ )
+      {
+        buckets[t] = new ClusterBucket[t==BUCKET_TYPE_IGNORE?1:3];
+        for ( int d=0; d<4; d++ )
+        {
+          buckets[t][d] = new ClusterBucket( t, d );
+          allbuckets.add(buckets[t][d] );
+        }
+      }
+    }
+
+    void clear()
+    {
+      for ( ClusterBucket bucket : allbuckets )
+        bucket.clear();
+    }
+    
+    int getPermutationCount( List<ClusterData> list )
+    {
+      if ( list.isEmpty() )
+        return 0;
+      int n=3;
+      int nextn;
+      for ( int i=1; i<list.size(); i++ )
+      {
+        nextn = n * 3;
+        if ( nextn < n )
+          throw new IllegalArgumentException( "List size too big." );
+        n = nextn;
+      }
+      return n;
+    }
+    
+    void setPermutation( int n, List<ClusterData> list )
+    {
+      clear();
+      if ( list.isEmpty() )
+        return;
+      int a=n, type, direction;
+      for ( ClusterData cluster : list )
+      {
+        type = a % 3;
+        a = a/3;
+        if ( type == BUCKET_TYPE_IGNORE )
+          direction = 0;
+        else
+          direction = cluster.direction;
+        buckets[type][direction].clusters.add(cluster);
+      }
+      score();
+    }
+    
+    void score()
+    {
+      
+    }
   }
 }

@@ -22,6 +22,8 @@ public class AngleBiasedDistanceMeasure implements DistanceMeasure
   double[] src = new double[4];
   double[] dst = new double[4];
   
+  double assymetryfactor = 0.75;
+  
   public AngleBiasedDistanceMeasure( double angle )
   {
     trans = AffineTransform.getRotateInstance( Math.toRadians(angle) );
@@ -40,7 +42,7 @@ public class AngleBiasedDistanceMeasure implements DistanceMeasure
     src[3] = b[1];
     trans.transform(src, 0, dst, 0, 2);
     
-    double dx = (dst[0] - dst[2]) / 10.0;
+    double dx = (dst[0] - dst[2]) * assymetryfactor;
     double dy = (dst[1] - dst[3]);
     
     return FastMath.sqrt( dx*dx + dy*dy );
