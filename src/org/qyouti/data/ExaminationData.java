@@ -137,6 +137,8 @@ public class ExaminationData
   
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
+  boolean analysesunsavedchanges=false;
+  
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
 
   private File examfolder;
@@ -155,6 +157,7 @@ public class ExaminationData
   
   public static final String examinerarchivename = "examiner.tar";
   public static final String examinerfilename = "examiner.xml";
+  public static final String analysesfilename = "itemanalysis.xml";
   
   EncryptedCompositeFile mainarchive;
   EncryptedCompositeFile questionarchive;
@@ -736,8 +739,9 @@ public class ExaminationData
       e.printStackTrace();
     }
     
-    setUnsavedChangesInMain( true );
     setUnsavedChangesInScans( true );
+    setUnsavedChangesInExaminer( true );
+    setUnsavedChangesInOutcome( true );
   }
   
   
@@ -976,7 +980,7 @@ public class ExaminationData
     analyses.clear();
     qdefs.itemAnalysis(candidates_sorted, analyses);
     analysistablemodel.setSelectedQuestion( ident );
-    setUnsavedChangesInMain( true );
+    setUnsavedChangesInAnalyses( true );
     
 //    ResponseAnalysis ranal;
 //    StringWriter writer = new StringWriter();
@@ -1807,6 +1811,18 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         writer = null;        
       }
       
+      if (analyses != null && analysesunsavedchanges )
+      {
+        writer = new OutputStreamWriter( examinerarchive.getEncryptingOutputStream( analysesfilename, true, true), "utf8");
+        writer.write("<analysis>\r\n");
+        for (int i = 0; i < analyses.size(); i++)
+          analyses.get(i).emit(writer);
+        writer.write("</analysis>\r\n");
+        writer.close();
+        writer = null;
+        analysesunsavedchanges = false;
+      }
+    
       if ( outcometables != null && outcometables.areThereUnsavedChanges() )
       {
         writer = new OutputStreamWriter( outcomearchive.getEncryptingOutputStream( outcomefilename, true, true), "utf8");
@@ -1879,7 +1895,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public boolean areThereUnsavedChanges()
   {
-    return unsaved_changes || 
+    return unsaved_changes || analysesunsavedchanges ||
             qdefs.areThereUnsavedChanges() || 
             ( examinerdata != null && examinerdata.areThereUnsavedChanges() ) || 
             (outcometables != null && outcometables.areThereUnsavedChanges())      ;
@@ -1920,7 +1936,16 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       fireStatusChange();
     }
   }
-  
+
+  public void setUnsavedChangesInAnalyses( boolean b )
+  {
+    if ( analysesunsavedchanges != b )
+    {
+      analysesunsavedchanges =  b;
+      fireStatusChange();
+    }
+  }
+    
   public void setUnsavedChangesInOutcome( boolean b )
   {
     if ( outcometables.areThereUnsavedChanges() != b )
@@ -2090,15 +2115,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
     writer.write("</papers>\r\n");
 
-    writer.write("<analysis>\r\n");
-    if (analyses != null)
-    {
-      for (int i = 0; i < analyses.size(); i++)
-      {
-        analyses.get(i).emit(writer);
-      }
-    }
-    writer.write("</analysis>\r\n");
 
     writer.write("<transforms>\r\n");
     if (datatransforminstructions != null)
@@ -2230,6 +2246,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     
     loadMain();
     loadPagination();
+    
+    if ( examinerarchive.exists( analysesfilename ) )
+      loadAnalyses();
     
     if ( examinerarchive.exists( examinerfilename ) )
       loadExaminerData();
@@ -2510,6 +2529,41 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     fireTableDataChanged();
   }
 
+  
+  private void loadAnalyses()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    InputStream in = examinerarchive.getDecryptingInputStream(analysesfilename);
+    InputSource source = new InputSource( in );
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+  
+    
+    Document document = builder.parse( source );
+    Element roote = document.getDocumentElement();
+    if ( !"analysis".equals(roote.getLocalName()))
+      return;
+    
+    //System.out.println(roote.getNodeName());
+    NodeList anl;
+
+    if ("analysis".equals(roote.getNodeName()))
+    {
+      anl = roote.getElementsByTagName("itemanalysis");
+      QuestionAnalysis qa;
+      for (int j = 0; j < anl.getLength(); j++)
+      {
+        qa = new QuestionAnalysis( (Element) anl.item(j) );
+        analyses.add( qa );
+      }
+    }
+    
+    fireStatusChange();
+    fireTableDataChanged();
+  }
+  
+  
   public int getRowCount()
   {
     return this.candidates.size();
