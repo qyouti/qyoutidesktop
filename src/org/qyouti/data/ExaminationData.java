@@ -105,14 +105,21 @@ public class ExaminationData
             AclEntryPermission.WRITE_ACL, 
             AclEntryPermission.WRITE_OWNER
     );
+  static final Set<AclEntryPermission> READDIRPERMISSIONS;
   static final Set<AclEntryPermission> READWRITEPERMISSIONS;
   static final Set<AclEntryPermission> FULLPERMISSIONS;
+  static final Set<AclEntryPermission> FULLDIRPERMISSIONS;
   static
   {
+    READDIRPERMISSIONS = EnumSet.copyOf(READPERMISSIONS);
+    READDIRPERMISSIONS.add(AclEntryPermission.EXECUTE);
     READWRITEPERMISSIONS = EnumSet.copyOf(READPERMISSIONS);
     READWRITEPERMISSIONS.addAll(WRITEPERMISSIONS);
     FULLPERMISSIONS = EnumSet.copyOf(READWRITEPERMISSIONS);
     FULLPERMISSIONS.addAll(ACCESSPERMISSIONS);    
+    FULLDIRPERMISSIONS = EnumSet.copyOf(FULLPERMISSIONS);
+    FULLDIRPERMISSIONS.add(AclEntryPermission.DELETE_CHILD);
+    FULLDIRPERMISSIONS.add(AclEntryPermission.EXECUTE);
   }
           
 
@@ -2808,9 +2815,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       updateAccessRights( f, keysobserver, EncryptedCompositeFile.READ_PERMISSION );
       
       permsetlist.clear();
-      permsetlist.add( FULLPERMISSIONS );
-      permsetlist.add( examinerfiles.contains(f)?READWRITEPERMISSIONS:READPERMISSIONS );
-      permsetlist.add( READPERMISSIONS );
+      permsetlist.add( FULLPERMISSIONS );  // for members of admin role
+      permsetlist.add( examinerfiles.contains(f)?READWRITEPERMISSIONS:READPERMISSIONS );  // for members of examiner role
+      permsetlist.add( READPERMISSIONS );  // for members of observer role
       Path file = new File( f.getCanonicalPath() ).toPath();
       try
       {
@@ -2821,6 +2828,21 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         JOptionPane.showMessageDialog(null, "Data was saved but failed to set access rights on the saved files.\nReason:\n" + ioe.getMessage() );
       }
     }
+
+    permsetlist.clear();
+    permsetlist.add( FULLDIRPERMISSIONS );  // for members of admin role
+    permsetlist.add( READDIRPERMISSIONS );     // for members of examiner role
+    permsetlist.add( READDIRPERMISSIONS );     // for members of observer role
+    Path file = examfolder.toPath();
+    try
+    {
+      updateOperatingSystemAccessRights( file, permsetlist );
+    }
+    catch ( IOException ioe )
+    {
+      JOptionPane.showMessageDialog(null, "Data was saved but failed to set access rights on the exam data folder.\nReason:\n" + ioe.getMessage() );
+    }
+    
   }
   
   public static void saveNewExamination( CryptographyManager cryptomanager, File examfolder, String strmain, String strquestions )
