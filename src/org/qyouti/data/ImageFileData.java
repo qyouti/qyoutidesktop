@@ -26,11 +26,8 @@
 
 package org.qyouti.data;
 
-import java.awt.Rectangle;
-import java.awt.geom.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.LookupOp;
 import java.io.*;
+import org.apache.commons.text.StringEscapeUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -165,11 +162,11 @@ public class ImageFileData
           throws IOException
   {
     writer.write( "    <file " );
-    writer.write( "ident=\""        + ident            + "\" " );
-    writer.write( "source=\""       + source           + "\" " );
-    writer.write( "importedname=\"" + importedname     + "\" " );
-    writer.write( "importeddate=\"" + importeddate     + "\" " );
-    writer.write( "digest=\""       + digest           + "\" " );
+    writer.write( "ident=\""        + ident                                 + "\" " );
+    writer.write( "source=\""       + StringEscapeUtils.escapeXml11(source) + "\" " );
+    writer.write( "importedname=\"" + importedname                          + "\" " );
+    writer.write( "importeddate=\"" + importeddate                          + "\" " );
+    writer.write( "digest=\""       + digest                                + "\" " );
     writer.write( "imported=\"" );
     writer.write( imported?"true":"false" );
     writer.write( "\" processed=\"" );

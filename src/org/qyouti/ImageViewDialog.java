@@ -10,19 +10,13 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.InputStream;
-import java.net.*;
 import java.util.logging.*;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import org.bullseye.BullseyeGenerator;
 import org.bullseye.BullseyePage;
 import org.bullseye.BullseyePageScanner;
-import org.quipto.compositefile.CompositeFile;
 import org.qyouti.qti1.gui.PaginationRecord;
 import org.qyouti.qti1.gui.QuestionMetricBox;
 import org.qyouti.qti1.gui.QuestionMetricsRecord;
@@ -44,6 +38,8 @@ public class ImageViewDialog
   PaginationRecord.Page page=null;
   PaginationRecord.Bullseye b=null;
   
+  float scale = 0.5f;
+  
   /**
    * Creates new form ImageViewDialog
    */
@@ -52,6 +48,7 @@ public class ImageViewDialog
     super( parent, modal );
     frame=parent;
     initComponents();
+    this.setSize( 800, 600 );
   }
 
   
@@ -104,8 +101,8 @@ public class ImageViewDialog
       
       annotateImage();
       
-      imagelabel.setIcon( new ImageIcon( image.getScaledInstance(image.getWidth()*2, -1, Image.SCALE_SMOOTH ) ) );
-      pack();
+      imagelabel.setIcon( new ImageIcon( image.getScaledInstance( Math.round(image.getWidth()*scale), -1, Image.SCALE_SMOOTH ) ) );
+      //pack();
     }
     catch ( Exception ex )
     {
@@ -238,12 +235,17 @@ public class ImageViewDialog
   private void initComponents()
   {
 
+    zoombuttongroup = new javax.swing.ButtonGroup();
     scrollpane = new javax.swing.JScrollPane();
     centrepanel = new javax.swing.JPanel();
     imagelabel = new javax.swing.JLabel();
     bottompanel = new javax.swing.JPanel();
     closebutton = new javax.swing.JButton();
     toppanel = new javax.swing.JPanel();
+    jLabel3 = new javax.swing.JLabel();
+    zoom50button = new javax.swing.JRadioButton();
+    zoom100button = new javax.swing.JRadioButton();
+    zoom200button = new javax.swing.JRadioButton();
     jLabel1 = new javax.swing.JLabel();
     printidlabel = new javax.swing.JLabel();
     jLabel2 = new javax.swing.JLabel();
@@ -272,6 +274,43 @@ public class ImageViewDialog
     getContentPane().add(bottompanel, java.awt.BorderLayout.SOUTH);
 
     toppanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 5));
+
+    jLabel3.setText("Zoom:");
+    toppanel.add(jLabel3);
+
+    zoombuttongroup.add(zoom50button);
+    zoom50button.setSelected(true);
+    zoom50button.setText("50%");
+    zoom50button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        zoom50buttonActionPerformed(evt);
+      }
+    });
+    toppanel.add(zoom50button);
+
+    zoombuttongroup.add(zoom100button);
+    zoom100button.setText("100%");
+    zoom100button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        zoom100buttonActionPerformed(evt);
+      }
+    });
+    toppanel.add(zoom100button);
+
+    zoombuttongroup.add(zoom200button);
+    zoom200button.setText("200%");
+    zoom200button.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        zoom200buttonActionPerformed(evt);
+      }
+    });
+    toppanel.add(zoom200button);
 
     jLabel1.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
     jLabel1.setText("Print ID:");
@@ -302,6 +341,24 @@ public class ImageViewDialog
     dispose();
   }//GEN-LAST:event_closebuttonActionPerformed
 
+  private void zoom50buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_zoom50buttonActionPerformed
+  {//GEN-HEADEREND:event_zoom50buttonActionPerformed
+    scale = 0.5f;
+    imagelabel.setIcon( new ImageIcon( image.getScaledInstance( Math.round(image.getWidth()*scale), -1, Image.SCALE_SMOOTH ) ) );
+  }//GEN-LAST:event_zoom50buttonActionPerformed
+
+  private void zoom100buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_zoom100buttonActionPerformed
+  {//GEN-HEADEREND:event_zoom100buttonActionPerformed
+    scale = 1.0f;
+    imagelabel.setIcon( new ImageIcon( image.getScaledInstance( Math.round(image.getWidth()*scale), -1, Image.SCALE_SMOOTH ) ) );
+  }//GEN-LAST:event_zoom100buttonActionPerformed
+
+  private void zoom200buttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_zoom200buttonActionPerformed
+  {//GEN-HEADEREND:event_zoom200buttonActionPerformed
+    scale = 2.0f;
+    imagelabel.setIcon( new ImageIcon( image.getScaledInstance( Math.round(image.getWidth()*scale), -1, Image.SCALE_SMOOTH ) ) );
+  }//GEN-LAST:event_zoom200buttonActionPerformed
+
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel bottompanel;
@@ -311,9 +368,14 @@ public class ImageViewDialog
   private javax.swing.JLabel imagelabel;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
+  private javax.swing.JLabel jLabel3;
   private javax.swing.JLabel pageidlabel;
   private javax.swing.JLabel printidlabel;
   private javax.swing.JScrollPane scrollpane;
   private javax.swing.JPanel toppanel;
+  private javax.swing.JRadioButton zoom100button;
+  private javax.swing.JRadioButton zoom200button;
+  private javax.swing.JRadioButton zoom50button;
+  private javax.swing.ButtonGroup zoombuttongroup;
   // End of variables declaration//GEN-END:variables
 }

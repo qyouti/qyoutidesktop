@@ -105,14 +105,21 @@ public class ExaminationData
             AclEntryPermission.WRITE_ACL, 
             AclEntryPermission.WRITE_OWNER
     );
+  static final Set<AclEntryPermission> READDIRPERMISSIONS;
   static final Set<AclEntryPermission> READWRITEPERMISSIONS;
   static final Set<AclEntryPermission> FULLPERMISSIONS;
+  static final Set<AclEntryPermission> FULLDIRPERMISSIONS;
   static
   {
+    READDIRPERMISSIONS = EnumSet.copyOf(READPERMISSIONS);
+    READDIRPERMISSIONS.add(AclEntryPermission.EXECUTE);
     READWRITEPERMISSIONS = EnumSet.copyOf(READPERMISSIONS);
     READWRITEPERMISSIONS.addAll(WRITEPERMISSIONS);
     FULLPERMISSIONS = EnumSet.copyOf(READWRITEPERMISSIONS);
     FULLPERMISSIONS.addAll(ACCESSPERMISSIONS);    
+    FULLDIRPERMISSIONS = EnumSet.copyOf(FULLPERMISSIONS);
+    FULLDIRPERMISSIONS.add(AclEntryPermission.DELETE_CHILD);
+    FULLDIRPERMISSIONS.add(AclEntryPermission.EXECUTE);
   }
           
 
@@ -137,6 +144,8 @@ public class ExaminationData
   
   public QuestionDefinitions qdefs = null;
   public ArrayList<QuestionAnalysis> analyses = new ArrayList<>();
+  boolean analysesunsavedchanges=false;
+  
   public QuestionAnalysisTable analysistablemodel = new QuestionAnalysisTable( this, analyses );
 
   private File examfolder;
@@ -155,6 +164,7 @@ public class ExaminationData
   
   public static final String examinerarchivename = "examiner.tar";
   public static final String examinerfilename = "examiner.xml";
+  public static final String analysesfilename = "itemanalysis.xml";
   
   EncryptedCompositeFile mainarchive;
   EncryptedCompositeFile questionarchive;
@@ -736,8 +746,9 @@ public class ExaminationData
       e.printStackTrace();
     }
     
-    setUnsavedChangesInMain( true );
     setUnsavedChangesInScans( true );
+    setUnsavedChangesInExaminer( true );
+    setUnsavedChangesInOutcome( true );
   }
   
   
@@ -976,7 +987,7 @@ public class ExaminationData
     analyses.clear();
     qdefs.itemAnalysis(candidates_sorted, analyses);
     analysistablemodel.setSelectedQuestion( ident );
-    setUnsavedChangesInMain( true );
+    setUnsavedChangesInAnalyses( true );
     
 //    ResponseAnalysis ranal;
 //    StringWriter writer = new StringWriter();
@@ -1807,6 +1818,18 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         writer = null;        
       }
       
+      if (analyses != null && analysesunsavedchanges )
+      {
+        writer = new OutputStreamWriter( examinerarchive.getEncryptingOutputStream( analysesfilename, true, true), "utf8");
+        writer.write("<analysis>\r\n");
+        for (int i = 0; i < analyses.size(); i++)
+          analyses.get(i).emit(writer);
+        writer.write("</analysis>\r\n");
+        writer.close();
+        writer = null;
+        analysesunsavedchanges = false;
+      }
+    
       if ( outcometables != null && outcometables.areThereUnsavedChanges() )
       {
         writer = new OutputStreamWriter( outcomearchive.getEncryptingOutputStream( outcomefilename, true, true), "utf8");
@@ -1879,7 +1902,7 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
 
   public boolean areThereUnsavedChanges()
   {
-    return unsaved_changes || 
+    return unsaved_changes || analysesunsavedchanges ||
             qdefs.areThereUnsavedChanges() || 
             ( examinerdata != null && examinerdata.areThereUnsavedChanges() ) || 
             (outcometables != null && outcometables.areThereUnsavedChanges())      ;
@@ -1920,7 +1943,16 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       fireStatusChange();
     }
   }
-  
+
+  public void setUnsavedChangesInAnalyses( boolean b )
+  {
+    if ( analysesunsavedchanges != b )
+    {
+      analysesunsavedchanges =  b;
+      fireStatusChange();
+    }
+  }
+    
   public void setUnsavedChangesInOutcome( boolean b )
   {
     if ( outcometables.areThereUnsavedChanges() != b )
@@ -2090,15 +2122,6 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     }
     writer.write("</papers>\r\n");
 
-    writer.write("<analysis>\r\n");
-    if (analyses != null)
-    {
-      for (int i = 0; i < analyses.size(); i++)
-      {
-        analyses.get(i).emit(writer);
-      }
-    }
-    writer.write("</analysis>\r\n");
 
     writer.write("<transforms>\r\n");
     if (datatransforminstructions != null)
@@ -2230,6 +2253,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     
     loadMain();
     loadPagination();
+    
+    if ( examinerarchive.exists( analysesfilename ) )
+      loadAnalyses();
     
     if ( examinerarchive.exists( examinerfilename ) )
       loadExaminerData();
@@ -2510,6 +2536,41 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
     fireTableDataChanged();
   }
 
+  
+  private void loadAnalyses()
+          throws ParserConfigurationException, SAXException, IOException
+  {
+    InputStream in = examinerarchive.getDecryptingInputStream(analysesfilename);
+    InputSource source = new InputSource( in );
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+  
+    
+    Document document = builder.parse( source );
+    Element roote = document.getDocumentElement();
+    if ( !"analysis".equals(roote.getLocalName()))
+      return;
+    
+    //System.out.println(roote.getNodeName());
+    NodeList anl;
+
+    if ("analysis".equals(roote.getNodeName()))
+    {
+      anl = roote.getElementsByTagName("itemanalysis");
+      QuestionAnalysis qa;
+      for (int j = 0; j < anl.getLength(); j++)
+      {
+        qa = new QuestionAnalysis( (Element) anl.item(j) );
+        analyses.add( qa );
+      }
+    }
+    
+    fireStatusChange();
+    fireTableDataChanged();
+  }
+  
+  
   public int getRowCount()
   {
     return this.candidates.size();
@@ -2754,9 +2815,9 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
       updateAccessRights( f, keysobserver, EncryptedCompositeFile.READ_PERMISSION );
       
       permsetlist.clear();
-      permsetlist.add( FULLPERMISSIONS );
-      permsetlist.add( examinerfiles.contains(f)?READWRITEPERMISSIONS:READPERMISSIONS );
-      permsetlist.add( READPERMISSIONS );
+      permsetlist.add( FULLPERMISSIONS );  // for members of admin role
+      permsetlist.add( examinerfiles.contains(f)?READWRITEPERMISSIONS:READPERMISSIONS );  // for members of examiner role
+      permsetlist.add( READPERMISSIONS );  // for members of observer role
       Path file = new File( f.getCanonicalPath() ).toPath();
       try
       {
@@ -2767,6 +2828,21 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
         JOptionPane.showMessageDialog(null, "Data was saved but failed to set access rights on the saved files.\nReason:\n" + ioe.getMessage() );
       }
     }
+
+    permsetlist.clear();
+    permsetlist.add( FULLDIRPERMISSIONS );  // for members of admin role
+    permsetlist.add( READDIRPERMISSIONS );     // for members of examiner role
+    permsetlist.add( READDIRPERMISSIONS );     // for members of observer role
+    Path file = examfolder.toPath();
+    try
+    {
+      updateOperatingSystemAccessRights( file, permsetlist );
+    }
+    catch ( IOException ioe )
+    {
+      JOptionPane.showMessageDialog(null, "Data was saved but failed to set access rights on the exam data folder.\nReason:\n" + ioe.getMessage() );
+    }
+    
   }
   
   public static void saveNewExamination( CryptographyManager cryptomanager, File examfolder, String strmain, String strquestions )
