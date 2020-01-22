@@ -6,6 +6,8 @@
 package org.bullseye;
 
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.*;
 import java.io.*;
 import java.text.*;
@@ -15,6 +17,7 @@ import javax.imageio.*;
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import org.apache.commons.math3.ml.clustering.DoublePoint;
+import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.qyouti.scan.image.ImageResizer;
 
@@ -40,10 +43,6 @@ import org.qyouti.scan.image.ImageResizer;
  */
 public class XLocatorByCluster extends Thread implements XLocator
 {
-  static final int BUCKET_TYPE_IGNORE = 0;
-  static final int BUCKET_TYPE_LINE   = 1;
-  static final int BUCKET_TYPE_END    = 2;
-
   static final int DIRECTION_NE = 0;  
   static final int DIRECTION_SE = 1;  
   static final int DIRECTION_NW = 2;  
@@ -253,66 +252,76 @@ public class XLocatorByCluster extends Thread implements XLocator
       clustcount[a] = clusters.size();
       count+=clustcount[a];
       for ( int c=0; c<clusters.size(); c++)
+      {
+        Cluster<DoublePoint> cluster = clusters.get( c );
+        notifyListeners( -1, false, this.clusterablesToImage( cluster.getPoints(), input.getWidth(), input.getHeight() ), "Angle " + angles[a] + " cluster " + c );
         clusterdatalist.add( new ClusterData( a, clusters.get(c) ) );
+      }
     }
     
-    ClusterBucketSet clusterbucketset = new ClusterBucketSet();
-    int permutationcount = clusterbucketset.getPermutationCount( clusterdatalist );
-    for ( int p = 0; p<permutationcount; p++ )
-    {
-      clusterbucketset.setPermutation( p, clusterdatalist );
-      
-    }
+    for ( ClusterData cd : clusterdatalist )
+      cd.compute();
+    
+    ClusterBucketSet clusterbucketset = new ClusterBucketSet( clusterdatalist );
+//    int permutationcount = clusterbucketset.getPermutationCount( clusterdatalist );
+//    notifyListeners( -1, false, null, "Cluster Bucket Permutation count " + permutationcount );
+//    for ( int p = 0; p<permutationcount; p++ )
+//    {
+//      clusterbucketset.setPermutation( p, clusterdatalist );
+//    }
+    
+    currentreport.hasX = false;
+    currentreport.dubious = true;
     
     // hasX == there is at least one good cluster in each of four angles
-    currentreport.hasX = isx;
+//    currentreport.hasX = isx;
   
-    if ( debuglevel >= 2 )
-      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good only" );
-    for ( int x=0; x<sobelresult.width; x++ )
-      for ( int y=0; y<sobelresult.height; y++ )
-      {
-        SobelPixelResult spr = sobelresult.results[x][y];
-        if ( spr.magnitude == 0.0 )
-          continue;
-        int rgb = forandagainst.getRGB( x, y );
-        if ( (rgb & 0xffffff) != 0xffffff )
-          continue;
-        int adjacentcount=0;
-        int otherrgb;
-        for ( int dx=x-1; dx>=0 && dx<sobelresult.width && dx<=x+1; dx++ )
-          for ( int dy=y-1; dy>=0 && dy<sobelresult.height && dy<=y+1; dy++ )
-          {
-            if ( dx==0 && dy == 0 ) continue;
-            otherrgb = forandagainst.getRGB(dx, dy) & 0xffffff;
-            if ( otherrgb == 0x00ff00 )
-              adjacentcount++;
-          }
-        if ( adjacentcount >=3 )
-        {
-          forandagainst.setRGB(x, y, 0xffff00 );
-        }
-        else
-        {
-          forandagainst.setRGB(x, y, 0xff0000 );
-          badcount++;
-        }
-      }
-    if ( debuglevel >= 2 )
-      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good count = " + goodcount + " Bad count " + badcount );
-     
-    if ( currentreport.hasX )
-    {
-      if ( badcount > goodcount/2.0 )
-        currentreport.dubious = true;
-      if ( badcount > 2.0*goodcount )
-        currentreport.hasX = false;
-    }
-    else
-    {
-      if ( (badcount + goodcount) > 0.02*input.getHeight()*input.getWidth() )
-        currentreport.dubious = true;
-    }
+//    if ( debuglevel >= 2 )
+//      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good only" );
+//    for ( int x=0; x<sobelresult.width; x++ )
+//      for ( int y=0; y<sobelresult.height; y++ )
+//      {
+//        SobelPixelResult spr = sobelresult.results[x][y];
+//        if ( spr.magnitude == 0.0 )
+//          continue;
+//        int rgb = forandagainst.getRGB( x, y );
+//        if ( (rgb & 0xffffff) != 0xffffff )
+//          continue;
+//        int adjacentcount=0;
+//        int otherrgb;
+//        for ( int dx=x-1; dx>=0 && dx<sobelresult.width && dx<=x+1; dx++ )
+//          for ( int dy=y-1; dy>=0 && dy<sobelresult.height && dy<=y+1; dy++ )
+//          {
+//            if ( dx==0 && dy == 0 ) continue;
+//            otherrgb = forandagainst.getRGB(dx, dy) & 0xffffff;
+//            if ( otherrgb == 0x00ff00 )
+//              adjacentcount++;
+//          }
+//        if ( adjacentcount >=3 )
+//        {
+//          forandagainst.setRGB(x, y, 0xffff00 );
+//        }
+//        else
+//        {
+//          forandagainst.setRGB(x, y, 0xff0000 );
+//          badcount++;
+//        }
+//      }
+//    if ( debuglevel >= 2 )
+//      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good count = " + goodcount + " Bad count " + badcount );
+//     
+//    if ( currentreport.hasX )
+//    {
+//      if ( badcount > goodcount/2.0 )
+//        currentreport.dubious = true;
+//      if ( badcount > 2.0*goodcount )
+//        currentreport.hasX = false;
+//    }
+//    else
+//    {
+//      if ( (badcount + goodcount) > 0.02*input.getHeight()*input.getWidth() )
+//        currentreport.dubious = true;
+//    }
     
     if ( debuglevel >= 2 )
       notifyListeners( -1, false, null, "X = " + currentreport.hasX  + "     Dubious = " + currentreport.dubious );
@@ -388,111 +397,279 @@ public class XLocatorByCluster extends Thread implements XLocator
   {
     int direction;
     Cluster<DoublePoint> cluster;
-    double sumx, sumy, meanx, meany;
+
+    int n;
+    double sumx, sumy;
     SimpleRegression regression;
-    double slope;
-    boolean good;
+    RegressionResults regressionresults;
+//    boolean good;
     
     ClusterData( int direction, Cluster<DoublePoint> cluster )
     {
       this.direction = direction;
       this.cluster = cluster;
+      regression = new SimpleRegression();
     }
+    
+    void compute()
+    {
+      regression.clear();
+      sumx = 0.0;
+      sumy = 0.0;
+      n=0;
+      for ( DoublePoint point : cluster.getPoints() )
+      {
+        regression.addData( point.getPoint()[0], point.getPoint()[1] );
+        sumx += point.getPoint()[0];
+        sumy += point.getPoint()[1];
+        n++;
+      }
+      regressionresults = regression.regress();
+    }
+    
+  }
+  
+  
+  class ClusterBucketResults
+  {
+    double n;
+    double slope;
+    double angle;
+    double intercept;
+    double meanx;
+    double meany;
+    double length;
+    Point2D.Double max = new Point2D.Double();
+    Point2D.Double min = new Point2D.Double();
+    double significance;    
+    RegressionResults regressionresults;
   }
   
   class ClusterBucket
   {
-    int type;
     int direction;
     ArrayList<ClusterData> clusters=new ArrayList<>();
-    Cluster<DoublePoint> combinedcluster =  new Cluster<DoublePoint>();
+    int permutations;
+    ArrayList<ClusterBucketResults> permutationresults = new ArrayList<>();
+            
+    ArrayList<ClusterData> currentclusters=new ArrayList<>();
+    ClusterBucketResults currentresults;
+            
     
-    ClusterBucket( int type, int direction )
+    
+    ClusterBucket( int direction )
     {
-      this.type = type;
       this.direction = direction;
     }
+    
+    void addCluster( ClusterData cd )
+    {
+      if ( cd.direction != direction )
+        throw new IllegalArgumentException( "Can't add given cluster to bucket - wrong direction." );
+      clusters.add(cd);
+    }
+    
+    void computePermutations()
+    {
+      permutations = 1 << clusters.size();
+      System.out.println( "\nCluster Bucket direction " + direction + " clusters " + clusters.size() + " number of permutations " + permutations );
+      permutationresults.add( new ClusterBucketResults() );
+      for ( int p=1; p<permutations; p++ )
+        permutationresults.add( computePermutation( p ) );
+    }
+    
+    ClusterBucketResults computePermutation( int n )
+    {
+      System.out.println( "Cluster Bucket direction " + direction + " permutation " + n );
+      currentclusters.clear();
+      for ( int i=0; i<clusters.size(); i++ )
+      {
+        if ( (n & (1<<i)) != 0  )
+          currentclusters.add( clusters.get(i) );
+      }
+      return compute();
+    }
+    
+    int getPermutationCount()
+    {
+      return permutations;
+    }
+    
+    ClusterBucketResults getPermutationResults( int p )
+    {
+      return permutationresults.get( p );
+    }
+    
     void clear()
     {
       clusters.clear();
     }
-    void compute()
+    boolean isEmpty()
     {
-      for ( ClusterData cd : clusters )
+      return clusters.size() == 0;
+    }
+    private ClusterBucketResults compute()
+    {
+      ClusterBucketResults results = new ClusterBucketResults();
+      SimpleRegression regression = new SimpleRegression();
+      if ( currentclusters.size() == 0 )
+        return results;
+      
+      double sumx=0.0, sumy=0.0;
+      int n=0;
+      for ( ClusterData cd : currentclusters )
+      {
+        n += cd.n;
+        sumx += cd.sumx;
+        sumy += cd.sumy;
+        regression.append( cd.regression );
+      }
+
+      results.n = n;
+      results.meanx = sumx/n;
+      results.meany = sumy/n;
+      results.regressionresults = regression.regress();
+      results.slope = regression.getSlope();
+      results.angle = Math.atan( results.slope );
+      results.intercept = regression.getIntercept();
+
+      Point2D.Double start = null;
+      Point2D.Double end = null;
+      double sqrdistance=0.0;
+      double sqrdistancemin=0.0;
+      double sqrdistancemax=0.0;
+      double dx, dy;
+      for ( ClusterData cd : currentclusters )
         for ( DoublePoint point : cd.cluster.getPoints() )
-          combinedcluster.addPoint(point);
-    
-      //for ( DoublePoint point : combinedcluster.getPoints() )
-      double sumx, sumy, meanx, meany;
-      SimpleRegression regression;
-      
-      
+        {
+          dx = point.getPoint()[0] - results.meanx;
+          dy = point.getPoint()[1] - results.meany;
+          sqrdistance = dx*dx + dy*dy;
+          if ( dy < 0.0 ) sqrdistance = -sqrdistance;
+          if ( start == null || sqrdistance < sqrdistancemin )
+          {
+            start = new Point2D.Double( point.getPoint()[0], point.getPoint()[1] );
+            sqrdistancemin = sqrdistance;
+          }
+          if ( end == null || sqrdistance > sqrdistancemax )
+          {
+            end = new Point2D.Double( point.getPoint()[0], point.getPoint()[1] );
+            sqrdistancemax = sqrdistance;
+          }
+        }
+      double distancemin = Math.sqrt( Math.abs( sqrdistancemin ) );
+      double distancemax = Math.sqrt( Math.abs( sqrdistancemax ) );
+      results.min.x = Math.cos( results.angle )*-distancemin;
+      results.min.y = Math.sin( results.angle )*-distancemin;
+      results.max.x = Math.cos( results.angle )*distancemax;
+      results.max.y = Math.sin( results.angle )*distancemax;
+      results.length = distancemax + distancemin;
+      results.significance = regression.getSignificance();
+      System.out.println( "Cluster bucket direction " + direction + " mean sq err = " + results.regressionresults.getMeanSquareError() );
+      System.out.println( "Cluster bucket direction " + direction + " significance = " + results.significance );
+      System.out.println( "Cluster bucket direction " + direction + " length = " + results.length  );
+      return results;
     }
   }
   
   class ClusterBucketSet
   {
-    ArrayList<ClusterBucket> allbuckets = new ArrayList<>();
-    ClusterBucket[][] buckets;
+    ClusterBucket[] buckets;
+    double significance;
+    int permutations;
 
-    ClusterBucketSet()
+    ClusterBucketSet( List<ClusterData> clusters )
     {
-      buckets = new ClusterBucket[3][];
-      for ( int t=BUCKET_TYPE_IGNORE; t<=BUCKET_TYPE_END; t++ )
+      buckets = new ClusterBucket[4];
+      for ( int d=0; d<buckets.length; d++ )
       {
-        buckets[t] = new ClusterBucket[t==BUCKET_TYPE_IGNORE?1:3];
-        for ( int d=0; d<4; d++ )
+        buckets[d] = new ClusterBucket( d );
+        for ( ClusterData cd : clusters )
+          if ( cd.direction == d )
+            buckets[d].addCluster(cd);
+        buckets[d].computePermutations();
+        permutations *= buckets[d].getPermutationCount();
+      }
+      
+      for ( int i=0; i<permutations; i++ )
+      {
+        if ( isPermutationAllowed(i) )
         {
-          buckets[t][d] = new ClusterBucket( t, d );
-          allbuckets.add(buckets[t][d] );
+          
         }
       }
     }
 
+    
+    
+    
     void clear()
     {
-      for ( ClusterBucket bucket : allbuckets )
-        bucket.clear();
     }
     
-    int getPermutationCount( List<ClusterData> list )
+    int getPermutationCount(  )
     {
-      if ( list.isEmpty() )
-        return 0;
-      int n=3;
-      int nextn;
-      for ( int i=1; i<list.size(); i++ )
-      {
-        nextn = n * 3;
-        if ( nextn < n )
-          throw new IllegalArgumentException( "List size too big." );
-        n = nextn;
-      }
-      return n;
+      return permutations;
     }
     
-    void setPermutation( int n, List<ClusterData> list )
+    boolean isPermutationAllowed( int i )
     {
-      clear();
-      if ( list.isEmpty() )
-        return;
-      int a=n, type, direction;
-      for ( ClusterData cluster : list )
-      {
-        type = a % 3;
-        a = a/3;
-        if ( type == BUCKET_TYPE_IGNORE )
-          direction = 0;
-        else
-          direction = cluster.direction;
-        buckets[type][direction].clusters.add(cluster);
-      }
-      score();
+      return true;
     }
     
-    void score()
-    {
-      
-    }
+//    void setPermutation( int n, List<ClusterData> list )
+//    {
+//      permutation = n;
+//      clear();
+//      if ( list.isEmpty() )
+//        return;
+//      int a=n, type, direction;
+//      for ( ClusterData cluster : list )
+//      {
+//        type = a % 3;
+//        a = a/3;
+//        if ( type == BUCKET_TYPE_IGNORE )
+//          direction = 0;
+//        else
+//          direction = cluster.direction;
+//        buckets[type][direction].clusters.add(cluster);
+//      }
+//      score();
+//    }
+//    
+//    void score()
+//    {
+//      significance = 1.0;
+//      // worth doing the stats?
+//      for ( int d=0; d<buckets[BUCKET_TYPE_LINE].length; d++ )
+//      {
+//        if ( buckets[BUCKET_TYPE_LINE][d].isEmpty() )
+//        {
+//          //notifyListeners(-1, false, null, "Non viable permutation - one or more lines absent." );
+//          return;
+//        }
+//      }
+//      
+//      System.out.println( "Computing permutation " + permutation );
+//      for ( int t=0; t<buckets.length; t++ )
+//      {
+//        if ( t == BUCKET_TYPE_IGNORE )
+//          continue;
+//        for ( int d=0; d<buckets[t].length; d++ )
+//        {
+//          if ( buckets[t][d].isEmpty() )
+//          {
+//            System.out.println( "Empty bucket" );
+//            continue;
+//          }
+//          else
+//          {
+//            buckets[t][d].compute();
+//            significance *= buckets[t][d].significance;
+//          }
+//        }
+//      }
+//      System.out.println( "Overall significance = " + significance );
+//    }
   }
 }
