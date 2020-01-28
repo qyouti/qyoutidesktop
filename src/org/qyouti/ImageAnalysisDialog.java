@@ -6,6 +6,7 @@
 package org.qyouti;
 
 import java.awt.GridBagConstraints;
+import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -84,6 +85,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
               GridBagConstraints gbc = new GridBagConstraints();
               gbc.gridx = 0;
               gbc.anchor = GridBagConstraints.LINE_START;
+              gbc.insets = new Insets( 2, 2, 2, 2 );
               JLabel label = new JLabel( message );
               if ( image != null )
                 label.setIcon( new ImageIcon( image ) );

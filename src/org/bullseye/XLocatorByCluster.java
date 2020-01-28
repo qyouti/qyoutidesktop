@@ -5,8 +5,12 @@
  */
 package org.bullseye;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.*;
 import java.io.*;
@@ -14,6 +18,8 @@ import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 import javax.imageio.*;
+import org.apache.commons.math3.geometry.euclidean.twod.Line;
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import org.apache.commons.math3.ml.clustering.DoublePoint;
@@ -43,9 +49,9 @@ import org.qyouti.scan.image.ImageResizer;
  */
 public class XLocatorByCluster extends Thread implements XLocator
 {
-  static final int DIRECTION_NE = 0;  
+  static final int DIRECTION_NW = 0;  
   static final int DIRECTION_SE = 1;  
-  static final int DIRECTION_NW = 2;  
+  static final int DIRECTION_NE = 2;  
   static final int DIRECTION_SW = 3;  
   
   int debuglevel=0;
@@ -212,6 +218,18 @@ public class XLocatorByCluster extends Thread implements XLocator
     return image;
   }
   
+  BufferedImage areaToImage( Area area, int width, int height )
+  {
+    BufferedImage image = new BufferedImage( width, height, BufferedImage.TYPE_BYTE_BINARY );
+    double[] point;
+    
+    Graphics2D g = image.createGraphics();
+    g.setColor( Color.white );
+    g.fill( area );
+    g.dispose();
+    
+    return image;
+  }
   
   
   public void pass() // PassResult result )
@@ -432,7 +450,7 @@ public class XLocatorByCluster extends Thread implements XLocator
   
   class ClusterBucketResults
   {
-    double n;
+    int  n;
     double slope;
     double angle;
     double intercept;
@@ -443,8 +461,10 @@ public class XLocatorByCluster extends Thread implements XLocator
     Point2D.Double min = new Point2D.Double();
     double significance;    
     RegressionResults regressionresults;
+    boolean rejected_as_line = true;
   }
   
+ 
   class ClusterBucket
   {
     int direction;
@@ -454,8 +474,9 @@ public class XLocatorByCluster extends Thread implements XLocator
             
     ArrayList<ClusterData> currentclusters=new ArrayList<>();
     ClusterBucketResults currentresults;
-            
     
+    int bestlinepermutation=0;
+    int bestlinecappermutation=0;
     
     ClusterBucket( int direction )
     {
@@ -474,8 +495,52 @@ public class XLocatorByCluster extends Thread implements XLocator
       permutations = 1 << clusters.size();
       System.out.println( "\nCluster Bucket direction " + direction + " clusters " + clusters.size() + " number of permutations " + permutations );
       permutationresults.add( new ClusterBucketResults() );
+      
+      int bestpixelcount=0;
+      bestlinepermutation=0;
+      bestlinecappermutation=0;
       for ( int p=1; p<permutations; p++ )
-        permutationresults.add( computePermutation( p ) );
+      {
+        ClusterBucketResults cbr = computePermutation( p );
+        cbr.rejected_as_line = cbr.regressionresults.getMeanSquareError() >= 15.0;
+        if ( !cbr.rejected_as_line && cbr.n > bestpixelcount )
+        {
+          bestpixelcount = cbr.n;
+          bestlinepermutation = p;
+        }
+        permutationresults.add( cbr );
+        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "Permutation " + p  + (cbr.rejected_as_line?" REJECTED AS LINE":"") );
+      }
+      if ( bestlinepermutation == 0 )
+        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "No Line Found for this directin" );
+      else
+        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "The best line is permutation " + bestlinepermutation );
+      
+      ClusterBucketResults bestlineresults = permutationresults.get(bestlinepermutation);
+      for ( int i=0; i<clusters.size(); i++ )
+      {
+        // skip over clusters that have been identified as in the best line permutation
+        if ( ((1 << i) & bestlinepermutation) != 0 )
+          continue;
+        
+      }
+    }
+
+    BufferedImage toImage( int width, int height )
+    {
+      BufferedImage image = new BufferedImage( width, height, BufferedImage.TYPE_BYTE_BINARY );
+      double[] point;
+
+      for ( ClusterData cd : currentclusters )
+      {
+        for ( DoublePoint c : cd.cluster.getPoints() )
+        {
+          point = c.getPoint();
+          image.setRGB( (int)point[0], (int)point[1], 0xffffff );
+        }
+      }
+
+      return image;
     }
     
     ClusterBucketResults computePermutation( int n )
@@ -498,6 +563,11 @@ public class XLocatorByCluster extends Thread implements XLocator
     ClusterBucketResults getPermutationResults( int p )
     {
       return permutationresults.get( p );
+    }
+    
+    ClusterBucketResults getBestLinePermutationResults()
+    {
+      return permutationresults.get( bestlinepermutation );
     }
     
     void clear()
@@ -532,7 +602,6 @@ public class XLocatorByCluster extends Thread implements XLocator
       results.slope = regression.getSlope();
       results.angle = Math.atan( results.slope );
       results.intercept = regression.getIntercept();
-
       Point2D.Double start = null;
       Point2D.Double end = null;
       double sqrdistance=0.0;
@@ -559,10 +628,10 @@ public class XLocatorByCluster extends Thread implements XLocator
         }
       double distancemin = Math.sqrt( Math.abs( sqrdistancemin ) );
       double distancemax = Math.sqrt( Math.abs( sqrdistancemax ) );
-      results.min.x = Math.cos( results.angle )*-distancemin;
-      results.min.y = Math.sin( results.angle )*-distancemin;
-      results.max.x = Math.cos( results.angle )*distancemax;
-      results.max.y = Math.sin( results.angle )*distancemax;
+      results.min.x = results.meanx + Math.cos( results.angle )*-distancemin;
+      results.min.y = results.meany + Math.sin( results.angle )*-distancemin;
+      results.max.x = results.meanx + Math.cos( results.angle )*distancemax;
+      results.max.y = results.meany + Math.sin( results.angle )*distancemax;
       results.length = distancemax + distancemin;
       results.significance = regression.getSignificance();
       System.out.println( "Cluster bucket direction " + direction + " mean sq err = " + results.regressionresults.getMeanSquareError() );
@@ -570,14 +639,23 @@ public class XLocatorByCluster extends Thread implements XLocator
       System.out.println( "Cluster bucket direction " + direction + " length = " + results.length  );
       return results;
     }
+    
+    /**
+     * Which clusters consist of 
+     * @param a
+     * @param b 
+     */
+    void computeBestLineCapPermutation( Point2D a, Point2D b )
+    {
+      
+    }
   }
   
   class ClusterBucketSet
   {
     ClusterBucket[] buckets;
-    double significance;
-    int permutations;
-
+    boolean isX=false;
+    
     ClusterBucketSet( List<ClusterData> clusters )
     {
       buckets = new ClusterBucket[4];
@@ -588,34 +666,118 @@ public class XLocatorByCluster extends Thread implements XLocator
           if ( cd.direction == d )
             buckets[d].addCluster(cd);
         buckets[d].computePermutations();
-        permutations *= buckets[d].getPermutationCount();
-      }
-      
-      for ( int i=0; i<permutations; i++ )
-      {
-        if ( isPermutationAllowed(i) )
+        if ( buckets[d].bestlinepermutation == 0 )
         {
-          
+          isX=false;
+          return;
         }
       }
+
+      
+      // construct two quadrilaterals within which we expect all the
+      // dark pixels to be found
+      Path2D.Double[] path = new Path2D.Double[2];
+      Area[] quadrilateral = new Area[2];
+      ClusterBucketResults cbra;
+      ClusterBucketResults cbrb;
+      Point2D.Double centre;
+      Vector2D[] points = new Vector2D[4];
+      
+      for ( int i=0; i<2; i++ )
+      {
+        path[i] = new Path2D.Double();
+        if ( i==0 )
+        {
+          cbra = buckets[DIRECTION_NW].getBestLinePermutationResults();
+          cbrb = buckets[DIRECTION_SE].getBestLinePermutationResults();
+        }
+        else
+        {
+          cbra = buckets[DIRECTION_NE].getBestLinePermutationResults();
+          cbrb = buckets[DIRECTION_SW].getBestLinePermutationResults();
+        }
+
+        points[0] = new Vector2D( cbra.min.x, cbra.min.y );
+        points[1] = new Vector2D( cbra.max.x, cbra.max.y );
+        points[2] = new Vector2D( cbrb.max.x, cbrb.max.y );
+        points[3] = new Vector2D( cbrb.min.x, cbrb.min.y );
+        Line diagonala = new Line( points[0], points[2], 1.5 );
+        Line diagonalb = new Line( points[1], points[3], 1.5 );
+        Vector2D intersection = diagonala.intersection(diagonalb);
+        
+        path[i].moveTo( points[0].getX(), points[0].getY() );
+        path[i].lineTo( points[1].getX(), points[1].getY() );
+        path[i].lineTo( points[2].getX(), points[2].getY() );
+        path[i].lineTo( points[3].getX(), points[3].getY() );
+        path[i].closePath();
+        quadrilateral[i] = new Area( path[i] );
+        notifyListeners( -1, false, areaToImage( quadrilateral[i], input.getWidth(), input.getHeight() ), " quadrilateral " + i );
+      }
+      
+      Area cross = new Area( quadrilateral[0] );
+      cross.add( quadrilateral[1] );
+      notifyListeners( -1, false, areaToImage( cross, input.getWidth(), input.getHeight() ), " cross" );
+      
+      
+//      // look at line end clusters
+//      int da, db;
+//      boolean max;
+//      Point2D a, b;
+//      for ( int d=0; d<buckets.length; d++ )
+//      {
+//        // need to tell this bucket about where lines were found on the
+//        // two orthogonal buckets
+//        switch ( d )
+//        {
+//          case DIRECTION_NE:
+//            da = DIRECTION_NW;
+//            db = DIRECTION_SE;
+//            max = true;
+//            break;
+//          case DIRECTION_NW:
+//            da = DIRECTION_NE;
+//            db = DIRECTION_SW;
+//            max = false;
+//            break;
+//          case DIRECTION_SE:
+//            da = DIRECTION_NE;
+//            db = DIRECTION_SW;
+//            max = true;
+//            break;
+//          case DIRECTION_SW:
+//            da = DIRECTION_NW;
+//            db = DIRECTION_SE;
+//            max = false;
+//            break;
+//          default:
+//            da = -1;
+//            db = -1;
+//            max = true;
+//            break;
+//        }
+//        // we expect line cap pixels to lie between
+//        // the ends of the two parallel lines that have been found...
+//        if ( buckets[da].bestlinepermutation == 0 )
+//          a = null;
+//        else
+//        {
+//          ClusterBucketResults cbr = buckets[da].getBestLinePermutationResults();
+//          a = max?cbr.max:cbr.min;
+//        }
+//        if ( buckets[db].bestlinepermutation == 0 )
+//          b = null;
+//        else
+//        {
+//          ClusterBucketResults cbr = buckets[db].getBestLinePermutationResults();
+//          b = max?cbr.max:cbr.min;
+//        }
+//        
+//      }
     }
 
     
     
     
-    void clear()
-    {
-    }
-    
-    int getPermutationCount(  )
-    {
-      return permutations;
-    }
-    
-    boolean isPermutationAllowed( int i )
-    {
-      return true;
-    }
     
 //    void setPermutation( int n, List<ClusterData> list )
 //    {
