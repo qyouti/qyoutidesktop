@@ -131,7 +131,7 @@ public class BullseyePageScanner
     bpage.righti  = righti;
     bpage.origini = origini;
     bpage.pagebounds = new Rectangle( 0, 0, image.getWidth(), image.getHeight() );
-    bpage.roughscale = (((float)image.getWidth() / width) + ((float)image.getHeight() / height))/2.0f;
+    bpage.roughscale = (float)image.getWidth() / width;
     for ( i=0; i<expectedpoints.length; i++ )
     {
       if ( expectedpoints[i] != null )

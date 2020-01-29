@@ -115,7 +115,7 @@ public class ScanTask
     {
       runImport();
     }
-    catch ( Exception e )
+    catch ( Throwable e )
     {
       e.printStackTrace();
       exitCode = 1;
@@ -151,9 +151,7 @@ public class ScanTask
      */
   private void importPDFImage(PDImage pdImage, ImageFileData parentpdf ) throws IOException
   {
-    String suffix = pdImage.getSuffix();
-    if (suffix == null)
-        suffix = "png";
+    String suffix = "png";
 
     ImageFileData ifd = new ImageFileData( 
             exam, 
@@ -271,17 +269,22 @@ public class ScanTask
           throws PageDecodeException, FileNotFoundException, IOException
   {
     // Read data from page.
-    PrintedPageData page = pagedecoder.decode( exam, ifd, image );
-    
-    if ( page!=null )
+    PrintedPageData page = null;
+    try
     {
-      page.rotatedimage=null;
-      String fn = page.getPreferredFileName();
-      if ( fn != null )
-        ifd.setImportedname(fn);
+      page = pagedecoder.decode( exam, ifd, image );
+    }
+    finally
+    {
+      if ( page!=null )
+      {
+        String fn = page.getPreferredFileName();
+        if ( fn != null )
+          ifd.setImportedname(fn);
+      }
       exam.sendImageToScanArchive(image, "pages/" + ifd.getImportedname(), "png" );
       ifd.setImported( true );
-    }    
+    }
   }
   
   public ImageFileData importImageFile( File file )

@@ -26,23 +26,16 @@
 
 package org.qyouti.scan.process;
 
-import java.awt.geom.NoninvertibleTransformException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.qyouti.scan.image.ResponseBoxColourLookupTable;
-import org.qyouti.scan.image.IdentityLookupTable;
 import org.qyouti.data.*;
 import com.google.zxing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.io.*;
-import java.net.*;
 import java.util.*;
-import javax.imageio.ImageIO;
 import org.bullseye.*;
 import org.qyouti.barcode.ZXingCodec;
 import org.qyouti.barcode.ZXingResult;
@@ -127,267 +120,6 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
 
 
-/**
- * 
- * @param exam  Data about this examination
- * @param image Bitmap image of a page
- * @param sourcename Original file name of page
- * @param scanorder Position in list of scanned pages
- * @return
- * @throws IOException 
- */  
-  public PrintedPageData identifyPage( ExaminationData exam, ImageFileData ifd, BufferedImage image )
-  {
-    int i;
-    PrintedPageData page=null;
-    ScannedPageData spage=null;
-    ZXingResult barcoderesult;
-    Rectangle r;
-    Rectangle[] barcodesearchrect = new Rectangle[4];
-    int ih = image.getHeight();
-    int iw = image.getWidth();
-    Point[] points;
-    Point bull_tl=null, bull_bl=null, bull_br=null;
-    double bradius_pixels = 1;
-    
-    String code;
-    String printid;
-    String pageid;
-    
-    // Initialise the page record that this method builds up
-    //page = new PageData( exam, ifd.getImportedname() );
-
-    // Look for the bar code in a strip down the left side or in case
-    // the scan was made with a rotation look in strips on the other
-    // three edges
-    try
-    {
-      // Bar code must be in a region near edge of page
-      barcodesearchrect[0] = new Rectangle(       0,      0, iw/8, ih   );  // left
-      barcodesearchrect[1] = new Rectangle(  7*iw/8,      0, iw/8, ih   );  // right
-      barcodesearchrect[2] = new Rectangle(       0,      0, iw,   ih/8 );  // top
-      barcodesearchrect[3] = new Rectangle(       0, 7*ih/8, iw,   ih/8 );  // bottom
-      
-      barcoderesult = decodeBarcode( image, barcodesearchrect );
-      if ( barcoderesult == null )
-      {
-        ifd.setError( "No barcode found on this image." );
-        return null;
-      }
-
-      System.out.println( "Barcode orientation: " + barcoderesult.getOrientation() );
-      
-      System.out.println( "Barcode = {" + barcoderesult.getText() + "}" );
-      code = barcoderesult.getText();
-      StringTokenizer ptok = new StringTokenizer( code, "/" );
-      try
-      {
-        if ( !"qyouti".equals( ptok.nextToken() ) )
-        {
-          ifd.setError( "Non-qyouti barcode found '" + code + "'." );
-          return null;        
-        }                
-        printid = ptok.nextToken();
-        pageid = ptok.nextToken();
-      }
-      catch ( NoSuchElementException nsee )
-      {
-        ifd.setError( "Unable to parse text in the barcode '" + code + "'." );
-        return null;        
-      }
-      
-      if ( !printid.equals( exam.getLastPrintID() ) )
-      {
-        ifd.setError( "The printid in the barcode does not match this exam/survey '" + printid + "'." );
-        return null;                
-      }
-      
-      // now we can look up the PrintData object...
-      page = exam.lookUpPage( pageid );
-      if ( page == null )
-      {
-        ifd.setError( "Unable to find the page in the print record " + pageid + "'." );
-        return null;                
-      }      
-      
-      spage = exam.getScannedPageData(pageid);
-      if ( spage != null )
-      {
-        ifd.setError( "A scan for this page ID has already been imported " + pageid + "'." );
-        return null;                
-      }      
-      
-      // use printid and pageid to get information about the page...
-      if ( page.printid != exam.getLastPrintID() )
-      {
-        ifd.setError( "The print ID on this page does not match the last print out." );
-        return null;
-      }
-        
-      PaginationRecord paginationrecord = exam.getPaginationRecord(page.printid);
-      if ( paginationrecord == null )
-      {
-        ifd.setError( "Cannot find the pagination data file for this page." );
-        return null;
-      }
-      
-      PaginationRecord.Candidate prcandidate = paginationrecord.getCandidate( page.pageid );
-      PaginationRecord.Page prpage = paginationrecord.getPage( page.pageid );
-      double[] caldim = prpage.getCalibrationDimension();
-      
-      if ( caldim == null )
-      {
-        page.error = "Cannot calibrate page.";
-        ifd.setError( page.error );
-        return page;
-      }
-      
-      page.candidate = exam.candidates.get( prcandidate.getId() );
-      page.candidate_number = page.candidate.id;        
-      page.candidate_name = page.candidate.name;      
-      page.declared_calibration_width  = caldim[0];
-      page.declared_calibration_height = caldim[1];
-
-      
-      // Now is the time to flip/rotate the image.
-      if ( "270".equals( barcoderesult.getOrientation() ) )
-      {
-        page.rotatedimage = image;
-      }
-      else
-      {
-        PageRotator rot = new PageRotator( image );
-        if ( "90".equals( barcoderesult.getOrientation() ) )
-          page.rotatedimage = rot.rotate180();
-        else if ( "0".equals( barcoderesult.getOrientation() ) )        
-          page.rotatedimage = rot.rotate90();
-        else if ( "180".equals( barcoderesult.getOrientation() ) )        
-          page.rotatedimage = rot.rotate270();
-        else
-        {
-          page.error = "Unable to reorient image. (Barcode at " + barcoderesult.getOrientation() + " degrees.)";
-          ifd.setError( page.error );
-          return page;          
-        }
-//        ImageIO.write(
-//                    page.rotatedimage,
-//                    "jpg",
-//                    new File( exam.getExamFolder(), "debug_rotation_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
-//              );        
-      }
-      ih = page.rotatedimage.getHeight();
-      iw = page.rotatedimage.getWidth();
-      page.scanbounds = new Rectangle( 0, 0, page.rotatedimage.getWidth(), page.rotatedimage.getHeight() );
-
-
-      PaginationRecord.Bullseye[] bullseyerecord = new PaginationRecord.Bullseye[3];
-      
-      bullseyerecord[0] = prpage.getBullseye( PaginationRecord.Bullseye.BULLSEYE_TOP_LEFT );
-      bullseyerecord[1] = prpage.getBullseye( PaginationRecord.Bullseye.BULLSEYE_BOTTOM_LEFT );
-      bullseyerecord[2] = prpage.getBullseye( PaginationRecord.Bullseye.BULLSEYE_BOTTOM_RIGHT );
-      if ( bullseyerecord[0] == null || bullseyerecord[1] == null || bullseyerecord[2] == null )
-      {
-        page.error = "Printed page lacked info about calibration bullseyes.";
-        ifd.setError( page.error );
-        return page;
-      }
-
-      double approxpixelspercentiinch =  page.rotatedimage.getWidth() / (double)prpage.getWidth();
-      for ( i=0; i<3; i++ )
-      {
-        bradius_pixels = (double)bullseyerecord[i].getR() * approxpixelspercentiinch;
-        Point approxcentre = new Point( 
-                (int)((double)bullseyerecord[i].getX() * approxpixelspercentiinch), 
-                (int)((double)bullseyerecord[i].getY() * approxpixelspercentiinch)   
-              );
-        
-        System.out.println( "Trial bullseye radius = " + bradius_pixels + " pixels." );
-        r = new Rectangle( approxcentre );
-        r.grow( (int)(bradius_pixels*3.5), (int)(bradius_pixels*3.5) );
-        r = r.intersection( page.scanbounds );
-        BufferedImage searchimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
-
-        
-        BullseyeLocator bloc = new BullseyeLocator( searchimage, bradius_pixels, BullseyeGenerator.RADII );
-        points = bloc.locateBullseye();
-
-
-        if ( points.length != 1 )
-        {
-          page.error = "Failed to find bullseye in corner " + (i+1) + " of page.";
-          ifd.setError( page.error );
-          try
-          {
-            ImageIO.write(
-                        searchimage,
-                        "jpg",
-                        new File( exam.getExamFolder(), "debug_bullseye_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
-                  );
-            ImageIO.write(
-                        bloc.getVoteMapImage(),
-                        "jpg",
-                        new File( exam.getExamFolder(), "debug_bullseye_votes_" + i + "_" + page.printid + "_" + page.pageid + "_" + page.candidate_number + ".jpg" )
-                  );          } catch (IOException ex)
-          {
-            Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-            //page.error = "Technical error saving debug image.";
-            //ifd.setError( page.error );
-          }
-          return page;
-        }
-        points[0].translate( r.x, r.y );
-        if ( i == 0 )
-          bull_tl = points[0];
-        if ( i == 1 )
-          bull_bl = points[0];
-        if ( i == 2 )
-          bull_br = points[0];
-        
-      }
-      
-      if ( false )
-      {
-        page.error = "Done.";
-        ifd.setError( page.error );
-        return page;
-      }
-      
-      // Use a bullseye area to measure blackest and whitest pixels
-      // 
-        
-      int nrad = Math.round( (float)bradius_pixels );
-      r = new Rectangle( bull_tl );
-      r.grow( nrad, nrad );
-      r = r.intersection( page.scanbounds );
-      BufferedImage bullseyeimage = page.rotatedimage.getSubimage( r.x, r.y, r.width, r.height );
-      BufferedImageStats stats = new BufferedImageStats( bullseyeimage );
-      
-      //page.blackness = calibrationresult[qrlocation[1]].getBlackness();
-      
-      page.pagetransform = pageTransform(
-              bull_tl, bull_bl, bull_br,
-              page.declared_calibration_width , page.declared_calibration_height );
-      
-      Point origin = inchesToPixels( page.pagetransform, 0.0, 0.0 );
-      Point inch = inchesToPixels( page.pagetransform, 1.0, 0.0 );
-      double dx = inch.x - origin.x;
-      double dy = inch.y - origin.y;
-      page.dpi = Math.sqrt( dx*dx + dy*dy );
-      
-      System.out.println( "Scanned page DPI = " + page.dpi );
-    }
-    catch (ReaderException e)
-    {
-      e.printStackTrace();
-      System.err.println( ifd.getSource() + ": No barcode found");
-      page.error = "Can't read bar code.";
-      ifd.setError( page.error );
-    }
-
-    return page;
-  }
-
-
   public PrintedPageData decode( ExaminationData exam, ImageFileData ifd, BufferedImage image )
           throws PageDecodeException
   {
@@ -409,6 +141,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     PaginationRecord.Bullseye b=null;
     ScannedQuestionData question;
     ScannedResponseData response;
+    BufferedImage rotatedimage;
 
     int i, j, k;    
     Point2D.Float[] pointd = new Point2D.Float[4];
@@ -447,7 +180,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     page.candidate = exam.candidates.get( prcandidate.getId() );
     page.candidate_number = page.candidate.id;        
     page.candidate_name = page.candidate.name;      
-    page.rotatedimage = image;
+    rotatedimage = image;
 
     for ( i=0; i<4; i++ )
     {
@@ -468,7 +201,8 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
     
     page.dpi = (int)( bpage.roughscale*100.0 );  
     System.out.println( "Scanned page DPI = " + page.dpi );
-  
+    if ( bpage.failed )
+      throw new PageDecodeException( "Unable to calibrate page using bullseyes." );
     
     PaginationRecord.Item[] items = prpage.getItems();
     Point[] itemcorners=new Point[4];
@@ -495,7 +229,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
 
       try
       {
-        BufferedImage qimage = page.rotatedimage.getSubimage(itembounds.x, itembounds.y, itembounds.width, itembounds.height );
+        BufferedImage qimage = rotatedimage.getSubimage(itembounds.x, itembounds.y, itembounds.width, itembounds.height );
         float scale = 100.0f / (float)page.dpi;  // convert to 100 dpi image
         question.setImage( ImageResizer.resize( 
                               qimage, 
@@ -504,7 +238,7 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
       } catch (Exception ex)
       {
         Logger.getLogger(PageDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        throw new PageDecodeException( "Technical error saving question image." );
+        throw new PageDecodeException( "Technical error processing question image." );
       }
       
       qmr = items[i].getQuestionMetricsRecord();
@@ -515,12 +249,10 @@ private ZXingResult decodeBarcode( BufferedImage image, Rectangle[] r )
         response = new ScannedResponseData( exam, page.candidate_number, question.getIdent(), j, box );
         response.setImageWidth( boxbounds.width );
         response.setImageHeight( boxbounds.height );
-        response.setImage( page.rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ) );
+        response.setImage( rotatedimage.getSubimage(boxbounds.x, boxbounds.y, boxbounds.width, boxbounds.height ) );
         question.addScannedResponseData(response);
       }
     }
-    
-    
     
     return page;
   }

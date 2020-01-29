@@ -27,18 +27,8 @@
 package org.qyouti.data;
 
 import java.awt.Rectangle;
-import java.awt.geom.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.LookupOp;
 import java.io.*;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-import org.qyouti.scan.image.IdentityLookupTable;
-import org.qyouti.scan.image.ResponseBoxColourLookupTable;
 import org.qyouti.scan.image.ResponseImageProcessor;
 import org.qyouti.scan.process.*;
 import org.w3c.dom.Element;
@@ -61,7 +51,7 @@ public class PrintedPageData implements Comparable<PrintedPageData>
 //  public int page_number;
   
   // fields that are NOT saved to disk
-  public BufferedImage rotatedimage;
+  //public BufferedImage rotatedimage;
   public int quarterturns;
   public double blackness;
   public String error=null;
