@@ -523,7 +523,9 @@ public class CandidateQuestionPanel
     ImageAnalysisDialog d = new ImageAnalysisDialog( QyoutiFrame.getFrames()[0], false );
     d.setTitle( "Image Analysis" );
     d.setSize( 400, 800 );
-    d.setImage( rd.getImage() );
+    ScannedPageData spage = scannedquestiondata.getScannedPage();
+
+    d.setImage( rd.getImage(), spage.getDpi() );
     d.setVisible( true );
     d.go();
   }//GEN-LAST:event_analysisbuttonActionPerformed

@@ -70,11 +70,12 @@ public class XLocatorByCluster extends Thread implements XLocator
   Point bestpoint = null;
 
   File[] filelist;
-  BufferedImage[] inputlist;
+  ImageDescription[] inputlist;
   int currentinput;  
-  BufferedImage input;
+  ImageDescription input;
+  BufferedImage inputimage;
   
-  public static final double SOBEL_THRESHOLD = 0.5; //0.45;    
+  public static final double SOBEL_THRESHOLD = 0.4; //0.45;    
     
   
   /**
@@ -111,13 +112,13 @@ public class XLocatorByCluster extends Thread implements XLocator
   {
     if ( input==null )
       throw new IllegalArgumentException( "Null image." );
-    this.inputlist = new BufferedImage[1];
-    this.inputlist[0] = input;
+    this.inputlist = new ImageDescription[1];
+    this.inputlist[0] = new ImageDescription( input, 300.0 );
     this.filelist = null;
     this.currentinput = 0;
   }
 
-  public void setImages( BufferedImage[] images )
+  public void setImages( ImageDescription[] images )
   {
     if ( images==null || images.length == 0 )
       throw new IllegalArgumentException( "Null or empty list of images." );
@@ -130,7 +131,7 @@ public class XLocatorByCluster extends Thread implements XLocator
     if ( files==null || files.length == 0 )
       throw new IllegalArgumentException( "Null or empty list of images." );
     this.filelist = Arrays.copyOf( files, files.length );
-    this.inputlist = new BufferedImage[files.length];
+    this.inputlist = new ImageDescription[files.length];
   }
   
   public Point[] getLocations()
@@ -146,7 +147,7 @@ public class XLocatorByCluster extends Thread implements XLocator
   
   public BufferedImage getInputImage()
   {
-    return input;
+    return inputimage;
   }
     
   public void addProgressListener( XLocatorListener listener )
@@ -208,11 +209,16 @@ public class XLocatorByCluster extends Thread implements XLocator
   {
     BufferedImage image = new BufferedImage( width, height, BufferedImage.TYPE_BYTE_BINARY );
     double[] point;
+
+    Graphics2D g = image.createGraphics();
+    g.setColor( Color.white );
+    g.fillRect( 0 , 0, width, height );
+    g.dispose();
     
     for ( DoublePoint c : list )
     {
       point = c.getPoint();
-      image.setRGB( (int)point[0], (int)point[1], 0xffffff );
+      image.setRGB( (int)point[0], (int)point[1], 0x000000 );
     }
     
     return image;
@@ -225,6 +231,9 @@ public class XLocatorByCluster extends Thread implements XLocator
     
     Graphics2D g = image.createGraphics();
     g.setColor( Color.white );
+    g.fillRect( 0 , 0, width, height );
+    
+    g.setColor( Color.black );
     g.fill( area );
     g.dispose();
     
@@ -240,10 +249,10 @@ public class XLocatorByCluster extends Thread implements XLocator
     int kernelsize = 3;
     bestpoint = null;
     // Transform using the red channel - so magenta ink/toner is ignored.
-    sobelresult = Sobel.transform( input, SOBEL_THRESHOLD, true, false, false, kernelsize, sobeldata );  
+    sobelresult = Sobel.transform(inputimage, SOBEL_THRESHOLD, true, false, false, kernelsize, sobeldata );  
     //System.out.println("Maximum Sobel magnitude: " + sobelresult.maxmag );
     if ( debuglevel >= 2 )
-      notifyListeners( -1, false, ImageResizer.resize(sobelresult.toImage(),input.getWidth()*4,input.getHeight()*4), "Sobel Transform" );
+      notifyListeners(-1, false, ImageResizer.resize(sobelresult.toImage(),inputimage.getWidth()*4,inputimage.getHeight()*4), "Sobel Transform" );
     
     boolean isx=true;
     
@@ -255,7 +264,7 @@ public class XLocatorByCluster extends Thread implements XLocator
     byte[] red = { (byte)0xff, (byte)0,    (byte)0xff,  (byte)0xff };
     byte[] grn = { (byte)0xff, (byte)0xff, (byte)0,     (byte)0xff };
     byte[] blu = { (byte)0xff, (byte)0,    (byte)0,     (byte)0    };
-    BufferedImage forandagainst = new BufferedImage( input.getWidth(), input.getHeight(), 
+    BufferedImage forandagainst = new BufferedImage( inputimage.getWidth(), inputimage.getHeight(), 
             BufferedImage.TYPE_BYTE_BINARY, new IndexColorModel(2,4,red,grn,blu) );
 
     for ( int a=0; a<angles.length; a++ )
@@ -263,7 +272,7 @@ public class XLocatorByCluster extends Thread implements XLocator
       // Get coordinates of pixels with the given angle
       list = this.getClusterables( sobelresult, angles[a], range );
       if ( debuglevel >= 2 )
-        notifyListeners( -1, false, this.clusterablesToImage( list, input.getWidth(), input.getHeight() ), "Angle " + angles[a] );
+        notifyListeners(-1, false, this.clusterablesToImage(list, inputimage.getWidth(), inputimage.getHeight() ), "Angle " + angles[a] );
       
       // Find the clusters of pixel coordinates from the list
       clusters = clusterers.get(a).cluster(list);
@@ -272,7 +281,7 @@ public class XLocatorByCluster extends Thread implements XLocator
       for ( int c=0; c<clusters.size(); c++)
       {
         Cluster<DoublePoint> cluster = clusters.get( c );
-        notifyListeners( -1, false, this.clusterablesToImage( cluster.getPoints(), input.getWidth(), input.getHeight() ), "Angle " + angles[a] + " cluster " + c );
+        notifyListeners(-1, false, this.clusterablesToImage(cluster.getPoints(), inputimage.getWidth(), inputimage.getHeight() ), "Angle " + angles[a] + " cluster " + c );
         clusterdatalist.add( new ClusterData( a, clusters.get(c) ) );
       }
     }
@@ -281,51 +290,33 @@ public class XLocatorByCluster extends Thread implements XLocator
       cd.compute();
     
     ClusterBucketSet clusterbucketset = new ClusterBucketSet( clusterdatalist );
-//    int permutationcount = clusterbucketset.getPermutationCount( clusterdatalist );
-//    notifyListeners( -1, false, null, "Cluster Bucket Permutation count " + permutationcount );
-//    for ( int p = 0; p<permutationcount; p++ )
-//    {
-//      clusterbucketset.setPermutation( p, clusterdatalist );
-//    }
     
     currentreport.hasX = false;
     currentreport.dubious = true;
-    
+
     // hasX == there is at least one good cluster in each of four angles
 //    currentreport.hasX = isx;
   
-//    if ( debuglevel >= 2 )
-//      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good only" );
-//    for ( int x=0; x<sobelresult.width; x++ )
-//      for ( int y=0; y<sobelresult.height; y++ )
-//      {
-//        SobelPixelResult spr = sobelresult.results[x][y];
-//        if ( spr.magnitude == 0.0 )
-//          continue;
-//        int rgb = forandagainst.getRGB( x, y );
-//        if ( (rgb & 0xffffff) != 0xffffff )
-//          continue;
-//        int adjacentcount=0;
-//        int otherrgb;
-//        for ( int dx=x-1; dx>=0 && dx<sobelresult.width && dx<=x+1; dx++ )
-//          for ( int dy=y-1; dy>=0 && dy<sobelresult.height && dy<=y+1; dy++ )
-//          {
-//            if ( dx==0 && dy == 0 ) continue;
-//            otherrgb = forandagainst.getRGB(dx, dy) & 0xffffff;
-//            if ( otherrgb == 0x00ff00 )
-//              adjacentcount++;
-//          }
-//        if ( adjacentcount >=3 )
-//        {
-//          forandagainst.setRGB(x, y, 0xffff00 );
-//        }
-//        else
-//        {
-//          forandagainst.setRGB(x, y, 0xff0000 );
-//          badcount++;
-//        }
-//      }
-//    if ( debuglevel >= 2 )
+    Graphics2D g = forandagainst.createGraphics();
+    g.setColor( Color.white );
+    g.fillRect( 0 , 0, forandagainst.getWidth(), forandagainst.getHeight() );
+    g.setColor( Color.green );
+    g.fill( clusterbucketset.cross );
+    
+    for ( int x=0; x<sobelresult.width; x++ )
+      for ( int y=0; y<sobelresult.height; y++ )
+      {
+        SobelPixelResult spr = sobelresult.results[x][y];
+        if ( spr.magnitude == 0.0 )
+          continue;
+        int rgb = forandagainst.getRGB( x, y );
+        if ( (rgb & 0xffffff) != 0xffffff )
+          continue;
+        forandagainst.setRGB(x, y, 0xff0000 );
+        badcount++;
+      }
+    if ( debuglevel >= 2 )
+      notifyListeners(-1, false, ImageResizer.resize(forandagainst,inputimage.getWidth()*4,inputimage.getHeight()*4), " Good and bad " );
 //      notifyListeners( -1, false, ImageResizer.resize(forandagainst,input.getWidth()*4,input.getHeight()*4), "Good count = " + goodcount + " Bad count " + badcount );
 //     
 //    if ( currentreport.hasX )
@@ -388,7 +379,7 @@ public class XLocatorByCluster extends Thread implements XLocator
         try
         {
           System.out.println( "Loading " + filelist[currentinput] );
-          inputlist[currentinput] = ImageIO.read( filelist[currentinput] );
+          inputlist[currentinput] = new ImageDescription( ImageIO.read( filelist[currentinput] ), 300.0 );
         }
         catch (Exception e)
         {
@@ -398,10 +389,11 @@ public class XLocatorByCluster extends Thread implements XLocator
         
       }
       input = inputlist[currentinput];
+      inputimage = input.getImage();
       if ( debuglevel >= 1 )
-        notifyListeners(-1, false, input, "Input " + currentinput );
+        notifyListeners(-1, false, inputimage, "Input " + currentinput );
       currentreport = new XLocatorReport();
-      currentreport.image = input;
+      currentreport.image = inputimage;
       locateX();
       inputlist[currentinput] = null;
   
@@ -509,21 +501,13 @@ public class XLocatorByCluster extends Thread implements XLocator
           bestlinepermutation = p;
         }
         permutationresults.add( cbr );
-        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "Permutation " + p  + (cbr.rejected_as_line?" REJECTED AS LINE":"") );
+        notifyListeners(-1, false, this.toImage(inputimage.getWidth(), inputimage.getHeight() ), "Permutation " + p  + (cbr.rejected_as_line?" REJECTED AS LINE":"") );
       }
       if ( bestlinepermutation == 0 )
-        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "No Line Found for this directin" );
+        notifyListeners(-1, false, this.toImage(inputimage.getWidth(), inputimage.getHeight() ), "No Line Found for this directin" );
       else
-        notifyListeners( -1, false, this.toImage( input.getWidth(), input.getHeight() ), "The best line is permutation " + bestlinepermutation );
+        notifyListeners( -1, false, null, "The best line is permutation " + bestlinepermutation );
       
-      ClusterBucketResults bestlineresults = permutationresults.get(bestlinepermutation);
-      for ( int i=0; i<clusters.size(); i++ )
-      {
-        // skip over clusters that have been identified as in the best line permutation
-        if ( ((1 << i) & bestlinepermutation) != 0 )
-          continue;
-        
-      }
     }
 
     BufferedImage toImage( int width, int height )
@@ -531,12 +515,17 @@ public class XLocatorByCluster extends Thread implements XLocator
       BufferedImage image = new BufferedImage( width, height, BufferedImage.TYPE_BYTE_BINARY );
       double[] point;
 
+      Graphics2D g = image.createGraphics();
+      g.setColor( Color.white );
+      g.fillRect( 0 , 0, width, height );
+      g.dispose();
+
       for ( ClusterData cd : currentclusters )
       {
         for ( DoublePoint c : cd.cluster.getPoints() )
         {
           point = c.getPoint();
-          image.setRGB( (int)point[0], (int)point[1], 0xffffff );
+          image.setRGB( (int)point[0], (int)point[1], 0x000000 );
         }
       }
 
@@ -655,6 +644,19 @@ public class XLocatorByCluster extends Thread implements XLocator
   {
     ClusterBucket[] buckets;
     boolean isX=false;
+    Path2D.Double[] path = new Path2D.Double[2];
+    Area[] quadrilateral = new Area[2];
+    ClusterBucketResults cbra;
+    ClusterBucketResults cbrb;
+    Vector2D[] intersection = new Vector2D[2];
+    Vector2D[][] points     = { new Vector2D[4], new Vector2D[4] };
+    Vector2D[][] midpoints  = { new Vector2D[2], new Vector2D[2] };     
+    double[] midlength      = new double[2];
+    double[][] sidelength   = { new double[2], new double[2] };
+    Line[] midline          = new Line[2];
+    Line[] centreline       = new Line[2];
+    double[][] quadwidth    = { new double[2], new double[2] };
+    Area cross=null;
     
     ClusterBucketSet( List<ClusterData> clusters )
     {
@@ -672,20 +674,11 @@ public class XLocatorByCluster extends Thread implements XLocator
           return;
         }
       }
-
       
       // construct two quadrilaterals within which we expect all the
       // dark pixels to be found
-      Path2D.Double[] path = new Path2D.Double[2];
-      Area[] quadrilateral = new Area[2];
-      ClusterBucketResults cbra;
-      ClusterBucketResults cbrb;
-      Point2D.Double centre;
-      Vector2D[] points = new Vector2D[4];
-      
       for ( int i=0; i<2; i++ )
       {
-        path[i] = new Path2D.Double();
         if ( i==0 )
         {
           cbra = buckets[DIRECTION_NW].getBestLinePermutationResults();
@@ -697,141 +690,73 @@ public class XLocatorByCluster extends Thread implements XLocator
           cbrb = buckets[DIRECTION_SW].getBestLinePermutationResults();
         }
 
-        points[0] = new Vector2D( cbra.min.x, cbra.min.y );
-        points[1] = new Vector2D( cbra.max.x, cbra.max.y );
-        points[2] = new Vector2D( cbrb.max.x, cbrb.max.y );
-        points[3] = new Vector2D( cbrb.min.x, cbrb.min.y );
-        Line diagonala = new Line( points[0], points[2], 1.5 );
-        Line diagonalb = new Line( points[1], points[3], 1.5 );
-        Vector2D intersection = diagonala.intersection(diagonalb);
-        
-        path[i].moveTo( points[0].getX(), points[0].getY() );
-        path[i].lineTo( points[1].getX(), points[1].getY() );
-        path[i].lineTo( points[2].getX(), points[2].getY() );
-        path[i].lineTo( points[3].getX(), points[3].getY() );
+        points[i][0] = new Vector2D( cbra.min.x, cbra.min.y );
+        points[i][1] = new Vector2D( cbra.max.x, cbra.max.y );
+        points[i][2] = new Vector2D( cbrb.max.x, cbrb.max.y );
+        points[i][3] = new Vector2D( cbrb.min.x, cbrb.min.y );
+        sidelength[i][0] = points[i][0].distance( points[i][1] );
+        sidelength[i][1] = points[i][2].distance( points[i][3] );
+        midpoints[i][0] = points[i][0].add( points[i][3] ).scalarMultiply( 0.5 );
+        midpoints[i][1] = points[i][1].add( points[i][2] ).scalarMultiply( 0.5 );
+        midlength[i] = midpoints[i][0].distance( midpoints[i][1] );
+        midline[i] = new Line( midpoints[i][0], midpoints[i][1], 1.5 );
+        for ( int j=0; j<2; j++ )
+          quadwidth[i][j] = midline[i].distance( points[i][j] ) * 2.0;
+                
+//        Line sidea = new Line( points[i][0], points[i][1], 1.5 );
+//        Line sideb = new Line( points[i][2], points[i][3], 1.5 );
+//        Line diagonala = new Line( points[i][0], points[i][2], 1.5 );
+//        Line diagonalb = new Line( points[i][1], points[i][3], 1.5 );
+//        intersection[i] = diagonala.intersection(diagonalb);
+
+        path[i] = new Path2D.Double();
+        path[i].moveTo( midpoints[i][0].getX()-1, midpoints[i][0].getY() );
+        path[i].lineTo( midpoints[i][1].getX()-1, midpoints[i][1].getY() );
+        path[i].lineTo( midpoints[i][1].getX()+1, midpoints[i][1].getY() );
+        path[i].lineTo( midpoints[i][0].getX()+1, midpoints[i][0].getY() );
         path[i].closePath();
         quadrilateral[i] = new Area( path[i] );
-        notifyListeners( -1, false, areaToImage( quadrilateral[i], input.getWidth(), input.getHeight() ), " quadrilateral " + i );
+        notifyListeners(-1, false, areaToImage(quadrilateral[i], inputimage.getWidth(), inputimage.getHeight() ), " midline " + i );
+
+        Area a = pointsToQuadrilateralArea( points[i] );
+        notifyListeners(-1, false, areaToImage(a, inputimage.getWidth(), inputimage.getHeight() ), " quadrilateral " + i );
+        
+        // expand the points to encompass more of the neighbouring pixels
+        Vector2D[] expandedpoints = new Vector2D[4];
+        double scalefactor = input.getDpi() / 100.0;
+        for ( int j=0; j<4; j++ )
+        {
+          int sameside = j ^ 1;
+          int otherside = j ^ 3;
+          Vector2D sidev = points[i][j].subtract( points[i][sameside] ).normalize().scalarMultiply(scalefactor);
+          Vector2D widthv = points[i][j].subtract( points[i][otherside] ).normalize().scalarMultiply(scalefactor);
+          expandedpoints[j] = points[i][j].add(sidev).add(widthv);
+        }
+        
+        
+        quadrilateral[i] = pointsToQuadrilateralArea( expandedpoints );
+        Area diff = new Area();
+        diff.add( quadrilateral[i] );
+        diff.subtract( a );
+        notifyListeners(-1, false, areaToImage( diff, inputimage.getWidth(), inputimage.getHeight() ), " expanded quadrilateral " + i );
+        notifyListeners( -1, false, null, "sidelength " + sidelength[i][0] + " sidelength " + sidelength[i][1] + " midlength " + midlength[i] + " quadwidth[0] " + quadwidth[i][0] + " quadwidth[1] "  + quadwidth[i][1] );
       }
       
-      Area cross = new Area( quadrilateral[0] );
+      cross = new Area( quadrilateral[0] );
       cross.add( quadrilateral[1] );
-      notifyListeners( -1, false, areaToImage( cross, input.getWidth(), input.getHeight() ), " cross" );
-      
-      
-//      // look at line end clusters
-//      int da, db;
-//      boolean max;
-//      Point2D a, b;
-//      for ( int d=0; d<buckets.length; d++ )
-//      {
-//        // need to tell this bucket about where lines were found on the
-//        // two orthogonal buckets
-//        switch ( d )
-//        {
-//          case DIRECTION_NE:
-//            da = DIRECTION_NW;
-//            db = DIRECTION_SE;
-//            max = true;
-//            break;
-//          case DIRECTION_NW:
-//            da = DIRECTION_NE;
-//            db = DIRECTION_SW;
-//            max = false;
-//            break;
-//          case DIRECTION_SE:
-//            da = DIRECTION_NE;
-//            db = DIRECTION_SW;
-//            max = true;
-//            break;
-//          case DIRECTION_SW:
-//            da = DIRECTION_NW;
-//            db = DIRECTION_SE;
-//            max = false;
-//            break;
-//          default:
-//            da = -1;
-//            db = -1;
-//            max = true;
-//            break;
-//        }
-//        // we expect line cap pixels to lie between
-//        // the ends of the two parallel lines that have been found...
-//        if ( buckets[da].bestlinepermutation == 0 )
-//          a = null;
-//        else
-//        {
-//          ClusterBucketResults cbr = buckets[da].getBestLinePermutationResults();
-//          a = max?cbr.max:cbr.min;
-//        }
-//        if ( buckets[db].bestlinepermutation == 0 )
-//          b = null;
-//        else
-//        {
-//          ClusterBucketResults cbr = buckets[db].getBestLinePermutationResults();
-//          b = max?cbr.max:cbr.min;
-//        }
-//        
-//      }
+      notifyListeners(-1, false, areaToImage(cross, inputimage.getWidth(), inputimage.getHeight() ), " cross" );
+//      intersection[0].distance( intersection[1] );
+    }    
+    
+    Area pointsToQuadrilateralArea( Vector2D[] points )
+    {
+      Path2D.Double path;
+      path = new Path2D.Double();
+      path.moveTo( points[0].getX(), points[0].getY() );
+      for ( int n=1; n<4; n++ )
+        path.lineTo( points[n].getX(), points[n].getY() );
+      path.closePath();
+      return new Area( path );
     }
-
-    
-    
-    
-    
-//    void setPermutation( int n, List<ClusterData> list )
-//    {
-//      permutation = n;
-//      clear();
-//      if ( list.isEmpty() )
-//        return;
-//      int a=n, type, direction;
-//      for ( ClusterData cluster : list )
-//      {
-//        type = a % 3;
-//        a = a/3;
-//        if ( type == BUCKET_TYPE_IGNORE )
-//          direction = 0;
-//        else
-//          direction = cluster.direction;
-//        buckets[type][direction].clusters.add(cluster);
-//      }
-//      score();
-//    }
-//    
-//    void score()
-//    {
-//      significance = 1.0;
-//      // worth doing the stats?
-//      for ( int d=0; d<buckets[BUCKET_TYPE_LINE].length; d++ )
-//      {
-//        if ( buckets[BUCKET_TYPE_LINE][d].isEmpty() )
-//        {
-//          //notifyListeners(-1, false, null, "Non viable permutation - one or more lines absent." );
-//          return;
-//        }
-//      }
-//      
-//      System.out.println( "Computing permutation " + permutation );
-//      for ( int t=0; t<buckets.length; t++ )
-//      {
-//        if ( t == BUCKET_TYPE_IGNORE )
-//          continue;
-//        for ( int d=0; d<buckets[t].length; d++ )
-//        {
-//          if ( buckets[t][d].isEmpty() )
-//          {
-//            System.out.println( "Empty bucket" );
-//            continue;
-//          }
-//          else
-//          {
-//            buckets[t][d].compute();
-//            significance *= buckets[t][d].significance;
-//          }
-//        }
-//      }
-//      System.out.println( "Overall significance = " + significance );
-//    }
   }
 }

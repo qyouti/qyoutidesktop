@@ -83,7 +83,6 @@ public class PrintedPageData implements Comparable<PrintedPageData>
   public double height;
   
   public PageDecoder.TransformData pagetransform;
-  public double dpi;
   
 //  public String candidate_name;
 //  public String candidate_number;

@@ -22,6 +22,7 @@ public class ScannedPageData
   private String ident;
   private String candidateident;
   boolean processed;
+  private double dpi=300.0;
   private ArrayList<ScannedQuestionData> questions = new ArrayList<>();
 
   public ScannedPageData(ExaminationData exam, String ident)
@@ -36,12 +37,33 @@ public class ScannedPageData
     this.exam = exam;
     this.processed = "true".equalsIgnoreCase( element.getAttribute( "processed" ) );
     this.ident = element.getAttribute( "pageid" );
+    String strdpi = element.getAttribute("dpi");
+    try
+    {
+      this.dpi = Double.parseDouble(strdpi);
+    }
+    catch ( NumberFormatException nfe )
+    {
+      this.dpi = 300.0;
+    }
     candidateident = exam.getCandidateIdentFromPage(ident);
     NodeList nl = element.getElementsByTagName( "question" );
     for ( int j=0; j<nl.getLength(); j++ )
       questions.add( new ScannedQuestionData( exam, ident, candidateident, (Element)nl.item( j ) ) );
   }  
 
+  public double getDpi()
+  {
+    return dpi;
+  }
+
+  public void setDpi(double dpi)
+  {
+    this.dpi = dpi;
+  }
+
+  
+        
   public String getIdent()
   {
     return ident;
@@ -82,7 +104,7 @@ public class ScannedPageData
     writer.write( "scanned=\"" );
     writer.write( "\" processed=\"" );
     writer.write( processed?"true":"false" );
-    writer.write( "\" " );
+    writer.write( "\" dpi=\"" + dpi + "\"");
     writer.write( ">\r\n" );
     
     for ( int i=0; i<questions.size(); i++ )

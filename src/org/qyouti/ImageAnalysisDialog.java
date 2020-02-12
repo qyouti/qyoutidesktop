@@ -10,6 +10,7 @@ import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import org.bullseye.ImageDescription;
 import org.bullseye.XLocator;
 import org.bullseye.XLocatorByCluster;
 import org.bullseye.XLocatorListener;
@@ -24,6 +25,7 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
   boolean running = false;
   boolean killpending = false;
   BufferedImage image;
+  double dpi;
         
   /**
    * Creates new form ImageAnalysisDialog
@@ -34,9 +36,10 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
     initComponents();
   }
 
-  public void setImage( BufferedImage image )
+  public void setImage( BufferedImage image, double dpi )
   {
     this.image = image;
+    this.dpi = dpi;
   }
   
   public void go()
@@ -62,8 +65,8 @@ public class ImageAnalysisDialog extends javax.swing.JDialog implements Runnable
     {
       if ( image != null )
       {
-        BufferedImage[] images = new BufferedImage[1];
-        images[0] = image;
+        ImageDescription[] images = new ImageDescription[1];
+        images[0] = new ImageDescription( image, dpi );
         XLocator xlocator = new XLocatorByCluster(200, 200);
         xlocator.setDebugLevel(10);
         xlocator.setImages(images);

@@ -30,13 +30,9 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.ref.SoftReference;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
-import org.quipto.compositefile.CompositeFile;
 import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
@@ -107,6 +103,11 @@ public class ScannedQuestionData
     exam.processDataChanged( this );
   }
 
+  public ScannedPageData getScannedPage()
+  {
+    return exam.getScannedPageData( pageident );
+  }
+  
   public String getIdent()
   {
     return ident;

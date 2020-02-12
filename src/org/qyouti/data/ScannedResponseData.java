@@ -29,17 +29,10 @@ package org.qyouti.data;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.ref.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import org.quipto.compositefile.CompositeFile;
-import org.qyouti.qti1.QTIResponse;
 import org.qyouti.qti1.element.QTIElementItem;
 import org.qyouti.qti1.element.QTIElementResponselabel;
 import org.qyouti.qti1.gui.QuestionMetricBox;
-import org.qyouti.util.QyoutiUtils;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 /**
  *

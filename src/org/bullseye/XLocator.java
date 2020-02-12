@@ -5,7 +5,6 @@
  */
 package org.bullseye;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 
 /**
@@ -14,7 +13,7 @@ import java.io.File;
  */
 public interface XLocator
 {
-  public void setImages( BufferedImage[] images );
+  public void setImages( ImageDescription[] images );
   public void setImageFiles( File[] files );
   public void addProgressListener( XLocatorListener listener );
   public void removeProgressListener( XLocatorListener listener );

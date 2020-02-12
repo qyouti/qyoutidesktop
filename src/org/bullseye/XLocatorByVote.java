@@ -62,10 +62,11 @@ public class XLocatorByVote extends Thread implements XLocator
   Point bestpoint = null;
 
   File[] filelist;
-  BufferedImage[] inputlist;
+  ImageDescription[] inputlist;
   int currentinput;
   
-  BufferedImage input;
+  ImageDescription input;
+  BufferedImage inputimage;
   Point[][] edge_vote_patterns_a;
   Point[][] edge_vote_patterns_b;
   int[][][] votemapa;
@@ -136,13 +137,13 @@ public class XLocatorByVote extends Thread implements XLocator
   {
     if ( input==null )
       throw new IllegalArgumentException( "Null image." );
-    this.inputlist = new BufferedImage[1];
-    this.inputlist[0] = input;
+    this.inputlist = new ImageDescription[1];
+    this.inputlist[0] = new ImageDescription( input, 300.0 );
     this.filelist = null;
     this.currentinput = 0;
   }
 
-  public void setImages( BufferedImage[] images )
+  public void setImages( ImageDescription[] images )
   {
     if ( images==null || images.length == 0 )
       throw new IllegalArgumentException( "Null or empty list of images." );
@@ -155,7 +156,7 @@ public class XLocatorByVote extends Thread implements XLocator
     if ( files==null || files.length == 0 )
       throw new IllegalArgumentException( "Null or empty list of images." );
     this.filelist = Arrays.copyOf( files, files.length );
-    this.inputlist = new BufferedImage[files.length];
+    this.inputlist = new ImageDescription[files.length];
   }
 
 
@@ -280,7 +281,7 @@ public class XLocatorByVote extends Thread implements XLocator
 
   public BufferedImage getInputImage()
   {
-    return input;
+    return inputimage;
   }
     
   
@@ -404,8 +405,8 @@ public class XLocatorByVote extends Thread implements XLocator
     int x, y, kx, ky, w, h, i, j;
     int koff = VOTESMOOTHKERNEL.length / 2;
     float total;
-    w = input.getWidth();
-    h = input.getHeight();
+    w = inputimage.getWidth();
+    h = inputimage.getHeight();
     
     for ( x=0; x<w; x++ )
       for ( y=0; y<h; y++ )
@@ -429,8 +430,8 @@ public class XLocatorByVote extends Thread implements XLocator
   {
     int x, y, w, h, i, j;
     boolean failed;
-    w = input.getWidth();
-    h = input.getHeight();
+    w = inputimage.getWidth();
+    h = inputimage.getHeight();
     int nextgroupid=1, groupid;
     LocalMaximum other;
     
@@ -540,8 +541,8 @@ public class XLocatorByVote extends Thread implements XLocator
   void voteStats( int[][] vm )
   {
     int x, y, w, h;
-    w = input.getWidth();
-    h = input.getHeight();
+    w = inputimage.getWidth();
+    h = inputimage.getHeight();
     // some stats...
     maxvote=0;
     for ( x=0; x<w; x++ )
@@ -554,14 +555,14 @@ public class XLocatorByVote extends Thread implements XLocator
   {
     int x, y, w, h;
     
-    w=input.getWidth();
-    h=input.getHeight();
+    w=inputimage.getWidth();
+    h=inputimage.getHeight();
     BufferedImage votemapimage = new BufferedImage(
               w,
               h,
               BufferedImage.TYPE_INT_RGB );
-    for ( x=0; x<input.getWidth(); x++ )
-      for ( y=0; y<input.getHeight(); y++ )
+    for ( x=0; x<inputimage.getWidth(); x++ )
+      for ( y=0; y<inputimage.getHeight(); y++ )
         votemapimage.setRGB( x, y, 0 );
 
     int vote, rgb;
@@ -584,8 +585,8 @@ public class XLocatorByVote extends Thread implements XLocator
   {
     int x, y, w, h, i;
 
-    w = input.getWidth();
-    h = input.getHeight();
+    w = inputimage.getWidth();
+    h = inputimage.getHeight();
 
     voteStats( cornervotemap[corner] );
     
@@ -769,7 +770,7 @@ public class XLocatorByVote extends Thread implements XLocator
     resetAllVoteMaps();
 
     // Transform using the red channel - so magenta ink/toner is ignored.
-    sobelresult = Sobel.transform( input, SOBEL_THRESHOLD, true, false, false, kernelsize, sobeldata );
+    sobelresult = Sobel.transform(inputimage, SOBEL_THRESHOLD, true, false, false, kernelsize, sobeldata );
     //System.out.println("Maximum Sobel magnitude: " + sobelresult.maxmag );
     currentreport.percentageBorderEdgePixels = sobelresult.percentageBorderEdgePixels;
     currentreport.percentageCentreEdgePixels = sobelresult.percentageCentreEdgePixels;
@@ -779,8 +780,8 @@ public class XLocatorByVote extends Thread implements XLocator
     
     // iterate over all the pixels of the input image
     // for each pixel votes in eight vote maps
-    for ( x=(kernelsize/2); x<(input.getWidth()-(kernelsize/2)); x++ )
-      for ( y=(kernelsize/2); y<(input.getHeight()-(kernelsize/2)); y++ )
+    for ( x=(kernelsize/2); x<(inputimage.getWidth()-(kernelsize/2)); x++ )
+      for ( y=(kernelsize/2); y<(inputimage.getHeight()-(kernelsize/2)); y++ )
       {        
         sobelpixel = sobelresult.results[x][y];
         for ( corner=0; corner<4; corner++ )
@@ -860,15 +861,15 @@ public class XLocatorByVote extends Thread implements XLocator
   public void prefilter()
   {
     int x, y, xk, yk, w, h, sum, rgb;
-    w = input.getWidth();
-    h = input.getHeight();
-    BufferedImage filtered = new BufferedImage( w, h, input.getType() );
+    w = inputimage.getWidth();
+    h = inputimage.getHeight();
+    BufferedImage filtered = new BufferedImage( w, h, inputimage.getType() );
     for ( x=0; x<w; x++ )
       for ( y=0; y<h; y++ )
       {
         if ( x==0 || y==0 || x==(w-1) || y==(h-1) )
         {
-          sum = (input.getRGB( x, y ) >> 16) & 0xff;
+          sum = (inputimage.getRGB( x, y ) >> 16) & 0xff;
         }
         else
         {
@@ -876,7 +877,7 @@ public class XLocatorByVote extends Thread implements XLocator
           for ( xk=-1; xk<=1; xk++ )
             for ( yk=-1; yk<=1; yk++ )
             {
-              sum += (input.getRGB( x, y ) >> 16) & 0xff;
+              sum += (inputimage.getRGB( x, y ) >> 16) & 0xff;
             }
           sum = sum / 9;
           if ( sum > 255 ) sum = 255;
@@ -884,7 +885,7 @@ public class XLocatorByVote extends Thread implements XLocator
         rgb = sum | (sum<<8) | (sum<<16);
         filtered.setRGB( x, y, rgb );
       }
-    input = filtered;
+    inputimage = filtered;
   }
   
   public void runSynchronously()
@@ -903,7 +904,7 @@ public class XLocatorByVote extends Thread implements XLocator
         try
         {
           System.out.println( "Loading " + filelist[currentinput] );
-          inputlist[currentinput] = ImageIO.read( filelist[currentinput] );
+          inputlist[currentinput] = new ImageDescription( ImageIO.read( filelist[currentinput] ), 300.0 );
         }
         catch (Exception e)
         {
@@ -913,11 +914,12 @@ public class XLocatorByVote extends Thread implements XLocator
         
       }
       input = inputlist[currentinput];
+      inputimage = input.getImage();
       prefilter();
       if ( debuglevel >= 1 )
-        notifyListeners(-1, false, input, "Input" );
+        notifyListeners(-1, false, inputimage, "Input" );
       currentreport = new XLocatorReportByVote();
-      currentreport.image = input;
+      currentreport.image = inputimage;
       locateX();
       inputlist[currentinput] = null;
   
