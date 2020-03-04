@@ -485,7 +485,7 @@ public class XLocatorByCluster extends Thread implements XLocator
     void computePermutations()
     {
       permutations = 1 << clusters.size();
-      System.out.println( "\nCluster Bucket direction " + direction + " clusters " + clusters.size() + " number of permutations " + permutations );
+      notifyListeners( -1, false, null, "\nCluster Bucket direction " + direction + " clusters " + clusters.size() + " number of permutations " + permutations );
       permutationresults.add( new ClusterBucketResults() );
       
       int bestpixelcount=0;
@@ -718,33 +718,38 @@ public class XLocatorByCluster extends Thread implements XLocator
         quadrilateral[i] = new Area( path[i] );
         notifyListeners(-1, false, areaToImage(quadrilateral[i], inputimage.getWidth(), inputimage.getHeight() ), " midline " + i );
 
-        Area a = pointsToQuadrilateralArea( points[i] );
-        notifyListeners(-1, false, areaToImage(a, inputimage.getWidth(), inputimage.getHeight() ), " quadrilateral " + i );
+        quadrilateral[i] = pointsToQuadrilateralArea( points[i] );
+        notifyListeners(-1, false, areaToImage( quadrilateral[i], inputimage.getWidth(), inputimage.getHeight() ), " quadrilateral " + i );
         
-        // expand the points to encompass more of the neighbouring pixels
-        Vector2D[] expandedpoints = new Vector2D[4];
-        double scalefactor = input.getDpi() / 100.0;
-        for ( int j=0; j<4; j++ )
-        {
-          int sameside = j ^ 1;
-          int otherside = j ^ 3;
-          Vector2D sidev = points[i][j].subtract( points[i][sameside] ).normalize().scalarMultiply(scalefactor);
-          Vector2D widthv = points[i][j].subtract( points[i][otherside] ).normalize().scalarMultiply(scalefactor);
-          expandedpoints[j] = points[i][j].add(sidev).add(widthv);
-        }
-        
-        
-        quadrilateral[i] = pointsToQuadrilateralArea( expandedpoints );
-        Area diff = new Area();
-        diff.add( quadrilateral[i] );
-        diff.subtract( a );
-        notifyListeners(-1, false, areaToImage( diff, inputimage.getWidth(), inputimage.getHeight() ), " expanded quadrilateral " + i );
+//        // expand the points to encompass more of the neighbouring pixels
+//        Vector2D[] expandedpoints = new Vector2D[4];
+//        double scalefactor = input.getDpi() / 100.0;
+//        for ( int j=0; j<4; j++ )
+//        {
+//          int sameside = j ^ 1;
+//          int otherside = j ^ 3;
+//          Vector2D sidev = points[i][j].subtract( points[i][sameside] ).normalize().scalarMultiply(scalefactor);
+//          Vector2D widthv = points[i][j].subtract( points[i][otherside] ).normalize().scalarMultiply(scalefactor);
+//          expandedpoints[j] = points[i][j].add(sidev).add(widthv);
+//        }        
+//        quadrilateral[i] = pointsToQuadrilateralArea( expandedpoints );
+//        Area diff = new Area();
+//        diff.add( quadrilateral[i] );
+//        diff.subtract( a );
+//        notifyListeners(-1, false, areaToImage( diff, inputimage.getWidth(), inputimage.getHeight() ), " expanded quadrilateral " + i );
+
         notifyListeners( -1, false, null, "sidelength " + sidelength[i][0] + " sidelength " + sidelength[i][1] + " midlength " + midlength[i] + " quadwidth[0] " + quadwidth[i][0] + " quadwidth[1] "  + quadwidth[i][1] );
       }
       
       cross = new Area( quadrilateral[0] );
       cross.add( quadrilateral[1] );
-      notifyListeners(-1, false, areaToImage(cross, inputimage.getWidth(), inputimage.getHeight() ), " cross" );
+      BufferedImage crossimage = areaToImage(cross, inputimage.getWidth(), inputimage.getHeight() );      
+      notifyListeners(-1, false, crossimage, " cross" );
+
+      BufferedImage fatterimage = new BufferedImage( inputimage.getWidth(), inputimage.getHeight(), BufferedImage.TYPE_BYTE_BINARY );
+      ImageShapeFattener fattener = new ImageShapeFattener( 4.0 );
+      fattener.fattenShapeImage(crossimage, fatterimage, 0xff000000 );
+      notifyListeners(-1, false, fatterimage, " fatter cross" );
 //      intersection[0].distance( intersection[1] );
     }    
     
