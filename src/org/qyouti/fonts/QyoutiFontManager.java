@@ -4,7 +4,6 @@ package org.qyouti.fonts;
 import java.awt.*;
 import java.io.*;
 import java.net.*;
-import java.nio.*;
 import java.util.*;
 import java.util.HashMap;
 import java.util.logging.*;
@@ -12,9 +11,13 @@ import javax.swing.plaf.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 import org.apache.avalon.framework.configuration.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.impl.Jdk14Logger;
 import org.apache.fontbox.util.autodetect.FontFileFinder;
 import org.apache.fop.fonts.*;
 import org.apache.fop.fonts.Font;
+import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.fop.svg.*;
 import org.qyouti.*;
 import org.qyouti.qti1.gui.*;
@@ -41,12 +44,13 @@ public class QyoutiFontManager
         "  <fonts>\n"          +
         "    INSERT\n"         +
         "  </fonts>\n"         +
-        "</fop>\n";  
+        "</fop>\n";
 
   QyoutiPreferences pref;
-  FontInfo configuredfontinfo=null;
-  FontInfo searchfontinfo=null;
-
+  
+  FontInfo fontinfoprint=null;
+  FontInfo fontinfosearch=null;
+  
   public static final int SET_SANS   =  0;
   public static final int SET_SERIF  =  1;
   public static final int SET_MONO   =  2;
@@ -57,23 +61,28 @@ public class QyoutiFontManager
   ArrayList<String> monofamilynames  = new ArrayList<>();
 
   ArrayList<ArrayList<String>> familynames = new ArrayList<>();
+  ArrayList<String> searchfamilynames  = null;
 
-  ArrayList<String> searchfamilynames  = new ArrayList<>();
 
   static private boolean builtininstalled=false;
   
   public QyoutiFontManager( QyoutiPreferences pref )
   {
-    System.out.println( "Starting to scan fonts.");
+    installBuiltins();
+    //System.out.println( "Starting to scan fonts.");
+    this.fontinfosearch  = getFOPFontInfo(  true );
+    //logFontData();
     this.pref = pref;
-    load();
-    if ( !builtininstalled )
-      installBuiltins();
-    System.out.println( "Font set up complete.");    
+    readPreferences();
+    this.fontinfoprint   = getFOPFontInfo( false );
+    //System.out.println( "Font set up complete.");    
   }
   
-  public void installBuiltins()
+  private static void installBuiltins()
   {
+    if ( builtininstalled )
+      return;
+    
     File d = getBuiltinFontDirectory();
     File[] ttffiles = d.listFiles( 
             new FilenameFilter()
@@ -105,45 +114,39 @@ public class QyoutiFontManager
   
   public void reset()
   {
-    pref.setDefaults();
+    pref.setProperty( "qyouti.print.font-family-sans",     "FreeSans,FreeSerif"  );
+    pref.setProperty( "qyouti.print.font-family-serif",    "FreeSerif" );
+    pref.setProperty( "qyouti.print.font-family-monospace","FreeMono,FreeSerif" );
     pref.save();
-    load();
+    this.fontinfoprint   = getFOPFontInfo( false );
   }
   
-  public void load()
+  private void logFontData()
   {
-    seriffamilynames.clear();
-    sansfamilynames.clear();
-    monofamilynames.clear();
-    readPreferences();
-    loadFOPFontInfo( false );
+    Map<String,Typeface> map = fontinfosearch.getFonts();
+    System.out.println( "Font scanning results:" );
+    fontinfosearch.dumpAllTripletsToSystemOut();
     
-    Map<String,Typeface> map = configuredfontinfo.getFonts();
-    
-    //System.out.println( "Font scanning results:" );
-    
-    //configuredfontinfo.dumpAllTripletsToSystemOut();
-    
-//    CustomFont cf;
-//    for ( Typeface tf : map.values() )
-//    {
-//      if ( tf instanceof LazyFont )
-//        tf = ((LazyFont)tf).getRealFont();
-//      if ( !(tf instanceof CustomFont) )
-//        continue;
-//      cf = (CustomFont)tf;
-//      if ( !cf.isEmbeddable() )
-//        continue;
-//      
-//      System.out.println( tf.getFontName() + " = " + tf.getFontURI() );
-//      for ( String ffname : tf.getFamilyNames() )
-//        System.out.println( "Family name: " + ffname );
-//      if ( tf.hasChar( '国' ) )
-//        System.out.println( "                                                              THIS FONT HAS 国 IN IT." );
-//      if ( tf.hasChar( 'ツ' ) )
-//        System.out.println( "                                                              THIS FONT HAS ツ IN IT." );
-//    }
-//    System.out.println( "Font scanning complete." );    
+    CustomFont cf;
+    for ( Typeface tf : map.values() )
+    {
+      if ( tf instanceof LazyFont )
+        tf = ((LazyFont)tf).getRealFont();
+      if ( !(tf instanceof CustomFont) )
+        continue;
+      cf = (CustomFont)tf;
+      if ( !cf.isEmbeddable() )
+        continue;
+      
+      System.out.println( tf.getFontName() + " = " + tf.getFontURI() );
+      for ( String ffname : tf.getFamilyNames() )
+        System.out.println( "Family name: " + ffname );
+      if ( tf.hasChar( '国' ) )
+        System.out.println( "                                                              THIS FONT HAS 国 IN IT." );
+      if ( tf.hasChar( 'ツ' ) )
+        System.out.println( "                                                              THIS FONT HAS ツ IN IT." );
+    }
+    System.out.println( "Font scanning complete." );    
   }
 
   
@@ -221,6 +224,9 @@ public class QyoutiFontManager
   
   private void readPreferences()
   {
+    seriffamilynames.clear();
+    sansfamilynames.clear();
+    monofamilynames.clear();
     familynames.add( readFontList( "qyouti.print.font-family-serif",    seriffamilynames ) );
     familynames.add( readFontList( "qyouti.print.font-family-sans",      sansfamilynames ) );
     familynames.add( readFontList( "qyouti.print.font-family-monospace", monofamilynames ) );
@@ -247,8 +253,8 @@ public class QyoutiFontManager
       case SET_MONO:
         return this.monofamilynames.toArray( a );
       case SET_SEARCH:
-        if ( searchfontinfo == null )
-          loadFOPFontInfo( true );
+        if ( searchfamilynames == null )
+          this.getFontFamilyList(fontinfosearch);
         return this.searchfamilynames.toArray( a );
     }
     
@@ -268,6 +274,7 @@ public class QyoutiFontManager
         break;
       case SET_MONO:
         list = monofamilynames;
+        break;
       default:
         return;
     }
@@ -289,13 +296,20 @@ public class QyoutiFontManager
     }
     return buffer.toString();
   }
-  public boolean reInitialise()
+  
+  
+  public void savePreferences()
   {
     pref.setProperty( "qyouti.print.font-family-sans", toCSV( sansfamilynames ) );
     pref.setProperty( "qyouti.print.font-family-serif", toCSV( seriffamilynames ) );
     pref.setProperty( "qyouti.print.font-family-monospace", toCSV( monofamilynames ) );
-    
-    if ( this.searchfontinfo == null ) return false;
+    this.fontinfoprint   = getFOPFontInfo( false );
+    pref.save();
+  }
+  
+  private String getFOPConfigurationStringPrint()
+  {
+    if ( this.fontinfosearch == null ) return null;
 
     // List of all the family names that will be used
     ArrayList<String> familys = new ArrayList<>();
@@ -307,7 +321,7 @@ public class QyoutiFontManager
     String fontkey;
 
     // iterate the triplets to decide which to put in allfontkeys
-    Map<FontTriplet, String> tripletmap = this.searchfontinfo.getFontTriplets();
+    Map<FontTriplet, String> tripletmap = this.fontinfosearch.getFontTriplets();
     ArrayList<FontTriplet> tripletlist;
     for ( FontTriplet triplet : tripletmap.keySet() )
     {
@@ -321,40 +335,43 @@ public class QyoutiFontManager
       }
     }
     
-    StringBuffer buffer = new StringBuffer();
+    StringBuilder builder = new StringBuilder();
     Typeface tf;
     CustomFont cf;
     for ( String key : keysandtriplets.keySet() )
     {
-      tf = searchfontinfo.getFonts().get( key );
+      tf = fontinfosearch.getFonts().get( key );
       tripletlist = keysandtriplets.get( key );
       if ( tf instanceof LazyFont )
         tf = ((LazyFont)tf).getRealFont();
       if ( !(tf instanceof CustomFont) )
         continue;
       cf = (CustomFont)tf;
-      buffer.append( "<font embed-url=\"" );
-      buffer.append( cf.getEmbedFileURI() );
-      buffer.append( "\">\n" );
+      builder.append( "<font embed-url=\"" );
+      builder.append( cf.getEmbedFileURI() );
+      builder.append( "\"" );
+      if ( cf instanceof MultiByteFont )
+      {
+        MultiByteFont mbf = (MultiByteFont)cf;
+        String sub = mbf.getTTCName();
+        if ( sub != null )
+          builder.append( " sub-font=\"" + sub + "\"" );
+      }
+      builder.append( ">\n" );
       for ( FontTriplet ft : tripletlist )
       {
-        buffer.append( "<font-triplet name=\"" );
-        buffer.append( ft.getName() );
-        buffer.append( "\" style=\"" );
-        buffer.append( ft.getStyle() );
-        buffer.append( "\" weight=\"" );
-        buffer.append( ft.getWeight() );
-        buffer.append( "\"/>\n" );
+        builder.append( "<font-triplet name=\"" );
+        builder.append( ft.getName() );
+        builder.append( "\" style=\"" );
+        builder.append( ft.getStyle() );
+        builder.append( "\" weight=\"" );
+        builder.append( ft.getWeight() );
+        builder.append( "\"/>\n" );
       }
-      buffer.append( "</font>\n" );
+      builder.append( "</font>\n" );
     }
-    pref.setProperty( "qyouti.print.font.fopconfig", CONFIGXML.replace( "INSERT", buffer.toString() ) );
-    pref.save();
-    load();
-    return true;
-    // how to revert to saved version
-//    pref.load();
-//    return false;    
+    
+    return CONFIGXML.replace( "INSERT",  builder.toString() );
   }
   
   public String getDefaultFontFamilyName( boolean serif )
@@ -420,88 +437,109 @@ public class QyoutiFontManager
     return ss;
   }
   
-  private void loadFOPFontInfo( boolean search )                                          
-  {                                                     
+
+  private FontInfo getFOPFontInfo( boolean search )
+  {               
+    //if ( !search ) return this.fontinfosearch;
+    String s = search?getFOPConfigurationStringSearch():getFOPConfigurationStringPrint();
+    Configuration fopconfig = getFOPConfiguration( s );
+    FontInfo fontinfo=null;
+    
+    Log log = LogFactory.getLog(TTFFile.class);
+    if ( log instanceof Jdk14Logger )
+    {
+      Jdk14Logger slog = (Jdk14Logger)log;
+      slog.getLogger().setLevel(Level.SEVERE);
+    }
+    
     try
     {
       PDFDocumentGraphics2D  graphics = new PDFDocumentGraphics2D( false );          
-      Configuration fopconfig = getFOPConfiguration( search );
       PDFTranscoder pdft = new PDFTranscoder();
       pdft.configure( fopconfig );    
       PDFDocumentGraphics2DConfigurator configurator
               = new PDFDocumentGraphics2DConfigurator();
       boolean useComplexScriptFeatures = false; //TODO - FIX ME
       configurator.configure( graphics, fopconfig, useComplexScriptFeatures);
-      if ( search )
-      {
-        searchfontinfo =  graphics.getFontInfo();
-        searchfamilynames.clear();
-      
-        ArrayList<String> ffnames = new ArrayList<>();
-        Map<FontTriplet,String> tripmap = searchfontinfo.getFontTriplets();
-        Typeface tf;
-        CustomFont cf;
-        java.awt.Font awtfont;
-        String familyname;
-        
-        for ( FontTriplet trip : tripmap.keySet() )
-        {
-          // the triplet has a family name but what is the 'oficial'
-          // awt family name?
-          awtfont = new java.awt.Font( trip.getName(), java.awt.Font.PLAIN, 12 );
-          familyname = awtfont.getFamily();
-          
-          if ( !ffnames.contains( familyname ) )
-          {
-            tf = searchfontinfo.getFonts().get( tripmap.get( trip ) );
-            if ( tf instanceof LazyFont )
-              tf = ((LazyFont)tf).getRealFont();
-            if ( tf instanceof CustomFont )
-            {
-              cf = (CustomFont)tf;
-              if ( cf.isEmbeddable() )
-                ffnames.add( familyname );
-            }
-          }
-        }
-        
-        ffnames.sort( 
-                new Comparator<String>()
-                {
-                  @Override
-                  public int compare( String o1, String o2 )
-                  {
-                    return o1.compareTo( o2 );
-                  }
-                }
-        );
-        
-        searchfamilynames.addAll( ffnames );
-      }
-      else
-        configuredfontinfo =  graphics.getFontInfo();      
+      fontinfo =  graphics.getFontInfo();
     }
     catch (Exception e)
     {
       e.printStackTrace();
     } 
+    
+    return fontinfo;
   } 
 
-
-  
-  public Configuration getFOPConfiguration()
+  public void getFontFamilyList( FontInfo fontinfo )
   {
-    return getFOPConfiguration( false );
-  }
+    if ( searchfamilynames != null )
+      return;
 
-  private Configuration getFOPConfiguration( boolean search )
+    searchfamilynames = new ArrayList<>();    
+    Map<FontTriplet,String> tripmap = fontinfo.getFontTriplets();
+    Typeface tf;
+    CustomFont cf;
+    String familyname;
+    java.awt.Font awtfont;
+
+    for ( FontTriplet trip : tripmap.keySet() )
+    {
+      boolean logging = false; //trip.getName().startsWith( "Free" );
+      String tripstr = tripmap.get( trip );
+      tf = fontinfo.getFonts().get( tripstr );
+//      if ( tf.getFontURI() != null && tf.getFontURI().getPath() != null && tf.getFontURI().getPath().toLowerCase().contains("msyh") )
+//      {
+//        System.out.println( "YaHei" );
+//        logging = true;
+//      }
+      if ( logging )
+        System.out.print( "Triplet " + trip.getName() + "   Style " + trip.getStyle() + "   Weight " + trip.getWeight() );
+      if ( tf instanceof LazyFont )
+        tf = ((LazyFont)tf).getRealFont();
+      if ( tf instanceof CustomFont )
+      {
+        cf = (CustomFont)tf;
+        awtfont = new java.awt.Font( trip.getName(), java.awt.Font.PLAIN, 12 );
+        familyname = awtfont.getFamily();
+
+        if ( logging ) System.out.print( "     Family Name " + familyname );
+        if ( logging && !trip.getName().startsWith( familyname ) ) System.out.print( "  ********* " );
+        if ( trip.getName().startsWith( familyname ) && cf.isEmbeddable() )
+        {
+          //if ( logging ) System.out.println( "Is Embeddable" );
+          if ( !searchfamilynames.contains( familyname ) )
+            searchfamilynames.add( familyname );
+        }
+      }
+      if ( logging ) System.out.println();
+    }
+
+    searchfamilynames.sort( 
+            new Comparator<String>()
+            {
+              @Override
+              public int compare( String o1, String o2 )
+              {
+                return o1.compareTo( o2 );
+              }
+            }
+    );
+  }
+  
+  
+  public Configuration getFOPConfigurationPrint()
+  {
+    String s = getFOPConfigurationStringPrint();
+    return getFOPConfiguration( s );
+  }
+  
+  private Configuration getFOPConfiguration( String s )
   {
     DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
     try
     {
-      return cfgBuilder.build( 
-              new ByteArrayInputStream( 
-                      getFOPConfigurationString( search ).getBytes( "UTF8" ) ) );
+      return cfgBuilder.build( new ByteArrayInputStream( s.getBytes( "UTF8" ) ) );
     }
     catch ( Exception ex )
     {
@@ -517,7 +555,7 @@ public class QyoutiFontManager
     ArrayList<File> directories=new ArrayList<>();
     for ( URI uri : systemFontList )
     {
-      System.out.println( uri.toString() );
+      //System.out.println( uri.toString() );
       if ( "file".equals(uri.getScheme()) )
       {
         File file = new File( uri );
@@ -527,16 +565,13 @@ public class QyoutiFontManager
       }
     }
     
-    for ( File dir : directories )
-      System.out.println( "System font directory: " + dir.toString() );
+//    for ( File dir : directories )
+//      System.out.println( "System font directory: " + dir.toString() );
     return directories;
   }
   
-  private String getFOPConfigurationString( boolean search )
+  private String getFOPConfigurationStringSearch()
   {
-    if ( !search )
-      return pref.getProperty( "qyouti.print.font.fopconfig" );
-    
     java.util.List<File> syslist = getSystemFontDirectories();
     
     String path;
@@ -567,7 +602,6 @@ public class QyoutiFontManager
     }
          
     String c = CONFIGXML.replace( "INSERT",  str.toString() );
-    System.out.println( c );
     return c;
   }
   
@@ -755,7 +789,7 @@ public class QyoutiFontManager
       // but we need to find the corresponding FOP font because this is a
       // nasty composite AWT font with references to other fonts that can
       // deal with lots of other glyphs.
-      Font fopfont = configuredfontinfo.getFontInstanceForAWTFont( font );
+      Font fopfont = fontinfoprint.getFontInstanceForAWTFont( font );
       System.out.println( font.toString() );
       
       for ( j=0; j<text.length(); j++ )

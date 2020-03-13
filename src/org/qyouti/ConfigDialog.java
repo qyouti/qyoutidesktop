@@ -279,13 +279,10 @@ public class ConfigDialog
     qfm.setFontFamilyNames( QyoutiFontManager.SET_SANS,   sansmodel.toArray() );
     qfm.setFontFamilyNames( QyoutiFontManager.SET_SERIF, serifmodel.toArray() );
     qfm.setFontFamilyNames( QyoutiFontManager.SET_MONO,   monomodel.toArray() );
-    if ( qfm.reInitialise() )
-    {
-      dispose();
-      return;
-    }
-    
-    JOptionPane.showMessageDialog( this, "There was a technical problem saving your new configuration." );   
+    qfm.savePreferences();
+    dispose();
+    return;
+    //JOptionPane.showMessageDialog( this, "There was a technical problem saving your new configuration." );   
   }//GEN-LAST:event_savebuttonActionPerformed
 
   private void cancelbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_cancelbuttonActionPerformed
@@ -423,8 +420,19 @@ public class ConfigDialog
 
   private void resetbuttonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_resetbuttonActionPerformed
   {//GEN-HEADEREND:event_resetbuttonActionPerformed
-    qfm.reset();
-    dispose();
+    while ( sansmodel.getSize() > 0 )
+      sansmodel.remove(0);
+    while ( serifmodel.getSize() > 0 )
+      serifmodel.remove(0);
+    while ( monomodel.getSize() > 0 )
+      monomodel.remove(0);
+    
+    sansmodel.add("FreeSans");
+    sansmodel.add("FreeSerif");
+    serifmodel.add("FreeSerif");
+    monomodel.add("FreeMono");
+    monomodel.add("FreeSerif");
+    
   }//GEN-LAST:event_resetbuttonActionPerformed
 
   class FontListModel extends AbstractListModel<String>

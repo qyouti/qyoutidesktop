@@ -118,7 +118,7 @@ public class PrintThread extends Thread
       //DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
       //Configuration fopconfig = cfgBuilder.build( new ByteArrayInputStream( strconfig.getBytes( "UTF8" ) ) );
       Configuration fopconfig;
-      fopconfig = fontmanager.getFOPConfiguration();
+      fopconfig = fontmanager.getFOPConfigurationPrint();
       PDFTranscoder pdft = new PDFTranscoder();
       pdft.configure( fopconfig );
 
@@ -150,8 +150,8 @@ public class PrintThread extends Thread
         System.out.println( "SVG Ready" );
         for ( int i=0; i<paginated.size(); i++ )
         {
-          //svgfile = new File( examfolder, examfolder.getName() + "_" + p + ".svg" );
-          //QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
+          svgfile = new File( examfolder, examfolder.getName() + "_" + p + ".svg" );
+          QyoutiUtils.dumpXMLFile( svgfile.getAbsolutePath(), paginated.get( i ).getDocumentElement(), true );
           pagefile = new File( examfolder, examfolder.getName() + "_" + p + ".pdf" );
           p++;
           pagefiles.add( pagefile );

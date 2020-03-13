@@ -57,12 +57,6 @@ public class QyoutiPreferences
   public void setDefaults()
   {    
     // relative URLs are relative to qyouti installation fonts folder
-    super.clear();
-    String conf = QyoutiFontManager.CONFIGXML.replace( 
-            "INSERT", 
-            "<directory>" + QyoutiFontManager.getBuiltinFontDirectory().getAbsolutePath() + "</directory>\n" );
-    super.setProperty( "qyouti.print.font.fopconfig", conf );
-        
     super.setProperty( "qyouti.print.font-family-sans",     "FreeSans,FreeSerif"  );
     super.setProperty( "qyouti.print.font-family-serif",    "FreeSerif" );
     super.setProperty( "qyouti.print.font-family-monospace","FreeMono,FreeSerif" );
