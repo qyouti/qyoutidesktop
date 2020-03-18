@@ -1775,8 +1775,10 @@ static String option = "              <response_label xmlns:qyouti=\"http://www.
   
   public void recomputeOutcomes()
   {
-    invalidateAllOutcomes();
-    updateOutcomes();
+    for ( CandidateData cd : candidates_sorted )
+      cd.computeCandidateOutcomes();
+    //invalidateAllOutcomes();
+    //updateOutcomes();
     setUnsavedChangesInOutcome( true );
     processDataChanged();    
   }
